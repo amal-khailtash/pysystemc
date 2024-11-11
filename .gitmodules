@@ -1,0 +1,4 @@
+[submodule "submodules/systemc"]
+	path = submodules/systemc
+	url = https://github.com/accellera-official/systemc
+	ignore = dirty
