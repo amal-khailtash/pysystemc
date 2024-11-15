@@ -20,7 +20,6 @@ test    := $(run) pytest
 pyright := $(run) pyright
 black   := $(run) black
 ruff    := $(run) ruff
-twine   := $(run) twine
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -53,16 +52,15 @@ uv:
 venv: .venv
 	@echo "run 'source .venv/bin/activate' to use virtualenv"
 
-
 # ----------------------------------------------------------------------------------------------------------------------
-# uv-lock: ## Lock the dependencies
+# uv-lock: ## Create a lockfile for the project's dependencies.
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: uv-lock
 uv-lock:
 	uv lock
 
 # ----------------------------------------------------------------------------------------------------------------------
-# uv-sync: ## Sync the dependencies
+# uv-sync: ## Sync the project's dependencies with the environment.
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: uv-sync
 uv-sync:

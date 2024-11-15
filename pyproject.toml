@@ -19,6 +19,19 @@ dependencies = [
 # [project.scripts]
 # pysystemc = "amal.eda.systemc:main"
 
+[tool.hatch.build.targets.sdist]
+# include = []
+exclude = [
+    ".uv_cache/",
+    "*.vcd",
+    "submodules/*",
+    "test-*",
+    "Makefile-local",
+    "main.py",
+    "main_window.py",
+    "modules.py",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/amal"]
 

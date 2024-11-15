@@ -1,4 +1,4 @@
-# pysystemc - SystemC pyhon binding using cppyy
+# pysystemc - SystemC python binding using cppyy
 
 First attempt at taking the advantage of Python dymanic feature to bind and use SystemC library in an equivalent Pythonic way.
 
