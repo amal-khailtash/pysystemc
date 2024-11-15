@@ -1,0 +1,56 @@
+version = 1
+requires-python = ">=3.12"
+
+[[package]]
+name = "cppyy"
+version = "3.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cppyy-backend" },
+    { name = "cppyy-cling" },
+    { name = "cpycppyy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/28/76ea59829239a8bc587ddc9e581d4a943f7daa24b7d1a13597870a73b726/cppyy-3.1.2.tar.gz", hash = "sha256:7937d184af02e1510f44d5655e0bcc3c6a7888ef5b3f06c3dd09ba93d1c1f19b", size = 28727 }
+
+[[package]]
+name = "cppyy-backend"
+version = "1.15.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cppyy-cling" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9e/fe/3dc515b384afec3801f59e6675120a6ccfe2ad40fab13cfd0e5db270a924/cppyy-backend-1.15.2.tar.gz", hash = "sha256:8d0ec169f6ea40d26999a61b274ce2ac880082e8d16aace6a0702933d3d835fc", size = 35640 }
+
+[[package]]
+name = "cppyy-cling"
+version = "6.30.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/d6/d73cc0698182034d8f03fd96efa581910d2aaa7379a84a2f1f91231bdae4/cppyy-cling-6.30.0.tar.gz", hash = "sha256:5d9e0551a4cb618eb3392001b3dc2c6294f02257f02fcd4d868999ba04f92af1", size = 56568831 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/d4/bc1a79693a3eef764b7ebaf877fe88617066132c58b3afeadacbc6578b75/cppyy_cling-6.30.0-py2.py3-none-macosx_10_15_x86_64.whl", hash = "sha256:b88ac593af6dad07571273f4bf01b9350c9a48f888ef81c9d1e9d206367843c5", size = 29978105 },
+    { url = "https://files.pythonhosted.org/packages/97/07/a2855e8ea98a2014262d82e5995c8772228c7d108292290efab7d02984d5/cppyy_cling-6.30.0-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:af30bd3064ca7c8258401ddc061466639357d87ffe45197852b7d0659a20f3da", size = 27931257 },
+    { url = "https://files.pythonhosted.org/packages/bc/de/8e15b32bb34f8726fa2cf9e2efcfb1b64b476aef482ac30d8023146e3caf/cppyy_cling-6.30.0-py2.py3-none-manylinux2014_x86_64.whl", hash = "sha256:8ff146c8c6dc61dabfb782b8f3062803e61e936688c2d9a32f67f81931a12ab4", size = 42168120 },
+    { url = "https://files.pythonhosted.org/packages/f3/82/8b42a8bc5a3a1e6734c7ebb4255d8addaa0d19bb5c1a5808d139a4c33f10/cppyy_cling-6.30.0-py2.py3-none-win32.whl", hash = "sha256:02b9d8cc754859e6ad1d60b633540b765236e61649e201b8a39632bf1cdee8ad", size = 23341830 },
+    { url = "https://files.pythonhosted.org/packages/eb/e7/80d06251abc542a198adac0240d964797278689d3c8105fcfaf0230bd63b/cppyy_cling-6.30.0-py2.py3-none-win_amd64.whl", hash = "sha256:7785cf767031444a48e83b670d1b7da0e7e475213c9aa64eee96d10db401f357", size = 27747226 },
+]
+
+[[package]]
+name = "cpycppyy"
+version = "1.12.16"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cppyy-backend" },
+    { name = "cppyy-cling" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/bf/947395ad56390b626d4b533e2772eecbc07b857cd241d9497cd0f4741334/CPyCppyy-1.12.16.tar.gz", hash = "sha256:09a845652ac1a82777ec499dda862f54493c1560e9df4cadecda09ecde9e4202", size = 211222 }
+
+[[package]]
+name = "systemc"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "cppyy" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cppyy", specifier = ">=3.1.2" }]
