@@ -1,26 +1,8 @@
+MAKEFILE_DIR   = $(patsubst %/,%,$(dir $(realpath $(firstword $(MAKEFILE_LIST)))))
 
-run     := uv run
-python  := $(run) python
-lint    := $(run) pylint
-pyright := $(run) pyright
-black   := $(run) black
-twine   := $(run) twine
-ruff    := $(run) ruff
+-include $(MAKEFILE_DIR)/Makefile-helper.mk
 
-
-# help: ## This help.
-# 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
-
-.PHONY: help
-help:  ## Display this help screen
-	@echo -e "\033[1mAvailable commands:\033[0m"
-	@grep -E '^[a-z.A-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}' | sort
-
-
-.PHONY: uv
-uv:
-	@curl -LsSf https://astral.sh/uv/install.sh | sh
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UV:=$(shell uv --version)
 ifdef UV
@@ -31,82 +13,134 @@ else
 	PIP  := python -m pip
 endif
 
+run     := uv run
+python  := $(run) python
+lint    := $(run) pylint
+test    := $(run) pytest
+pyright := $(run) pyright
+black   := $(run) black
+ruff    := $(run) ruff
+twine   := $(run) twine
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## .PHONY: help
+## help: ## This help.
+## 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
+## .PHONY: help
+## help:  ## Display this help screen
+## 	@echo -e "\033[1mAvailable commands:\033[0m"
+## 	@grep -E '^[a-z.A-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}' | sort
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##@ Setup:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ----------------------------------------------------------------------------------------------------------------------
+# uv: ## Install uv
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: uv
+uv:
+	@curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# ----------------------------------------------------------------------------------------------------------------------
+# venv: ## Create a virtual environment
+# ----------------------------------------------------------------------------------------------------------------------
 .venv:
-	PYTHON_HOME=/tool/pandora64/.package/miniforge3-3.12.5/ $(VENV) .venv
+	$(VENV) .venv
 
 venv: .venv
 	@echo "run 'source .venv/bin/activate' to use virtualenv"
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# uv-lock: ## Lock the dependencies
+# ----------------------------------------------------------------------------------------------------------------------
 .PHONY: uv-lock
 uv-lock:
 	uv lock
 
+# ----------------------------------------------------------------------------------------------------------------------
+# uv-sync: ## Sync the dependencies
+# ----------------------------------------------------------------------------------------------------------------------
 .PHONY: uv-sync
 uv-sync:
 	uv sync
 
+## # ----------------------------------------------------------------------------------------------------------------------
+## # add-cppyy: ## Add cppyy to the project
+## # ----------------------------------------------------------------------------------------------------------------------
+## .PHONY: add-cppyy
+## add-cppyy:
+## 	STDCXX=14      \
+## 	MAKE_NPROCS=16 \
+## 	uv add cppyy
 
-
-cppyy:
-	CC=/tool/pandora64/.package/gcc-10.2.0/bin/gcc  \
-	CXX=/tool/pandora64/.package/gcc-10.2.0/bin/g++ \
-	LD=/tool/pandora64/.package/gcc-10.2.0/bin/g++ \
-	STDCXX=14                                       \
-	MAKE_NPROCS=16                                  \
-	uv add cppyy
-#	pip install --force-reinstall cppyy
-
-
-# git-submodules:
-# 	git submodule add https://github.com/accellera-official/systemc submodules/systemc
-# 	(cd submodules/systemc/; git checkout 2.3.4)
-
-git-submodules:
+# ----------------------------------------------------------------------------------------------------------------------
+# setup-systemc: ## Fetch and install SystemC submodule
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: setup-systemc
+setup-systemc:	## Fetch and install SystemC submodule
 	@git submodule update --init --recursive
 	@( \
 		cd submodules/systemc/ ; \
 		git checkout 2.3.4     ; \
-		CC=/tool/pandora64/.package/gcc-10.2.0/bin/gcc  \
-		CXX=/tool/pandora64/.package/gcc-10.2.0/bin/g++ \
-		LD=/tool/pandora64/.package/gcc-10.2.0/bin/g++ \
 		./configure --prefix=$(PWD)/submodules/systemc ; \
 		make -j16 install; \
 	)
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##@ Examples:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# git submodule update --init --remote --recursive
-# git submodule update --recursive
-# git clone --recursive
-
-
-# CC=/tool/pandora64/.package/gcc-10.2.0/bin/gcc \
-# CXX=/tool/pandora64/.package/gcc-10.2.0/bin/g++ \
-# LD=/tool/pandora64/.package/gcc-10.2.0/bin/ld \
-# STDCXX=14 MAKE_NPROCS=16 pip install cppyy
-
-hello-cpp:
+# ----------------------------------------------------------------------------------------------------------------------
+# example-hello-cpp: ## Run the hello world example in C++
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-hello-cpp
+example-hello-cpp:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-		uv run examples/run_sysc_cpp.py examples/helloworld/cpp/helloworld.cpp
+		uv run examples/run_sysc_cpp.py \
+			examples/helloworld/cpp/helloworld.cpp
 
-
-hello-py:
+# ----------------------------------------------------------------------------------------------------------------------
+# example-hello-py: ## Run the hello world example in Python
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-hello-py
+example-hello-py:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-		uv run examples/helloworld/python/helloworld.py
+		uv run examples/helloworld/py/helloworld.py
 
-
-simple_fifo-py:
+# ----------------------------------------------------------------------------------------------------------------------
+# example-counter-cpp: ## Run the counter example in C++
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-counter-cpp
+example-counter-cpp:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-		uv run examples/simple_fifo/python/simple_fifo.py
+		uv run examples/run_sysc_cpp.py \
+			examples/counter/cpp/counter_tb.cpp
 
-simple_fifo-cpp:
+# ----------------------------------------------------------------------------------------------------------------------
+# example-counter-py: ## Run the counter example in Python
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-counter-py
+example-counter-py:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-		uv run examples/run_sysc_cpp.py     \
-			submodules/systemc/examples/sysc/simple_fifo/simple_fifo.cpp
+		uv run examples/counter/py/counter_tb.py
 
+# ----------------------------------------------------------------------------------------------------------------------
+# example-simple_fifo-py: ## Run the simple_fifo example in Python
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-simple_fifo-py
+example-simple_fifo-py:
+	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
+		uv run examples/simple_fifo/py/simple_fifo.py
 
-pipe-cpp:
+# ----------------------------------------------------------------------------------------------------------------------
+# example-pipe-cpp: ## Run the pipe example in C++
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-pipe-cpp
+example-pipe-cpp:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc                   \
 		uv run examples/run_sysc_cpp.py                       \
 			submodules/systemc/examples/sysc/pipe/display.h   \
@@ -121,8 +155,20 @@ pipe-cpp:
 			submodules/systemc/examples/sysc/pipe/stage3.cpp  \
 			submodules/systemc/examples/sysc/pipe/main.cpp
 
+# ----------------------------------------------------------------------------------------------------------------------
+# example-pipe-py: ## Run the pipe example in Python
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-pipe-py
+example-simple_fifo-cpp:
+	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
+		uv run examples/run_sysc_cpp.py     \
+			submodules/systemc/examples/sysc/simple_fifo/simple_fifo.cpp
 
-pkt_switch-cpp:
+# ----------------------------------------------------------------------------------------------------------------------
+# example-pkt_switch-cpp: ## Run the pkt_switch example in C++
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-pkt_switch-cpp
+example-pkt_switch-cpp:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc                            \
 		uv run examples/run_sysc_cpp.py                                \
 			submodules/systemc/examples/sysc/pkt_switch/fifo.cpp       \
@@ -131,3 +177,21 @@ pkt_switch-cpp:
 			submodules/systemc/examples/sysc/pkt_switch/switch.cpp     \
 			submodules/systemc/examples/sysc/pkt_switch/receiver.cpp   \
 			submodules/systemc/examples/sysc/pkt_switch/main.cpp
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##@ General:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ----------------------------------------------------------------------------------------------------------------------
+# vars: ## Print the vars used in the Makefile
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: vars
+vars:
+	@echo -e "$(BOLD)MAKEFILE_DIR$(RESET) : $(MAKEFILE_DIR)"
+	@echo -e "$(BOLD)BUILD_TYPE$(RESET)   : $(STRATUS_HOME)"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# var-<VARIABLE>: ## Print single variable used in the Makefile
+# ----------------------------------------------------------------------------------------------------------------------
+var-%:
+	@echo -e '$(BOLD)$*$(RESET)=$($*)'
