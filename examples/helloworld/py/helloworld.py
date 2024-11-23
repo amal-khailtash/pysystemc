@@ -20,7 +20,7 @@ class HelloWorld(sc_core.sc_module):
     def hello2(self):
         print("-" * 80)
         print(f">>> {sc_core.sc_time_stamp()} - [ {self.name():12} ] - hello2()")
-        print("Hello world using approach 2")
+        print("Hello world using approach 3")
 
     def before_end_of_elaboration(self):
         print(f">>> {sc_core.sc_time_stamp()} - [ {self.name():12} ] - Before End of Elaboration")
