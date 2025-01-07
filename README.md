@@ -6,6 +6,35 @@ A few other implementations try to mix and match the C++ features and implement 
 [cppyy](https://github.com/wlav/cppyy) provides a clean interface to expose C++ classes, functions, templates.
 
 
+# Development
+
+To get examples working, run the following commands to install uv, create virtual environment,
+fetch and compile SystemC 2.3.4 (compiled with C++17 for now).
+
+```bash
+$ make uv
+$ make .venv
+$ make uv-sync
+$ make setup-systemc
+```
+
+Run a few examples:
+
+```bash
+# hello cpp version
+$ make example-hello-cpp
+
+# hello python version
+$ make example-hello-py
+
+# counter cpp version
+$ make example-counter-cpp
+
+# counter py version
+$ make example-counter-py
+```
+
+
 # Examples
 
 A convient script `examples/run_sysc_cpp.py` is provided that can run any SystemC C++ code.  It reads the source code provided on the command line and calls `sc_main()`, basically running the SystemC simulation.
