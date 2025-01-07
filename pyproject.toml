@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "cppyy>=3.1.2",
+    "cppyy",
 ]
 
 # [tool.setuptools.packages.find]
@@ -31,11 +31,14 @@ exclude = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/amal"]
 
+[tool.uv.sources]
+cppyy = { git = "https://github.com/wlav/cppyy" }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.3",
+    "pytest>=8.3.4",
 ]
