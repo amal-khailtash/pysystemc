@@ -1,6 +1,16 @@
 import os
 import sys
 
+cppv = 17
+# cppv = 14
+# os.environ["CLING_STANDARD_PCH"] = os.path.expanduser(os.path.join("~", f"cling_standard_native_{cppv}.pch"))
+os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv}"
+# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -D_LIBCPP_LFTS_STRING_VIEW"
+# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DRWrap_libcpp_string_view_h"
+# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DR__HAS_STD_EXPERIMENTAL_STRING_VIEW"
+
+# os.environ["CLING_REBUILD_PCH"] = "1"
+
 import cppyy
 
 SYSTEMC_HOME = os.environ["SYSTEMC_HOME"]
@@ -15,10 +25,17 @@ cppyy.add_include_path(f"{SYSTEMC_HOME}/include")
 cppyy.add_library_path(f"{SYSTEMC_HOME}/lib-linux64")
 
 cppyy.load_library("systemc")
-# # cppyy.load_library(f"{SYSTEMC_HOME}/lib-linux64/libsystemc.so")
-cppyy.load_reflection_info(f"{SYSTEMC_HOME}/lib-linux64/libsystemc.so")
+cppyy.load_library(f"{SYSTEMC_HOME}/lib-linux64/libsystemc.so")
+# cppyy.load_reflection_info(f"{SYSTEMC_HOME}/lib-linux64/libsystemc.so")
 
-cppyy.include("systemc.h")
+cppyy.cppdef("""
+// #define SC_CPLUSPLUS 201402L /* std=c++14 */
+   #define SC_CPLUSPLUS 201703L /* std=c++17 */
+""")
+
+# cppyy.include("tlm.h")
+# cppyy.include("systemc.h")
+cppyy.include("systemc")
 
 from .sc_core import *
 from .sc_dt import *
@@ -56,7 +73,14 @@ def print_hierarchy(all_modules: bool=False):
     print("Design Hierarchy:")
 
     simcontext = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    print(cppyy.gbl.sc_core.sc_get_status())
+    # print("1")
     top_level_objects = cppyy.gbl.sc_core.sc_get_top_level_objects(simcontext)
+    # top_level_objects = cppyy.gbl.sc_core.sc_get_top_level_objects()
+    # print(type(top_level_objects))
+    print(top_level_objects.size())
+    # print(dir(top_level_objects))
+    # print(f"Len: {len(top_level_objects[0])}")
     for obj in top_level_objects:
         print_module_hierarchy(obj, 1, all_modules)
 

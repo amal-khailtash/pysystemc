@@ -6,7 +6,8 @@ import sys
 
 import cppyy
 
-from .. import SYSTEMC_HOME
+# from .. import SYSTEMC_HOME
+SYSTEMC_HOME = os.environ["SYSTEMC_HOME"]
 
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
