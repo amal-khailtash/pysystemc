@@ -66,14 +66,25 @@ uv-lock:
 uv-sync:
 	uv sync
 
-## # ----------------------------------------------------------------------------------------------------------------------
-## # add-cppyy: ## Add cppyy to the project
-## # ----------------------------------------------------------------------------------------------------------------------
-## .PHONY: add-cppyy
-## add-cppyy:
-## 	STDCXX=14      \
-## 	MAKE_NPROCS=16 \
-## 	uv add cppyy
+# ----------------------------------------------------------------------------------------------------------------------
+# add-cppyy: ## Add cppyy to the project
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: add-cppyy
+add-cppyy:
+	STDCXX=17      \
+	MAKE_NPROCS=16 \
+	uv add --upgrade 'cppyy @ git+https://github.com/wlav/cppyy'
+#	uv add cppyy
+
+# STDCXX=14 uv add cppyy --upgrade 'cppyy @ git+https://github.com/wlav/cppyy'
+
+# ----------------------------------------------------------------------------------------------------------------------
+# remove-cppyy: ## Remove cppyy to the project
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: remove-cppyy
+remove-cppyy:
+	uv cache clean
+	uv remove cppyy
 
 # ----------------------------------------------------------------------------------------------------------------------
 # setup-systemc: ## Fetch and install SystemC submodule
@@ -84,7 +95,7 @@ setup-systemc:	## Fetch and install SystemC submodule
 	@( \
 		cd submodules/systemc/ ; \
 		git checkout 2.3.4     ; \
-		./configure --prefix=$(PWD)/submodules/systemc ; \
+		./configure --prefix=--prefix=$(PWD)/submodules/systemc CXXFLAGS="-DSC_CPLUSPLUS=201703L -std=c++17" ; \
 		make -j16 install; \
 	)
 
@@ -107,6 +118,7 @@ example-hello-cpp:
 .PHONY: example-hello-py
 example-hello-py:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
+	CPPYY_API_PATH=.venv/include/site/python3.12 \
 		uv run examples/helloworld/py/helloworld.py
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -157,7 +169,7 @@ example-pipe-cpp:
 # example-pipe-py: ## Run the pipe example in Python
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: example-pipe-py
-example-simple_fifo-cpp:
+example-pipe-py:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
 		uv run examples/run_sysc_cpp.py     \
 			submodules/systemc/examples/sysc/simple_fifo/simple_fifo.cpp
