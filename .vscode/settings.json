@@ -1,10 +1,17 @@
 {
+    // Python settings
+
+    // "python.envFile": "${workspaceFolder}/.env",,
+
     "python.analysis.extraPaths": [
         "${workspaceFolder}/src"
     ],
+
+    // Test settings
     "python.testing.pytestArgs": [
         "tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.testing.cwd": "${workspaceFolder}/tests",
 }

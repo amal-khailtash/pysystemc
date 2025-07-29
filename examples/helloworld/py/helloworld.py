@@ -10,12 +10,12 @@ def hello1():
 class HelloWorld(sc_core.sc_module):
 
     def __init__(self, name: str):
-        module_name = sc_core.sc_module_name(name)
-        super().__init__(module_name)
+        # module_name = sc_core.sc_module_name(name)
+        super().__init__(name)
 
         self.sc_method("hello2", self.hello2)
 
-        self.hello2()
+        # self.hello2()
 
     def hello2(self):
         print("-" * 80)

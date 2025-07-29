@@ -21,16 +21,12 @@ $ make setup-systemc
 Run a few examples:
 
 ```bash
-# hello cpp version
+# hello example C++/Python version
 $ make example-hello-cpp
-
-# hello python version
 $ make example-hello-py
 
-# counter cpp version
+# counter example C++/Python version
 $ make example-counter-cpp
-
-# counter py version
 $ make example-counter-py
 ```
 

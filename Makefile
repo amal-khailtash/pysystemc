@@ -4,6 +4,11 @@ MAKEFILE_DIR   = $(patsubst %/,%,$(dir $(realpath $(firstword $(MAKEFILE_LIST)))
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+export UV_PYTHON=/tool/pandora64/.package/miniforge3-3.13.2/bin/python
+
+PYTHON_VERSION := $(shell $(UV_PYTHON) -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+
+
 UV:=$(shell uv --version)
 ifdef UV
 	VENV := uv venv
@@ -79,6 +84,14 @@ add-cppyy:
 # STDCXX=14 uv add cppyy --upgrade 'cppyy @ git+https://github.com/wlav/cppyy'
 
 # ----------------------------------------------------------------------------------------------------------------------
+# fix-cppyy: ## Fix cppyy
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: fix-cppyy
+fix-cppyy:
+	(cd .venv/include/site/python$(PYTHON_VERSION); ln -s cpycppyy CPyCppyy)
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # remove-cppyy: ## Remove cppyy to the project
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: remove-cppyy
@@ -118,7 +131,7 @@ example-hello-cpp:
 .PHONY: example-hello-py
 example-hello-py:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-	CPPYY_API_PATH=.venv/include/site/python3.12 \
+	CPPYY_API_PATH=$(PWD)/.venv/include/site/python3.13 \
 		uv run examples/helloworld/py/helloworld.py
 
 # ----------------------------------------------------------------------------------------------------------------------

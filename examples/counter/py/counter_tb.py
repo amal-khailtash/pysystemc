@@ -7,6 +7,8 @@ def sc_main(args: list) -> int:
     """Main function for the testbench
     """
 
+    global wf, cnt, clock, reset, enable, counter_out
+
     clock       = sc_core.sc_signal[bool]("clock")
     reset       = sc_core.sc_signal[bool]("reset")
     enable      = sc_core.sc_signal[bool]("enable")
@@ -14,6 +16,7 @@ def sc_main(args: list) -> int:
 
     # Connect the DUT
     counter = Counter("COUNTER")
+    cnt = counter
     counter.clock       (clock      )
     counter.reset       (reset      )
     counter.enable      (enable     )
@@ -24,11 +27,25 @@ def sc_main(args: list) -> int:
     # Open VCD file
     wf = sc_core.sc_create_vcd_trace_file("counter")
 
+    import cppyy
+    cppyy.set_debug()
+
+    print(type(clock))
+    # <class cppyy.gbl.sc_core.sc_signal<bool,sc_core::SC_ONE_WRITER>>
+
     # Dump the desired signals
-    sc_core.sc_trace(wf, clock, "clock")
-    sc_core.sc_trace(wf, reset, "reset")
-    sc_core.sc_trace(wf, enable, "enable")
-    sc_core.sc_trace(wf, counter_out, "count")
+    clock.trace(wf)
+    reset.trace(wf)
+    enable.trace(wf)
+    counter_out.trace(wf)
+    # sc_core.sc_trace(wf, clock.read(), clock.name())
+    # sc_core.sc_trace[bool](wf, clock.read(), clock.name())
+    # sc_core.sc_trace[type(clock)](wf, clock, "clock")
+    # sc_core.sc_trace[cppyy.gbl.sc_core.sc_signal_in_if[bool]](wf, clock, "clock")
+    # sc_core.sc_trace[cppyy.gbl.sc_core.sc_signal[bool]](wf, clock, "clock")
+    # sc_core.sc_trace[type(reset)](wf, reset, "reset")
+    # sc_core.sc_trace[type(enable)](wf, enable, "enable")
+    # sc_core.sc_trace[type(counter_out)](wf, counter_out, "count")
 
     # Initialize all variables
     reset.write(False)  # initial value of reset
@@ -68,6 +85,8 @@ def sc_main(args: list) -> int:
 
     print(f"@{sc_core.sc_time_stamp()} Terminating simulation")
     sc_core.sc_close_vcd_trace_file(wf)
+
+    sc_core.sc_stop()
 
     return 0
 
