@@ -6,6 +6,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-14
+
 ### Fixed
 
 - Discover CPyCppyy API headers in the active environment before importing cppyy,
@@ -83,6 +85,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/amal-khailtash/pysystemc/releases/tag/v0.1.0
