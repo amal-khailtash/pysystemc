@@ -8,6 +8,10 @@ MAKEFILE_DIR   = $(patsubst %/,%,$(dir $(realpath $(firstword $(MAKEFILE_LIST)))
 # Help and setup must also work before the virtual environment exists.
 PYTHON_VERSION = $(shell .venv/bin/python -c "import sys; print(str(sys.version_info.major) + '.' + str(sys.version_info.minor))")
 
+# Published-package smoke checks default to the version declared in pyproject.toml.
+# Select another release with: make test-testpypi PACKAGE_VERSION=0.2.1
+PACKAGE_VERSION ?= $(shell awk '/^version = / {gsub(/"/, "", $$3); print $$3; exit}' $(MAKEFILE_DIR)/pyproject.toml)
+
 VENV := uv venv
 
 # CMake output locations and coroutine backend can be overridden on the command line.
@@ -200,6 +204,25 @@ test-verbose:
 .PHONY: coverage
 coverage:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: test-testpypi
+test-testpypi:
+	cd /tmp && env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
+		uv run --no-project --refresh-package pysystemc --index https://test.pypi.org/simple --index-strategy unsafe-best-match \
+		--with 'pysystemc==$(PACKAGE_VERSION)' \
+		python "$(MAKEFILE_DIR)/tools/check_published.py" "$(PACKAGE_VERSION)"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-pypi: ## Check installed PyPI release (override PACKAGE_VERSION to select a version)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: test-pypi
+test-pypi:
+	cd /tmp && env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
+		uv run --no-project --refresh-package pysystemc --with 'pysystemc==$(PACKAGE_VERSION)' \
+		python "$(MAKEFILE_DIR)/tools/check_published.py" "$(PACKAGE_VERSION)"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # docs: ## Build Sphinx HTML documentation with warnings treated as errors

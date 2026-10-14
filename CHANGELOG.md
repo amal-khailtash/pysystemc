@@ -6,6 +6,22 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-14
+
+### Fixed
+
+- Install documentation dependencies into the Read the Docs virtual environment
+  so hosted Sphinx builds can import MyST and the theme.
+
+- Replace the README badge table's empty header with Category and Status labels
+  and refresh the production PyPI version badge.
+
+### Added
+
+- Makefile checks for installed TestPyPI and PyPI releases with selectable package
+  versions, isolated from checkout native dependency paths. Checks refresh package
+  metadata and run main, verifying callback execution and simulation time.
+
 ## [0.2.1] - 2026-10-14
 
 ### Fixed
@@ -85,7 +101,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/amal-khailtash/pysystemc/releases/tag/v0.1.0
