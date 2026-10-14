@@ -1,6 +1,8 @@
 pysystemc
 =========
 
+Version |project_version|
+
 Python bindings to native SystemC with on-demand C++ templates through cppyy.
 
 .. toctree::

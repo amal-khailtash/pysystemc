@@ -7,10 +7,11 @@ _metadata = tomllib.loads((Path(__file__).resolve().parents[1] / "pyproject.toml
 project = "pysystemc — SystemC Python bindings"
 author = "Amal Khailtash"
 copyright = "2026, Amal Khailtash"
-# The local project metadata is authoritative; builds never query another
-# package's PyPI release or require network access to determine the version.
+# Read the version locally so documentation builds work offline.
 version = _metadata["project"]["version"]
 release = version
+rst_epilog = f"\n.. |project_version| replace:: {release}\n"
+html_title = f"pysystemc {release} documentation"
 
 # -- General configuration ---------------------------------------------------
 extensions = ["sphinx.ext.mathjax", "sphinx.ext.napoleon",
@@ -24,7 +25,7 @@ html_theme = "sphinx_rtd_theme"
 html_show_sourcelink = False
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
-html_theme_options = {"collapse_navigation": False, "sticky_navigation": True,
+html_theme_options = {"display_version": True, "collapse_navigation": False, "sticky_navigation": True,
                       "navigation_depth": 4, "includehidden": True,
                       "prev_next_buttons_location": "bottom"}
 html_sidebars = {"**": ["globaltoc.html", "relations.html", "searchbox.html"]}
