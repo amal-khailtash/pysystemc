@@ -6,6 +6,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Exclude ZIP directory entries from wheel RECORD so auditwheel can inspect and
+  repair bundled native libraries.
+
 ### Changed
 
 - Update GitHub Actions to Node.js 24 releases for publishing and documentation.

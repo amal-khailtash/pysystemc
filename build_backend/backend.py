@@ -82,7 +82,10 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     tag = "py3-none-" + sysconfig.get_platform().replace("-", "_").replace(".", "_")
     target = path.with_name(original.replace("py3-none-any", tag))
     with zipfile.ZipFile(path) as archive:
-        files = {name: archive.read(name) for name in archive.namelist() if not name.endswith("/RECORD")}
+        # Directory entries are ZIP structure, not installed files. Including
+        # them in RECORD makes auditwheel attempt to read a directory as ELF.
+        files = {name: archive.read(name) for name in archive.namelist()
+                 if not name.endswith(("/", "/RECORD"))}
     for resource in NATIVE.rglob("*"):
         if resource.is_file():
             # Installed CMake/pkg-config files refer to the build prefix and
