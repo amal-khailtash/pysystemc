@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">pysystemc</title>
+  <desc id="desc">A blue simulation chip with logic gates, a clock waveform, and a small Python mark before SystemC trademark.</desc>
+  <defs>
+    <linearGradient id="chip" x2="0" y2="1"><stop stop-color="#25476d"/><stop offset="1" stop-color="#143453"/></linearGradient>
+    <linearGradient id="blue" x2="1" y2="1"><stop stop-color="#5cabe2"/><stop offset="1" stop-color="#3776ab"/></linearGradient>
+    <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#ffe873"/><stop offset="1" stop-color="#ffd343"/></linearGradient>
+    <filter id="python-shadow" x="-50%" y="-100%" width="200%" height="300%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+  <!-- Native simulation block and signal pins. Transparent outside the chip. -->
+  <g fill="none" stroke="#3776ab" stroke-width="10" stroke-linecap="round">
+    <path d="M64 18v20m42-20v20m44-20v20m42-20v20M64 218v20m42-20v20m44-20v20m42-20v20M18 64h20m-20 42h20m-20 44h20m-20 42h20m180-128h20m-20 42h20m-20 44h20m-20 42h20"/>
+  </g>
+  <rect x="33" y="33" width="190" height="190" rx="28" fill="url(#chip)" stroke="#102940" stroke-width="3"/>
+  <!-- Compact Python mark precedes the SystemC name. -->
+  <ellipse cx="61.5" cy="80" rx="11" ry="2" fill="#061b2d" opacity=".55" filter="url(#python-shadow)"/>
+  <g transform="translate(48 50) scale(.245)">
+    <path fill="url(#blue)" fill-rule="evenodd" d="M55.023-0.077c-25.971,0-26.25,10.081-26.25,12.156c0,3.148,0,12.594,0,12.594h26.75v3.781 c0,0-27.852,0-37.375,0c-7.949,0-17.938,4.833-17.938,26.25c0,19.673,7.792,27.281,15.656,27.281c2.335,0,9.344,0,9.344,0 s0-9.765,0-13.125c0-5.491,2.721-15.656,15.406-15.656c15.91,0,19.971,0,26.531,0c3.902,0,14.906-1.696,14.906-14.406 c0-13.452,0-17.89,0-24.219C82.054,11.426,81.515-0.077,55.023-0.077z M40.273,8.392c2.662,0,4.813,2.15,4.813,4.813 c0,2.661-2.151,4.813-4.813,4.813s-4.813-2.151-4.813-4.813C35.46,10.542,37.611,8.392,40.273,8.392z"/>
+    <path fill="url(#gold)" fill-rule="evenodd" d="M55.397,109.923c25.959,0,26.282-10.271,26.282-12.156c0-3.148,0-12.594,0-12.594H54.897v-3.781 c0,0,28.032,0,37.375,0c8.009,0,17.938-4.954,17.938-26.25c0-23.322-10.538-27.281-15.656-27.281c-2.336,0-9.344,0-9.344,0 s0,10.216,0,13.125c0,5.491-2.631,15.656-15.406,15.656c-15.91,0-19.476,0-26.532,0c-3.892,0-14.906,1.896-14.906,14.406 c0,14.475,0,18.265,0,24.219C28.366,100.497,31.562,109.923,55.397,109.923z M70.148,101.454c-2.662,0-4.813-2.151-4.813-4.813 s2.15-4.813,4.813-4.813c2.661,0,4.813,2.151,4.813,4.813S72.809,101.454,70.148,101.454z"/>
+  </g>
+  <text x="83" y="69" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" font-weight="700" fill="#eef6ff">SystemC<tspan font-size="9" baseline-shift="super">™</tspan></text>
+  <!-- AND and inverter gates connected to a small register block. -->
+  <g fill="none" stroke="#8ed7ee" stroke-width="3" stroke-linejoin="round">
+    <path d="M55 108h20m-20 18h20M75 101h13a21 21 0 0 1 0 42H75zM109 122h22"/>
+    <path d="M131 106l27 16-27 16z"/>
+    <circle cx="163" cy="122" r="5"/>
+    <path d="M168 122h22v37h-32"/>
+    <rect x="117" y="149" width="41" height="31" rx="3"/>
+    <path d="M117 160l8 5-8 5M96 165h21M138 180v11"/>
+  </g>
+  <g fill="#ffe873"><circle cx="55" cy="108" r="3"/><circle cx="55" cy="126" r="3"/><circle cx="96" cy="165" r="3"/></g>
+  <!-- Clock transitions identify the simulation domain without small lettering. -->
+  <path d="M59 201h19v-10h16v10h17v-10h16v10h18" fill="none" stroke="#ffe873" stroke-width="3" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,44 @@
+name: Publish documentation on Read the Docs
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Read the Docs version slug (for example latest or v0.1.0)
+        required: false
+        default: latest
+permissions:
+  contents: read
+concurrency:
+  group: readthedocs-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.14'
+      - name: Check documentation
+        run: |
+          uv sync --locked --only-group docs
+          uv run --no-sync sphinx-build -W -b html docs build/docs
+      - name: Trigger Read the Docs build
+        env:
+          RTD_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}
+          RTD_PROJECT: ${{ vars.READTHEDOCS_PROJECT || 'pysystemc' }}
+          RTD_VERSION: ${{ inputs.version || (github.ref_type == 'tag' && github.ref_name) || 'latest' }}
+        run: |
+          if [ -z "$RTD_TOKEN" ]; then
+            echo "Configure the READTHEDOCS_TOKEN repository secret before publishing documentation." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Token $RTD_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            "https://readthedocs.org/api/v3/projects/$RTD_PROJECT/versions/$RTD_VERSION/builds/"

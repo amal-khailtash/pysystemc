@@ -5,7 +5,7 @@ import sysconfig
 from importlib.metadata import version as _package_version
 from ._logging import log, show_banner
 
-__version__ = _package_version("systemc")
+__version__ = _package_version("pysystemc")
 show_banner(__version__)
 
 cppv = 17

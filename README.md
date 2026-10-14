@@ -1,9 +1,22 @@
 # pysystemc - SystemC python binding using cppyy
 
-First attempt at taking the advantage of Python dymanic feature to bind and use [SystemC](https://systemc.org/overview/systemc/) library in an equivalent Pythonic way.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/amal-khailtash/pysystemc/main/docs/_static/logo-256x256.svg" alt="pysystemc — Python and SystemC with logic gates in a simulation chip" width="256"/>
+</p>
 
-A few other implementations try to mix and match the C++ features and implement them in Python with various difficulties and success.
-[cppyy](https://github.com/wlav/cppyy) provides a clean interface to expose C++ classes, functions, templates.
+| | |
+| --- | --- |
+| CI/CD | [![Publish](https://github.com/amal-khailtash/pysystemc/actions/workflows/publish.yml/badge.svg)](https://github.com/amal-khailtash/pysystemc/actions/workflows/publish.yml) [![Documentation workflow](https://img.shields.io/github/actions/workflow/status/amal-khailtash/pysystemc/readthedocs.yml?branch=main&label=Documentation&logo=readthedocs&logoColor=white)](https://github.com/amal-khailtash/pysystemc/actions/workflows/readthedocs.yml) |
+| Project | [![GitHub](https://img.shields.io/badge/pysystemc-29b6f6?logo=github&labelColor=0277bd)](https://github.com/amal-khailtash/pysystemc) [![PyPI](https://img.shields.io/pypi/v/pysystemc?logo=pypi&logoColor=FBE072)](https://pypi.org/project/pysystemc/) [![GitHub tag](https://img.shields.io/github/v/tag/amal-khailtash/pysystemc?logo=github&label=version)](https://github.com/amal-khailtash/pysystemc/tags) |
+| Docs | [![Read the Docs](https://readthedocs.org/projects/pysystemc/badge/?version=latest)](https://pysystemc.readthedocs.io/en/latest/) |
+| Meta | [![License](https://img.shields.io/github/license/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/blob/main/LICENSE) [![Stars](https://img.shields.io/github/stars/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/stargazers) [![Forks](https://img.shields.io/github/forks/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/forks) [![Contributors](https://img.shields.io/github/contributors/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/graphs/contributors) |
+| Standards | [![Python](https://img.shields.io/badge/python-3.14-blue?logo=python)](https://www.python.org/) [![SemVer](https://img.shields.io/badge/SemVer-2.0.0-333333?logo=semver)](https://semver.org/) [![Keep a Changelog](https://img.shields.io/badge/Keep%20a%20Changelog-1.1.0-0c7fb0?logo=keepachangelog&logoColor=white)](https://keepachangelog.com/en/1.1.0/) |
+
+Python bindings for [SystemC](https://systemc.org/overview/systemc/) using
+[cppyy](https://github.com/wlav/cppyy). Write Python testbenches and modules while
+using the native C++ simulation kernel and on-demand template instantiation.
+The PyPI distribution is `pysystemc`; the Python import namespace is
+`amal.eda.systemc`.
 
 ## Why Python and cppyy?
 
@@ -37,45 +50,28 @@ but arbitrary structural changes and Python process reset are not currently
 supported by these bindings.
 
 
-# Development
+## Quickstart
 
-To get examples working, run the following commands to install uv, create virtual environment,
-fetch and compile SystemC 2.3.4 (compiled with C++17 for now).
-The project requires Python 3.14 or newer. Load your Python environment before
-running these commands; set `UV_PYTHON` if you need to select a specific interpreter.
-Existing `UV_*` environment settings are honored. Dependencies are managed with
-uv, and distribution artifacts are built with `uv build` (or `make build`).
+Load Python 3.14 and install [uv](https://docs.astral.sh/uv/), then run:
 
 ```bash
 make setup
+make example-hello-py
+make example-counter-py
+make test
 ```
 
-Install uv first if needed (`make uv`). `make setup` synchronizes Python 3.14
-dependencies, repairs CPyCppyy headers, fetches fmt, and builds pinned SystemC
-2.3.4 with pthreads through CMake. All `UV_*` settings are honored.
-Individual setup targets remain available, including the Autotools alternative
-`make setup-systemc`.
+Setup installs dependencies and builds SystemC 2.3.4 with pthreads. Existing
+`UV_*` environment settings are honored. To run the C++ hello example, use
+`make example-hello-cpp`.
 
-Run validation with `make test`, detailed results with `make test-verbose`, and
-Python coverage with `make coverage`. Coverage includes simulation subprocesses;
-native C++ execution is not included in the percentage.
+Detailed setup, validation, and logging instructions are in the
+[documentation](https://pysystemc.readthedocs.io/en/latest/).
 
-Run a few examples:
+## Examples
 
-```bash
-# hello example C++/Python version
-$ make example-hello-cpp
-$ make example-hello-py
-
-# counter example C++/Python version
-$ make example-counter-cpp
-$ make example-counter-py
-```
-
-
-# Examples
-
-A convient script `examples/run_sysc_cpp.py` is provided that can run any SystemC C++ code.  It reads the source code provided on the command line and calls `sc_main()`, basically running the SystemC simulation.
+`examples/run_sysc_cpp.py` loads C++ source files and runs them through the
+native SystemC startup wrapper.
 
 There are a few C++ and Python examples in `examples/` directory.
 
@@ -84,7 +80,10 @@ Some examples adapted from:
 * [Brief SystemC getting started tutorial](https://github.com/AleksandarKostovic/SystemC-tutorial/)
 
 
-# References
+For build options, header repair, logging controls, and validation, see the
+[development guide](https://pysystemc.readthedocs.io/en/latest/intro/development.html).
+
+## References
 
 * [Accellera](https://accellera.org/)
   * [SystemC](https://github.com/accellera-official/systemc)
@@ -104,81 +103,3 @@ Scripting Languages](https://dvcon-proceedings.org/wp-content/uploads/transparen
   * [CFFI](https://cffi.readthedocs.io/en/stable/)
   * [Boost.Python](https://www.boost.org/doc/libs/1_86_0/libs/python/doc/html/index.html)
   * [Shiboken](https://doc.qt.io/qtforpython-6/shiboken6/index.html)
-
-## Binding repair and validation
-
-`make fix-cppyy` repairs distributions that install `cpycppyy` headers while
-cppyy expects `CPyCppyy/API.h`. Package initialization also discovers the active
-Python headers and repairs this alias when the environment is writable.
-`make test` checks Python method callbacks, lifecycle hooks, counter sensitivity,
-four-bit overflow, and VCD declarations/transitions in separate processes.
-
-Both `make setup-systemc` (Autotools) and `make setup-systemc-cmake` use
-pthreads by default and install into `build/deps/systemc-install`. Python 3.14
-requires native pthread stacks for the tested Python thread processes.
-The bindings and C++ runner discover the installed library automatically:
-
-```bash
-make setup-systemc-cmake  # or make setup-systemc
-make example-simple_fifo-py
-make test
-```
-
-All three regression tests run without library-location variables. Advanced
-installations may override `SYSTEMC_INSTALL_DIR`; `SYSTEMC_LIBRARY_DIR` remains
-available for explicit library selection. The bridge is compiled by cppyy at
-runtime and loads `libsystemc.so`; it is not yet a prelinked Python extension.
-The current entry bridge still reads kernel entry source from the submodule.
-
-See the documentation examples page for verified behavior and current limitations.
-
-## fmt and binding diagnostics
-
-Run `make setup-fmt` before Python examples to fetch fmt 11.2.0 headers, or set
-`FMT_HOME` to an existing fmt installation prefix. The native JIT bridge uses fmt
-in header-only mode. A system installation visible to the compiler is also
-supported. fmt is distributed under its upstream MIT license; the download
-includes its license file. Installed Python packages require accessible fmt
-headers too.
-
-Binding debug messages are opt-in and go to stderr:
-
-```bash
-PYSYSTEMC_LOG_LEVEL=DEBUG make example-hello-py
-PYSYSTEMC_LOG_LEVEL=DEBUG PYSYSTEMC_COLOR=always make example-counter-py
-```
-
-`PYSYSTEMC_COLOR=auto` is the default and enables colors only on a terminal.
-Set `PYSYSTEMC_COLOR=never` to disable them. `NO_COLOR` disables automatic
-colors; explicitly setting `PYSYSTEMC_COLOR=always` takes precedence. Errors remain visible
-without debug mode. SystemC reports and example output retain their native form.
-
-
-Additional upstream ports: `make example-forkjoin-py` exercises dynamic spawning,
-joins and waits; `make example-report-py` exercises native report rules with a
-Python handler. Tests compare both against their original C++ examples.
-`make docs` builds Sphinx/Read the Docs HTML into `build/docs`.
-The reset example is a draft: Python reset configuration raises
-`NotImplementedError` until native unwind handling is safe across cppyy callbacks.
-
-
-The binding exposes `amal.eda.systemc.__version__` from installed package metadata
-and prints its version before the SystemC kernel banner. Set
-`PYSC_COPYRIGHT_MESSAGE=DISABLE` to suppress the binding banner. Debug messages
-require `PYSYSTEMC_LOG_LEVEL=DEBUG`; to force colored diagnostics even when your
-environment sets `NO_COLOR`, run:
-
-```bash
-PYSYSTEMC_LOG_LEVEL=DEBUG PYSYSTEMC_COLOR=always make example-hello-py
-```
-
-
-PyPI/TestPyPI publishing and Read the Docs setup are described in
-[the publishing guide](https://pysystemc.readthedocs.io/en/latest/intro/publishing.html). Publication is manual; the
-workflow defaults to TestPyPI. Native SystemC and fmt are external dependencies.
-
-
-C++ runner progress notes use header-only spdlog with external fmt, written to
-stderr. `make setup-spdlog` fetches the headers; `make setup` includes this step.
-Set `SPDLOG_HOME` to use an existing header installation. Information notes are
-visible by default and follow the same `PYSYSTEMC_COLOR`/`NO_COLOR` controls.

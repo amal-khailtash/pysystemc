@@ -10,10 +10,10 @@ Python bindings to native SystemC with on-demand C++ templates through cppyy.
    :maxdepth: 2
 
    intro/setup
+   intro/development
    intro/examples
    intro/release_notes
    intro/references
-   intro/publishing
 
 .. toctree::
    :caption: API Reference

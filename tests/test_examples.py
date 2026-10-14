@@ -105,7 +105,7 @@ def test_banner_version_colors_and_disable(tmp_path):
     result = subprocess.run(command, cwd=tmp_path, env=env,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60)
     assert result.returncode == 0, result.stdout
-    banner = f"pysystemc {version('systemc')}"
+    banner = f"pysystemc {version('pysystemc')}"
     assert result.stdout.index(banner) < result.stdout.index("SystemC 2.3.4-Accellera")
     assert "\x1b[" in result.stdout
     assert "[pysystemc:C++:DEBUG]" in result.stdout

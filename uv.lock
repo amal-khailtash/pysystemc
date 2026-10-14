@@ -461,6 +461,51 @@ wheels = [
 ]
 
 [[package]]
+name = "pysystemc"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "cppyy" },
+    { name = "loguru" },
+    { name = "rich" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "myst-parser" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "sphinx" },
+    { name = "sphinx-rtd-theme" },
+]
+docs = [
+    { name = "myst-parser" },
+    { name = "sphinx" },
+    { name = "sphinx-rtd-theme" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cppyy", specifier = ">=3.5" },
+    { name = "loguru", specifier = ">=0.7" },
+    { name = "rich", specifier = ">=14" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "myst-parser", specifier = ">=4" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-cov", specifier = ">=7.0" },
+    { name = "sphinx", specifier = ">=8" },
+    { name = "sphinx-rtd-theme", specifier = ">=3" },
+]
+docs = [
+    { name = "myst-parser", specifier = ">=4" },
+    { name = "sphinx", specifier = ">=8" },
+    { name = "sphinx-rtd-theme", specifier = ">=3" },
+]
+
+[[package]]
 name = "pytest"
 version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -668,51 +713,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz", hash = "sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d", size = 16080, upload-time = "2024-07-29T01:10:09.332Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/52/a7/d2782e4e3f77c8450f727ba74a8f12756d5ba823d81b941f1b04da9d033a/sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl", hash = "sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331", size = 92072, upload-time = "2024-07-29T01:10:08.203Z" },
-]
-
-[[package]]
-name = "systemc"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "cppyy" },
-    { name = "loguru" },
-    { name = "rich" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "myst-parser" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "sphinx" },
-    { name = "sphinx-rtd-theme" },
-]
-docs = [
-    { name = "myst-parser" },
-    { name = "sphinx" },
-    { name = "sphinx-rtd-theme" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cppyy", specifier = ">=3.5" },
-    { name = "loguru", specifier = ">=0.7" },
-    { name = "rich", specifier = ">=14" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "myst-parser", specifier = ">=4" },
-    { name = "pytest", specifier = ">=8.3.4" },
-    { name = "pytest-cov", specifier = ">=7.0" },
-    { name = "sphinx", specifier = ">=8" },
-    { name = "sphinx-rtd-theme", specifier = ">=3" },
-]
-docs = [
-    { name = "myst-parser", specifier = ">=4" },
-    { name = "sphinx", specifier = ">=8" },
-    { name = "sphinx-rtd-theme", specifier = ">=3" },
 ]
 
 [[package]]

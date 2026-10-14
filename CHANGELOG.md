@@ -6,6 +6,21 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Read the Docs workflow with documentation checks and hosted build requests for
+  main, version tags, and manual runs.
+- A circuit-chip logo with a compact Python emblem, SystemC™ name, logic gates,
+  clock waveform, PNG variants and favicon.
+- README status badges for publishing, documentation, package metadata and standards.
+
+### Changed
+
+- Name the distribution `pysystemc`, retaining the `amal.eda.systemc` namespace;
+  update version lookup, PyPI badges, dependency lock and package artifacts.
+- Keep the README concise and move detailed development notes into a Sphinx page.
+- Keep personal publishing instructions in ignored local records rather than public docs.
+
 ## [0.1.0] - 2026-10-14
 
 ### Added
