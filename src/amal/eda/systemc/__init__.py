@@ -40,9 +40,12 @@ if (_api_alias / "API.h").is_file():
     """)
 
 # fmt is header-only in the JIT bridge; no extra shared-library ABI is needed.
+_bundled = pathlib.Path(__file__).parent / "_native"
 _fmt_home = os.environ.get("FMT_HOME")
 _fmt_include = (pathlib.Path(_fmt_home) / "include" if _fmt_home else
                 pathlib.Path(__file__).resolve().parents[4] / "build/deps/fmt-11.2.0/include")
+if not _fmt_home and (_bundled / "include/fmt/format.h").is_file():
+    _fmt_include = _bundled / "include"
 if (_fmt_include / "fmt/format.h").is_file():
     cppyy.add_include_path(str(_fmt_include))
 else:
@@ -57,10 +60,10 @@ cppyy.add_include_path(str(pathlib.Path(__file__).parent / "sc_core"))
 # available, but ordinary checkout use requires no library-location settings.
 _repository = pathlib.Path(__file__).resolve().parents[4]
 SYSTEMC_HOME = str(pathlib.Path(os.environ.get("SYSTEMC_SOURCE_DIR",
-    os.environ.get("SYSTEMC_HOME", str(_repository / "submodules/systemc")))))
+    os.environ.get("SYSTEMC_HOME", str(_bundled if (_bundled / "src").exists() else _repository / "submodules/systemc")))))
 _install = pathlib.Path(os.environ.get("SYSTEMC_INSTALL_DIR",
     str(_repository / "build/deps/systemc-install")))
-_prefixes = [_install, pathlib.Path(SYSTEMC_HOME)]
+_prefixes = ([_install] if "SYSTEMC_INSTALL_DIR" in os.environ else []) + [_bundled, _install, pathlib.Path(SYSTEMC_HOME)]
 _headers = next((prefix / "include" for prefix in _prefixes
                  if (prefix / "include/systemc").is_file()), None)
 if _headers is None:

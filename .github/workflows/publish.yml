@@ -13,13 +13,24 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux_2_28_x86_64
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: '3.14'
-      - name: Build distributions
-        run: uv build
+      - name: Build native dependencies and distributions
+        run: |
+          uv build
+          uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
+          rm dist/*.whl
+          mv repaired/*.whl dist/
+      - name: Install and test bundled wheel
+        run: |
+          wheel=$(realpath dist/*.whl)
+          check=$(realpath tools/check_wheel.py)
+          cd /tmp
+          uv run --no-project --with "$wheel" python -c "import subprocess, sys; subprocess.run([sys.executable, sys.argv[1]], check=True, timeout=120)" "$check"
       - uses: actions/upload-artifact@v4
         with:
           name: distributions

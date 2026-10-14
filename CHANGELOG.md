@@ -6,6 +6,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-14
+
 ### Added
 
 - Read the Docs workflow with documentation checks and hosted build requests for
@@ -15,6 +17,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - README status badges for publishing, documentation, package metadata and standards.
 
 ### Changed
+
+- Build fmt, spdlog and pthreads SystemC during distribution builds and bundle
+  their native resources in platform wheels, staging builds outside the source tree.
+- Validate installed wheels with runtime C++ compilation and pthread waits; build
+  publishing wheels in manylinux 2.28 and repair them with auditwheel.
 
 - Name the distribution `pysystemc`, retaining the `amal.eda.systemc` namespace;
   update version lookup, PyPI badges, dependency lock and package artifacts.
@@ -62,8 +69,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 - Python reset configuration is rejected: cppyy consumes native SystemC unwind
   exceptions. The upstream reset port remains a failing draft.
-- The entry bridge still reads upstream kernel source; independent installed-artifact
-  validation, broad feature/example coverage, TLM and CI remain release gates.
+- Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/amal-khailtash/pysystemc/releases/tag/v0.1.0

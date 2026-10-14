@@ -14,10 +14,14 @@ into ``build/deps/systemc-install``. CMake build files live in
 Override ``SYSTEMC_INSTALL_DIR`` or ``SYSTEMC_LIBRARY_DIR`` for another compatible
 installation. Python 3.14 thread callbacks require the tested pthread backend.
 
-The bridge is compiled by cppyy at runtime and loads ``libsystemc.so``. Its entry
-wrapper still reads upstream kernel source; an installed wheel does not bundle
-SystemC. fmt and spdlog headers are also external dependencies. Use ``FMT_HOME``
-and ``SPDLOG_HOME`` for existing installations.
+``uv build`` fetches and builds fmt, spdlog and pthreads SystemC 2.3.4, then
+stages dependencies under ``build/package-native`` and bundles native libraries, headers, license notices and the entry-wrapper source
+in a platform-specific wheel. cppyy still compiles the binding adapters and user
+models at runtime. Source distributions perform native preparation when built
+into a wheel. Building requires curl, a C++17 compiler and CMake.
+
+Installed wheels discover their bundled dependencies automatically. ``FMT_HOME``
+and ``SPDLOG_HOME`` remain available for explicit development installations.
 
 Header repair
 -------------

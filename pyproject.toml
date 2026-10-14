@@ -1,6 +1,6 @@
 [project]
 name = "pysystemc"
-version = "0.1.0"
+version = "0.2.0"
 description = "SystemC Python Binding using cppyy"
 readme = "README.md"
 license = "MIT"
@@ -26,10 +26,13 @@ Issues = "https://github.com/amal-khailtash/pysystemc/issues"
 [tool.uv.build-backend]
 module-name = "amal"
 namespace = true
+source-include = ["build_backend/**"]
+source-exclude = ["src/amal/eda/systemc/_native/**"]
 
 [build-system]
-requires = ["uv_build>=0.9,<0.14"]
-build-backend = "uv_build"
+requires = ["uv_build>=0.9,<0.14", "cmake>=3.20"]
+build-backend = "backend"
+backend-path = ["build_backend"]
 
 [dependency-groups]
 dev = [

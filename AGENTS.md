@@ -10,7 +10,7 @@ Do not restrict template widths or types to a precompiled list.
 ## Environment and build
 
 - Use uv for dependency management, locking, environment synchronization, and
-  distribution builds. Use `uv_build` as the backend; do not introduce pip or Hatch.
+  distribution builds. Use the native preparation backend with `uv_build` for packaging; do not introduce pip or Hatch.
 - Honor existing `UV_*` environment variables. Do not overwrite interpreter,
   cache, index, or installation settings without user authorization.
 - Python 3.14 is the current baseline. If the selected environment disagrees,
