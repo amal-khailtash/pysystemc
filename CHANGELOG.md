@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Manual PyPI/TestPyPI trusted publishing workflow and Read the Docs configuration.
+- Separate documentation dependency group for native-free hosted documentation builds.
+
 - Aggregate `make setup`, configurable native build paths, verbose tests, Python
   subprocess coverage, and Sphinx documentation with the Read the Docs theme.
 - Header-only fmt dependency and optional colored native/Python diagnostics.

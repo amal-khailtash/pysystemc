@@ -140,3 +140,8 @@ environment sets `NO_COLOR`, run:
 ```bash
 PYSYSTEMC_LOG_LEVEL=DEBUG PYSYSTEMC_COLOR=always make example-hello-py
 ```
+
+
+PyPI/TestPyPI publishing and Read the Docs setup are described in
+[the publishing guide](https://pysystemc.readthedocs.io/en/latest/intro/publishing.html). Publication is manual; the
+workflow defaults to TestPyPI. Native SystemC and fmt are external dependencies.

@@ -204,12 +204,13 @@ wheels = [
 [[package]]
 name = "cppyy"
 version = "3.5.0"
-source = { git = "https://github.com/wlav/cppyy#2d28e09af72dd7f951c341d74266a0c31599d8a8" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cppyy-backend" },
     { name = "cppyy-cling" },
     { name = "cpycppyy" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/17/9d/cddfb8112428bd1b4b8a240c25131111bc6c249c3fb0856f2b1db2adad81/cppyy-3.5.0.tar.gz", hash = "sha256:b9cfd48bd0c6e0c7399a82cca2105d7d90699adb3083904aaf30bf3632224e79", size = 29893, upload-time = "2024-12-17T05:52:17.957Z" }
 
 [[package]]
 name = "cppyy-backend"
@@ -687,10 +688,15 @@ dev = [
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
 ]
+docs = [
+    { name = "myst-parser" },
+    { name = "sphinx" },
+    { name = "sphinx-rtd-theme" },
+]
 
 [package.metadata]
 requires-dist = [
-    { name = "cppyy", git = "https://github.com/wlav/cppyy" },
+    { name = "cppyy", specifier = ">=3.5" },
     { name = "loguru", specifier = ">=0.7" },
     { name = "rich", specifier = ">=14" },
 ]
@@ -700,6 +706,11 @@ dev = [
     { name = "myst-parser", specifier = ">=4" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=7.0" },
+    { name = "sphinx", specifier = ">=8" },
+    { name = "sphinx-rtd-theme", specifier = ">=3" },
+]
+docs = [
+    { name = "myst-parser", specifier = ">=4" },
     { name = "sphinx", specifier = ">=8" },
     { name = "sphinx-rtd-theme", specifier = ">=3" },
 ]
