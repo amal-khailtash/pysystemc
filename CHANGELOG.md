@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Discover CPyCppyy API headers in the active environment before importing cppyy,
+  preventing API-discovery warnings with uv cached installations.
+
 - Exclude ZIP directory entries from wheel RECORD so auditwheel can inspect and
   repair bundled native libraries.
 

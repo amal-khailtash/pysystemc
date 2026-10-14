@@ -2,6 +2,8 @@ import os
 import sys
 import pathlib
 import sysconfig
+import shutil
+from importlib.metadata import files as _distribution_files
 from importlib.metadata import version as _package_version
 from ._logging import log, show_banner
 
@@ -22,11 +24,27 @@ os.environ.setdefault("EXTRA_CLING_ARGS", f"-std=c++{cppv}")
 # bindings include CPyCppyy/API.h. Repair only the active environment.
 _api_parent = pathlib.Path(sys.prefix) / "include" / "site" / f"python{sys.version_info.major}.{sys.version_info.minor}"
 _api_alias = _api_parent / "CPyCppyy"
+if not (_api_alias / "API.h").is_file() and not (_api_parent / "cpycppyy/API.h").is_file():
+    # uv can retain wheel data headers in its cache rather than sys.prefix.
+    # Copy into this environment so generated uppercase includes work without
+    # modifying shared cache contents.
+    for _header in _distribution_files("CPyCppyy") or ():
+        if _header.name == "API.h":
+            _header_dir = pathlib.Path(_header.locate()).parent
+            if (_header_dir / "API.h").is_file():
+                shutil.copytree(_header_dir, _api_alias, dirs_exist_ok=True)
+                break
 if (_api_parent / "cpycppyy" / "API.h").is_file() and not _api_alias.exists():
     try:
         _api_alias.symlink_to("cpycppyy", target_is_directory=True)
     except OSError as error:
         raise RuntimeError("CPyCppyy headers need repair; run make fix-cppyy in your environment") from error
+
+# uv may load cppyy from a cache outside sys.prefix. Select the active
+# environment's header parent before cppyy performs its import-time lookup.
+# cppyy expects this parent directory, despite its diagnostic wording.
+if (_api_alias / "API.h").is_file():
+    os.environ.setdefault("CPPYY_API_PATH", str(_api_parent))
 
 import cppyy
 cppyy.add_include_path(sysconfig.get_path("include"))
