@@ -6,6 +6,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Changed
+
+- Update GitHub Actions to Node.js 24 releases for publishing and documentation.
+
 ## [0.2.0] - 2026-10-14
 
 ### Added
