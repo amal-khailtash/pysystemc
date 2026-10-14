@@ -13,6 +13,16 @@ SYSTEMC_HOME = os.environ.get("SYSTEMC_HOME", str(pathlib.Path(__file__).resolve
 
 
 def load_systemc():
+    """Load native SystemC and the external-fmt spdlog note adapter."""
+    root = pathlib.Path(__file__).resolve().parents[1]
+    for variable, default in (("FMT_HOME", "fmt-11.2.0"),
+                              ("SPDLOG_HOME", "spdlog-1.15.3")):
+        prefix = pathlib.Path(os.environ.get(variable, str(root / "build/deps" / default)))
+        if not (prefix / "include").is_dir():
+            raise RuntimeError(f"{variable} headers missing; run make setup")
+        cppyy.add_include_path(str(prefix / "include"))
+    cppyy.add_include_path(str(root / "src/amal/eda/systemc/sc_core"))
+    cppyy.include("runner_log.h")
     install = pathlib.Path(os.environ.get("SYSTEMC_INSTALL_DIR",
         str(pathlib.Path(__file__).resolve().parents[1] / "build/deps/systemc-install")))
     prefixes = [install, pathlib.Path(SYSTEMC_HOME)]
@@ -33,26 +43,30 @@ def load_systemc():
 
 
 def run_sysc_cpp(source_files):
-    print("-" * 80)
-    print("Running SystemC C++ code ...")
+    """Compile sources and enter the native kernel startup wrapper."""
+    cppyy.gbl.pysystemc.runner_note("Running SystemC C++ code")
 
     for src in source_files:
         if src == "++":
             break
 
-        print(f"  Reading '{src}' ...")
+        cppyy.gbl.pysystemc.runner_note(f"Reading {src}")
         source_path = pathlib.Path(src)
         cppyy.add_include_path(str(source_path.parent))
 
         with open(src, "r") as fd:
             cppyy.cppdef(fd.read())
 
-    argc = len(sys.argv) - len(source_files)
+    # Recompile the pinned startup wrapper after defining the user's sc_main
+    # so Cling resolves it to that JIT symbol, rather than a shared-library stub.
+    startup = pathlib.Path(SYSTEMC_HOME) / "src/sysc/kernel/sc_main_main.cpp"
+    cppyy.cppdef(startup.read_text())
+    argc = 1
     argv = [sys.argv[0]]
-    print("-" * 80)
-    print(f"Running sc_main ({argc}, {argv}) ...")
-    print("-" * 80)
-    cppyy.gbl.sc_main(argc, argv)
+    cppyy.gbl.pysystemc.runner_note(f"Starting sc_main with {argc} arguments: {argv}")
+    sys.stdout.flush()
+    cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
+    return int(cppyy.gbl.sc_core.sc_elab_and_sim(argc, argv))
 
 
 def main():
@@ -63,8 +77,8 @@ def main():
 
     load_systemc()
 
-    run_sysc_cpp(args.source)
+    return run_sysc_cpp(args.source)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -116,3 +116,24 @@ def test_banner_version_colors_and_disable(tmp_path):
     assert banner not in result.stdout
     assert "SystemC 2.3.4-Accellera" in result.stdout
     assert "\x1b[" not in result.stdout
+
+
+def test_cpp_runner_kernel_banner(tmp_path):
+    """Native startup prints the kernel banner and honors its suppression flag."""
+    command = [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"),
+               str(ROOT / "examples/helloworld/cpp/helloworld.cpp")]
+    env = dict(os.environ)
+    env.pop("SYSTEMC_DISABLE_COPYRIGHT_MESSAGE", None)
+    env.pop("SC_COPYRIGHT_MESSAGE", None)
+    result = subprocess.run(command, cwd=tmp_path, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60)
+    assert result.returncode == 0, result.stdout
+    assert "[pysystemc:C++:info]" in result.stdout
+    assert "Reading " in result.stdout
+    assert result.stdout.index("SystemC 2.3.4-Accellera") < result.stdout.index("Hello world using approach 1")
+    env["SC_COPYRIGHT_MESSAGE"] = "DISABLE"
+    result = subprocess.run(command, cwd=tmp_path, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60)
+    assert result.returncode == 0, result.stdout
+    assert "SystemC 2.3.4-Accellera" not in result.stdout
+    assert "Hello world using approach 2" in result.stdout

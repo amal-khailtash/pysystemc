@@ -5,6 +5,37 @@ First attempt at taking the advantage of Python dymanic feature to bind and use 
 A few other implementations try to mix and match the C++ features and implement them in Python with various difficulties and success.
 [cppyy](https://github.com/wlav/cppyy) provides a clean interface to expose C++ classes, functions, templates.
 
+## Why Python and cppyy?
+
+SystemC provides a C++ simulation kernel, typed channels, and a rich modeling
+library. Python adds a convenient way to assemble models and experiment with
+them. You can change stimulus, testbench logic, logging, waveform selection, and
+model connections in Python, then rerun the simulation without rebuilding the
+existing C++ model libraries.
+
+cppyy makes native C++ classes and templates accessible from Python. For example,
+`sc_uint[17]`, `sc_biguint[137]`, and `sc_signal[sc_uint[17]]` can be requested
+when a script runs, rather than requiring a binding library with a predefined
+list of types and widths. Its Cling interpreter compiles the necessary template
+specializations and bridge code on demand. This still involves compilation, but
+it happens within the running Python environment instead of a separate C++
+build-and-link cycle.
+
+Python modules can register methods and threads with the native SystemC kernel,
+while existing C++ models continue to execute as C++. This lets a testbench load
+configuration files, generate parameterized stimulus, inspect results, and use
+Python analysis tools around the same simulation. SystemC still controls time,
+delta cycles, and process scheduling; Python callbacks add overhead when the
+simulation crosses the language boundary.
+
+This flexibility is especially useful during exploration and verification:
+change a test scenario or a traced signal in a script and rerun it. Changes to
+the implementation of a compiled C++ model still require rebuilding that model.
+SystemC's elaboration rules also still apply: most structural connections are
+made before simulation starts. Dynamic processes can be spawned during a run,
+but arbitrary structural changes and Python process reset are not currently
+supported by these bindings.
+
 
 # Development
 
@@ -145,3 +176,9 @@ PYSYSTEMC_LOG_LEVEL=DEBUG PYSYSTEMC_COLOR=always make example-hello-py
 PyPI/TestPyPI publishing and Read the Docs setup are described in
 [the publishing guide](https://pysystemc.readthedocs.io/en/latest/intro/publishing.html). Publication is manual; the
 workflow defaults to TestPyPI. Native SystemC and fmt are external dependencies.
+
+
+C++ runner progress notes use header-only spdlog with external fmt, written to
+stderr. `make setup-spdlog` fetches the headers; `make setup` includes this step.
+Set `SPDLOG_HOME` to use an existing header installation. Information notes are
+visible by default and follow the same `PYSYSTEMC_COLOR`/`NO_COLOR` controls.

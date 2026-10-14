@@ -24,6 +24,9 @@ BUILD_JOBS ?= 8
 FMT_VERSION := 11.2.0
 FMT_HOME ?= $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION)
 export FMT_HOME
+SPDLOG_VERSION := 1.15.3
+SPDLOG_HOME ?= $(MAKEFILE_DIR)/build/deps/spdlog-$(SPDLOG_VERSION)
+export SPDLOG_HOME
 
 run     := uv run
 python  := $(run) python
@@ -49,7 +52,7 @@ ruff    := $(run) ruff
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ----------------------------------------------------------------------------------------------------------------------
-# setup: ## Set up Python dependencies, CPyCppyy headers, fmt, and pthreads SystemC 2.3.4
+# setup: ## Set up Python dependencies, CPyCppyy headers, fmt/spdlog, and pthreads SystemC 2.3.4
 # ----------------------------------------------------------------------------------------------------------------------
 # Recursive recipes enforce order even when the caller uses make -j.
 # uv sync creates the environment and honors the caller's UV_* settings.
@@ -58,6 +61,7 @@ setup:
 	$(MAKE) uv-sync
 	$(MAKE) fix-cppyy
 	$(MAKE) setup-fmt
+	$(MAKE) setup-spdlog
 	$(MAKE) setup-systemc-cmake
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -155,6 +159,15 @@ setup-fmt:
 	mkdir -p $(MAKEFILE_DIR)/build/deps
 	curl -fL https://github.com/fmtlib/fmt/archive/refs/tags/$(FMT_VERSION).tar.gz -o $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION).tar.gz
 	tar -xzf $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION).tar.gz -C $(MAKEFILE_DIR)/build/deps
+
+# ----------------------------------------------------------------------------------------------------------------------
+# setup-spdlog: ## Download pinned spdlog headers for fmt-based C++ runner logging
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: setup-spdlog
+setup-spdlog:
+	mkdir -p $(MAKEFILE_DIR)/build/deps
+	curl -fL https://github.com/gabime/spdlog/archive/refs/tags/v$(SPDLOG_VERSION).tar.gz -o $(MAKEFILE_DIR)/build/deps/spdlog-$(SPDLOG_VERSION).tar.gz
+	tar -xzf $(MAKEFILE_DIR)/build/deps/spdlog-$(SPDLOG_VERSION).tar.gz -C $(MAKEFILE_DIR)/build/deps
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##@ Build and validation:

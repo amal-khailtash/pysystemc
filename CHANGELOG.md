@@ -6,11 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-14
+
 ### Added
 
+- spdlog 1.15.3 with external fmt for colored C++ runner information notes.
 - Manual PyPI/TestPyPI trusted publishing workflow and Read the Docs configuration.
 - Separate documentation dependency group for native-free hosted documentation builds.
-
 - Aggregate `make setup`, configurable native build paths, verbose tests, Python
   subprocess coverage, and Sphinx documentation with the Read the Docs theme.
 - Header-only fmt dependency and optional colored native/Python diagnostics.
@@ -33,8 +35,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- C++ runner enters native kernel startup, including its banner, and returns the simulation exit status.
 - Explicit `PYSYSTEMC_COLOR=always` enables colors even when `NO_COLOR` is set.
-
 - CPyCppyy header discovery and compatibility alias; suppress its case-path diagnostic.
 - Native process hosts, callback dispatch and bound Python callable lifetime.
 - Named VCD tracing through native signal storage and four-bit counter overflow.
@@ -48,10 +50,5 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - The entry bridge still reads upstream kernel source; independent installed-artifact
   validation, broad feature/example coverage, TLM and CI remain release gates.
 
-## Initial prototype
-
-The existing project metadata identifies the prototype as version 0.1.0. Its
-cppyy bindings and hello/counter/FIFO examples predate this changelog. No release
-date or publication status is asserted here.
-
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/commits/main/
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/amal-khailtash/pysystemc/releases/tag/v0.1.0
