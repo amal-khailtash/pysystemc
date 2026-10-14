@@ -4,7 +4,7 @@ from amal.eda.systemc import main, sc_core
 
 
 def hello1():
-    print("Hello world using approach 1")
+    print("\nHello world using approach 1")
 
 
 class HelloWorld(sc_core.sc_module):

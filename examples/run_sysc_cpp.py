@@ -3,21 +3,32 @@ import os
 import pathlib
 import sys
 
+os.environ.setdefault("EXTRA_CLING_ARGS", "-std=c++17")
+
 import cppyy
 
 __version__ = "0.1.0"
 
-SYSTEMC_HOME = os.environ["SYSTEMC_HOME"]
+SYSTEMC_HOME = os.environ.get("SYSTEMC_HOME", str(pathlib.Path(__file__).resolve().parents[1] / "submodules/systemc"))
 
 
 def load_systemc():
-    cppyy.add_include_path(f"{SYSTEMC_HOME}/include")
-    cppyy.add_library_path(f"{SYSTEMC_HOME}/lib-linux64")
+    install = pathlib.Path(os.environ.get("SYSTEMC_INSTALL_DIR",
+        str(pathlib.Path(__file__).resolve().parents[1] / "build/deps/systemc-install")))
+    prefixes = [install, pathlib.Path(SYSTEMC_HOME)]
+    headers = next(prefix / "include" for prefix in prefixes
+                   if (prefix / "include/systemc").is_file())
+    cppyy.add_include_path(str(headers))
+    override = os.environ.get("SYSTEMC_LIBRARY_DIR")
+    directories = ([pathlib.Path(override)] if override else
+                   [prefix / name for prefix in prefixes
+                    for name in ("lib", "lib64", "lib-linux64")])
+    library = next(directory / "libsystemc.so" for directory in directories
+                   if (directory / "libsystemc.so").is_file())
+    cppyy.add_library_path(str(library.parent))
+    cppyy.load_library(str(library))
 
-    cppyy.load_library("systemc")
-    # # cppyy.load_library(f"{SYSTEMC_HOME}/lib-linux64/libsystemc.so")
-    # cppyy.load_reflection_info(f"{SYSTEMC_HOME}/lib-linux64/libsystemc.so")
-
+    cppyy.cppdef("#define SC_INCLUDE_DYNAMIC_PROCESSES")
     cppyy.include("systemc.h")
 
 

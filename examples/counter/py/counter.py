@@ -40,11 +40,11 @@ class Counter(sc_core.sc_module):
         # At every rising edge of clock we check if reset is active
         if self.reset.read() == 1:
             # If active, we load the counter output with 4'b0000
-            self.count = 0
+            self.count = sc_dt.sc_uint[4](0)
             self.counter_out.write(self.count)
         # If enable is active, then we increment the counter
         elif self.enable.read() == 1:
-            self.count = self.count + 1
+            self.count = sc_dt.sc_uint[4](int(self.count) + 1)
             self.counter_out.write(self.count)
             print(f"@{sc_core.sc_time_stamp()} :: Incremented Counter {self.counter_out.read()}")
 

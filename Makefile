@@ -4,19 +4,26 @@ MAKEFILE_DIR   = $(patsubst %/,%,$(dir $(realpath $(firstword $(MAKEFILE_LIST)))
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-export UV_PYTHON=/tool/pandora64/.package/miniforge3-3.13.2/bin/python
+# Resolve the active environment's header suffix only when a recipe needs it.
+# Help and setup must also work before the virtual environment exists.
+PYTHON_VERSION = $(shell .venv/bin/python -c "import sys; print(str(sys.version_info.major) + '.' + str(sys.version_info.minor))")
 
-PYTHON_VERSION := $(shell $(UV_PYTHON) -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+VENV := uv venv
 
+# CMake output locations and coroutine backend can be overridden on the command line.
+# Python callbacks require pthread stacks on Python 3.14. Both builders use it.
+SYSTEMC_BUILD_DIR ?= $(MAKEFILE_DIR)/build/deps/systemc
+SYSTEMC_INSTALL_DIR ?= $(MAKEFILE_DIR)/build/deps/systemc-install
+export SYSTEMC_INSTALL_DIR
 
-UV:=$(shell uv --version)
-ifdef UV
-	VENV := uv venv
-	PIP  := uv pip
-else
-	VENV := python -m venv
-	PIP  := python -m pip
-endif
+SYSTEMC_PTHREADS ?= ON
+# Pinned upstream release shared by both native build paths.
+SYSTEMC_VERSION := 2.3.4
+BUILD_JOBS ?= 8
+
+FMT_VERSION := 11.2.0
+FMT_HOME ?= $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION)
+export FMT_HOME
 
 run     := uv run
 python  := $(run) python
@@ -40,6 +47,18 @@ ruff    := $(run) ruff
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##@ Setup:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ----------------------------------------------------------------------------------------------------------------------
+# setup: ## Set up Python dependencies, CPyCppyy headers, fmt, and pthreads SystemC 2.3.4
+# ----------------------------------------------------------------------------------------------------------------------
+# Recursive recipes enforce order even when the caller uses make -j.
+# uv sync creates the environment and honors the caller's UV_* settings.
+.PHONY: setup
+setup:
+	$(MAKE) uv-sync
+	$(MAKE) fix-cppyy
+	$(MAKE) setup-fmt
+	$(MAKE) setup-systemc-cmake
 
 # ----------------------------------------------------------------------------------------------------------------------
 # uv: ## Install uv
@@ -84,11 +103,11 @@ add-cppyy:
 # STDCXX=14 uv add cppyy --upgrade 'cppyy @ git+https://github.com/wlav/cppyy'
 
 # ----------------------------------------------------------------------------------------------------------------------
-# fix-cppyy: ## Fix cppyy
+# fix-cppyy: ## Repair the CPyCppyy header alias in the active virtual environment
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: fix-cppyy
 fix-cppyy:
-	(cd .venv/include/site/python$(PYTHON_VERSION); ln -s cpycppyy CPyCppyy)
+	(cd .venv/include/site/python$(PYTHON_VERSION); test -e CPyCppyy/API.h || ln -s cpycppyy CPyCppyy)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -100,21 +119,106 @@ remove-cppyy:
 	uv remove cppyy
 
 # ----------------------------------------------------------------------------------------------------------------------
-# setup-systemc: ## Fetch and install SystemC submodule
+# check-systemc-version: ## Initialize the pinned submodule and verify SystemC 2.3.4
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: check-systemc-version
+check-systemc-version:
+	@test -f submodules/systemc/configure || git submodule update --init --recursive
+	@test "$$(git -C submodules/systemc describe --tags --exact-match)" = "$(SYSTEMC_VERSION)" || { echo "Expected SystemC $(SYSTEMC_VERSION); restore the pinned submodule before building." >&2; exit 1; }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# setup-systemc: ## Build and install SystemC with Autotools and pthreads
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: setup-systemc
-setup-systemc:	## Fetch and install SystemC submodule
-	@git submodule update --init --recursive
+setup-systemc: check-systemc-version
 	@( \
+		set -e; \
 		cd submodules/systemc/ ; \
-		git checkout 2.3.4     ; \
-		./configure --prefix=--prefix=$(PWD)/submodules/systemc CXXFLAGS="-DSC_CPLUSPLUS=201703L -std=c++17" ; \
-		make -j16 install; \
+		./configure --enable-pthreads --prefix=$(SYSTEMC_INSTALL_DIR) --libdir=$(SYSTEMC_INSTALL_DIR)/lib CXXFLAGS="-DSC_CPLUSPLUS=201703L -std=c++17" ; \
+		make -j$(BUILD_JOBS) install; \
 	)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# setup-systemc-cmake: ## Build and install SystemC with CMake and pthreads
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: setup-systemc-cmake
+setup-systemc-cmake: check-systemc-version
+	cmake -S submodules/systemc -B $(SYSTEMC_BUILD_DIR) -DCMAKE_CXX_STANDARD=17 -DENABLE_PTHREADS=$(SYSTEMC_PTHREADS) -DCMAKE_INSTALL_PREFIX=$(SYSTEMC_INSTALL_DIR) -DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build $(SYSTEMC_BUILD_DIR) -j$(BUILD_JOBS)
+	cmake --install $(SYSTEMC_BUILD_DIR)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# setup-fmt: ## Download pinned fmt headers for binding diagnostics (override FMT_HOME for an existing installation)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: setup-fmt
+setup-fmt:
+	mkdir -p $(MAKEFILE_DIR)/build/deps
+	curl -fL https://github.com/fmtlib/fmt/archive/refs/tags/$(FMT_VERSION).tar.gz -o $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION).tar.gz
+	tar -xzf $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION).tar.gz -C $(MAKEFILE_DIR)/build/deps
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##@ Build and validation:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ----------------------------------------------------------------------------------------------------------------------
+# build: ## Build wheel and source distribution using uv
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: build
+build:
+	uv build
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test: ## Run all subprocess regressions using the automatically discovered SystemC library
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: test
+test:
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -q
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-verbose: ## Run all subprocess regressions with verbose pytest results
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: test-verbose
+test-verbose:
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -vv
+
+# ----------------------------------------------------------------------------------------------------------------------
+# coverage: ## Run regression tests with Python binding coverage (native C++ is not measured)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: coverage
+coverage:
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing
+
+# ----------------------------------------------------------------------------------------------------------------------
+# docs: ## Build Sphinx HTML documentation with warnings treated as errors
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: docs
+docs:
+	uv run sphinx-build -W -b html docs build/docs
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##@ Examples:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-barrier-py: ## Run the upstream Python event barrier example
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-barrier-py
+example-barrier-py:
+	uv run examples/sysc/2.1/scx_barrier/main.py
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-forkjoin-py: ## Run the upstream Python dynamic process and join example
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-forkjoin-py
+example-forkjoin-py:
+	uv run examples/sysc/2.1/forkjoin/forkjoin.py
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-report-py: ## Run the upstream Python report action-rule example
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-report-py
+example-report-py:
+	uv run examples/sysc/2.1/sc_report/main.py
 
 # ----------------------------------------------------------------------------------------------------------------------
 # example-hello-cpp: ## Run the hello world example in C++
@@ -131,7 +235,7 @@ example-hello-cpp:
 .PHONY: example-hello-py
 example-hello-py:
 	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-	CPPYY_API_PATH=$(PWD)/.venv/include/site/python3.13 \
+	CPPYY_API_PATH=$(PWD)/.venv/include/site/python$(PYTHON_VERSION) \
 		uv run examples/helloworld/py/helloworld.py
 
 # ----------------------------------------------------------------------------------------------------------------------

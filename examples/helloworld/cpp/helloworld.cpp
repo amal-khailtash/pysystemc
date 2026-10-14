@@ -4,7 +4,7 @@ using namespace sc_core;
 
 void hello1()
 {
-  std::cout << "Hello world using approach 1" << std::endl;
+  std::cout << std::endl << "Hello world using approach 1" << std::endl;
 }
 
 struct HelloWorld

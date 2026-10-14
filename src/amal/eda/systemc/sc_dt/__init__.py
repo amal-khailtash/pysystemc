@@ -3,7 +3,7 @@ import os
 cppv = 17
 # cppv = 14
 # os.environ["CLING_STANDARD_PCH"] = os.path.expanduser(os.path.join("~", f"cling_standard_native_{cppv}.pch"))
-os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -Wno-nonportable-include-path"
+os.environ.setdefault("EXTRA_CLING_ARGS", f"-std=c++{cppv}")
 # os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -D_LIBCPP_LFTS_STRING_VIEW"
 # os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DRWrap_libcpp_string_view_h"
 # os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DR__HAS_STD_EXPERIMENTAL_STRING_VIEW"

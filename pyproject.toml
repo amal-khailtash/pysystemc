@@ -6,39 +6,40 @@ readme = "README.md"
 authors = [
     { name = "Amal Khailtash", email = "amal.khailtash@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "cppyy",
+    "loguru>=0.7",
+    "rich>=14",
 ]
-
-# [tool.setuptools.packages.find]
-# where = ["."]
-# include = ["src/amal"]
-# namespaces = true
 
 # [project.scripts]
 # pysystemc = "amal.eda.systemc:main"
 
-[tool.hatch.build.targets.sdist]
-# include = []
-exclude = [
-    ".uv_cache/",
-    "*.vcd",
-    "submodules/*",
-    "test-*",
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/amal"]
+[tool.uv.build-backend]
+module-name = "amal"
+namespace = true
 
 [tool.uv.sources]
 cppyy = { git = "https://github.com/wlav/cppyy" }
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.9,<0.14"]
+build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
+    "pytest-cov>=7.0",
+    "sphinx>=8",
+    "myst-parser>=4",
+    "sphinx-rtd-theme>=3",
 ]
+
+# Simulation tests spawn fresh interpreters to isolate SystemC kernel state.
+[tool.coverage.run]
+source = ["amal.eda.systemc"]
+patch = ["subprocess"]
+# The pytest parent intentionally never imports the singleton native kernel;
+# coverage data is collected by its simulation subprocesses instead.
+disable_warnings = ["module-not-imported", "no-data-collected"]

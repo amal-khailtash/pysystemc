@@ -27,25 +27,10 @@ def sc_main(args: list) -> int:
     # Open VCD file
     wf = sc_core.sc_create_vcd_trace_file("counter")
 
-    import cppyy
-    cppyy.set_debug()
-
-    print(type(clock))
-    # <class cppyy.gbl.sc_core.sc_signal<bool,sc_core::SC_ONE_WRITER>>
-
-    # Dump the desired signals
-    clock.trace(wf)
-    reset.trace(wf)
-    enable.trace(wf)
-    counter_out.trace(wf)
-    # sc_core.sc_trace(wf, clock.read(), clock.name())
-    # sc_core.sc_trace[bool](wf, clock.read(), clock.name())
-    # sc_core.sc_trace[type(clock)](wf, clock, "clock")
-    # sc_core.sc_trace[cppyy.gbl.sc_core.sc_signal_in_if[bool]](wf, clock, "clock")
-    # sc_core.sc_trace[cppyy.gbl.sc_core.sc_signal[bool]](wf, clock, "clock")
-    # sc_core.sc_trace[type(reset)](wf, reset, "reset")
-    # sc_core.sc_trace[type(enable)](wf, enable, "enable")
-    # sc_core.sc_trace[type(counter_out)](wf, counter_out, "count")
+    # Trace signal interfaces, preserving references to their native values.
+    for signal, name in ((clock, "clock"), (reset, "reset"),
+                         (enable, "enable"), (counter_out, "count")):
+        sc_core.sc_trace(wf, signal, name)
 
     # Initialize all variables
     reset.write(False)  # initial value of reset
