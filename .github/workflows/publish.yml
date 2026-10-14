@@ -62,3 +62,12 @@ jobs:
       - name: Publish to PyPI
         if: github.event_name == 'push' || inputs.repository == 'pypi'
         uses: pypa/gh-action-pypi-publish@release/v1
+  documentation:
+    needs: publish
+    if: github.event_name == 'push' || inputs.repository == 'pypi'
+    uses: ./.github/workflows/readthedocs.yml
+    with:
+      ref: ${{ github.ref }}
+      version: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
+    secrets:
+      READTHEDOCS_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}

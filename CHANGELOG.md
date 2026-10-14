@@ -6,6 +6,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Changed
+
+- Build release documentation after successful production PyPI publication;
+  retain main-branch and manual documentation builds.
+- Give hosted PyPI badges a separate cache URL for each documentation version.
+
 ## [0.2.3] - 2026-10-14
 
 ### Fixed

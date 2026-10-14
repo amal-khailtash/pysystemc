@@ -2,11 +2,21 @@ name: Publish documentation on Read the Docs
 on:
   push:
     branches: [main]
-    tags: ['v*']
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: latest
+      ref:
+        type: string
+        required: true
+    secrets:
+      READTHEDOCS_TOKEN:
+        required: true
   workflow_dispatch:
     inputs:
       version:
-        description: Read the Docs version slug (for example latest or v0.1.0)
+        description: Read the Docs version slug (for example latest or v0.2.3)
         required: false
         default: latest
 permissions:
@@ -19,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
