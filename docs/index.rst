@@ -1,11 +1,5 @@
-pysystemc
-=========
-
-Version |project_version|
-
-Python bindings to native SystemC with on-demand C++ templates through cppyy.
-
 .. toctree::
+   :hidden:
    :caption: Introduction
    :maxdepth: 2
 
@@ -16,6 +10,7 @@ Python bindings to native SystemC with on-demand C++ templates through cppyy.
    intro/references
 
 .. toctree::
+   :hidden:
    :caption: API Reference
    :maxdepth: 2
 

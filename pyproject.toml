@@ -1,6 +1,6 @@
 [project]
 name = "pysystemc"
-version = "0.2.2"
+version = "0.2.3"
 description = "SystemC Python Binding using cppyy"
 readme = "README.md"
 license = "MIT"

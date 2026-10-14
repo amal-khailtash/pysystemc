@@ -41,6 +41,10 @@ Run the regression suite in independent native simulation processes::
    make coverage
    make docs
 
+The coverage target prints a terminal summary and writes an HTML report to
+``build/coverage/html/index.html``. Open that file in a browser to inspect
+coverage by module and line.
+
 Tests verify callbacks, lifecycle, sensitivity, integer wraparound and VCD
 transitions. Upstream fork/join, report and barrier ports are compared with native
 C++ examples. Coverage measures Python code, including subprocesses, not native

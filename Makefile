@@ -199,11 +199,11 @@ test-verbose:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -vv
 
 # ----------------------------------------------------------------------------------------------------------------------
-# coverage: ## Run regression tests with Python binding coverage (native C++ is not measured)
+# coverage: ## Run regression coverage with terminal and HTML reports (build/coverage/html)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage
 coverage:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)

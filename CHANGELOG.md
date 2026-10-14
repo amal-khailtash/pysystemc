@@ -6,6 +6,22 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-14
+
+### Fixed
+
+- Simplify the documentation landing page to show the project introduction once,
+  keeping the contents in sidebar navigation and the version in the page title.
+
+
+### Added
+
+- Publish to production PyPI on release-tag pushes after checking the tag matches
+  the package version; retain manual TestPyPI and PyPI publishing.
+
+- HTML coverage report under `build/coverage/html` alongside the terminal summary
+  when running `make coverage`.
+
 ## [0.2.2] - 2026-10-14
 
 ### Fixed
@@ -101,7 +117,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.1.0...v0.2.0
