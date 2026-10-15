@@ -82,4 +82,19 @@ for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
     tlm.tlm_from_hostendian(payload)
     assert [ord(value) for value in data] == ([23] + [17] * 7 if command == tlm.TLM_READ_COMMAND else [17] * 8)
     assert cppyy.addressof(payload.get_data_ptr()) == original_data
+payload = tlm.tlm_generic_payload()
+payload.resize_extensions()
+data = cppyy.gbl.std.vector["unsigned char"](8, 99)
+payload.set_command(tlm.TLM_READ_COMMAND)
+payload.set_address(16)
+payload.set_data_ptr(data.data())
+payload.set_data_length(8)
+payload.set_streaming_width(8)
+tlm.tlm_to_hostendian_aligned["unsigned short"](payload, 4)
+converted = payload.get_data_ptr()
+converted.reshape((8,))
+for index in range(8):
+    converted[index] = index + 1
+tlm.tlm_from_hostendian_aligned["unsigned short"](payload, 4)
+assert [ord(value) for value in data] == [3, 4, 1, 2, 7, 8, 5, 6]
 print("ENDIAN_ALIGNED_OK")

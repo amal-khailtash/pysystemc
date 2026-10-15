@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Explicit generic, word and aligned endian response templates verify read
+  copying alongside the generic response dispatcher.
+
 - Word endian read/write matrix covers three native word types and every offset
   on two bus widths, checking actual native buffer sizes and byte mapping.
 

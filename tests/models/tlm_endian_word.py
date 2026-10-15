@@ -129,4 +129,19 @@ for word, size in (("unsigned char", 1), ("unsigned short", 2), ("unsigned int",
                     [50 + index for index in mapping] if command == tlm.TLM_READ_COMMAND else list(range(1, length + 1))
                 )
                 assert [ord(value) for value in data] == expected
+payload = tlm.tlm_generic_payload()
+payload.resize_extensions()
+data = cppyy.gbl.std.vector["unsigned char"](8, 99)
+payload.set_command(tlm.TLM_READ_COMMAND)
+payload.set_address(16)
+payload.set_data_ptr(data.data())
+payload.set_data_length(8)
+payload.set_streaming_width(8)
+tlm.tlm_to_hostendian_word["unsigned short"](payload, 4)
+converted = payload.get_data_ptr()
+converted.reshape((8,))
+for index in range(8):
+    converted[index] = index + 1
+tlm.tlm_from_hostendian_word["unsigned short"](payload, 4)
+assert [ord(value) for value in data] == [3, 4, 1, 2, 7, 8, 5, 6]
 print("ENDIAN_WORD_OK")
