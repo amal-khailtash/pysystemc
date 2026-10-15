@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Hierarchical target socket regression verifies forward export and backward
+  port resolution, callback state, debug bounds and blocking timing.
 - Hierarchical initiator socket regression verifies parent port/export resolution
   and Python callback dispatch after native elaboration.
 - Tagged initiator sockets register backward transport and DMI invalidation
