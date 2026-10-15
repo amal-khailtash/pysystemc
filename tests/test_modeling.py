@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_passthrough_socket_reset_and_kill_cleanup(tmp_path):
+    """Verify passthrough callback cleanup and borrowed state through reset/kill."""
+    assert "PASSTHROUGH_RESET_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_reset.py")
+
+
 def test_passthrough_target_socket_callbacks(tmp_path):
     """Verify ordinary passthrough forward registrations and blocking waits."""
     assert "PASSTHROUGH_TARGET_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_target.py")
