@@ -37,6 +37,23 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_blocking_get_peek_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "BlockingGetPeekAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Blocking get-peek value bridge. @details Ports borrow the owner; "
+                    "cppyy acquires GIL for callbacks and blocking callers release it. Outputs receive "
+                    "copies; Python owns sample state. Exceptions propagate through guarded waits. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class BlockingGetPeekAdapter : public tlm::tlm_blocking_get_peek_if<T> { public: "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
+                    "void get(T& value) override { value = get_value(); } "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
+                    "void peek(T& value) const override { value = peek_value(); } "
+                    "virtual T get_value() = 0; virtual T peek_value() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_blocking_get_peek_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::BlockingGetPeekAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_get_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedGetPeekAdapter"):
                 cppyy.cppdef(

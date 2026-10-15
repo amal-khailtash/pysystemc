@@ -84,6 +84,7 @@ def interface(protocol=None, *, methods=None):
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
+    "tlm::tlm_blocking_get_peek_if": {"get_value": "get", "peek_value": "peek"},
     "tlm::tlm_get_peek_if": {
         "get_value": "get",
         "peek_value": "peek",

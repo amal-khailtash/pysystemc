@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Blocking-only TLM get-peek interfaces accept structural Python implementations
+  with automatic GIL handling and native value/output overload forwarding.
 - Full TLM get-peek interface supports shared blocking/nonblocking Python state
   and dispatch through native blocking and nonblocking base-interface ports.
 - Combined TLM peek interface forwards blocking and nonblocking callbacks while

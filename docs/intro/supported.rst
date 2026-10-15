@@ -106,3 +106,7 @@ must preserve samples rather than consume them. Nonblocking callbacks return a
 The native adapter implements the blocking/nonblocking get-peek inheritance
 hierarchy, so base-interface ports can bind the resulting native interface.
 ``notify_ready()`` schedules both separate native readiness events.
+
+``tlm_blocking_get_peek_if[T]`` also accepts structural objects implementing
+only ``get()`` and ``peek()``. Both native value-return and output-reference
+forms forward to those Python value callbacks, with blocking GIL release.
