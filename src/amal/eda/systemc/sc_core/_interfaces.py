@@ -4,36 +4,81 @@ Native signatures remain authoritative. Adapters and implementations are retaine
 until interpreter shutdown because SystemC ports borrow their interfaces.
 """
 
+import inspect
+from typing import get_type_hints
+
 import cppyy
+
+from ._channel_interfaces import declare_interface
 
 _owners = []
 _classes = {}
 _protocol_interfaces = {}
 
 
-def interface(*, methods):
-    """Decorate a Protocol with explicit native SystemC method signatures.
+def _annotation_type(annotation, *, result=False):
+    """Translate unambiguous annotations, rejecting implicit integer widths/references."""
+    if annotation in (None, type(None)) and result:
+        return "void"
+    if annotation is bool:
+        return "bool"
+    if annotation is float:
+        return "double"
+    native = getattr(annotation, "__cpp_name__", None)
+    if native:
+        return native
+    raise TypeError(f"unsupported native interface annotation {annotation!r}; use a native type or explicit methods")
+
+
+def _infer_methods(protocol):
+    """Collect inherited annotated instance methods with fixed positional signatures."""
+    methods = {}
+    for base in reversed(protocol.__mro__):
+        for name, function in vars(base).items():
+            if name.startswith("_") or not inspect.isfunction(function):
+                continue
+            signature = inspect.signature(function)
+            hints = get_type_hints(function)
+            parameters = list(signature.parameters.values())
+            if not parameters or parameters[0].name != "self":
+                raise TypeError(f"{name} must be an instance method with self")
+            arguments = []
+            for parameter in parameters[1:]:
+                if parameter.kind not in (parameter.POSITIONAL_ONLY, parameter.POSITIONAL_OR_KEYWORD):
+                    raise TypeError(f"{name} requires fixed positional parameters")
+                if parameter.default is not parameter.empty:
+                    raise TypeError(f"{name} defaults require explicit native methods")
+                arguments.append(f"{_annotation_type(hints.get(parameter.name))} {parameter.name}")
+            if "return" not in hints:
+                raise TypeError(f"{name} requires a return annotation")
+            methods[name] = (_annotation_type(hints["return"], result=True), ", ".join(arguments))
+    return methods
+
+
+def interface(protocol=None, *, methods=None):
+    """Decorate a Protocol with inferred or explicit native SystemC signatures.
 
     Args:
-        methods: Mapping of method names to C++ (return type, arguments).
+        protocol: Annotated interface class when used as @interface.
+        methods: Optional mapping to C++ (return type, arguments), overriding inference.
 
     Returns:
         Decorator retaining the Protocol for typing and registering its native type.
 
-    Signatures are trusted C++ declarations, including reference qualifications.
-    Python annotations do not determine native widths or ownership. Native
-    compilation errors propagate; implementations are checked when bound.
+    None returns map to void, bool to bool, float to double, and cppyy native
+    classes retain their C++ type. Python int, missing annotations, defaults and
+    variadic parameters raise TypeError. References/overloads require explicit
+    trusted C++ signatures. Owners survive simulation; errors propagate.
     """
     def register(protocol):
         """Associate the structural contract with a lazily compiled native interface."""
-        from ._channel_interfaces import declare_interface
-
-        native = declare_interface(f"ProtocolInterface{len(_protocol_interfaces)}", methods)
+        declarations = methods if methods is not None else _infer_methods(protocol)
+        native = declare_interface(f"ProtocolInterface{len(_protocol_interfaces)}", declarations)
         _protocol_interfaces[protocol] = native
-        _METHODS[native.__cpp_name__] = {name: name for name in methods}
+        _METHODS[native.__cpp_name__] = {name: name for name in declarations}
         return protocol
 
-    return register
+    return register(protocol) if protocol is not None else register
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {

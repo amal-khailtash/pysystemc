@@ -57,3 +57,23 @@ shutdown. Python ``Protocol`` definitions are optional typing aids; native
 interface specializations determine C++ signatures. Missing required methods
 raise ``TypeError``. Other structural interface families, specialized TLM ports,
 and arbitrary Python reference-return implementations are not yet supported.
+
+Custom interfaces can infer native signatures from annotated Protocol methods::
+
+    from typing import Protocol
+
+    @sc.interface
+    class C_if(Protocol):
+        def run(self) -> None: ...
+
+    export = sc.sc_export[C_if]("IFP")
+    export.bind(implementation)
+
+``None`` results become C++ ``void``, ``bool`` becomes ``bool``, and ``float``
+becomes ``double``. Native cppyy classes, including SystemC template
+specializations, retain their C++ types. Inherited methods and resolvable string
+annotations are supported. Python ``int`` does not specify a native width and
+is rejected. Missing annotations, variadic/keyword-only parameters and defaults
+also require an explicit declaration. Reference qualifications and overloads
+can use ``@sc.interface(methods={...})`` with trusted native signatures.
+The two sc_export examples show native and annotated Protocol implementations.

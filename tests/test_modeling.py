@@ -232,3 +232,8 @@ def test_native_tlm1_combined_nonblocking_get_peek(tmp_path):
 def test_structural_python_interface_binding(tmp_path):
     """Verify ordinary methods, automatic GIL handling and retained implementations."""
     assert "PYTHON_INTERFACE_BINDING_OK" in run_example(tmp_path, "tests/models/python_interface_binding.py")
+
+
+def test_protocol_interface_annotation_inference(tmp_path):
+    """Verify inherited signatures, native values and ambiguous annotation rejection."""
+    assert "INTERFACE_ANNOTATIONS_OK" in run_example(tmp_path, "tests/models/interface_annotations.py")

@@ -11,7 +11,7 @@ from amal.eda.systemc import main, sc_core as sc
 from typing import Protocol
 
 
-@sc.interface(methods={"run": ("void", "")})
+@sc.interface
 class C_if(Protocol):
     """Structural contract exported through the module hierarchy."""
 
