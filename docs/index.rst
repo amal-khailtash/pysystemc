@@ -21,6 +21,7 @@
    api/bindings
    api/tlm_sockets
    api/tlm_extensions
+   api/tlm_endian
    api/coverage
 
 .. include:: ../README.md

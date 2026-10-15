@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Endian utility guide documents native converter preconditions, context and
+  buffer ownership, response metadata behavior and current verification limits.
+
 - Independent generic endian streaming reference compares actual enable masks,
   source enables and masked response bytes with Python conversion results.
 
