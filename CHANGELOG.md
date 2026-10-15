@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Indexed multi transport exception regression checks visible Python errors,
+  borrowed payload/delay mutations, cleanup and simulation time at failure.
+
 - Custom multi socket protocol regression checks original transaction identity
   and 137-bit field preservation across both directions and timed payload mutation.
 
