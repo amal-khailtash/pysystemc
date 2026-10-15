@@ -21,6 +21,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Quantumkeeper synchronization preserves native reset/kill unwind and Python
+  cleanup across utility JIT transactions.
 - Restore the native default simulation context for Python `sc_is_running()` calls.
 - Restore CI formatting and strict documentation builds after structural interface changes.
 - Compare installed-wheel versions with distribution metadata rather than a stale release literal.

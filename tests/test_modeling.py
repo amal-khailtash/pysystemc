@@ -205,6 +205,11 @@ def test_native_tlm_quantumkeeper_and_payload_queue(tmp_path):
     assert "TLM_UTILITIES_OK" in run_example(tmp_path, "tests/models/tlm_utilities.py")
 
 
+def test_tlm_quantumkeeper_reset_and_kill_cleanup(tmp_path):
+    """Verify both quantum wait APIs restart and execute cleanup before termination."""
+    assert "QUANTUM_RESET_OK" in run_example(tmp_path, "tests/models/tlm_quantum_reset.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

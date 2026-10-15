@@ -138,6 +138,24 @@ std::string python_argv_at(int index)
  */
 thread_local std::exception_ptr python_unwind;
 
+/** @brief Capture scheduler unwind from a borrowed native utility operation.
+ * @details Release GIL; operation stays alive during suspension. Other errors propagate.
+ * @return False requests Python cleanup and restoration by dispatch_python.
+ */
+bool python_guarded_operation(const std::function<void()>& operation)
+{
+  try
+  {
+    operation();
+    return true;
+  }
+  catch (const sc_unwind_exception&)
+  {
+    python_unwind = std::current_exception();
+    return false;
+  }
+}
+
 /**
  * @brief Run a wait without allowing cppyy to consume scheduler unwind.
  * @details Call with GIL released. False tells Python to unwind its frames; the original exception stays owned here.

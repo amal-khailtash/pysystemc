@@ -6,6 +6,7 @@ ownership require native-compatible objects and retained Python callbacks.
 """
 
 import cppyy
+from ..sc_core import _ProcessUnwind
 from .._namespace import public_names as _public_names, document_member as _document_member
 
 for _header in (
@@ -43,7 +44,41 @@ def __dir__():
     return sorted(set(globals()) | set(_public_names(_namespace)))
 
 
-# Native sync uses a scheduler wait. Release GIL during suspension; reset/unwind
-# parity still requires the separate process-control validation matrix.
-_namespace.tlm_quantumkeeper.sync.__release_gil__ = True
-_namespace.tlm_quantumkeeper.set_and_sync.__release_gil__ = True
+cppyy.cppdef("""
+/** @brief Preserve native scheduler unwind during quantumkeeper synchronization.
+ * @param keeper Borrowed keeper retained across suspension.
+ * @return False if Python must unwind before the native callback dispatcher rethrows.
+ * @details Release GIL before entry. Exceptions other than scheduler unwind propagate.
+ */
+namespace pysystemc_interfaces {
+bool quantum_sync(tlm_utils::tlm_quantumkeeper& keeper)
+{
+    return sc_core::python_guarded_operation([&]() { keeper.sync(); });
+}
+/** @brief Set local time and synchronize with guarded scheduler exception handling.
+ * @details Keeper/time are borrowed; release GIL. False requests Python frame unwind.
+ */
+bool quantum_set_and_sync(tlm_utils::tlm_quantumkeeper& keeper, const sc_core::sc_time& time)
+{
+    return sc_core::python_guarded_operation([&]() { keeper.set_and_sync(time); });
+}
+}
+""")
+cppyy.gbl.pysystemc_interfaces.quantum_sync.__release_gil__ = True
+cppyy.gbl.pysystemc_interfaces.quantum_set_and_sync.__release_gil__ = True
+
+
+def _sync(self):
+    """Synchronize native local time; propagate reset/kill through Python cleanup."""
+    if not cppyy.gbl.pysystemc_interfaces.quantum_sync(self):
+        raise _ProcessUnwind()
+
+
+def _set_and_sync(self, time):
+    """Set borrowed native time and synchronize, preserving scheduler unwind."""
+    if not cppyy.gbl.pysystemc_interfaces.quantum_set_and_sync(self, time):
+        raise _ProcessUnwind()
+
+
+_namespace.tlm_quantumkeeper.sync = _sync
+_namespace.tlm_quantumkeeper.set_and_sync = _set_and_sync
