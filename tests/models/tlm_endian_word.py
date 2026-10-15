@@ -129,6 +129,9 @@ for word, size in (("unsigned char", 1), ("unsigned short", 2), ("unsigned int",
                     [50 + index for index in mapping] if command == tlm.TLM_READ_COMMAND else list(range(1, length + 1))
                 )
                 assert [ord(value) for value in data] == expected
+                print(
+                    "WORD", size, bus, offset, int(command), expanded, *list(enables), *[ord(value) for value in data]
+                )
 payload = tlm.tlm_generic_payload()
 payload.resize_extensions()
 data = cppyy.gbl.std.vector["unsigned char"](8, 99)

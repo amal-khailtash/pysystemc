@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent native word endian matrix matches 72 actual buffer lengths,
+  enable masks and read/write response records against Python.
+
 - Generic endian context-reuse checks verify sequential conversions target fresh
   original buffers and leave completed response storage unchanged.
 
