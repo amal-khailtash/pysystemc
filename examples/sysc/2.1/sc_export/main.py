@@ -3,6 +3,8 @@
 Adapted from Accellera's examples/sysc/2.1/sc_export/main.cpp (Apache-2.0;
 see the upstream LICENSE and NOTICE). Native interfaces/channels are retained
 by their enclosing Python modules until simulation ends.
+
+Original source: examples/sysc/2.1/sc_export/main.cpp
 """
 
 from amal.eda.systemc import main, sc_core as sc
@@ -14,25 +16,25 @@ namespace export_example
 {
 
 /** @brief Native interface exported through the Python module hierarchy. */
-class ChannelInterface : virtual public sc_core::sc_interface
+class C_if : virtual public sc_core::sc_interface
 {
  public:
   virtual void run() = 0;
 };
 
 /** @brief Native channel; calls execute in C++ without acquiring the GIL. */
-class Channel : public ChannelInterface, public sc_core::sc_channel
+class C : public C_if, public sc_core::sc_channel
 {
  public:
-  explicit Channel(sc_core::sc_module_name name) : sc_core::sc_channel(name) {}
+  explicit C(sc_core::sc_module_name name) : sc_core::sc_channel(name) {}
   /** @brief Print the time of interface invocation. */
   void run() override { std::cout << sc_core::sc_time_stamp() << " In Channel run()" << std::endl; }
 };
 
 }  // namespace export_example
 """)
-interface = cppyy.gbl.export_example.ChannelInterface
-channel = cppyy.gbl.export_example.Channel
+C_if = cppyy.gbl.export_example.C_if
+C = cppyy.gbl.export_example.C
 
 
 class D(sc.sc_module):
@@ -42,8 +44,8 @@ class D(sc.sc_module):
         """Create the channel and bind its interface to IFP."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
-        self.IFP = sc.sc_export[interface]("IFP")
-        self.channel = channel("C")
+        self.IFP = sc.sc_export[C_if]("IFP")
+        self.channel = C("C")
         self.IFP(self.channel)
 
 
@@ -54,10 +56,10 @@ class E(sc.sc_module):
         """Retain channel, child module and hierarchical interface bindings."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
-        self.channel = channel("C")
+        self.channel = C("C")
         self.child = D("D")
-        self.IFP1 = sc.sc_export[interface]("IFP1")
-        self.IFP2 = sc.sc_export[interface]("IFP2")
+        self.IFP1 = sc.sc_export[C_if]("IFP1")
+        self.IFP2 = sc.sc_export[C_if]("IFP2")
         self.IFP1(self.channel)
         self.IFP2(self.child.IFP.get_interface())
 
@@ -69,8 +71,8 @@ class X(sc.sc_module):
         """Register a finite thread and two interface ports."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
-        self.P1 = sc.sc_port[interface]("P1")
-        self.P2 = sc.sc_port[interface]("P2")
+        self.P1 = sc.sc_port[C_if]("P1")
+        self.P2 = sc.sc_port[C_if]("P2")
         self.sc_thread("run", self.run)
 
     def run(self):

@@ -43,6 +43,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Match sc_export example interface/channel class names to upstream C_if and C,
+  retaining its native implementation and recording the original source path.
+
 - Organize subprocess regressions into tutorial, upstream, runtime, lifecycle,
   modeling and runner modules with shared simulation helpers.
 
