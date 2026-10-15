@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Aligned endian byte-enable checks verify enable reversal, unchanged original
+  enable storage and preservation of disabled read-response bytes.
+
 - Aligned endian buffer checks verify write word reversal and read response
   copying into original borrowed storage.
 
