@@ -4,13 +4,11 @@ from amal.eda.systemc import sc_core as sc
 from amal.eda.systemc import tlm
 
 
-class Target(sc.channel_interface(tlm.tlm_blocking_transport_if[tlm.tlm_generic_payload])):
+class Target:
     """Implement native blocking transport with borrowed payload and delay references."""
 
-    def __init__(self, name):
+    def __init__(self):
         """Create channel identity and retain observed request records."""
-        module_name = sc.sc_module_name(name)
-        super().__init__(module_name)
         self.requests = []
 
     def b_transport(self, trans, delay):
@@ -25,12 +23,11 @@ class Target(sc.channel_interface(tlm.tlm_blocking_transport_if[tlm.tlm_generic_
 
 module_name = sc.sc_module_name("top")
 model = sc.sc_module(module_name)
-target = Target("target")
+target = Target()
 interface_type = tlm.tlm_blocking_transport_if[tlm.tlm_generic_payload]
 port = sc.sc_port[interface_type]("port")
 port.bind(target)
 del module_name
-type(port.get_interface()).b_transport.__release_gil__ = True
 trans = tlm.tlm_generic_payload()
 trans.set_address(16)
 trans.set_command(tlm.TLM_READ_COMMAND)

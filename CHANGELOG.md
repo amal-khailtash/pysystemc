@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural TLM-2 blocking transport supports ordinary b_transport callbacks,
+  borrowed payload/delay mutation and automatic GIL release for process waits.
 - Structural TLM regression verifies 73-bit native value copies across blocking
   and nonblocking put/get/peek calls, including preserved failure outputs.
 - Native-style port/export call syntax adapts structural Python implementations
@@ -73,6 +75,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Improve namespace declaration ordering and spacing in binding helpers.
 - Break up long conditions in core interface adapters for readability.
 - Split core interface declarations, structural binding and waveform helpers
   into related modules; simplify initializer imports and document setup order.

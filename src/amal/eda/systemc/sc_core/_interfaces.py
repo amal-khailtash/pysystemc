@@ -84,6 +84,7 @@ def interface(protocol=None, *, methods=None):
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
+    "tlm::tlm_blocking_transport_if": {"b_transport": "b_transport"},
     "tlm::tlm_blocking_get_peek_if": {"get_value": "get", "peek_value": "peek"},
     "tlm::tlm_get_peek_if": {
         "get_value": "get",
@@ -145,7 +146,7 @@ def _adapt(interface, implementation, factory):
     name = cppyy.gbl.sc_core.sc_module_name(cppyy.gbl.sc_core.sc_gen_unique_name("python_interface", False))
     adapter = _classes[interface](name)
     adapter._implementation = implementation
-    for method in ("transport", "get", "peek", "put"):
+    for method in ("transport", "get", "peek", "put", "b_transport"):
         overload = getattr(type(adapter), method, None)
         if overload is not None and hasattr(overload, "__release_gil__"):
             overload.__release_gil__ = True
