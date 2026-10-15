@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Tagged target nonblocking callbacks preserve independent user IDs, mutable
+  phase/delay references and native synchronization enum results.
 - Tagged target DMI callbacks preserve independent user IDs and borrowed native
   DMI result fields alongside blocking and debug callback registrations.
 - Tagged target debug callbacks preserve independent registration IDs and

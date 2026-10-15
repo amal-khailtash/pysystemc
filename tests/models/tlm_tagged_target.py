@@ -8,8 +8,9 @@ import weakref
 class Target:
     """Borrow transaction state and suspend through a registered blocking callback."""
 
-    def nonblocking(self, payload, phase, delay):
+    def nonblocking(self, identifier, payload, phase, delay):
         """Update native phase and latency without waiting."""
+        assert identifier == 67
         phase.__assign__(tlm.BEGIN_RESP)
         delay.__assign__(sc.sc_time(1, sc.SC_NS))
         return tlm.TLM_UPDATED
@@ -43,6 +44,7 @@ retained = weakref.ref(target)
 socket = tlm_utils.callback_target_socket("target", width=73, tagged=True)
 target.count = 0
 socket.register_b_transport(target.transport, 47)
+socket.register_nb_transport_fw(target.nonblocking, 67)
 socket.register_transport_dbg(target.debug, 59)
 socket.register_get_direct_mem_ptr(target.dmi, 61)
 initiator = tlm_utils.callback_initiator_socket("initiator", width=73)
@@ -73,6 +75,9 @@ delay = sc.sc_time(2, sc.SC_NS)
 records = []
 interface = initiator.get_interface()
 assert interface.b_transport.__release_gil__
+phase = tlm.tlm_phase(tlm.BEGIN_REQ)
+assert interface.nb_transport_fw(payload, phase, delay) == tlm.TLM_UPDATED
+assert phase == tlm.BEGIN_RESP and delay == sc.sc_time(1, sc.SC_NS)
 dmi = tlm.tlm_dmi()
 assert not interface.get_direct_mem_ptr(payload, dmi)
 assert (dmi.get_start_address(), dmi.get_end_address()) == (17, 31)

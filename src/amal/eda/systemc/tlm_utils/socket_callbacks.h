@@ -126,6 +126,8 @@ class CallbackTaggedTargetSocket
                                                     Policy>
 {
   using Payload = typename Types::tlm_payload_type;
+  using Phase = typename Types::tlm_phase_type;
+  std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> nonblocking;
   std::function<void(int, Payload&, sc_core::sc_time&)> callback;
   std::function<long(int, Payload&)> debug;
   std::function<bool(int, Payload&, tlm::tlm_dmi&)> dmi;
@@ -136,6 +138,20 @@ class CallbackTaggedTargetSocket
   /** @brief Construct native tagged socket before simulation. */
   explicit CallbackTaggedTargetSocket(const char* name) : Base(name)
   {
+  }
+
+  /** @brief Register tagged nonblocking callback through upstream ID checks. */
+  void register_nb_transport_fw(std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> function,
+                                int id)
+  {
+    Base::register_nb_transport_fw(this, &CallbackTaggedTargetSocket::forward, id);
+    nonblocking = std::move(function);
+  }
+
+  /** @brief Forward tagged mutable protocol phase and delay without waiting. */
+  tlm::tlm_sync_enum forward(int id, Payload& payload, Phase& phase, sc_core::sc_time& delay)
+  {
+    return nonblocking(id, payload, phase, delay);
   }
 
   /** @brief Register callable and user ID through upstream registration checks. */

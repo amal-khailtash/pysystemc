@@ -118,7 +118,12 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged
     socket_type = template[width, protocol, policy]
     if not getattr(socket_type, "_retained_registration", False):
         methods = (
-            ("register_b_transport", "register_transport_dbg", "register_get_direct_mem_ptr")
+            (
+                "register_b_transport",
+                "register_nb_transport_fw",
+                "register_transport_dbg",
+                "register_get_direct_mem_ptr",
+            )
             if tagged
             else (
                 "register_b_transport",
