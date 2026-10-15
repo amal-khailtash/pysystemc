@@ -16,7 +16,9 @@ pass-through availability does not by itself establish tested support.
 
 ``wait(*args)``
    Suspend the native thread with GIL release. No arguments selects a cycle wait;
-   arguments select native timed/event overloads. Reset/unwind is unsupported.
+   arguments select guarded native timed/event overloads, including OR/AND
+   expressions. Reset/kill unwind executes Python cleanup before the original
+   scheduler exception is restored. Do not suppress unwind or wait in cleanup.
 
 ``set_report_handler(callback=None)``
    Install a retained callback receiving a native report and integer action mask;

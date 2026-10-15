@@ -426,3 +426,48 @@ def test_entry_arguments_and_simulation_lifecycle(tmp_path):
 def test_method_dynamic_event_and_timed_sensitivity(tmp_path):
     """Method next_trigger handles event expressions and timed reactivation."""
     assert "DYNAMIC_METHOD_OK" in run_example(tmp_path, "tests/models/dynamic_method.py")
+
+
+def test_modeling_datatype_and_vcd_matrix(tmp_path):
+    """Check native channel updates, ports, datatype assignment and trace transitions."""
+    output = run_example(tmp_path, "tests/models/modeling_matrix.py")
+    assert "MODELING_MATRIX_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/modeling_matrix.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert [line for line in output.splitlines() if line.startswith("MATRIX_")] == [
+        line for line in native.stdout.splitlines() if line.startswith("MATRIX_")
+    ]
+    python_trace = (tmp_path / "matrix.vcd").read_text()
+    native_trace = (tmp_path / "native_matrix.vcd").read_text()
+    assert python_trace[python_trace.index("$timescale") :] == native_trace[native_trace.index("$timescale") :]
+
+
+def test_required_port_binding_diagnostic(tmp_path):
+    """Unbound required input reports its hierarchical name without native abort."""
+    assert "BINDING_ERROR_OK" in run_example(tmp_path, "tests/models/binding_error.py")
+
+
+def test_datatype_mutation_and_typed_ports(tmp_path):
+    """Verify overflow, bit/range writes, conversion and arbitrary typed port copies."""
+    assert "DATATYPE_OPERATIONS_OK" in run_example(tmp_path, "tests/models/datatype_operations.py")
+
+
+def test_trace_setup_and_output_failure_cleanup(tmp_path):
+    """Trace setup/output errors preserve diagnostics and permit a subsequent valid trace."""
+    assert "TRACE_FAILURE_OK" in run_example(tmp_path, "tests/models/trace_failure.py")
+
+
+def test_hierarchy_children_and_status_helpers(tmp_path):
+    """Native hierarchy paths and helper output preserve child module ownership."""
+    assert "HIERARCHY_CHECKS_OK" in run_example(tmp_path, "tests/models/hierarchy_checks.py")
+
+
+def test_version_time_registry_and_introspection_apis(tmp_path):
+    """Check post-2.3.1 time, registry, RTTI, never-event and initialized-signal behavior."""
+    assert "VERSION_APIS_OK" in run_example(tmp_path, "tests/models/version_apis.py")

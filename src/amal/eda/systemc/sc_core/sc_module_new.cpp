@@ -18,6 +18,19 @@ namespace sc_core
 {
 
 /**
+ * @brief Select native time modulo without cppyy operator discovery ambiguity.
+ * @param left Borrowed dividend time.
+ * @param right Borrowed divisor time.
+ * @return Native remainder; inputs are not modified.
+ * @details No callbacks or GIL release are required. A zero divisor is rejected before native integer division.
+ */
+sc_time python_time_modulo(const sc_time& left, const sc_time& right)
+{
+  if (right == SC_ZERO_TIME) throw std::invalid_argument("time modulo divisor must be nonzero");
+  return left % right;
+}
+
+/**
  * @brief Read a native argv entry without cppyy pointer-array conversion.
  * @param index Argument position during sc_main execution.
  * @return Copy of the original native argument.

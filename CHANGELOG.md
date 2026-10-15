@@ -8,6 +8,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Reject missing VCD output directories before native delayed file creation.
 - Preserve native reset/kill unwind across Python thread waits and self-control,
   including finally cleanup; support OR/AND event-expression waits.
 - Keep native sc_module reflection intact while exposing the Python callback
@@ -20,6 +21,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Verified API coverage tables, native modeling/VCD comparisons, datatype mutation
+  and typed-port checks, binding diagnostics and trace/hierarchy regressions.
 - Native thread/reset reference checks, repeated reset/kill wait-family stress,
   self-control and entry pause/resume lifecycle validation.
 - Module identity, callback registration and lifecycle isolation checks across

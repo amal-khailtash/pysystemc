@@ -115,6 +115,16 @@ for name, member in sc_core_namespace.__dict__.items():
 sc_module = cppyy.gbl.sc_core.ScModule
 
 
+def _time_modulo(self: Any, other: Any) -> Any:
+    """Return native time remainder; reject a zero divisor with ValueError."""
+    if other == cppyy.gbl.sc_core.SC_ZERO_TIME:
+        raise ValueError("time modulo divisor must be nonzero")
+    return cppyy.gbl.sc_core.python_time_modulo(self, other)
+
+
+cppyy.gbl.sc_core.sc_time.__mod__ = _time_modulo
+
+
 def __getattr__(name):
     """Resolve a native kernel name or raise AttributeError."""
     mod = _document_member(getattr(cppyy.gbl.sc_core, name))
@@ -212,6 +222,9 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
     stop the kernel; independent simulations still require new subprocesses.
     Native process aborts cannot execute Python cleanup.
     """
+    trace_path = pathlib.Path(str(filename) + ".vcd")
+    if not trace_path.parent.is_dir():
+        raise RuntimeError(f"Cannot create VCD trace: directory does not exist: {trace_path.parent}")
     trace = cppyy.gbl.sc_core.sc_create_vcd_trace_file(str(filename))
     if not trace:
         raise RuntimeError(f"Cannot create VCD trace: {filename}")

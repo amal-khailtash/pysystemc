@@ -18,6 +18,7 @@
    :maxdepth: 2
 
    api/bindings
+   api/coverage
 
 .. include:: ../README.md
    :parser: myst_parser.sphinx_
