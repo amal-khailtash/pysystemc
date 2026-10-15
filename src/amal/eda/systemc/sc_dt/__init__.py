@@ -1,92 +1,29 @@
-import os
+"""Native SystemC integers, logic vectors and fixed-point datatypes.
 
-cppv = 17
-# cppv = 14
-# os.environ["CLING_STANDARD_PCH"] = os.path.expanduser(os.path.join("~", f"cling_standard_native_{cppv}.pch"))
-os.environ.setdefault("EXTRA_CLING_ARGS", f"-std=c++{cppv}")
-# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -D_LIBCPP_LFTS_STRING_VIEW"
-# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DRWrap_libcpp_string_view_h"
-# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DR__HAS_STD_EXPERIMENTAL_STRING_VIEW"
-
-# os.environ["CLING_REBUILD_PCH"] = "1"
-
+Templates are instantiated by cppyy on demand. Fixed-point quantization and
+overflow policies are the native sc_dt enums, not Python substitutes.
+"""
 import cppyy
+from .._namespace import public_names as _public_names, document_member as _document_member, namespace_help as _namespace_help
 
-# Access the C++ sc_dt namespace
-sc_dt_namespace = cppyy.gbl.sc_dt
-
-# Helper function to add all items from `sc_dt` to this module
-def add_sc_dt_members():
-    module_globals = globals()
-    for name in dir(sc_dt_namespace):
-        try:
-            member = getattr(sc_dt_namespace, name)
-        except AttributeError:
-            continue
-        module_globals[name] = member
-
-# Add all sc_dt members to this module
-add_sc_dt_members()
-
-
-# Manually add each public member of the `sc_core` namespace to the module"s globals
-for name, member in sc_dt_namespace.__dict__.items():
-    # Filter out internal or irrelevant attributes
-    if not name.startswith("__"):
-        globals()[name] = member
-
-
-# List of classes, enums, and functions to expose from `sc_dt`
-sc_dt_classes = ["sc_uint", "sc_int", "sc_bigint", "sc_biguint"]
-sc_dt_functions = []  # Add functions here if needed
-
-# Dynamically add classes and functions from the C++ `sc_dt` namespace to this module
-for name in sc_dt_classes + sc_dt_functions:
-    try:
-        globals()[name] = getattr(sc_dt_namespace, name)
-    except AttributeError:
-        print(f"Warning: {name} not found in sc_dt namespace.")
+_namespace = cppyy.gbl.sc_dt
+__all__ = _public_names(_namespace)
 
 
 def __getattr__(name):
-    mod = getattr(cppyy.gbl.sc_dt, name)
-    return mod
+    """Resolve and cache a native datatype, template, enum or function.
 
-# Define a custom __dir__ for listing available attributes
+    Raises AttributeError for names absent from the native sc_dt namespace.
+    """
+    if name.startswith('_'):
+        raise AttributeError(name)
+    member = _document_member(getattr(_namespace, name))
+    globals()[name] = member
+    return member
+
+
 def __dir__():
-    return list(globals().keys())
+    """List Python exports and discoverable native sc_dt members."""
+    return sorted(set(globals()) | set(_public_names(_namespace)))
 
-
-# __all__ = dir(sc_dt_namespace)
-
-
-
-# import sys
-
-# import cppyy
-
-
-# entity = getattr(cppyy.gbl, "sc_dt")
-# if getattr(entity, "__module__", None) == "cppyy.gbl":
-#     setattr(entity, "__module__", "sc_dt")
-# setattr(sys.modules["SystemC"], "sc_dt", entity)
-
-
-# sc_uint = cppyy.gbl.sc_dt.sc_uint
-# sc_int  = cppyy.gbl.sc_dt.sc_int
-
-
-# sc_dt_namespace = cppyy.gbl.sc_dt
-
-
-# for name in dir(sc_dt_namespace):
-#     if hasattr(sc_dt_namespace, name):  # Check if it"s actually accessible
-#         # setattr(cppyy.gbl.sc_core, name, getattr(sc_dt_namespace, name))
-#         try:
-#             globals().update({name: getattr(sc_dt_namespace, name)})
-#         except TypeError:
-#             pass
-#             # print(f"Attribute {name} could not be accessed and will be skipped.")
-#     else:
-#         pass
-#         # print(f"Attribute {name} could not be accessed and will be skipped.")
+__doc__ = _namespace_help(globals(), _namespace)

@@ -13,17 +13,21 @@ assert native.is_dir(), native
 for header in ('fmt/format.h', 'spdlog/spdlog.h', 'systemc'):
     assert (native / 'include' / header).is_file(), header
 cppyy.cppdef('''
-struct WheelModel : sc_core::sc_module {
-    SC_HAS_PROCESS(WheelModel);
-    int calls = 0;
-    explicit WheelModel(sc_core::sc_module_name name) : sc_module(name) {
-        SC_THREAD(run);
-    }
-    void run() {
-        ++calls;
-        wait(2, sc_core::SC_NS);
-        ++calls;
-    }
+
+
+struct WheelModel : sc_core::sc_module
+{
+  SC_HAS_PROCESS(WheelModel);
+  int calls = 0;
+
+  explicit WheelModel(sc_core::sc_module_name name) : sc_module(name) { SC_THREAD(run); }
+
+  void run()
+  {
+    ++calls;
+    wait(2, sc_core::SC_NS);
+    ++calls;
+  }
 };
 ''')
 model = cppyy.gbl.WheelModel('wheel_model')

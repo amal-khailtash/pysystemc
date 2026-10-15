@@ -137,3 +137,41 @@ def test_cpp_runner_kernel_banner(tmp_path):
     assert result.returncode == 0, result.stdout
     assert "SystemC 2.3.4-Accellera" not in result.stdout
     assert "Hello world using approach 2" in result.stdout
+
+
+def test_native_namespaces_fixed_point_and_tlm(tmp_path):
+    """Check exports plus native quantization and transaction payload semantics."""
+    output = run_example(tmp_path, 'tests/models/namespaces.py')
+    assert 'NAMESPACES_OK' in output
+
+
+def test_toy_event_cancellation(tmp_path):
+    """A cancelled timed notification never invokes the method observer."""
+    assert 'EVENT_CANCEL_OK' in run_example(tmp_path, 'examples/toy/event_cancel.py')
+
+
+def test_toy_mixed_native_gate(tmp_path):
+    """Native ports connected to Python-owned channels preserve gate behavior."""
+    assert 'MIXED_GATE_OK' in run_example(tmp_path, 'examples/toy/mixed_gate.py')
+
+
+def test_toy_trace_closes_after_exception(tmp_path):
+    """A context-managed trace flushes transitions even when its body fails."""
+    output = run_example(tmp_path, 'examples/toy/trace_cleanup.py')
+    assert 'TRACE_CLEANUP_OK' in output
+    assert (tmp_path / 'cleanup.vcd').is_file()
+
+
+def test_upstream_exports_match_native(tmp_path):
+    """Compare hierarchical export dispatch times against the C++ reference."""
+    import re
+    output = run_example(tmp_path, 'examples/sysc/2.1/sc_export/main.py')
+    native = subprocess.run(
+        [sys.executable, str(ROOT / 'examples/run_sysc_cpp.py'),
+         str(ROOT / 'submodules/systemc/examples/sysc/2.1/sc_export/main.cpp')],
+        cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r'^\d+ ns In Channel run\(\)'
+    records = re.findall(pattern, output, re.M)
+    assert records == re.findall(pattern, native.stdout, re.M)
+    assert records == ['10 ns In Channel run()', '17 ns In Channel run()', '20 ns In Channel run()']

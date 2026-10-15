@@ -1,19 +1,17 @@
+"""Native kernel, channels, processes and Python callback adapters.
+
+Callbacks are retained for their native process lifetime. Blocking scheduler
+operations release the GIL; process reset remains explicitly unsupported.
+"""
 from .._logging import log
 import atexit
+from contextlib import contextmanager
 from enum import Enum
 import pathlib
 import os
 import sys
 
-cppv = 17
-# cppv = 14
-# os.environ["CLING_STANDARD_PCH"] = os.path.expanduser(os.path.join("~", f"cling_standard_native_{cppv}.pch"))
-os.environ.setdefault("EXTRA_CLING_ARGS", f"-std=c++{cppv}")
-# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -D_LIBCPP_LFTS_STRING_VIEW"
-# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DRWrap_libcpp_string_view_h"
-# os.environ["EXTRA_CLING_ARGS"] = f"-O2 -march=native -std=c++{cppv} -DR__HAS_STD_EXPERIMENTAL_STRING_VIEW"
-
-# os.environ["CLING_REBUILD_PCH"] = "1"
+# The parent package selects the JIT C++ standard before importing cppyy.
 
 import cppyy
 
@@ -62,6 +60,7 @@ cppyy.gbl.sc_main.__release_gil__ = True
 def _retain_process_callback(register):
     """Wrap registration to retain bound callables on their owning module."""
     def wrapper(self, name, callback, *args):
+        """Retain callable ownership before native process registration."""
         if not hasattr(self, "_process_callbacks"):
             self._process_callbacks = []
         self._process_callbacks.append(callback)
@@ -86,6 +85,7 @@ cppyy.gbl.sc_core.sc_module = cppyy.gbl.sc_core.ScModule
 sc_core_namespace = cppyy.gbl.sc_core
 
 def add_sc_core_members():
+    """Populate resolvable native names while preserving Python print()."""
     module_globals = globals()
     for name in dir(sc_core_namespace):
         if name == "print":
@@ -124,16 +124,22 @@ for name in sc_core_classes + sc_core_functions:
 
 
 def __getattr__(name):
-    mod = getattr(cppyy.gbl.sc_core, name)
+    """Resolve a native kernel name or raise AttributeError."""
+    mod = _document_member(getattr(cppyy.gbl.sc_core, name))
     return mod
 
 
 # Define a custom __dir__ for listing available attributes
 def __dir__():
-    return list(globals().keys())
+    return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
 
 
 def sc_elab_and_sim():
+    """Enter native sc_main with sys.argv and return its integer exit status.
+
+    This releases the GIL while native code runs and reacquires it for Python
+    callbacks. Invoke once per independent simulation process.
+    """
     log(f"sc_elab_and_sim({sys.argv})")
 
     argc = len(sys.argv)
@@ -146,6 +152,7 @@ def sc_elab_and_sim():
 
 
 def sc_stop():
+    """Request kernel stop unless already stopped; also used at interpreter exit."""
     if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_STOPPED:
         log("Stopping simulation")
         cppyy.gbl.sc_core.sc_stop()
@@ -156,6 +163,7 @@ atexit.register(sc_stop)
 
 
 class ScStatus(Enum):
+    """Python names for native simulation lifecycle status values."""
     SC_UNITIALIZED               = cppyy.gbl.sc_core.SC_UNITIALIZED
     SC_ELABORATION               = cppyy.gbl.sc_core.SC_ELABORATION
     SC_BEFORE_END_OF_ELABORATION = cppyy.gbl.sc_core.SC_BEFORE_END_OF_ELABORATION
@@ -187,8 +195,40 @@ class ScStatus(Enum):
 
 
 def sc_status():
+    """Return the current kernel lifecycle state as ScStatus."""
     status = cppyy.gbl.sc_core.sc_get_status()
     return ScStatus(status)  # Convert to Python enum
+
+
+
+@contextmanager
+def vcd_trace(filename, *, time_unit=None):
+    """Open a VCD trace and close it on normal exit or a Python exception.
+
+    Args:
+        filename: Native trace filename stem (SystemC appends .vcd).
+        time_unit: Optional (value, sc_time_unit) pair for trace timestamps.
+
+    Yields:
+        Native sc_trace_file accepted by sc_trace().
+
+    Raises:
+        RuntimeError: If the kernel cannot create the trace file.
+        Exception: Exceptions from the body propagate after trace closure.
+
+    Retain traced signals until the context exits. Closing a trace does not
+    stop the kernel; independent simulations still require new subprocesses.
+    Native process aborts cannot execute Python cleanup.
+    """
+    trace = cppyy.gbl.sc_core.sc_create_vcd_trace_file(str(filename))
+    if not trace:
+        raise RuntimeError(f"Cannot create VCD trace: {filename}")
+    try:
+        if time_unit is not None:
+            trace.set_time_unit(*time_unit)
+        yield trace
+    finally:
+        cppyy.gbl.sc_core.sc_close_vcd_trace_file(trace)
 
 
 _native_sc_trace = cppyy.gbl.sc_core.sc_trace
@@ -287,3 +327,12 @@ def _unsupported_reset(self, *args):
 # avoids SystemC's fatal F539 abort when cppyy translates that control exception.
 cppyy.gbl.sc_core.ScModule.reset_signal_is = _unsupported_reset
 cppyy.gbl.sc_core.ScModule.async_reset_signal_is = _unsupported_reset
+
+# Publish native classes/enums and Python adapters for wildcard imports.
+from .._namespace import public_names as _public_names, document_member as _document_member, namespace_help as _namespace_help
+__all__ = sorted(set(_public_names(cppyy.gbl.sc_core)) | {
+    "ScStatus", "sc_status", "sc_trace", "sc_spawn", "wait",
+    "set_report_handler", "sc_elab_and_sim", "sc_stop", "vcd_trace",
+})
+
+__doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)

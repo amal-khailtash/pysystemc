@@ -1,3 +1,9 @@
+"""Initialize native SystemC and expose Python modeling namespaces.
+
+The kernel has one simulation context per interpreter. Retain modules, channels
+and callback dependencies until simulation ends; use subprocesses for unrelated
+simulations. Native templates are instantiated by cppyy on demand.
+"""
 import os
 import sys
 import pathlib
@@ -108,17 +114,34 @@ cppyy.cppdef("""
 # cppyy.include("tlm.h")
 # cppyy.include("systemc.h")
 cppyy.cppdef("#define SC_INCLUDE_DYNAMIC_PROCESSES")
+cppyy.cppdef("#define SC_INCLUDE_FX")
 cppyy.include("systemc")
+cppyy.include("tlm")
+# cppyy renders enum template arguments without their namespace qualifier.
+# Make fixed-point policies visible to Cling's generated specializations.
+cppyy.cppdef("""
+using sc_dt::SC_RND; using sc_dt::SC_RND_ZERO; using sc_dt::SC_RND_MIN_INF;
+using sc_dt::SC_RND_INF; using sc_dt::SC_RND_CONV; using sc_dt::SC_TRN;
+using sc_dt::SC_TRN_ZERO; using sc_dt::SC_SAT; using sc_dt::SC_SAT_ZERO;
+using sc_dt::SC_SAT_SYM; using sc_dt::SC_WRAP; using sc_dt::SC_WRAP_SM;
+""")
 # cppyy-generated port specializations use unqualified policy enum names.
 cppyy.cppdef("using sc_core::SC_ONE_OR_MORE_BOUND; using sc_core::SC_ZERO_OR_MORE_BOUND; using sc_core::SC_ALL_BOUND;")
 
 from .sc_core import *
 from .sc_dt import *
+from . import tlm
 
 
 
 def print_module_hierarchy(obj: sc_core.sc_object, level: int = 0, all_modules: bool=False):
-    """Function to recursively print the hierarchy"""
+    """Print a module and recursively visit its child modules.
+
+    Args:
+        obj: Native object whose module hierarchy is inspected.
+        level: Initial indentation depth.
+        all_modules: Include modules with the internal cynw prefix when true.
+    """
 
     # print(f"kind     : {obj.kind()}")
     # print(f"name     : {obj.name()}")
@@ -144,6 +167,11 @@ def print_module_hierarchy(obj: sc_core.sc_object, level: int = 0, all_modules: 
 
 
 def print_hierarchy(all_modules: bool=False):
+    """Print top-level modules and descendants in the current kernel context.
+
+    Args:
+        all_modules: Include internal cynw modules when true.
+    """
     print("=" * 80)
     print("Design Hierarchy:")
 
@@ -163,6 +191,12 @@ def print_hierarchy(all_modules: bool=False):
 
 
 def main():
+    """Invoke __main__.sc_main(argv) through the native SystemC entry point.
+
+    The callable must return an integer status. A nonzero status or exception
+    exits with SystemExit. Call once per interpreter; use a fresh subprocess
+    for independent simulations. The bridge acquires the GIL for Python entry.
+    """
     log(f"SystemC {sc_core.sc_release()}; main({sys.argv})")
     try:
         result = sc_core.sc_elab_and_sim()

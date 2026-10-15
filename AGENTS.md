@@ -21,6 +21,7 @@ Do not restrict template widths or types to a precompiled list.
 
 ## Implementation and documentation
 
+- Format first-party C++ with the depot’s `.clang-format` configuration.
 - Document C++ bridge classes and functions using Doxygen comments. Describe
   ownership, callback lifetime, exceptions, and GIL/thread requirements.
 - Give public Python functions/classes proper docstrings, including parameters,

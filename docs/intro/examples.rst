@@ -18,3 +18,26 @@ Arbitrary kill/unwind paths and broad datatype/TLM support remain unverified.
 
 Only the scenarios listed above are verified. Remaining upstream ports and
 feature coverage are still in development.
+
+Small examples
+--------------
+
+``examples/toy/event_cancel.py`` schedules and cancels events, disables initial
+method execution, and checks a single callback at 3 ns.
+
+``examples/toy/mixed_gate.py`` connects a native C++ AND gate to Python-owned
+signals and checks all four truth-table entries.
+
+These original examples illustrate introductory topics from
+`ASIC World <https://www.asic-world.com/examples/systemc/index.html>`_ and
+`Learn SystemC <https://www.learnsystemc.com/>`_. Run each in a fresh interpreter::
+
+   make example-event-cancel-py
+   make example-mixed-gate-py
+
+``examples/toy/trace_cleanup.py`` verifies that VCD transitions are flushed when
+a Python exception leaves the trace context. Run ``make example-trace-cleanup-py``.
+
+``examples/sysc/2.1/sc_export/main.py`` ports the native hierarchical export
+example and verifies channel calls at 10, 17 and 20 ns against C++.
+Run ``make example-export-py``.

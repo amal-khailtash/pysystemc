@@ -4,8 +4,8 @@
    :maxdepth: 2
 
    intro/setup
-   intro/development
    intro/examples
+   intro/development
    intro/release_notes
    intro/references
 
