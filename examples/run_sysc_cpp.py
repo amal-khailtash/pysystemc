@@ -15,26 +15,28 @@ SYSTEMC_HOME = os.environ.get("SYSTEMC_HOME", str(pathlib.Path(__file__).resolve
 def load_systemc():
     """Load native SystemC and the external-fmt spdlog note adapter."""
     root = pathlib.Path(__file__).resolve().parents[1]
-    for variable, default in (("FMT_HOME", "fmt-11.2.0"),
-                              ("SPDLOG_HOME", "spdlog-1.15.3")):
+    for variable, default in (("FMT_HOME", "fmt-11.2.0"), ("SPDLOG_HOME", "spdlog-1.15.3")):
         prefix = pathlib.Path(os.environ.get(variable, str(root / "build/deps" / default)))
         if not (prefix / "include").is_dir():
             raise RuntimeError(f"{variable} headers missing; run make setup")
         cppyy.add_include_path(str(prefix / "include"))
     cppyy.add_include_path(str(root / "src/amal/eda/systemc/sc_core"))
     cppyy.include("runner_log.h")
-    install = pathlib.Path(os.environ.get("SYSTEMC_INSTALL_DIR",
-        str(pathlib.Path(__file__).resolve().parents[1] / "build/deps/systemc-install")))
+    install = pathlib.Path(
+        os.environ.get(
+            "SYSTEMC_INSTALL_DIR", str(pathlib.Path(__file__).resolve().parents[1] / "build/deps/systemc-install")
+        )
+    )
     prefixes = [install, pathlib.Path(SYSTEMC_HOME)]
-    headers = next(prefix / "include" for prefix in prefixes
-                   if (prefix / "include/systemc").is_file())
+    headers = next(prefix / "include" for prefix in prefixes if (prefix / "include/systemc").is_file())
     cppyy.add_include_path(str(headers))
     override = os.environ.get("SYSTEMC_LIBRARY_DIR")
-    directories = ([pathlib.Path(override)] if override else
-                   [prefix / name for prefix in prefixes
-                    for name in ("lib", "lib64", "lib-linux64")])
-    library = next(directory / "libsystemc.so" for directory in directories
-                   if (directory / "libsystemc.so").is_file())
+    directories = (
+        [pathlib.Path(override)]
+        if override
+        else [prefix / name for prefix in prefixes for name in ("lib", "lib64", "lib-linux64")]
+    )
+    library = next(directory / "libsystemc.so" for directory in directories if (directory / "libsystemc.so").is_file())
     cppyy.add_library_path(str(library.parent))
     cppyy.load_library(str(library))
 
@@ -54,7 +56,7 @@ def run_sysc_cpp(source_files):
         source_path = pathlib.Path(src)
         cppyy.add_include_path(str(source_path.parent))
 
-        with open(src, "r") as fd:
+        with open(src) as fd:
             cppyy.cppdef(fd.read())
 
     # Recompile the pinned startup wrapper after defining the user's sc_main

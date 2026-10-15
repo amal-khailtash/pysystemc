@@ -4,23 +4,22 @@ from counter import Counter
 
 
 def sc_main(args: list) -> int:
-    """Main function for the testbench
-    """
+    """Main function for the testbench"""
 
     global wf, cnt, clock, reset, enable, counter_out
 
-    clock       = sc_core.sc_signal[bool]("clock")
-    reset       = sc_core.sc_signal[bool]("reset")
-    enable      = sc_core.sc_signal[bool]("enable")
+    clock = sc_core.sc_signal[bool]("clock")
+    reset = sc_core.sc_signal[bool]("reset")
+    enable = sc_core.sc_signal[bool]("enable")
     counter_out = sc_core.sc_signal[sc_dt.sc_uint[4]]("counter_out")
 
     # Connect the DUT
     counter = Counter("COUNTER")
     cnt = counter
-    counter.clock       (clock      )
-    counter.reset       (reset      )
-    counter.enable      (enable     )
-    counter.counter_out (counter_out)
+    counter.clock(clock)
+    counter.reset(reset)
+    counter.enable(enable)
+    counter.counter_out(counter_out)
 
     sc_core.sc_start(1, sc_core.SC_NS)
 
@@ -28,8 +27,7 @@ def sc_main(args: list) -> int:
     wf = sc_core.sc_create_vcd_trace_file("counter")
 
     # Trace signal interfaces, preserving references to their native values.
-    for signal, name in ((clock, "clock"), (reset, "reset"),
-                         (enable, "enable"), (counter_out, "count")):
+    for signal, name in ((clock, "clock"), (reset, "reset"), (enable, "enable"), (counter_out, "count")):
         sc_core.sc_trace(wf, signal, name)
 
     # Initialize all variables

@@ -1,0 +1,44 @@
+name: Tests and coverage
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+      - name: Set up native and Python dependencies
+        run: make setup
+      - name: Check Python lint and formatting
+        run: |
+          make lint
+          uv run ruff format --check .
+      - name: Run semantic tests and coverage
+        run: uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
+      - name: Save coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-python-3.14
+          path: build/coverage/
+          if-no-files-found: warn
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/coverage/coverage.xml
+          disable_search: true
+          fail_ci_if_error: true

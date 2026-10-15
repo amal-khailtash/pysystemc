@@ -114,3 +114,11 @@ Hierarchical interfaces
 Python module exports and ports. Keep ``sc_module_name`` alive throughout each
 module constructor. Use ``export.get_interface()`` when binding a port or another
 export: cppyy does not provide SystemC's implicit export/interface conversion.
+
+Runtime initialization
+----------------------
+
+Native library loading and CPyCppyy header repair are centralized in the private
+runtime module. The package ships its licensed native entry adapter and requires
+no external kernel source file at startup. Existing environment overrides remain
+available; ordinary installed wheels discover bundled dependencies automatically.

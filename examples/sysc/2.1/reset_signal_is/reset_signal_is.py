@@ -3,6 +3,7 @@
 See the upstream LICENSE and NOTICE. The native clock and signal topology and
 100-cycle active-low synchronous reset stimulus follow the C++ example.
 """
+
 from amal.eda.systemc import main, sc_core as sc
 
 

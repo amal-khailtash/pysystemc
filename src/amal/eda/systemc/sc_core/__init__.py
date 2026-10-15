@@ -3,40 +3,38 @@
 Callbacks are retained for their native process lifetime. Blocking scheduler
 operations release the GIL; process reset remains explicitly unsupported.
 """
+
 from .._logging import log
 import atexit
 from contextlib import contextmanager
+from collections.abc import Callable, Iterator
+from typing import Any
 from enum import Enum
 import pathlib
-import os
 import sys
 
 # The parent package selects the JIT C++ standard before importing cppyy.
 
 import cppyy
 
-# from .. import SYSTEMC_HOME
-from .. import SYSTEMC_HOME
-
+#
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
 
 
-with open(SCRIPT_PATH / "sc_main.cpp", "r") as fd:
+with open(SCRIPT_PATH / "sc_main.cpp") as fd:
     cppyy.cppdef(fd.read())
 
-# Reread the sc_main_main.cpp file to link out new sc_main to sc_elan_and_sim function
-with open(f"{SYSTEMC_HOME}/src/sysc/kernel/sc_main_main.cpp", "r") as fd:
+# Compile the licensed local SystemC entry adapter; no upstream source tree is needed.
+with open(SCRIPT_PATH / "native_entry.cpp") as fd:
     cppyy.cppdef(fd.read())
 
 # Store the sc_core.sc_module and its metaclass
 # sc_module           = cppyy.gbl.sc_core.sc_module
 # sc_module_metaclass = type(cppyy.gbl.sc_core.sc_module)
 
-with open(SCRIPT_PATH / "sc_module_new.cpp", "r") as fd:
+with open(SCRIPT_PATH / "sc_module_new.cpp") as fd:
     cppyy.cppdef(fd.read())
-
-
 
 
 # print(f"type(sc_core.sc_module): {type(cppyy.gbl.sc_core.sc_module)}")
@@ -55,21 +53,24 @@ cppyy.gbl.sc_core.sc_start.__release_gil__ = True
 cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
 cppyy.gbl.sc_main.__release_gil__ = True
 
+
 # cppyy's std::function conversion does not retain bound Python callables.
 # Keep them alive on their owning module for the native process lifetime.
 def _retain_process_callback(register):
     """Wrap registration to retain bound callables on their owning module."""
+
     def wrapper(self, name, callback, *args):
         """Retain callable ownership before native process registration."""
         if not hasattr(self, "_process_callbacks"):
             self._process_callbacks = []
         self._process_callbacks.append(callback)
         return register(self, name, callback, *args)
+
     return wrapper
 
+
 for _name in ("sc_method", "sc_thread", "sc_cthread"):
-    setattr(cppyy.gbl.sc_core.ScModule, _name,
-            _retain_process_callback(getattr(cppyy.gbl.sc_core.ScModule, _name)))
+    setattr(cppyy.gbl.sc_core.ScModule, _name, _retain_process_callback(getattr(cppyy.gbl.sc_core.ScModule, _name)))
 
 # Replace with custom sc_module
 cppyy.gbl.sc_core.sc_module = cppyy.gbl.sc_core.ScModule
@@ -79,10 +80,9 @@ cppyy.gbl.sc_core.sc_module = cppyy.gbl.sc_core.ScModule
 # print(f"type(sc_core.sc_module): {type(cppyy.gbl.sc_core.sc_module)}")
 
 
-
-
 # Access the C++ sc_core namespace
 sc_core_namespace = cppyy.gbl.sc_core
+
 
 def add_sc_core_members():
     """Populate resolvable native names while preserving Python print()."""
@@ -96,6 +96,7 @@ def add_sc_core_members():
             continue
         module_globals[name] = member
 
+
 # Add all sc_core members to this module
 add_sc_core_members()
 
@@ -105,22 +106,6 @@ for name, member in sc_core_namespace.__dict__.items():
     # Filter out internal or irrelevant attributes
     if not name.startswith("__"):
         globals()[name] = member
-
-
-# List of classes, enums, and functions to expose from `sc_core`
-sc_core_classes = ["sc_module", "sc_module_name", "sc_clock", "sc_event", "sc_signal", "sc_in", "sc_in", "sc_out", "sc_in_clk", "sc_inout_clk", "sc_out_clk"]
-sc_core_functions = ["sc_elab_and_sim"]  # Add other functions if needed
-
-
-# Dynamically add classes and functions from the C++ `sc_core` namespace to this module
-for name in sc_core_classes + sc_core_functions:
-    try:
-        globals()[name] = getattr(sc_core_namespace, name)
-    except AttributeError:
-        print(f"Warning: {name} not found in sc_core namespace.")
-
-
-
 
 
 def __getattr__(name):
@@ -134,7 +119,7 @@ def __dir__():
     return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
 
 
-def sc_elab_and_sim():
+def sc_elab_and_sim() -> int:
     """Enter native sc_main with sys.argv and return its integer exit status.
 
     This releases the GIL while native code runs and reacquires it for Python
@@ -147,11 +132,10 @@ def sc_elab_and_sim():
 
     log(f"Entering native simulation with {argc} arguments")
 
-
     return cppyy.gbl.sc_core.sc_elab_and_sim(argc, argv)
 
 
-def sc_stop():
+def sc_stop() -> None:
     """Request kernel stop unless already stopped; also used at interpreter exit."""
     if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_STOPPED:
         log("Stopping simulation")
@@ -164,21 +148,22 @@ atexit.register(sc_stop)
 
 class ScStatus(Enum):
     """Python names for native simulation lifecycle status values."""
-    SC_UNITIALIZED               = cppyy.gbl.sc_core.SC_UNITIALIZED
-    SC_ELABORATION               = cppyy.gbl.sc_core.SC_ELABORATION
+
+    SC_UNITIALIZED = cppyy.gbl.sc_core.SC_UNITIALIZED
+    SC_ELABORATION = cppyy.gbl.sc_core.SC_ELABORATION
     SC_BEFORE_END_OF_ELABORATION = cppyy.gbl.sc_core.SC_BEFORE_END_OF_ELABORATION
-    SC_END_OF_ELABORATION        = cppyy.gbl.sc_core.SC_END_OF_ELABORATION
-    SC_START_OF_SIMULATION       = cppyy.gbl.sc_core.SC_START_OF_SIMULATION
-    SC_RUNNING                   = cppyy.gbl.sc_core.SC_RUNNING
-    SC_PAUSED                    = cppyy.gbl.sc_core.SC_PAUSED
-    SC_STOPPED                   = cppyy.gbl.sc_core.SC_STOPPED
-    SC_END_OF_SIMULATION         = cppyy.gbl.sc_core.SC_END_OF_SIMULATION
-    SC_END_OF_INITIALIZATION     = cppyy.gbl.sc_core.SC_END_OF_INITIALIZATION
-  # SC_END_OF_EVALUATION         = cppyy.gbl.sc_core.SC_END_OF_EVALUATION
-    SC_END_OF_UPDATE             = cppyy.gbl.sc_core.SC_END_OF_UPDATE
-    SC_BEFORE_TIMESTEP           = cppyy.gbl.sc_core.SC_BEFORE_TIMESTEP
-    SC_STATUS_LAST               = cppyy.gbl.sc_core.SC_STATUS_LAST
-    SC_STATUS_ANY                = cppyy.gbl.sc_core.SC_STATUS_ANY
+    SC_END_OF_ELABORATION = cppyy.gbl.sc_core.SC_END_OF_ELABORATION
+    SC_START_OF_SIMULATION = cppyy.gbl.sc_core.SC_START_OF_SIMULATION
+    SC_RUNNING = cppyy.gbl.sc_core.SC_RUNNING
+    SC_PAUSED = cppyy.gbl.sc_core.SC_PAUSED
+    SC_STOPPED = cppyy.gbl.sc_core.SC_STOPPED
+    SC_END_OF_SIMULATION = cppyy.gbl.sc_core.SC_END_OF_SIMULATION
+    SC_END_OF_INITIALIZATION = cppyy.gbl.sc_core.SC_END_OF_INITIALIZATION
+    # SC_END_OF_EVALUATION         = cppyy.gbl.sc_core.SC_END_OF_EVALUATION
+    SC_END_OF_UPDATE = cppyy.gbl.sc_core.SC_END_OF_UPDATE
+    SC_BEFORE_TIMESTEP = cppyy.gbl.sc_core.SC_BEFORE_TIMESTEP
+    SC_STATUS_LAST = cppyy.gbl.sc_core.SC_STATUS_LAST
+    SC_STATUS_ANY = cppyy.gbl.sc_core.SC_STATUS_ANY
 
     @classmethod
     def from_cpp_enum(cls, cpp_enum_value):
@@ -194,15 +179,14 @@ class ScStatus(Enum):
         return self.name
 
 
-def sc_status():
+def sc_status() -> ScStatus:
     """Return the current kernel lifecycle state as ScStatus."""
     status = cppyy.gbl.sc_core.sc_get_status()
     return ScStatus(status)  # Convert to Python enum
 
 
-
 @contextmanager
-def vcd_trace(filename, *, time_unit=None):
+def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | None = None) -> Iterator[Any]:
     """Open a VCD trace and close it on normal exit or a Python exception.
 
     Args:
@@ -233,7 +217,8 @@ def vcd_trace(filename, *, time_unit=None):
 
 _native_sc_trace = cppyy.gbl.sc_core.sc_trace
 
-def sc_trace(file, value, name, *args):
+
+def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
     """Register a named waveform using stable native signal storage.
 
     Args:
@@ -259,7 +244,8 @@ cppyy.gbl.sc_core.wait.__release_gil__ = True
 cppyy.gbl.sc_core.sc_join.wait.__release_gil__ = True
 _spawn_callbacks = []
 
-def sc_spawn(callback, name="", options=None):
+
+def sc_spawn(callback: Callable[[], Any], name: str = "", options: Any = None) -> Any:
     """Spawn a Python callable as a native dynamic SystemC process.
 
     Args:
@@ -284,7 +270,8 @@ def sc_spawn(callback, name="", options=None):
 
 _report_callback = None
 
-def set_report_handler(callback=None):
+
+def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> None:
     """Install a retained Python report handler, or restore the native default.
 
     The callback receives a native sc_report and an integer action bitmask.
@@ -304,7 +291,8 @@ def set_report_handler(callback=None):
 _native_wait = cppyy.gbl.sc_core.wait
 cppyy.gbl.sc_core.wait_cycle.__release_gil__ = True
 
-def wait(*args):
+
+def wait(*args: Any) -> Any:
     """Suspend the current native thread, preserving SystemC wait overloads.
 
     A zero-argument call selects the cycle wait explicitly. Timed, event and
@@ -323,16 +311,32 @@ def _unsupported_reset(self, *args):
         "sc_unwind_exception; native reset/unwind support is pending."
     )
 
+
 # Native unwind must cross a Python callback during process reset. Failing early
 # avoids SystemC's fatal F539 abort when cppyy translates that control exception.
 cppyy.gbl.sc_core.ScModule.reset_signal_is = _unsupported_reset
 cppyy.gbl.sc_core.ScModule.async_reset_signal_is = _unsupported_reset
 
 # Publish native classes/enums and Python adapters for wildcard imports.
-from .._namespace import public_names as _public_names, document_member as _document_member, namespace_help as _namespace_help
-__all__ = sorted(set(_public_names(cppyy.gbl.sc_core)) | {
-    "ScStatus", "sc_status", "sc_trace", "sc_spawn", "wait",
-    "set_report_handler", "sc_elab_and_sim", "sc_stop", "vcd_trace",
-})
+from .._namespace import (
+    public_names as _public_names,
+    document_member as _document_member,
+    namespace_help as _namespace_help,
+)
+
+__all__ = sorted(
+    set(_public_names(cppyy.gbl.sc_core))
+    | {
+        "ScStatus",
+        "sc_status",
+        "sc_trace",
+        "sc_spawn",
+        "wait",
+        "set_report_handler",
+        "sc_elab_and_sim",
+        "sc_stop",
+        "vcd_trace",
+    }
+)
 
 __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)

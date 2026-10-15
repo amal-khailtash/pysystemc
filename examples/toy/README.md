@@ -4,6 +4,8 @@ These original examples demonstrate introductory topics covered by
 [ASIC World](https://www.asic-world.com/examples/systemc/index.html) and
 [Learn SystemC](https://www.learnsystemc.com/). They do not copy tutorial code.
 
+- `adder.py`: parameterized addition with native width truncation.
+- `up_counter.py`: eight-bit edge-sensitive counter with reset, enable and wrap.
 - `event_cancel.py`: event notification/cancellation, static sensitivity,
   `dont_initialize`, and timed thread waits.
 - `mixed_gate.py`: a C++ AND gate with ports connected to Python-owned signals;

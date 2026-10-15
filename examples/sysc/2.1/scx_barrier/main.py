@@ -3,6 +3,7 @@
 Adapted from Andy Goodrich's upstream example; see upstream LICENSE/NOTICE.
 The barrier is implemented in Python using native SystemC events and waits.
 """
+
 from amal.eda.systemc import main, sc_core as sc
 
 
@@ -66,7 +67,7 @@ class X(sc.sc_module):
 
 def sc_main(args):
     """Run the upstream clocked 1000-ns interval and verify all arrivals."""
-    clock = sc.sc_clock("clock")
+    _clock = sc.sc_clock("clock")  # Retain the native clock through simulation.
     x = X("x")
     sc.sc_start(1000, sc.SC_NS)
     assert sorted(x.results) == [("a", 11000.0), ("b", 11000.0), ("c", 11000.0)]

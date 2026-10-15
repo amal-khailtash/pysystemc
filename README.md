@@ -6,7 +6,7 @@
 
 | Category | Status |
 | --- | --- |
-| CI/CD | [![Publish](https://github.com/amal-khailtash/pysystemc/actions/workflows/publish.yml/badge.svg)](https://github.com/amal-khailtash/pysystemc/actions/workflows/publish.yml) [![Documentation workflow](https://img.shields.io/github/actions/workflow/status/amal-khailtash/pysystemc/readthedocs.yml?branch=main&label=Documentation&logo=readthedocs&logoColor=white)](https://github.com/amal-khailtash/pysystemc/actions/workflows/readthedocs.yml) |
+| CI/CD | [![Tests](https://github.com/amal-khailtash/pysystemc/actions/workflows/ci.yml/badge.svg)](https://github.com/amal-khailtash/pysystemc/actions/workflows/ci.yml) [![Codecov](https://codecov.io/gh/amal-khailtash/pysystemc/branch/main/graph/badge.svg)](https://app.codecov.io/gh/amal-khailtash/pysystemc) [![Publish](https://github.com/amal-khailtash/pysystemc/actions/workflows/publish.yml/badge.svg)](https://github.com/amal-khailtash/pysystemc/actions/workflows/publish.yml) [![Documentation workflow](https://img.shields.io/github/actions/workflow/status/amal-khailtash/pysystemc/readthedocs.yml?branch=main&label=Documentation&logo=readthedocs&logoColor=white)](https://github.com/amal-khailtash/pysystemc/actions/workflows/readthedocs.yml) |
 | Project | [![GitHub](https://img.shields.io/badge/pysystemc-29b6f6?logo=github&labelColor=0277bd)](https://github.com/amal-khailtash/pysystemc) [![PyPI](https://img.shields.io/pypi/v/pysystemc?logo=pypi&logoColor=FBE072&cacheSeconds=300)](https://pypi.org/project/pysystemc/) [![GitHub tag](https://img.shields.io/github/v/tag/amal-khailtash/pysystemc?logo=github&label=version)](https://github.com/amal-khailtash/pysystemc/tags) |
 | Docs | [![Read the Docs](https://readthedocs.org/projects/pysystemc/badge/?version=latest)](https://pysystemc.readthedocs.io/en/latest/) |
 | Meta | [![License](https://img.shields.io/github/license/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/blob/main/LICENSE) [![Stars](https://img.shields.io/github/stars/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/stargazers) [![Forks](https://img.shields.io/github/forks/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/forks) [![Contributors](https://img.shields.io/github/contributors/amal-khailtash/pysystemc)](https://github.com/amal-khailtash/pysystemc/graphs/contributors) |
@@ -87,6 +87,10 @@ For build options, header repair, logging controls, and validation, see the
 
 * [Accellera](https://accellera.org/)
   * [SystemC](https://github.com/accellera-official/systemc)
+  * [SystemC Verification (SCV)](https://systemc.org/overview/systemc-verification/)
+  * [UVM-SystemC](https://github.com/accellera-official/uvm-systemc)
+  * [CRAVE constrained randomization](https://github.com/accellera-official/crave)
+  * [FC4SC functional coverage](https://github.com/accellera-official/fc4sc)
   * [PySysC](https://github.com/accellera-official/PySysC) - A Python package to make SystemC usable from Python using conan/cppyy
     * [Python and SystemC](https://workspace.accellera.org/document/dl/10968)
 * [systemc_python](https://github.com/YouHui1/systemc_python) - use systemc through cppyy

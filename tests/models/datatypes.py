@@ -1,4 +1,5 @@
 """Validate on-demand arbitrary-width native datatypes and bit/range access."""
+
 from amal.eda.systemc import sc_core as sc, sc_dt as dt
 
 for width in (1, 4, 17, 63, 64):

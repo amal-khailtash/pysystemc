@@ -3,6 +3,7 @@
 See upstream LICENSE/NOTICE. Demonstrates severity/id/action precedence,
 user-defined actions, and temporary suppression/forcing with a Python handler.
 """
+
 from amal.eda.systemc import main, sc_core as sc
 
 USER_ACTIONS = []
@@ -12,8 +13,16 @@ NAMES = ("INFO", "WARNING", "ERROR", "FATAL")
 
 def allocate_user_actions():
     """Allocate all available user bits and retain the first six."""
-    reserved = {sc.SC_UNSPECIFIED, sc.SC_DO_NOTHING, sc.SC_THROW, sc.SC_LOG,
-                sc.SC_DISPLAY, sc.SC_CACHE_REPORT, sc.SC_STOP, sc.SC_ABORT}
+    reserved = {
+        sc.SC_UNSPECIFIED,
+        sc.SC_DO_NOTHING,
+        sc.SC_THROW,
+        sc.SC_LOG,
+        sc.SC_DISPLAY,
+        sc.SC_CACHE_REPORT,
+        sc.SC_STOP,
+        sc.SC_ABORT,
+    }
     for count in range(1000):
         action = sc.sc_report_handler.get_new_action_id()
         if action == sc.SC_UNSPECIFIED:
@@ -27,25 +36,35 @@ def allocate_user_actions():
 
 def dump_all_handler(report, actions):
     """Print native report fields and resolved actions without executing them."""
-    known = {int(sc.SC_DO_NOTHING): "do-nothing", int(sc.SC_THROW): "throw",
-             int(sc.SC_LOG): "log", int(sc.SC_DISPLAY): "display",
-             int(sc.SC_CACHE_REPORT): "cache-report", int(sc.SC_INTERRUPT): "interrupt",
-             int(sc.SC_STOP): "stop", int(sc.SC_ABORT): "abort"}
+    known = {
+        int(sc.SC_DO_NOTHING): "do-nothing",
+        int(sc.SC_THROW): "throw",
+        int(sc.SC_LOG): "log",
+        int(sc.SC_DISPLAY): "display",
+        int(sc.SC_CACHE_REPORT): "cache-report",
+        int(sc.SC_INTERRUPT): "interrupt",
+        int(sc.SC_STOP): "stop",
+        int(sc.SC_ABORT): "abort",
+    }
     known.update({int(value): f"usr{index + 1}" for index, value in enumerate(USER_ACTIONS)})
-    labels = [known.get(1 << bit, "UNKNOWN") for bit in range(32)
-              if int(actions) & (1 << bit)]
-    print(f"report: {report.get_msg_type()} {NAMES[int(report.get_severity())]} --> "
-          + "".join(f" {label}" for label in labels))
+    labels = [known.get(1 << bit, "UNKNOWN") for bit in range(32) if int(actions) & (1 << bit)]
+    print(
+        f"report: {report.get_msg_type()} {NAMES[int(report.get_severity())]} --> "
+        + "".join(f" {label}" for label in labels)
+    )
     process = report.get_process_name() or "<none>"
-    print(f" msg={report.get_msg()} file={report.get_file_name()}"
-          f" line {report.get_line_number()} time={report.get_time()} process={process}")
+    print(
+        f" msg={report.get_msg()} file={report.get_file_name()}"
+        f" line {report.get_line_number()} time={report.get_time()} process={process}"
+    )
 
 
 def query_rules(identifier):
     """Emit all severities for one message identifier."""
     for line, severity in enumerate(SEVERITIES):
-        sc.sc_report_handler.report(severity, identifier,
-            f"extra_msg_for_{NAMES[line].lower()}", "no_specific_file", line)
+        sc.sc_report_handler.report(
+            severity, identifier, f"extra_msg_for_{NAMES[line].lower()}", "no_specific_file", line
+        )
     print()
 
 

@@ -3,6 +3,7 @@
 Adapted from Accellera's Apache-2.0 example; see the upstream LICENSE/NOTICE.
 Python closures replace sc_bind/sc_ref and retain native process return values.
 """
+
 from amal.eda.systemc import main, sc_core as sc
 
 
@@ -35,8 +36,11 @@ class Top(sc.sc_module):
         events[0].notify(100, sc.SC_NS)
         join = sc.sc_join()
         for index in range(4):
-            callback = lambda index=index: self.round_robin(
-                str(index + 1), events[index], events[(index + 1) % 4])
+
+            def callback(index=index):
+                """Run one round-robin participant with a retained index."""
+                return self.round_robin(str(index + 1), events[index], events[(index + 1) % 4])
+
             join.add_process(sc.sc_spawn(callback, str(index + 1)))
         join.wait()
         assert len(self.rounds) == 12
@@ -44,13 +48,13 @@ class Top(sc.sc_module):
         for index in range(10):
             sc.sc_spawn(lambda index=index: self.wait_and_end(index))
         sc.wait(20, sc.SC_NS)
-        for label, value in (("test_function", 3.14159),
-                             ("void_function", 1.2345),
-                             ("ref_function", 9.8765)):
+        for label, value in (("test_function", 3.14159), ("void_function", 1.2345), ("ref_function", 9.8765)):
             result = []
+
             def callback(label=label, value=value):
                 print(f"{label} sees {value}")
                 result.append(int(value))
+
             handle = sc.sc_spawn(callback)
             sc.wait(handle.terminated_event())
             if label != "void_function":

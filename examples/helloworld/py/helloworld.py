@@ -1,5 +1,3 @@
-import sys
-
 from amal.eda.systemc import main, sc_core
 
 
@@ -8,7 +6,6 @@ def hello1():
 
 
 class HelloWorld(sc_core.sc_module):
-
     def __init__(self, name: str):
         # module_name = sc_core.sc_module_name(name)
         super().__init__(name)
@@ -38,7 +35,7 @@ class HelloWorld(sc_core.sc_module):
 def sc_main(args: list) -> int:
     hello1()
 
-    helloworld = HelloWorld("helloworld")
+    _helloworld = HelloWorld("helloworld")  # Retain the native process host.
 
     sc_core.sc_start()
 

@@ -5,7 +5,10 @@
 
    intro/setup
    intro/examples
+   intro/supported
    intro/development
+   intro/architecture
+   intro/roadmap
    intro/release_notes
    intro/references
 

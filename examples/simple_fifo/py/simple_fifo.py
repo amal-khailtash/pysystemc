@@ -1,4 +1,5 @@
 """A finite producer/consumer example using the native SystemC FIFO."""
+
 from amal.eda.systemc import main, sc_core
 
 # Blocking native FIFO calls must release the GIL so other processes can run.

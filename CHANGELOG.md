@@ -8,30 +8,27 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
-- Native fixed-point templates and policy enums, with quantization, saturation,
-  wrap and arbitrary-width construction checks.
-- A TLM namespace exposing payloads, protocol enums, interfaces and socket
-  templates; tests cover payload metadata, not transport callback support.
-- Grouped namespace help and enum value inventories, plus missing native class
-  and template descriptions that preserve cppyy overload documentation.
-- Context-managed VCD files with cleanup on Python exceptions and tests that
-  inspect flushed waveform transitions.
-- A hierarchical sc_export Python port compared with native C++ at 10, 17 and
-  20 ns, using explicit get_interface() bindings.
-- Small event-cancellation and mixed C++/Python gate examples with assertions
-  for callback execution, truth-table values and simulation times.
+- Semantic test CI with Python 3.14, native dependency setup, Ruff checks,
+  XML/HTML coverage artifacts and Codecov uploads; add test and coverage badges.
+- Ruff development tooling and modern annotations for callback/trace adapters.
+- Original parameterized adder and eight-bit counter examples, shown inline in
+  documentation with tutorial references and behavioral assertions.
+- Architecture/baseline, supported-behavior and future-roadmap pages covering
+  SCV, CRAVE, FC4SC, UVM-SystemC and RTL co-simulation references.
+- Tests for missing entry callables, dynamic spawn options, static cycle waits,
+  invalid callbacks and idempotent cleanup.
 
 ### Changed
 
-- Improve native namespace exports and introspection without restricting template
-  parameters; keep Python print() available in wildcard imports.
-- Centralize C++17 selection in the package initializer and remove the redundant
-  submodule setting.
-- Expand Python and Doxygen documentation, move Development after Examples,
-  and apply the depot clang-format configuration with a 120-column limit.
-- Build release documentation after successful production PyPI publication;
-  retain main-branch and manual documentation builds.
-- Give hosted PyPI badges a separate cache URL for each documentation version.
+- Centralize native discovery/loading in a private runtime module and package
+  the licensed SystemC entry adapter to remove startup's external source dependency.
+- Format first-party Python with Ruff and retain native object lifetimes in examples.
+- Produce Codecov-compatible XML alongside local terminal and HTML coverage reports.
+- Support CMake 4 when configuring the pinned SystemC 2.3.4 developer build.
+
+### Fixed
+
+- Avoid cppyy empty-vector iteration and native range shadowing in hierarchy inspection.
 
 ## [0.2.3] - 2026-10-14
 

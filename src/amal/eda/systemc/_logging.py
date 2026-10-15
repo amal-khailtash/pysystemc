@@ -1,4 +1,5 @@
 """Loguru diagnostics rendered by Rich with native-compatible color controls."""
+
 import os
 import sys
 from loguru._logger import Core, Logger
@@ -10,17 +11,20 @@ def _console() -> Console:
     """Create a stderr console honoring explicit color mode and NO_COLOR."""
     mode = os.environ.get("PYSYSTEMC_COLOR", "auto")
     force = True if mode == "always" else False if mode == "never" else None
-    return Console(file=sys.stderr, force_terminal=force,
-                   no_color=mode == "never" or (mode != "always" and "NO_COLOR" in os.environ),
-                   highlight=False, markup=False)
+    return Console(
+        file=sys.stderr,
+        force_terminal=force,
+        no_color=mode == "never" or (mode != "always" and "NO_COLOR" in os.environ),
+        highlight=False,
+        markup=False,
+    )
 
 
 def _sink(message) -> None:
     """Render only this binding's Loguru records without changing global sinks."""
     record = message.record
     level = record["level"].name
-    text = Text(f"[pysystemc:Python:{level}] {record['message']}",
-                style="red" if level == "ERROR" else "cyan")
+    text = Text(f"[pysystemc:Python:{level}] {record['message']}", style="red" if level == "ERROR" else "cyan")
     _console().print(text, soft_wrap=True)
     sys.stderr.flush()
 
@@ -46,6 +50,8 @@ def show_banner(version: str) -> None:
     """Print the version before native startup unless PYSC_COPYRIGHT_MESSAGE=DISABLE."""
     if os.environ.get("PYSC_COPYRIGHT_MESSAGE") == "DISABLE":
         return
-    _console().print(Text(f"pysystemc {version} — SystemC Python bindings\n"
-                          "Copyright (c) 2026 Amal Khailtash", style="cyan"), soft_wrap=True)
+    _console().print(
+        Text(f"pysystemc {version} — SystemC Python bindings\nCopyright (c) 2026 Amal Khailtash", style="cyan"),
+        soft_wrap=True,
+    )
     sys.stderr.flush()

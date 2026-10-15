@@ -2,7 +2,6 @@ from amal.eda.systemc import sc_core, sc_dt, print_hierarchy
 
 
 class Counter(sc_core.sc_module):
-
     def __init__(self, name: str):
         """Constructor for the counter
         Since this counter is a positive edge trigged one,
@@ -14,9 +13,9 @@ class Counter(sc_core.sc_module):
 
         print("Executing new")
 
-        self.clock       = sc_core.sc_in_clk("clock")                       # Clock input of the design
-        self.reset       = sc_core.sc_in[bool]("reset")                     # active high, synchronous Reset input
-        self.enable      = sc_core.sc_in[bool]("enable")                    # Active high enable signal for counter
+        self.clock = sc_core.sc_in_clk("clock")  # Clock input of the design
+        self.reset = sc_core.sc_in[bool]("reset")  # active high, synchronous Reset input
+        self.enable = sc_core.sc_in[bool]("enable")  # Active high enable signal for counter
         self.counter_out = sc_core.sc_out[sc_dt.sc_uint[4]]("counter_out")  # 4 bit vector output of the counter
 
         # Local Variables

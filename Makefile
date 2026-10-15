@@ -151,7 +151,7 @@ setup-systemc: check-systemc-version
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: setup-systemc-cmake
 setup-systemc-cmake: check-systemc-version
-	cmake -S submodules/systemc -B $(SYSTEMC_BUILD_DIR) -DCMAKE_CXX_STANDARD=17 -DENABLE_PTHREADS=$(SYSTEMC_PTHREADS) -DCMAKE_INSTALL_PREFIX=$(SYSTEMC_INSTALL_DIR) -DCMAKE_INSTALL_LIBDIR=lib
+	cmake -S submodules/systemc -B $(SYSTEMC_BUILD_DIR) -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_CXX_STANDARD=17 -DENABLE_PTHREADS=$(SYSTEMC_PTHREADS) -DCMAKE_INSTALL_PREFIX=$(SYSTEMC_INSTALL_DIR) -DCMAKE_INSTALL_LIBDIR=lib
 	cmake --build $(SYSTEMC_BUILD_DIR) -j$(BUILD_JOBS)
 	cmake --install $(SYSTEMC_BUILD_DIR)
 
@@ -199,11 +199,25 @@ test-verbose:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -vv
 
 # ----------------------------------------------------------------------------------------------------------------------
+# lint: ## Check first-party Python with Ruff (Python 3.14)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: lint
+lint:
+	uv run ruff check .
+
+# ----------------------------------------------------------------------------------------------------------------------
+# format-python: ## Format first-party Python with Ruff
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: format-python
+format-python:
+	uv run ruff format .
+
+# ----------------------------------------------------------------------------------------------------------------------
 # coverage: ## Run regression coverage with terminal and HTML reports (build/coverage/html)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage
 coverage:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)
@@ -234,6 +248,20 @@ docs:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##@ Examples:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-adder-py: ## Verify parameterized unsigned addition and overflow
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-adder-py
+example-adder-py:
+	uv run examples/toy/adder.py
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-up-counter-py: ## Verify eight-bit reset, enable and wraparound
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-up-counter-py
+example-up-counter-py:
+	uv run examples/toy/up_counter.py
 
 # ----------------------------------------------------------------------------------------------------------------------
 # example-export-py: ## Run hierarchical native interface exports from Python

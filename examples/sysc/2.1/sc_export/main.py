@@ -4,10 +4,11 @@ Adapted from Accellera's examples/sysc/2.1/sc_export/main.cpp (Apache-2.0;
 see the upstream LICENSE and NOTICE). Native interfaces/channels are retained
 by their enclosing Python modules until simulation ends.
 """
+
 from amal.eda.systemc import main, sc_core as sc
 import cppyy
 
-cppyy.cppdef('''
+cppyy.cppdef("""
 
 namespace export_example
 {
@@ -29,7 +30,7 @@ class Channel : public ChannelInterface, public sc_core::sc_channel
 };
 
 }  // namespace export_example
-''')
+""")
 interface = cppyy.gbl.export_example.ChannelInterface
 channel = cppyy.gbl.export_example.Channel
 
@@ -41,8 +42,8 @@ class D(sc.sc_module):
         """Create the channel and bind its interface to IFP."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
-        self.IFP = sc.sc_export[interface]('IFP')
-        self.channel = channel('C')
+        self.IFP = sc.sc_export[interface]("IFP")
+        self.channel = channel("C")
         self.IFP(self.channel)
 
 
@@ -53,10 +54,10 @@ class E(sc.sc_module):
         """Retain channel, child module and hierarchical interface bindings."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
-        self.channel = channel('C')
-        self.child = D('D')
-        self.IFP1 = sc.sc_export[interface]('IFP1')
-        self.IFP2 = sc.sc_export[interface]('IFP2')
+        self.channel = channel("C")
+        self.child = D("D")
+        self.IFP1 = sc.sc_export[interface]("IFP1")
+        self.IFP2 = sc.sc_export[interface]("IFP2")
         self.IFP1(self.channel)
         self.IFP2(self.child.IFP.get_interface())
 
@@ -68,9 +69,9 @@ class X(sc.sc_module):
         """Register a finite thread and two interface ports."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
-        self.P1 = sc.sc_port[interface]('P1')
-        self.P2 = sc.sc_port[interface]('P2')
-        self.sc_thread('run', self.run)
+        self.P1 = sc.sc_port[interface]("P1")
+        self.P2 = sc.sc_port[interface]("P2")
+        self.sc_thread("run", self.run)
 
     def run(self):
         """Call interfaces after native waits at 10 and 20 ns."""
@@ -82,8 +83,8 @@ class X(sc.sc_module):
 
 def sc_main(args: list[str]) -> int:
     """Bind the hierarchy and preserve the native reference's bounded starts."""
-    provider = E('E')
-    consumer = X('X')
+    provider = E("E")
+    consumer = X("X")
     consumer.P1(provider.IFP1.get_interface())
     consumer.P2(provider.IFP2.get_interface())
     sc.sc_start(17, sc.SC_NS)
@@ -93,5 +94,5 @@ def sc_main(args: list[str]) -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

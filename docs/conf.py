@@ -1,4 +1,5 @@
 """Build project documentation without importing the native SystemC kernel."""
+
 from pathlib import Path
 import tomllib
 from docutils import nodes
@@ -15,8 +16,7 @@ rst_epilog = f"\n.. |project_version| replace:: {release}\n"
 html_title = f"pysystemc {release} documentation"
 
 # -- General configuration ---------------------------------------------------
-extensions = ["sphinx.ext.mathjax", "sphinx.ext.napoleon",
-              "sphinx.ext.githubpages", "myst_parser"]
+extensions = ["sphinx.ext.mathjax", "sphinx.ext.napoleon", "sphinx.ext.githubpages", "myst_parser"]
 exclude_patterns = ["_build"]
 source_suffix = {".rst": "restructuredtext"}
 napoleon_google_docstring = True
@@ -28,9 +28,13 @@ html_logo = "_static/logo.svg"
 html_favicon = "_static/favicon.ico"
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
-html_theme_options = {"collapse_navigation": False, "sticky_navigation": True,
-                      "navigation_depth": 4, "includehidden": True,
-                      "prev_next_buttons_location": "bottom"}
+html_theme_options = {
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "prev_next_buttons_location": "bottom",
+}
 html_sidebars = {"**": ["globaltoc.html", "relations.html", "searchbox.html"]}
 
 

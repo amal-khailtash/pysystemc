@@ -1,43 +1,54 @@
-Examples and supported behavior
-===============================
+Examples
+========
 
-* Hello: Python method callbacks and elaboration/simulation hooks.
-* Counter: sensitivity, four-bit wraparound and native VCD signal transitions.
-* FIFO: blocking exchange between Python native pthread processes.
-* Fork/join: dynamic spawning, joins, event/time waits and termination events;
-  25 records match the upstream C++ reference.
-* Barrier: three threads released in one delta cycle at 11 ns; release order
-  and timestamps match native C++.
-* Report rules: custom Python handlers, native actions, severity/id precedence,
-  suppression and forcing; 80 records match the upstream C++ reference.
+Run each example in a fresh interpreter: the native kernel retains simulation
+state. The examples below are original small models illustrating topics from
+ASIC World and Learn SystemC; they include assertions and bounded runs.
 
-Run ``make example-forkjoin-py`` and ``make example-report-py`` for the newer ports.
-The reset port is a blocked draft: reset configuration raises
-``NotImplementedError`` because cppyy consumes native unwind exceptions.
-Arbitrary kill/unwind paths and broad datatype/TLM support remain unverified.
+Adder
+-----
 
-Only the scenarios listed above are verified. Remaining upstream ports and
-feature coverage are still in development.
+Inspired by `ASIC World's adder <https://www.asic-world.com/examples/systemc/adder.html#Adder>`_.
+The Python model retains native parameterized ports and tests width-limited sums::
 
-Small examples
+   make example-adder-py
+
+.. literalinclude:: ../../examples/toy/adder.py
+   :language: python
+
+8-bit up counter
+----------------
+
+Inspired by `ASIC World's counter <https://www.asic-world.com/examples/systemc/counters.html#8-Bit_Up_Counter>`_.
+Reset is synchronous and enable holds the count; the test includes wraparound::
+
+   make example-up-counter-py
+
+.. literalinclude:: ../../examples/toy/up_counter.py
+   :language: python
+
+Event cancellation
+------------------
+
+.. literalinclude:: ../../examples/toy/event_cancel.py
+   :language: python
+
+Mixed C++/Python gate
+---------------------
+
+.. literalinclude:: ../../examples/toy/mixed_gate.py
+   :language: python
+
+Trace cleanup
+-------------
+
+.. literalinclude:: ../../examples/toy/trace_cleanup.py
+   :language: python
+
+Upstream ports
 --------------
 
-``examples/toy/event_cancel.py`` schedules and cancels events, disables initial
-method execution, and checks a single callback at 3 ns.
-
-``examples/toy/mixed_gate.py`` connects a native C++ AND gate to Python-owned
-signals and checks all four truth-table entries.
-
-These original examples illustrate introductory topics from
-`ASIC World <https://www.asic-world.com/examples/systemc/index.html>`_ and
-`Learn SystemC <https://www.learnsystemc.com/>`_. Run each in a fresh interpreter::
-
-   make example-event-cancel-py
-   make example-mixed-gate-py
-
-``examples/toy/trace_cleanup.py`` verifies that VCD transitions are flushed when
-a Python exception leaves the trace context. Run ``make example-trace-cleanup-py``.
-
-``examples/sysc/2.1/sc_export/main.py`` ports the native hierarchical export
-example and verifies channel calls at 10, 17 and 20 ns against C++.
-Run ``make example-export-py``.
+The sysc/2.1 ports preserve the upstream directory hierarchy. Fork/join,
+barrier, report rules and hierarchical exports are compared against native C++.
+Run ``make example-export-py``, ``make example-forkjoin-py`` or
+``make example-report-py``. See :doc:`supported` for tested behavior and limits.
