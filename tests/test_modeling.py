@@ -252,6 +252,11 @@ def test_convenience_socket_reset_and_kill_cleanup(tmp_path):
     assert "CALLBACK_SOCKET_RESET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_reset.py")
 
 
+def test_convenience_socket_indexed_forward_access(tmp_path):
+    """Verify indexed native interface access configures blocking GIL release."""
+    assert "CALLBACK_INDEXED_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_indexed.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

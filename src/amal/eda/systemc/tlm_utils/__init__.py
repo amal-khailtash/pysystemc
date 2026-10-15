@@ -35,18 +35,21 @@ def _configure_forward_access(socket_type):
     """Release GIL on concrete forward interfaces returned by a native socket."""
     if getattr(socket_type, "_forward_gil_configured", False):
         return
-    native_get = socket_type.get_interface
+    for accessor in ("get_interface", "__getitem__"):
+        native_get = getattr(socket_type, accessor, None)
+        if native_get is None:
+            continue
 
-    def get_interface(socket, *args):
-        """Return the native interface with blocking dispatch configured for waits."""
-        interface = native_get(socket, *args)
-        if interface:
-            method = getattr(type(interface), "b_transport", None)
-            if method is not None and hasattr(method, "__release_gil__"):
-                method.__release_gil__ = True
-        return interface
+        def get_interface(socket, *args, _native=native_get):
+            """Return the native interface with blocking dispatch configured for waits."""
+            interface = _native(socket, *args)
+            if interface:
+                method = getattr(type(interface), "b_transport", None)
+                if method is not None and hasattr(method, "__release_gil__"):
+                    method.__release_gil__ = True
+            return interface
 
-    socket_type.get_interface = get_interface
+        setattr(socket_type, accessor, get_interface)
     socket_type._forward_gil_configured = True
 
 

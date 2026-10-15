@@ -31,6 +31,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Indexed convenience initiator socket access configures blocking GIL release
+  while preserving native interface identity and forward/backward callbacks.
 - Convenience initiator forward-interface access configures blocking GIL release;
   socket callback reset/kill preserves Python cleanup and native unwind.
 - Callback payload queues convert primitive protocol phases by value while
