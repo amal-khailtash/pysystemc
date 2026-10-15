@@ -334,6 +334,11 @@ def channel_interface(interface: Any) -> Any:
     return _channel_interfaces[cache_name]
 
 
+from ._interfaces import PortTemplate as _PortTemplate
+
+sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
+
+
 def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
     """Declare a native interface for Python overrides and templated ports.
 

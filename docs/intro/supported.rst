@@ -29,3 +29,31 @@ metadata, namespace help, hierarchical exports with explicit get_interface(),
 and VCD closure after Python exceptions. TLM transport callbacks, Python custom
 interfaces and the full upstream feature matrix remain
 incomplete. API exposure alone is not a compatibility claim.
+
+Structural Python interface implementations
+------------------------------------------
+
+``sc_core.sc_port[IF](name).bind(implementation)`` accepts ordinary Python
+objects for TLM blocking-get, blocking-peek, transport and analysis interfaces.
+Implement ``get()``, ``peek()``, ``transport(request)`` or ``write(value)`` using
+the familiar SystemC method name. Native value-return and output-reference
+calls are forwarded by a package adapter; Python methods return values.
+Blocking get/peek/transport calls through the adapter release the GIL.
+
+For example::
+
+    class Transport:
+        def transport(self, request):
+            sc.wait(1, sc.SC_NS)
+            return request * 2
+
+    port = sc.sc_port[tlm.tlm_transport_if[int, int]]("port")
+    port.bind(Transport())
+
+Ports must be constructed within a module construction scope. Native interface
+and hierarchical port bindings continue to use SystemC's native binding rules.
+Adapters are child modules and retain Python implementations until interpreter
+shutdown. Python ``Protocol`` definitions are optional typing aids; native
+interface specializations determine C++ signatures. Missing required methods
+raise ``TypeError``. Other structural interface families, specialized TLM ports,
+and arbitrary Python reference-return implementations are not yet supported.

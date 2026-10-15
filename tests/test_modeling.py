@@ -227,3 +227,8 @@ def test_native_tlm1_combined_nonblocking_get_peek(tmp_path):
     assert "NATIVE_TLM1_NONBLOCKING_GET_PEEK_OK" in run_example(
         tmp_path, "tests/models/native_tlm1_nonblocking_get_peek.py"
     )
+
+
+def test_structural_python_interface_binding(tmp_path):
+    """Verify ordinary methods, automatic GIL handling and retained implementations."""
+    assert "PYTHON_INTERFACE_BINDING_OK" in run_example(tmp_path, "tests/models/python_interface_binding.py")
