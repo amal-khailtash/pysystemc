@@ -16,6 +16,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent native custom socket reference verifies Python/native equivalence
+  for payload identity, wide-field mutation, forward/backward transport and timing.
+
 - Custom convenience socket protocol regression verifies 137-bit payload fields,
   original transaction identity across forward/backward callbacks and timed mutation.
 

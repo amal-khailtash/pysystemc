@@ -104,6 +104,7 @@ assert phase == tlm.BEGIN_RESP and delay == sc.sc_time(1, sc.SC_NS)
 dmi = tlm.tlm_dmi()
 assert not interface.get_direct_mem_ptr(payload, dmi)
 assert (dmi.get_start_address(), dmi.get_end_address()) == (17, 31)
+assert dmi.is_none_allowed()
 for count in (0, 2**32 - 1):
     retained().count = count
     assert interface.transport_dbg(payload) == count
@@ -136,5 +137,8 @@ handle = sc.sc_spawn(run, "run")
 sc.sc_start(3, sc.SC_NS)
 assert handle.terminated() and records == ["2 ns"], records
 assert callback_records == ["payload"] * 8, callback_records
+print(
+    f"CUSTOM_SOCKET {payload.get_address()} {payload.value.to_uint64()} {int(payload.value[136].to_bool())} {records[0]}"
+)
 sc.sc_stop()
 print("CUSTOM_CALLBACK_SOCKET_OK")

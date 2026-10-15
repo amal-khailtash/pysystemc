@@ -252,6 +252,22 @@ def test_convenience_socket_custom_protocol(tmp_path):
     assert "CUSTOM_CALLBACK_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_custom.py")
 
 
+def test_custom_socket_protocol_matches_native_reference(tmp_path):
+    """Compare custom socket payload mutation and timing with upstream native sockets."""
+    python_output = run_example(tmp_path, "tests/models/tlm_callback_socket_custom.py")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_socket_custom.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    expected = ["CUSTOM_SOCKET 21 23 0 2 ns"]
+    assert [line for line in python_output.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
+    assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
+
+
 def test_convenience_socket_reset_and_kill_cleanup(tmp_path):
     """Verify automatic GIL release and callback cleanup through reset/kill."""
     assert "CALLBACK_SOCKET_RESET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_reset.py")
