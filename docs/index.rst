@@ -20,6 +20,7 @@
 
    api/bindings
    api/tlm_sockets
+   api/tlm_extensions
    api/coverage
 
 .. include:: ../README.md

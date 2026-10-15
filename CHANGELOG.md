@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Instance-specific extension guide documents carrier registration, borrowed
+  ownership, accessor invalidation after final clear and deep-copy semantics.
+
 - Private extension deep-copy checks verify native payload state copies while
   instance-private carrier information stays exclusive to the original transaction.
 
