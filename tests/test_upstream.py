@@ -120,3 +120,5 @@ def test_upstream_exports_match_native(tmp_path):
     records = re.findall(pattern, output, re.M)
     assert records == re.findall(pattern, native.stdout, re.M)
     assert records == ["10 ns In Channel run()", "17 ns In Channel run()", "20 ns In Channel run()"]
+    protocol_output = run_example(tmp_path, "examples/sysc/2.1/sc_export/main_protocol.py")
+    assert re.findall(pattern, protocol_output, re.M) == records
