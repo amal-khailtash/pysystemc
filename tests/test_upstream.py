@@ -168,3 +168,26 @@ def test_upstream_mutex_policy_matches_native(tmp_path):
     pattern = r"^t\d got mutex at .*"
     assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
     assert len(re.findall(pattern, output, re.M)) == 3
+
+
+def test_upstream_async_host_notification_matches_native(tmp_path):
+    """Compare separate-host-thread event time and lifecycle with native source."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/2.3/simple_async/main.py")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "amal.eda.systemc._runner",
+            str(ROOT / "submodules/systemc/examples/sysc/2.3/simple_async/main.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    pattern = r"^(?:Start SystemC.*|I'm busy!|Asked to stop.*|The dog barks.*|Program completed)$"
+    assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
+    assert len(re.findall(pattern, output, re.M)) == 5
