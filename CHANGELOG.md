@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Word endian conversion checks verify write/read ordering, converted byte
+  enables and preservation of disabled response bytes.
+
 - Aligned endian equal-width checks verify original data/enable pointer identity
   and in-place read response mutation on the native no-conversion path.
 

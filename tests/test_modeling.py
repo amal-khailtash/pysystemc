@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_word_endian_native_buffer_conversion(tmp_path):
+    """Verify word converter data ordering and byte-enable read masking."""
+    assert "ENDIAN_WORD_OK" in run_example(tmp_path, "tests/models/tlm_endian_word.py")
+
+
 def test_aligned_endian_native_buffer_conversion(tmp_path):
     """Verify aligned word reversal for writes and response copying into read storage."""
     assert "ENDIAN_ALIGNED_OK" in run_example(tmp_path, "tests/models/tlm_endian_aligned.py")
