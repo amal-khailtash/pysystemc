@@ -175,6 +175,24 @@ def channel_interface(interface: Any) -> Any:
     if name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_nonblocking_get_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingGetAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Nonblocking get value/event bridge. @details Ports borrow the owner; "
+                    "event storage belongs to the adapter. Callbacks acquire GIL and must not wait. "
+                    "Value assignment occurs only after successful callback; exceptions propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class NonblockingGetAdapter : public tlm::tlm_nonblocking_get_if<T> { "
+                    "sc_core::sc_event ready; public: "
+                    "bool nb_get(T& value) override { auto result = get_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    "bool nb_can_get(tlm::tlm_tag<T>* = nullptr) const override { return can_get(); } "
+                    "const sc_core::sc_event& ok_to_get(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    "virtual std::pair<bool, T> get_value() = 0; virtual bool can_get() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_nonblocking_get_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::NonblockingGetAdapter<{argument}>"
         if name.startswith("tlm::tlm_nonblocking_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPutAdapter"):
                 cppyy.cppdef(

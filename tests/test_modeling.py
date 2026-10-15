@@ -210,3 +210,8 @@ def test_native_tlm1_transport_and_peek_reference_overloads(tmp_path):
 def test_native_tlm1_nonblocking_put_readiness_event(tmp_path):
     """Verify nonblocking acceptance and stable native event wakeup through a port."""
     assert "NATIVE_TLM1_NONBLOCKING_PUT_OK" in run_example(tmp_path, "tests/models/native_tlm1_nonblocking_put.py")
+
+
+def test_native_tlm1_nonblocking_get_output_and_readiness(tmp_path):
+    """Verify failed get preserves output and successful get consumes one native value."""
+    assert "NATIVE_TLM1_NONBLOCKING_GET_OK" in run_example(tmp_path, "tests/models/native_tlm1_nonblocking_get.py")

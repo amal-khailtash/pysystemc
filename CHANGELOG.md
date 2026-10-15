@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- TLM-1 nonblocking-get adapter preserves output references on failure and owns
+  stable readiness events for native-port callbacks.
+
 - TLM-1 nonblocking-put adapter with Python acceptance/readiness callbacks and
   channel-owned readiness-event references for native ports.
 
