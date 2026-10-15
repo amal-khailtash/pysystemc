@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Word endian unaligned checks verify expanded request windows, enabled lanes
+  and read/write byte placement across bus boundaries.
+
 - Endian utility guide documents native converter preconditions, context and
   buffer ownership, response metadata behavior and current verification limits.
 
