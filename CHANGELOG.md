@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Tagged convenience target sockets forward registered blocking callback IDs
+  while preserving native bus width, payload references and simulation timing.
 - Convenience socket exception regression checks callback error propagation,
   payload/delay mutation and simulation time at failure.
 

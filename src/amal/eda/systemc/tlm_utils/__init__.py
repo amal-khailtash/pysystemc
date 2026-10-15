@@ -89,7 +89,7 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
     return socket_type(name)
 
 
-def callback_target_socket(name, *, width=32, protocol=None, policy=None):
+def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged=False):
     """Create a native simple target socket accepting Python transport callbacks.
 
     Args:
@@ -97,6 +97,7 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None):
         width: Arbitrary native bus width.
         protocol: Native protocol types; defaults to base protocol.
         policy: Native port policy; defaults to one or more bound.
+        tagged: Select native tagged socket; blocking registration takes callable and ID.
 
     Returns:
         Native socket with register_b_transport(callable), bind and native accessors.
@@ -109,21 +110,31 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None):
         protocol = cppyy.gbl.tlm.tlm_base_protocol_types
     if policy is None:
         policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND
-    socket_type = cppyy.gbl.pysystemc_interfaces.CallbackTargetSocket[width, protocol, policy]
+    template = (
+        cppyy.gbl.pysystemc_interfaces.CallbackTaggedTargetSocket
+        if tagged
+        else cppyy.gbl.pysystemc_interfaces.CallbackTargetSocket
+    )
+    socket_type = template[width, protocol, policy]
     if not getattr(socket_type, "_retained_registration", False):
-        for method in (
-            "register_b_transport",
-            "register_nb_transport_fw",
-            "register_transport_dbg",
-            "register_get_direct_mem_ptr",
-        ):
+        methods = (
+            ("register_b_transport",)
+            if tagged
+            else (
+                "register_b_transport",
+                "register_nb_transport_fw",
+                "register_transport_dbg",
+                "register_get_direct_mem_ptr",
+            )
+        )
+        for method in methods:
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, _native=native_register):
+            def register(socket, callback, *args, _native=native_register):
                 """Retain a callable after native registration succeeds."""
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
-                _native(socket, callback)
+                _native(socket, callback, *args)
                 _callback_sockets.append((socket, callback))
 
             setattr(socket_type, method, register)

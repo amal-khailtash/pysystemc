@@ -89,6 +89,33 @@ class CallbackTargetSocket : public tlm_utils::simple_target_socket_b<SocketCall
     callbacks.dmi = std::move(callback);
   }
 };
+/** @brief Native tagged target forwarding a registered ID to blocking callbacks.
+ * @details Python retains callback/socket through kernel lifetime. Payload and
+ * delay are borrowed; caller releases GIL, cppyy acquires it for callback entry.
+ * Exceptions and guarded reset unwind propagate. Width/types/policy stay native.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackTaggedTargetSocket
+  : public tlm_utils::simple_target_socket_tagged_b<CallbackTaggedTargetSocket<Width, Types, Policy>, Width, Types,
+                                                    Policy>
+{
+  using Payload = typename Types::tlm_payload_type;
+  std::function<void(int, Payload&, sc_core::sc_time&)> callback;
+
+ public:
+  using Base = tlm_utils::simple_target_socket_tagged_b<CallbackTaggedTargetSocket, Width, Types, Policy>;
+  /** @brief Construct native tagged socket before simulation. */
+  explicit CallbackTaggedTargetSocket(const char* name) : Base(name) {}
+  /** @brief Register callable and user ID through upstream registration checks. */
+  void register_b_transport(std::function<void(int, Payload&, sc_core::sc_time&)> function, int id)
+  {
+    Base::register_b_transport(this, &CallbackTaggedTargetSocket::deliver, id);
+    callback = std::move(function);
+  }
+  /** @brief Forward tagged borrowed transport arguments without copying payload. */
+  void deliver(int id, Payload& payload, sc_core::sc_time& delay) { callback(id, payload, delay); }
+};
 /** @brief Native simple initiator socket accepting retained Python callbacks.
  * @details Python retains callback owners until shutdown. Protocol, width and
  * policy remain native templates; backward callbacks must not wait. GIL is

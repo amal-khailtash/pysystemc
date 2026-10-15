@@ -262,6 +262,11 @@ def test_convenience_socket_callback_exception_state(tmp_path):
     assert "CALLBACK_SOCKET_ERROR_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_error.py")
 
 
+def test_tagged_target_socket_blocking_callback(tmp_path):
+    """Verify tagged native registration supplies user ID and borrowed transport state."""
+    assert "TAGGED_TARGET_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_tagged_target.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")
