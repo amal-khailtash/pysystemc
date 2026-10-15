@@ -6,6 +6,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Refresh the README PyPI badge cache identity after the 0.6.0 publication.
+
 ### Added
 
 - Tagged convenience target sockets forward registered blocking callback IDs
