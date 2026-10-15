@@ -268,6 +268,22 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_single_word_endian_matches_native_reference(tmp_path):
+    """Compare all native endian address conversion records with Python dispatch."""
+    python_output = run_example(tmp_path, "tests/models/tlm_endian_single.py")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_endian_single.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    records = [line for line in python_output.splitlines() if line.startswith("ENDIAN ")]
+    assert len(records) == 27
+    assert records == [line for line in result.stdout.splitlines() if line.startswith("ENDIAN ")]
+
+
 def test_native_single_word_endian_conversion(tmp_path):
     """Verify native word/bus templates, converted addresses and response dispatch."""
     assert "ENDIAN_SINGLE_OK" in run_example(tmp_path, "tests/models/tlm_endian_single.py")

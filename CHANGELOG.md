@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent native single-word endian reference matches all 27 Python
+  template, bus-width and address conversion records.
+
 - Single-word endian utility regression checks native word/bus templates,
   address lane conversion and generic response conversion dispatch.
 

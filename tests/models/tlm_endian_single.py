@@ -17,4 +17,5 @@ for word, size in (("unsigned char", 1), ("unsigned short", 2), ("unsigned int",
             payload.set_response_status(tlm.TLM_OK_RESPONSE)
             tlm.tlm_from_hostendian(payload)
             assert payload.get_address() == expected and payload.is_response_ok()
+            print(f"ENDIAN {size} {bus} {address} {expected}")
 print("ENDIAN_SINGLE_OK")
