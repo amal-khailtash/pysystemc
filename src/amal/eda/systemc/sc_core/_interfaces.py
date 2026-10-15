@@ -87,6 +87,13 @@ _METHODS = {
     "tlm::tlm_blocking_get_if": {"get_value": "get"},
     "tlm::tlm_blocking_peek_if": {"peek_value": "peek"},
     "tlm::tlm_analysis_if": {"write_value": "write"},
+    "tlm::tlm_nonblocking_put_if": {"put_value": "nb_put", "can_put": "nb_can_put"},
+    "tlm::tlm_nonblocking_get_if": {"get_value": "nb_get", "can_get": "nb_can_get"},
+    "tlm::tlm_nonblocking_peek_if": {"peek_value": "nb_peek", "can_peek": "nb_can_peek"},
+    "tlm::tlm_nonblocking_get_peek_if": {
+        "get_value": "nb_get", "can_get": "nb_can_get",
+        "peek_value": "nb_peek", "can_peek": "nb_can_peek",
+    },
 }
 
 
@@ -107,7 +114,13 @@ def _adapt(interface, implementation, factory):
         for native_name, python_name in methods.items():
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
-                return getattr(self._implementation, _method)(*args)
+                result = getattr(self._implementation, _method)(*args)
+                if _method in ("nb_get", "nb_peek"):
+                    if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
+                        raise TypeError(f"{_method} must return a (bool, value) tuple")
+                    value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+                    return cppyy.gbl.std.pair[bool, value_type](*result)
+                return result
             callbacks[native_name] = forward
         base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
         _classes[interface] = type(f"PythonPortAdapter{len(_classes)}", (base,), callbacks)

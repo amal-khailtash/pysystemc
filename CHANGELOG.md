@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural nonblocking TLM put/get/peek and combined get-peek bindings use
+  familiar callback names and Python success/value tuples with native event storage.
 - Structural blocking-put binding copies native const-reference values into Python
   put callbacks and automatically releases the GIL for blocking port calls.
 - Structural Python implementations bind through native SystemC ports using

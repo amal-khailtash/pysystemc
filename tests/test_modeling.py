@@ -237,3 +237,8 @@ def test_structural_python_interface_binding(tmp_path):
 def test_protocol_interface_annotation_inference(tmp_path):
     """Verify inherited signatures, native values and ambiguous annotation rejection."""
     assert "INTERFACE_ANNOTATIONS_OK" in run_example(tmp_path, "tests/models/interface_annotations.py")
+
+
+def test_structural_nonblocking_interface_binding(tmp_path):
+    """Verify ordinary readiness/value callbacks dispatch through native base ports."""
+    assert "PYTHON_NONBLOCKING_BINDING_OK" in run_example(tmp_path, "tests/models/python_nonblocking_binding.py")

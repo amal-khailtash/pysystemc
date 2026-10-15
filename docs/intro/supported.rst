@@ -77,3 +77,11 @@ is rejected. Missing annotations, variadic/keyword-only parameters and defaults
 also require an explicit declaration. Reference qualifications can use ``@sc.interface(methods={...})`` with trusted native signatures.
 Repeated-name overload declarations are not supported by this dictionary.
 The two sc_export examples show native and annotated Protocol implementations.
+
+Structural nonblocking TLM put/get/peek and combined get-peek bindings use
+``nb_put(value)``, ``nb_can_put()``, ``nb_get()``, ``nb_can_get()``, ``nb_peek()``
+and ``nb_can_peek()``. Get and peek callbacks return ``(success, value)`` with a
+boolean success flag; the native output argument is assigned only on success.
+These callbacks must not wait. Native readiness events belong to the adapter;
+``port.get_interface().notify_ready(delay)`` schedules readiness notification.
+For the combined get-peek interface, it notifies both separate events.
