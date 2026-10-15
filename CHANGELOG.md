@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Tagged target DMI callbacks preserve independent user IDs and borrowed native
+  DMI result fields alongside blocking and debug callback registrations.
 - Tagged target debug callbacks preserve independent registration IDs and
   validate native unsigned return bounds.
 - Tagged convenience target sockets forward registered blocking callback IDs

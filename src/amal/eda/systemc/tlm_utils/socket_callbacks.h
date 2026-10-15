@@ -128,6 +128,7 @@ class CallbackTaggedTargetSocket
   using Payload = typename Types::tlm_payload_type;
   std::function<void(int, Payload&, sc_core::sc_time&)> callback;
   std::function<long(int, Payload&)> debug;
+  std::function<bool(int, Payload&, tlm::tlm_dmi&)> dmi;
 
  public:
   using Base = tlm_utils::simple_target_socket_tagged_b<CallbackTaggedTargetSocket, Width, Types, Policy>;
@@ -164,6 +165,19 @@ class CallbackTaggedTargetSocket
     if (count < 0 || static_cast<unsigned long>(count) > std::numeric_limits<unsigned int>::max())
       throw std::out_of_range("transport_dbg result outside unsigned int range");
     return static_cast<unsigned int>(count);
+  }
+
+  /** @brief Register DMI callable and independent native user ID. */
+  void register_get_direct_mem_ptr(std::function<bool(int, Payload&, tlm::tlm_dmi&)> function, int id)
+  {
+    Base::register_get_direct_mem_ptr(this, &CallbackTaggedTargetSocket::direct_memory, id);
+    dmi = std::move(function);
+  }
+
+  /** @brief Forward borrowed DMI output; callback owner retains any granted memory. */
+  bool direct_memory(int id, Payload& payload, tlm::tlm_dmi& result)
+  {
+    return dmi(id, payload, result);
   }
 };
 

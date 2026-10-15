@@ -19,8 +19,9 @@ class Target:
         assert identifier == 59
         return self.count
 
-    def dmi(self, payload, result):
+    def dmi(self, identifier, payload, result):
         """Reject DMI with an explicit native range."""
+        assert identifier == 61
         result.set_start_address(17)
         result.set_end_address(31)
         result.allow_none()
@@ -43,6 +44,7 @@ socket = tlm_utils.callback_target_socket("target", width=73, tagged=True)
 target.count = 0
 socket.register_b_transport(target.transport, 47)
 socket.register_transport_dbg(target.debug, 59)
+socket.register_get_direct_mem_ptr(target.dmi, 61)
 initiator = tlm_utils.callback_initiator_socket("initiator", width=73)
 backward_records = []
 
@@ -71,6 +73,10 @@ delay = sc.sc_time(2, sc.SC_NS)
 records = []
 interface = initiator.get_interface()
 assert interface.b_transport.__release_gil__
+dmi = tlm.tlm_dmi()
+assert not interface.get_direct_mem_ptr(payload, dmi)
+assert (dmi.get_start_address(), dmi.get_end_address()) == (17, 31)
+assert not dmi.is_read_allowed() and not dmi.is_write_allowed()
 for count in (0, 2**32 - 1):
     retained().count = count
     assert interface.transport_dbg(payload) == count
