@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- TLM-1 analysis value-copy channel adapter and blocking put/get dispatch checks.
+  Analysis callbacks currently use write_value to avoid cppyy reference conversion.
+
 - Combined TLM forward/backward channel adapters with phase/delay mutation,
   checked debug return ranges, DMI access and invalidation regressions.
 - Native initiator/target socket integration and Python memory-manager recycling

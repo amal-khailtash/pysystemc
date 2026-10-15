@@ -193,3 +193,10 @@ def test_native_tlm_socket_forward_backward_binding(tmp_path):
 def test_native_tlm_memory_manager_reference_count_and_recycle(tmp_path):
     """Verify native reference counting invokes the retained Python manager at zero."""
     assert "NATIVE_TLM_MEMORY_MANAGER_OK" in run_example(tmp_path, "tests/models/native_tlm_memory_manager.py")
+
+
+def test_native_tlm1_blocking_and_analysis_python_dispatch(tmp_path):
+    """Verify TLM-1 blocking calls and analysis broadcast preserve values and time."""
+    assert "NATIVE_TLM1_BLOCKING_INTERFACES_OK" in run_example(
+        tmp_path, "tests/models/native_tlm1_blocking_interfaces.py"
+    )

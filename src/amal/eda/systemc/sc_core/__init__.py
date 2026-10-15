@@ -172,6 +172,12 @@ def channel_interface(interface: Any) -> Any:
     if name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_analysis_if<"):
+            value_type = name.removeprefix("tlm::tlm_analysis_if<").removesuffix(">")
+            methods = (
+                f"void write(const {value_type}& value) override {{ write_value(value); }} "
+                f"virtual void write_value({value_type}) = 0; "
+            )
         if name.startswith("tlm::tlm_fw_transport_if<") or name.startswith("tlm::tlm_bw_transport_if<"):
             # Redeclare inherited pure methods so cppyy builds every Python dispatcher override.
             types = f"{name}::protocol_types"
