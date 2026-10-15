@@ -1,6 +1,7 @@
 /** @file Member-pointer adapters for native convenience socket registration. */
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
+#include <tlm_utils/passthrough_target_socket.h>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
 
@@ -189,6 +190,148 @@ class CallbackTaggedTargetSocket
   void register_get_direct_mem_ptr(std::function<bool(int, Payload&, tlm::tlm_dmi&)> function, int id)
   {
     Base::register_get_direct_mem_ptr(this, &CallbackTaggedTargetSocket::direct_memory, id);
+    dmi = std::move(function);
+  }
+
+  /** @brief Forward borrowed DMI output; callback owner retains any granted memory. */
+  bool direct_memory(int id, Payload& payload, tlm::tlm_dmi& result)
+  {
+    return dmi(id, payload, result);
+  }
+};
+
+/** @brief Passthrough socket retains native behavior while accepting a callable blocking registration.
+ * @details Width, protocol and port policy remain arbitrary native template parameters.
+ * Python must retain callback owner; socket borrows bridge until shutdown.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackPassthroughTargetSocket
+  : public tlm_utils::passthrough_target_socket_b<SocketCallbacks<Types>, Width, Types, Policy>
+{
+  SocketCallbacks<Types> callbacks;
+
+ public:
+  using Base = tlm_utils::passthrough_target_socket_b<SocketCallbacks<Types>, Width, Types, Policy>;
+
+  /** @brief Construct native socket during elaboration. */
+  explicit CallbackPassthroughTargetSocket(const char* name) : Base(name)
+  {
+  }
+
+  /** @brief Register callable using upstream member-pointer registration checks. */
+  void register_b_transport(std::function<void(typename Types::tlm_payload_type&, sc_core::sc_time&)> callback)
+  {
+    Base::register_b_transport(&callbacks, &SocketCallbacks<Types>::b_transport);
+    if (callbacks.blocking) return;
+    callbacks.blocking = std::move(callback);
+  }
+
+  /** @brief Register nonblocking forward callback through upstream checks. */
+  void register_nb_transport_fw(std::function<tlm::tlm_sync_enum(typename Types::tlm_payload_type&,
+                                                                 typename Types::tlm_phase_type&, sc_core::sc_time&)>
+                                  callback)
+  {
+    Base::register_nb_transport_fw(&callbacks, &SocketCallbacks<Types>::nb_transport_fw);
+    if (callbacks.nonblocking) return;
+    callbacks.nonblocking = std::move(callback);
+  }
+
+  /** @brief Register range-checked debug callback; it must not wait. */
+  void register_transport_dbg(std::function<long(typename Types::tlm_payload_type&)> callback)
+  {
+    Base::register_transport_dbg(&callbacks, &SocketCallbacks<Types>::transport_dbg);
+    if (callbacks.debug) return;
+    callbacks.debug = std::move(callback);
+  }
+
+  /** @brief Register DMI callback with borrowed transaction/output references. */
+  void register_get_direct_mem_ptr(std::function<bool(typename Types::tlm_payload_type&, tlm::tlm_dmi&)> callback)
+  {
+    Base::register_get_direct_mem_ptr(&callbacks, &SocketCallbacks<Types>::get_direct_mem_ptr);
+    if (callbacks.dmi) return;
+    callbacks.dmi = std::move(callback);
+  }
+};
+
+/** @brief Native tagged passthrough target forwarding a registered ID to blocking callbacks.
+ * @details Python retains callback/socket through kernel lifetime. Payload and
+ * delay are borrowed; caller releases GIL, cppyy acquires it for callback entry.
+ * Exceptions and guarded reset unwind propagate. Width/types/policy stay native.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackTaggedPassthroughTargetSocket
+  : public tlm_utils::passthrough_target_socket_tagged_b<CallbackTaggedPassthroughTargetSocket<Width, Types, Policy>,
+                                                         Width, Types, Policy>
+{
+  using Payload = typename Types::tlm_payload_type;
+  using Phase = typename Types::tlm_phase_type;
+  std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> nonblocking;
+  std::function<void(int, Payload&, sc_core::sc_time&)> callback;
+  std::function<long(int, Payload&)> debug;
+  std::function<bool(int, Payload&, tlm::tlm_dmi&)> dmi;
+
+ public:
+  using Base =
+    tlm_utils::passthrough_target_socket_tagged_b<CallbackTaggedPassthroughTargetSocket, Width, Types, Policy>;
+
+  /** @brief Construct native tagged socket before simulation. */
+  explicit CallbackTaggedPassthroughTargetSocket(const char* name) : Base(name)
+  {
+  }
+
+  /** @brief Register tagged nonblocking callback through upstream ID checks. */
+  void register_nb_transport_fw(std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> function,
+                                int id)
+  {
+    Base::register_nb_transport_fw(this, &CallbackTaggedPassthroughTargetSocket::forward, id);
+    if (nonblocking) return;
+    nonblocking = std::move(function);
+  }
+
+  /** @brief Forward tagged mutable protocol phase and delay without waiting. */
+  tlm::tlm_sync_enum forward(int id, Payload& payload, Phase& phase, sc_core::sc_time& delay)
+  {
+    return nonblocking(id, payload, phase, delay);
+  }
+
+  /** @brief Register callable and user ID through upstream registration checks. */
+  void register_b_transport(std::function<void(int, Payload&, sc_core::sc_time&)> function, int id)
+  {
+    Base::register_b_transport(this, &CallbackTaggedPassthroughTargetSocket::deliver, id);
+    if (callback) return;
+    callback = std::move(function);
+  }
+
+  /** @brief Forward tagged borrowed transport arguments without copying payload. */
+  void deliver(int id, Payload& payload, sc_core::sc_time& delay)
+  {
+    callback(id, payload, delay);
+  }
+
+  /** @brief Register debug callable with independently selected native user ID. */
+  void register_transport_dbg(std::function<long(int, Payload&)> function, int id)
+  {
+    Base::register_transport_dbg(this, &CallbackTaggedPassthroughTargetSocket::debug_transport, id);
+    if (debug) return;
+    debug = std::move(function);
+  }
+
+  /** @brief Forward tagged debug calls and reject counts outside unsigned range. */
+  unsigned int debug_transport(int id, Payload& payload)
+  {
+    auto count = debug(id, payload);
+    if (count < 0 || static_cast<unsigned long>(count) > std::numeric_limits<unsigned int>::max())
+      throw std::out_of_range("transport_dbg result outside unsigned int range");
+    return static_cast<unsigned int>(count);
+  }
+
+  /** @brief Register DMI callable and independent native user ID. */
+  void register_get_direct_mem_ptr(std::function<bool(int, Payload&, tlm::tlm_dmi&)> function, int id)
+  {
+    Base::register_get_direct_mem_ptr(this, &CallbackTaggedPassthroughTargetSocket::direct_memory, id);
+    if (dmi) return;
     dmi = std::move(function);
   }
 

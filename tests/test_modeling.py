@@ -268,6 +268,16 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_passthrough_target_socket_callbacks(tmp_path):
+    """Verify ordinary passthrough forward registrations and blocking waits."""
+    assert "PASSTHROUGH_TARGET_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_target.py")
+
+
+def test_tagged_passthrough_target_socket_callbacks(tmp_path):
+    """Verify tagged passthrough callbacks preserve independent IDs and native state."""
+    assert "PASSTHROUGH_TAGGED_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_tagged.py")
+
+
 def test_multi_socket_callback_exception_state(tmp_path):
     """Verify indexed callback exceptions preserve payload mutation, cleanup and time."""
     assert "MULTI_SOCKET_ERROR_OK" in run_example(tmp_path, "tests/models/tlm_multi_socket_error.py")

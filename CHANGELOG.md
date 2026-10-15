@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Ordinary and tagged passthrough target sockets accept retained Python transport,
+  debug and DMI callbacks with native templates, user IDs and blocking waits.
+
 - Indexed multi transport exception regression checks visible Python errors,
   borrowed payload/delay mutations, cleanup and simulation time at failure.
 

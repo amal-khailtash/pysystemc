@@ -153,6 +153,64 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged
     return socket_type(name)
 
 
+def callback_passthrough_target_socket(name, *, width=32, protocol=None, policy=None, tagged=False):
+    """Create a native passthrough target socket accepting Python transport callbacks.
+
+    Args:
+        name: Native socket name during elaboration.
+        width: Arbitrary native bus width.
+        protocol: Native protocol types; defaults to base protocol.
+        policy: Native port policy; defaults to one or more bound.
+        tagged: Select native tagged socket; blocking registration takes callable and ID.
+
+    Returns:
+        Native socket with register_b_transport(callable), bind and native accessors.
+
+    Retain socket until simulation ends. Registered callbacks are retained until
+    shutdown. Payload/delay references are borrowed; guarded waits and errors
+    follow native process semantics. Nonblocking/debug/DMI callbacks must not wait.
+    """
+    if protocol is None:
+        protocol = cppyy.gbl.tlm.tlm_base_protocol_types
+    if policy is None:
+        policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND
+    template = (
+        cppyy.gbl.pysystemc_interfaces.CallbackTaggedPassthroughTargetSocket
+        if tagged
+        else cppyy.gbl.pysystemc_interfaces.CallbackPassthroughTargetSocket
+    )
+    socket_type = template[width, protocol, policy]
+    if not getattr(socket_type, "_retained_registration", False):
+        methods = (
+            (
+                "register_b_transport",
+                "register_nb_transport_fw",
+                "register_transport_dbg",
+                "register_get_direct_mem_ptr",
+            )
+            if tagged
+            else (
+                "register_b_transport",
+                "register_nb_transport_fw",
+                "register_transport_dbg",
+                "register_get_direct_mem_ptr",
+            )
+        )
+        for method in methods:
+            native_register = getattr(socket_type, method)
+
+            def register(socket, callback, *args, _native=native_register):
+                """Retain a callable after native registration succeeds."""
+                if not callable(callback):
+                    raise TypeError("socket transport callback must be callable")
+                _native(socket, callback, *args)
+                _callback_sockets.append((socket, callback))
+
+            setattr(socket_type, method, register)
+        socket_type._retained_registration = True
+    return socket_type(name)
+
+
 def callback_multi_initiator_socket(name, *, width=32, protocol=None, connections=0, policy=None):
     """Create a native multi initiator with connection-indexed backward callbacks.
 
@@ -260,6 +318,7 @@ def callback_peq(name, callback, protocol=None):
     return queue
 
 
+__all__.append("callback_passthrough_target_socket")
 __all__.append("callback_multi_initiator_socket")
 __all__.append("callback_multi_target_socket")
 __all__.append("callback_peq")
