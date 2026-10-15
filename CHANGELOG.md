@@ -16,6 +16,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Multi target sockets accept retained Python callbacks for blocking/nonblocking
+  transport, debug and DMI, preserving native connection indices and templates.
+
 - Independent native custom socket reference verifies Python/native equivalence
   for payload identity, wide-field mutation, forward/backward transport and timing.
 

@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_multi_target_socket_connection_callbacks(tmp_path):
+    """Verify multi target IDs, borrowed state, retained owners and independent waits."""
+    assert "MULTI_TARGET_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_multi_target.py")
+
+
 def test_convenience_socket_reset_and_kill_cleanup(tmp_path):
     """Verify automatic GIL release and callback cleanup through reset/kill."""
     assert "CALLBACK_SOCKET_RESET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_reset.py")

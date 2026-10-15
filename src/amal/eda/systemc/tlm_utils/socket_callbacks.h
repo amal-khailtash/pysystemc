@@ -1,4 +1,5 @@
 /** @file Member-pointer adapters for native convenience socket registration. */
+#include <tlm_utils/multi_passthrough_target_socket.h>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
 
@@ -187,6 +188,88 @@ class CallbackTaggedTargetSocket
   void register_get_direct_mem_ptr(std::function<bool(int, Payload&, tlm::tlm_dmi&)> function, int id)
   {
     Base::register_get_direct_mem_ptr(this, &CallbackTaggedTargetSocket::direct_memory, id);
+    dmi = std::move(function);
+  }
+
+  /** @brief Forward borrowed DMI output; callback owner retains any granted memory. */
+  bool direct_memory(int id, Payload& payload, tlm::tlm_dmi& result)
+  {
+    return dmi(id, payload, result);
+  }
+};
+
+/** @brief Native multi target forwarding upstream connection indices to callbacks.
+ * @details Python retains callback/socket through kernel lifetime. Payload and
+ * delay are borrowed; caller releases GIL, cppyy acquires it for callback entry.
+ * Exceptions and guarded reset unwind propagate. Width/types/connection limit/policy stay native.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types, unsigned int Connections = 0,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackMultiTargetSocket
+  : public tlm_utils::multi_passthrough_target_socket<CallbackMultiTargetSocket<Width, Types, Connections, Policy>,
+                                                      Width, Types, Connections, Policy>
+{
+  using Payload = typename Types::tlm_payload_type;
+  using Phase = typename Types::tlm_phase_type;
+  std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> nonblocking;
+  std::function<void(int, Payload&, sc_core::sc_time&)> callback;
+  std::function<long(int, Payload&)> debug;
+  std::function<bool(int, Payload&, tlm::tlm_dmi&)> dmi;
+
+ public:
+  using Base = tlm_utils::multi_passthrough_target_socket<CallbackMultiTargetSocket, Width, Types, Connections, Policy>;
+
+  /** @brief Construct native connection-indexed socket before simulation. */
+  explicit CallbackMultiTargetSocket(const char* name) : Base(name)
+  {
+  }
+
+  /** @brief Register connection-indexed nonblocking callback through upstream ID checks. */
+  void register_nb_transport_fw(std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> function)
+  {
+    Base::register_nb_transport_fw(this, &CallbackMultiTargetSocket::forward);
+    nonblocking = std::move(function);
+  }
+
+  /** @brief Forward connection-indexed mutable protocol phase and delay without waiting. */
+  tlm::tlm_sync_enum forward(int id, Payload& payload, Phase& phase, sc_core::sc_time& delay)
+  {
+    return nonblocking(id, payload, phase, delay);
+  }
+
+  /** @brief Register callable through upstream registration checks. */
+  void register_b_transport(std::function<void(int, Payload&, sc_core::sc_time&)> function)
+  {
+    Base::register_b_transport(this, &CallbackMultiTargetSocket::deliver);
+    callback = std::move(function);
+  }
+
+  /** @brief Forward connection-indexed borrowed transport arguments without copying payload. */
+  void deliver(int id, Payload& payload, sc_core::sc_time& delay)
+  {
+    callback(id, payload, delay);
+  }
+
+  /** @brief Register debug callable with native connection indices. */
+  void register_transport_dbg(std::function<long(int, Payload&)> function)
+  {
+    Base::register_transport_dbg(this, &CallbackMultiTargetSocket::debug_transport);
+    debug = std::move(function);
+  }
+
+  /** @brief Forward connection-indexed debug calls and reject counts outside unsigned range. */
+  unsigned int debug_transport(int id, Payload& payload)
+  {
+    auto count = debug(id, payload);
+    if (count < 0 || static_cast<unsigned long>(count) > std::numeric_limits<unsigned int>::max())
+      throw std::out_of_range("transport_dbg result outside unsigned int range");
+    return static_cast<unsigned int>(count);
+  }
+
+  /** @brief Register DMI callable receiving the upstream connection index. */
+  void register_get_direct_mem_ptr(std::function<bool(int, Payload&, tlm::tlm_dmi&)> function)
+  {
+    Base::register_get_direct_mem_ptr(this, &CallbackMultiTargetSocket::direct_memory);
     dmi = std::move(function);
   }
 
