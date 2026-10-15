@@ -220,3 +220,10 @@ def test_native_tlm1_nonblocking_get_output_and_readiness(tmp_path):
 def test_native_tlm1_nonblocking_peek_output_and_readiness(tmp_path):
     """Verify failed peek preserves output and repeated peeks do not consume samples."""
     assert "NATIVE_TLM1_NONBLOCKING_PEEK_OK" in run_example(tmp_path, "tests/models/native_tlm1_nonblocking_peek.py")
+
+
+def test_native_tlm1_combined_nonblocking_get_peek(tmp_path):
+    """Verify combined and base-port dispatch, readiness and consumption agree."""
+    assert "NATIVE_TLM1_NONBLOCKING_GET_PEEK_OK" in run_example(
+        tmp_path, "tests/models/native_tlm1_nonblocking_get_peek.py"
+    )
