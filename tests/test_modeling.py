@@ -232,6 +232,11 @@ def test_native_callback_payload_event_queue(tmp_path):
     assert "CALLBACK_PEQ_OK" in run_example(tmp_path, "tests/models/tlm_callback_peq.py")
 
 
+def test_callback_payload_queue_custom_protocol_and_errors(tmp_path):
+    """Verify wide custom payload identity, primitive phases and callback exceptions."""
+    assert "CUSTOM_CALLBACK_PEQ_OK" in run_example(tmp_path, "tests/models/tlm_callback_peq_custom.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

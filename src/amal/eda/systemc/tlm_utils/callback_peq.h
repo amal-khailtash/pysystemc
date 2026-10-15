@@ -2,6 +2,7 @@
 #include <tlm_utils/peq_with_cb_and_phase.h>
 
 #include <functional>
+#include <type_traits>
 
 namespace pysystemc_interfaces
 {
@@ -17,7 +18,8 @@ class CallbackPeq
  public:
   using Payload = typename Types::tlm_payload_type;
   using Phase = typename Types::tlm_phase_type;
-  using Callback = std::function<void(Payload&, const Phase&)>;
+  using CallbackPhase = std::conditional_t<std::is_arithmetic_v<Phase> || std::is_enum_v<Phase>, Phase, const Phase&>;
+  using Callback = std::function<void(Payload&, CallbackPhase)>;
   /** @brief Retain callback and register native queue process before simulation. */
   CallbackPeq(const char* name, Callback callback)
     : callback(std::move(callback)), queue(name, this, &CallbackPeq::deliver)

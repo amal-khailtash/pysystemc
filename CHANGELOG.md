@@ -25,6 +25,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Callback payload queues convert primitive protocol phases by value while
+  preserving native class phase references and callback exception propagation.
 - Quantumkeeper synchronization preserves native reset/kill unwind and Python
   cleanup across utility JIT transactions.
 - Restore the native default simulation context for Python `sc_is_running()` calls.
