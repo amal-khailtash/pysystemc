@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_multi_socket_custom_protocol_payloads(tmp_path):
+    """Verify multi protocol specialization preserves native identity and 137-bit fields."""
+    assert "CUSTOM_MULTI_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_multi_socket_custom.py")
+
+
 def test_multi_socket_reset_and_kill_cleanup(tmp_path):
     """Verify both connections restart and clean up while indexed transport is suspended."""
     assert "MULTI_SOCKET_RESET_OK" in run_example(tmp_path, "tests/models/tlm_multi_socket_reset.py")

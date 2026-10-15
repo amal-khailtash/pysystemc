@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Custom multi socket protocol regression checks original transaction identity
+  and 137-bit field preservation across both directions and timed payload mutation.
+
 - Multi socket lifecycle regression verifies both suspended connections restart
   on reset and execute Python cleanup on reset/kill without completing transport.
 
