@@ -6,46 +6,41 @@ from amal.eda.systemc import sc_core as sc
 from amal.eda.systemc import tlm
 
 
-class Transport(sc.channel_interface(tlm.tlm_transport_if[int, int])):
+class Transport:
     """Compute a response after a native process wait."""
 
-    def __init__(self, name):
+    def __init__(self):
         """Initialize channel identity and request records."""
-        module_name = sc.sc_module_name(name)
-        super().__init__(module_name)
         self.requests = []
 
-    def transport_value(self, request):
+    def transport(self, request):
         """Wait one nanosecond and return twice the request value."""
         sc.wait(1, sc.SC_NS)
         self.requests.append(int(request))
         return int(request) * 2
 
 
-class Peek(sc.channel_interface(tlm.tlm_blocking_peek_if[int])):
+class Peek:
     """Return a retained sample without consuming it."""
 
-    def __init__(self, name):
+    def __init__(self):
         """Initialize channel identity and sample state."""
-        module_name = sc.sc_module_name(name)
-        super().__init__(module_name)
         self.value = 23
 
-    def peek_value(self):
+    def peek(self):
         """Return the current sample without changing state or simulation time."""
         return self.value
 
 
 module_name = sc.sc_module_name("top")
 model = sc.sc_module(module_name)
-transport = Transport("transport")
-peek = Peek("peek")
+transport = Transport()
+peek = Peek()
 transport_port = sc.sc_port[tlm.tlm_transport_if[int, int]]("transport_port")
 peek_port = sc.sc_port[tlm.tlm_blocking_peek_if[int]]("peek_port")
 transport_port.bind(transport)
 peek_port.bind(peek)
 del module_name
-type(transport_port.get_interface()).transport.__release_gil__ = True
 records = []
 
 

@@ -21,16 +21,14 @@ class Put(sc.channel_interface(tlm.tlm_blocking_put_if[int])):
         self.values.append(int(value))
 
 
-class Get(sc.channel_interface(tlm.tlm_blocking_get_if[int])):
+class Get:
     """Return value samples after waiting inside native virtual dispatch."""
 
-    def __init__(self, name):
+    def __init__(self):
         """Initialize channel identity and response value."""
-        module_name = sc.sc_module_name(name)
-        super().__init__(module_name)
         self.value = 23
 
-    def get_value(self):
+    def get(self):
         """Wait one nanosecond and return the next native integer value."""
         sc.wait(1, sc.SC_NS)
         return self.value
@@ -53,7 +51,7 @@ class Analysis(sc.channel_interface(tlm.tlm_analysis_if[int])):
 module_name = sc.sc_module_name("top")
 model = sc.sc_module(module_name)
 put = Put("put")
-get = Get("get")
+get = Get()
 analysis = Analysis("analysis")
 put_port = sc.sc_port[tlm.tlm_blocking_put_if[int]]("put_port")
 get_port = sc.sc_port[tlm.tlm_blocking_get_if[int]]("get_port")
@@ -63,7 +61,6 @@ get_port.bind(get)
 analysis_port.bind(analysis)
 del module_name
 type(put_port.get_interface()).put.__release_gil__ = True
-type(get_port.get_interface()).get.__release_gil__ = True
 records = []
 
 
