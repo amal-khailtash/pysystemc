@@ -227,6 +227,11 @@ def test_tlm_quantumkeeper_reset_and_kill_cleanup(tmp_path):
     assert "QUANTUM_RESET_OK" in run_example(tmp_path, "tests/models/tlm_quantum_reset.py")
 
 
+def test_native_callback_payload_event_queue(tmp_path):
+    """Verify retained callbacks, copied phases, payload mutation and timed delivery."""
+    assert "CALLBACK_PEQ_OK" in run_example(tmp_path, "tests/models/tlm_callback_peq.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

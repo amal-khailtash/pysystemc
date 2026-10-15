@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Callback payload event queues accept retained Python callables with native
+  protocol types, phase copying, delta/timed scheduling and cancellation.
 - Independent native reference checks compare quantumkeeper and payload queue
   delivery order, simulation times, cancellation and local-time behavior.
 - Native `tlm_utils` namespace exposes convenience socket and utility templates;

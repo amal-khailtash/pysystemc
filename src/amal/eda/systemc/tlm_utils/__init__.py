@@ -6,6 +6,7 @@ ownership require native-compatible objects and retained Python callbacks.
 """
 
 import cppyy
+from pathlib import Path
 from ..sc_core import _ProcessUnwind
 from .._namespace import public_names as _public_names, document_member as _document_member
 
@@ -24,6 +25,38 @@ for _header in (
 
 _namespace = cppyy.gbl.tlm_utils
 __all__ = _public_names(_namespace)
+cppyy.include(str(Path(__file__).with_name("callback_peq.h")))
+_callback_queues = []
+
+
+def callback_peq(name, callback, protocol=None):
+    """Create a native payload queue delivering to a Python callable.
+
+    Args:
+        name: Native object name, created before simulation starts.
+        callback: Callable accepting borrowed payload and const phase; must not wait.
+        protocol: Native protocol types class; defaults to tlm_base_protocol_types.
+
+    Returns:
+        Native queue with notify(payload, phase[, delay]) and cancel_all().
+
+    Raises:
+        TypeError: Callback is not callable or protocol signatures are incompatible.
+
+    Queue and callback are retained until interpreter shutdown because the kernel
+    owns a process borrowing the queue. Retain payloads until delivery/cancellation.
+    Callback exceptions propagate through the kernel. cppyy acquires the GIL.
+    """
+    if not callable(callback):
+        raise TypeError("payload queue callback must be callable")
+    if protocol is None:
+        protocol = cppyy.gbl.tlm.tlm_base_protocol_types
+    queue = cppyy.gbl.pysystemc_interfaces.CallbackPeq[protocol](name, callback)
+    _callback_queues.append((queue, callback))
+    return queue
+
+
+__all__.append("callback_peq")
 
 
 def __getattr__(name):
