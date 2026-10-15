@@ -36,7 +36,7 @@ class Target:
     def debug(self, index, payload):
         """Return distinct counts to prove independent connection routing."""
         self.check(index, payload)
-        return index + 7
+        return self.counts[index]
 
     def dmi(self, index, payload, result):
         """Reject DMI while supplying per-connection output ranges."""
@@ -48,6 +48,7 @@ class Target:
 
 
 target = Target()
+target.counts = [7, 8]
 retained = weakref.ref(target)
 socket = tlm_utils.callback_multi_target_socket("target", width=73, connections=2)
 socket.register_b_transport(target.transport)
@@ -84,6 +85,17 @@ def run(index):
     assert interface.nb_transport_fw(payload, phase, delay) == tlm.TLM_UPDATED
     assert phase == tlm.BEGIN_RESP and delay == sc.sc_time(index + 1, sc.SC_NS)
     assert interface.transport_dbg(payload) == index + 7
+    for count in (0, 2**32 - 1):
+        retained().counts[index] = count
+        assert interface.transport_dbg(payload) == count
+    for count in (-1, 2**32):
+        retained().counts[index] = count
+        try:
+            interface.transport_dbg(payload)
+        except Exception as error:
+            assert "outside unsigned int range" in str(error), error
+        else:
+            raise AssertionError("invalid multi debug count accepted")
     result = tlm.tlm_dmi()
     assert not interface.get_direct_mem_ptr(payload, result)
     assert (result.get_start_address(), result.get_end_address()) == (17 + index, 31 + index)

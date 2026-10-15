@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Multi target debug conversion checks cover unsigned endpoints and invalid
+  negative/overflow counts independently on both connections.
+
 - Public socket guide documents callable factories, signatures, connection IDs,
   optional policies, borrowing, callback retention and current verification limits.
 
