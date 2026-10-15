@@ -91,4 +91,42 @@ for address in (17, 18, 19):
         assert [ord(value) for value in data] == (
             [10 + index for index in mapping] if command == tlm.TLM_READ_COMMAND else [1, 2, 3, 4]
         )
+for word, size in (("unsigned char", 1), ("unsigned short", 2), ("unsigned int", 4)):
+    for bus in (4, 8):
+        for offset in range(bus):
+            for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
+                payload = tlm.tlm_generic_payload()
+                payload.resize_extensions()
+                length = size * 2
+                data = cppyy.gbl.std.vector["unsigned char"](length, 0)
+                for index in range(length):
+                    data[index] = index + 1
+                address = 32 + offset
+                payload.set_command(command)
+                payload.set_address(address)
+                payload.set_data_ptr(data.data())
+                payload.set_data_length(length)
+                payload.set_streaming_width(length)
+                tlm.tlm_to_hostendian_word[word](payload, bus)
+                expanded = payload.get_data_length()
+                assert payload.get_address() == 32 and expanded >= length
+                converted = payload.get_data_ptr()
+                enables = payload.get_byte_enable_ptr()
+                converted.reshape((expanded,))
+                enables.reshape((expanded,))
+                mapping = [
+                    ((address + (index // size) * size + size - 1 - index % size) ^ (bus - 1)) - 32
+                    for index in range(length)
+                ]
+                if command == tlm.TLM_WRITE_COMMAND:
+                    assert [converted[index] for index in mapping] == list(range(1, length + 1))
+                else:
+                    for index in range(expanded):
+                        converted[index] = 50 + index
+                assert [index for index in range(expanded) if enables[index] == 255] == sorted(mapping)
+                tlm.tlm_from_hostendian(payload)
+                expected = (
+                    [50 + index for index in mapping] if command == tlm.TLM_READ_COMMAND else list(range(1, length + 1))
+                )
+                assert [ord(value) for value in data] == expected
 print("ENDIAN_WORD_OK")

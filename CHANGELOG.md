@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Word endian read/write matrix covers three native word types and every offset
+  on two bus widths, checking actual native buffer sizes and byte mapping.
+
 - Word endian unaligned checks verify expanded request windows, enabled lanes
   and read/write byte placement across bus boundaries.
 
