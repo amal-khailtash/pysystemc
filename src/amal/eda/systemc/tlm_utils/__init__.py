@@ -32,7 +32,7 @@ _callback_sockets = []
 
 
 def callback_target_socket(name, *, width=32, protocol=None, policy=None):
-    """Create a native simple target socket accepting blocking Python callbacks.
+    """Create a native simple target socket accepting Python transport callbacks.
 
     Args:
         name: Native socket name during elaboration.
@@ -45,24 +45,30 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None):
 
     Retain socket until simulation ends. Registered callbacks are retained until
     shutdown. Payload/delay references are borrowed; guarded waits and errors
-    follow native process semantics. Nonblocking/debug/DMI registration is pending.
+    follow native process semantics. Nonblocking/debug/DMI callbacks must not wait.
     """
     if protocol is None:
         protocol = cppyy.gbl.tlm.tlm_base_protocol_types
     if policy is None:
         policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND
     socket_type = cppyy.gbl.pysystemc_interfaces.CallbackTargetSocket[width, protocol, policy]
-    native_register = socket_type.register_b_transport
     if not getattr(socket_type, "_retained_registration", False):
+        for method in (
+            "register_b_transport",
+            "register_nb_transport_fw",
+            "register_transport_dbg",
+            "register_get_direct_mem_ptr",
+        ):
+            native_register = getattr(socket_type, method)
 
-        def register(socket, callback):
-            """Retain a callable after native registration succeeds."""
-            if not callable(callback):
-                raise TypeError("blocking transport callback must be callable")
-            native_register(socket, callback)
-            _callback_sockets.append((socket, callback))
+            def register(socket, callback, _native=native_register):
+                """Retain a callable after native registration succeeds."""
+                if not callable(callback):
+                    raise TypeError("socket transport callback must be callable")
+                _native(socket, callback)
+                _callback_sockets.append((socket, callback))
 
-        socket_type.register_b_transport = register
+            setattr(socket_type, method, register)
         socket_type._retained_registration = True
     return socket_type(name)
 

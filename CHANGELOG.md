@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Convenience target sockets register nonblocking transport, debug transport and
+  DMI Python callbacks, preserving native references and unsigned debug bounds.
 - Native convenience target sockets accept retained blocking Python callbacks
   through a member-pointer bridge with arbitrary width and protocol parameters.
 - Callback payload event queues accept retained Python callables with native
