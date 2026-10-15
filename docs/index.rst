@@ -7,6 +7,7 @@
    intro/examples
    intro/supported
    intro/development
+   intro/contributing
    intro/architecture
    intro/roadmap
    intro/release_notes

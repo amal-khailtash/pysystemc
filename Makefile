@@ -224,7 +224,14 @@ coverage:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
 
 # ----------------------------------------------------------------------------------------------------------------------
-# test-wheel: ## Check local release wheel startup (override PACKAGE_VERSION and WHEEL_DIR)
+# native-sanitize: ## Run optional ASan/UBSan first-party native references
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: native-sanitize
+native-sanitize:
+	uv run python tools/native_sanitize.py
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-wheel: ## Check installed wheel startup, console and tutorials (override PACKAGE_VERSION and WHEEL_DIR)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: test-wheel
 test-wheel:

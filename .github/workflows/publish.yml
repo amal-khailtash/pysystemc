@@ -37,8 +37,10 @@ jobs:
         run: |
           wheel=$(realpath dist/*.whl)
           check=$(realpath tools/check_wheel.py)
+          examples_check=$(realpath tools/check_installed_examples.py)
           cd /tmp
           uv run --no-project --with "$wheel" python -c "import subprocess, sys; subprocess.run([sys.executable, sys.argv[1]], check=True, timeout=120)" "$check"
+          uv run --no-project --with "$wheel" python "$examples_check"
       - uses: actions/upload-artifact@v7
         with:
           name: distributions

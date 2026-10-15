@@ -6,6 +6,22 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Optional `make native-sanitize` ASan/UBSan checks for first-party native
+  reference models; the SystemC dependency library is not instrumented.
+- Contribution and troubleshooting guidance covering native library ownership,
+  blocking-call GIL requirements, installed validation and dependency licenses.
+- Native CI caching keyed by compiler, architecture, SystemC revision and build
+  configuration, including the C++17/pthreads ABI settings.
+
+### Changed
+
+- Publishing validates installed console arguments, exit status and tutorial
+  behavior before uploading distributions.
+- Place `native-sanitize` in the Makefile's Build and validation help section;
+  describe the startup, console and tutorial checks performed by `test-wheel`.
+
 ## [0.4.0] - 2026-10-15
 
 ### Fixed
