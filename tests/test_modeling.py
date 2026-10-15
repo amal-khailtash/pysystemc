@@ -200,3 +200,8 @@ def test_native_tlm1_blocking_and_analysis_python_dispatch(tmp_path):
     assert "NATIVE_TLM1_BLOCKING_INTERFACES_OK" in run_example(
         tmp_path, "tests/models/native_tlm1_blocking_interfaces.py"
     )
+
+
+def test_native_tlm1_transport_and_peek_reference_overloads(tmp_path):
+    """Verify TLM-1 request/response and peek preserve native output-reference semantics."""
+    assert "NATIVE_TLM1_TRANSPORT_PEEK_OK" in run_example(tmp_path, "tests/models/native_tlm1_transport_peek.py")

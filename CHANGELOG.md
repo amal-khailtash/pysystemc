@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- TLM-1 transport and blocking-peek adapters preserve both value-return and
+  reference-output overloads through Python value callbacks.
+
 - TLM-1 analysis value-copy channel adapter and blocking put/get dispatch checks.
   Analysis callbacks currently use write_value to avoid cppyy reference conversion.
 

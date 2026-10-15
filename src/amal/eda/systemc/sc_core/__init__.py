@@ -166,12 +166,42 @@ def channel_interface(interface: Any) -> Any:
     Abstract interface methods must be implemented by the Python subclass.
     Combined TLM forward interfaces currently use Python debug_transport callbacks.
     Native callers use transport_dbg, which validates the unsigned return range.
-    Debug callbacks must never wait.
+    Debug callbacks must never wait. TLM-1 transport and blocking peek use
+    transport_value and peek_value callbacks; native methods preserve value and
+    reference-output overloads. Callback naming parity remains pending.
     """
     name = interface.__cpp_name__
+    cache_name = name
     if name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_transport_if<"):
+            # Template parameter names avoid parsing nested C++ type arguments.
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "TransportAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Value-copy TLM response bridge. @details Ports borrow the owner; "
+                    "cppyy acquires GIL for callbacks. Blocking callers release GIL. Errors propagate. */ "
+                    "namespace pysystemc_interfaces { template<class Req, class Rsp> "
+                    "class TransportAdapter : public tlm::tlm_transport_if<Req, Rsp> { public: "
+                    "Rsp transport(const Req& req) override { return transport_value(req); } "
+                    "void transport(const Req& req, Rsp& rsp) override { rsp = transport_value(req); } "
+                    "virtual Rsp transport_value(Req) = 0; }; }"
+                )
+            arguments = name.removeprefix("tlm::tlm_transport_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::TransportAdapter<{arguments}>"
+        if name.startswith("tlm::tlm_blocking_peek_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PeekAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Value-copy TLM peek bridge. @details Ports borrow the owner; "
+                    "cppyy acquires GIL for callbacks. Errors propagate; retain owner through simulation. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class PeekAdapter : public tlm::tlm_blocking_peek_if<T> { public: "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
+                    "void peek(T& value) const override { value = peek_value(); } "
+                    "virtual T peek_value() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_blocking_peek_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::PeekAdapter<{argument}>"
         if name.startswith("tlm::tlm_analysis_if<"):
             value_type = name.removeprefix("tlm::tlm_analysis_if<").removesuffix(">")
             methods = (
@@ -210,8 +240,8 @@ def channel_interface(interface: Any) -> Any:
             f"~{identifier}() override = default; {methods} }}; }}"
         )
         base = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
-        _channel_interfaces[name] = base
-    return _channel_interfaces[name]
+        _channel_interfaces[cache_name] = base
+    return _channel_interfaces[cache_name]
 
 
 def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
