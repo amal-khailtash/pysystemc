@@ -54,6 +54,17 @@ socket.register_b_transport(target.transport)
 socket.register_nb_transport_fw(target.forward)
 socket.register_transport_dbg(target.debug)
 socket.register_get_direct_mem_ptr(target.dmi)
+
+
+def duplicate(*args):
+    """Fail if duplicate registration replaces the first native callable."""
+    raise AssertionError("duplicate callback replaced original")
+
+
+socket.register_b_transport(duplicate)
+socket.register_nb_transport_fw(duplicate)
+socket.register_transport_dbg(duplicate)
+socket.register_get_direct_mem_ptr(duplicate)
 initiators = [tlm_utils.callback_initiator_socket(f"initiator_{i}", width=73) for i in range(2)]
 for initiator in initiators:
     initiator.bind(socket)

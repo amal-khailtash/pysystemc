@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Multi socket duplicate registrations retain the original callback after native
+  registration warnings, matching upstream behavior.
+
 - Check custom PEQ high-bit values through native bit-proxy `to_bool()`.
 
 - Format first-party C++ function bodies across multiple lines and separate
@@ -15,6 +18,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Refresh the README PyPI badge cache identity after the 0.6.0 publication.
 
 ### Added
+
+- Multi initiator sockets accept connection-indexed backward transport and DMI
+  invalidation callbacks, with automatic GIL release for indexed blocking access.
 
 - Multi target sockets accept retained Python callbacks for blocking/nonblocking
   transport, debug and DMI, preserving native connection indices and templates.

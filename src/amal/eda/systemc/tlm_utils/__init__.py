@@ -153,6 +153,44 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged
     return socket_type(name)
 
 
+def callback_multi_initiator_socket(name, *, width=32, protocol=None, connections=0, policy=None):
+    """Create a native multi initiator with connection-indexed backward callbacks.
+
+    Args:
+        name: Native socket name during elaboration.
+        width: Arbitrary native bus width.
+        protocol: Native protocol types; defaults to base protocol.
+        connections: Native maximum connection count; zero means unlimited.
+        policy: Native binding policy; defaults to one or more bound.
+
+    Returns:
+        Native multi initiator with backward registrations and indexed forward access.
+
+    Registered callbacks and sockets remain retained until shutdown. Backward callbacks
+    receive connection index and borrowed payload/phase/delay or invalidation range;
+    they must not wait. cppyy acquires GIL and exceptions propagate. Indexed forward
+    blocking calls release GIL. Bind before elaboration; access only resolved indices.
+    """
+    protocol = cppyy.gbl.tlm.tlm_base_protocol_types if protocol is None else protocol
+    policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND if policy is None else policy
+    socket_type = cppyy.gbl.pysystemc_interfaces.CallbackMultiInitiatorSocket[width, protocol, connections, policy]
+    _configure_forward_access(socket_type)
+    if not getattr(socket_type, "_retained_registration", False):
+        for method in ("register_nb_transport_bw", "register_invalidate_direct_mem_ptr"):
+            native_register = getattr(socket_type, method)
+
+            def register(socket, callback, _native=native_register):
+                """Retain callback ownership after native registration succeeds."""
+                if not callable(callback):
+                    raise TypeError("socket callback must be callable")
+                _native(socket, callback)
+                _callback_sockets.append((socket, callback))
+
+            setattr(socket_type, method, register)
+        socket_type._retained_registration = True
+    return socket_type(name)
+
+
 def callback_multi_target_socket(name, *, width=32, protocol=None, connections=0, policy=None):
     """Create a native multi target with connection-indexed Python callbacks.
 
@@ -222,6 +260,7 @@ def callback_peq(name, callback, protocol=None):
     return queue
 
 
+__all__.append("callback_multi_initiator_socket")
 __all__.append("callback_multi_target_socket")
 __all__.append("callback_peq")
 __all__.append("callback_target_socket")

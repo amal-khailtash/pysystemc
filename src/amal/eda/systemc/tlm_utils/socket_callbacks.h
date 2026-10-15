@@ -1,4 +1,5 @@
 /** @file Member-pointer adapters for native convenience socket registration. */
+#include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
@@ -228,6 +229,7 @@ class CallbackMultiTargetSocket
   void register_nb_transport_fw(std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> function)
   {
     Base::register_nb_transport_fw(this, &CallbackMultiTargetSocket::forward);
+    if (nonblocking) return;
     nonblocking = std::move(function);
   }
 
@@ -241,6 +243,7 @@ class CallbackMultiTargetSocket
   void register_b_transport(std::function<void(int, Payload&, sc_core::sc_time&)> function)
   {
     Base::register_b_transport(this, &CallbackMultiTargetSocket::deliver);
+    if (callback) return;
     callback = std::move(function);
   }
 
@@ -254,6 +257,7 @@ class CallbackMultiTargetSocket
   void register_transport_dbg(std::function<long(int, Payload&)> function)
   {
     Base::register_transport_dbg(this, &CallbackMultiTargetSocket::debug_transport);
+    if (debug) return;
     debug = std::move(function);
   }
 
@@ -270,6 +274,7 @@ class CallbackMultiTargetSocket
   void register_get_direct_mem_ptr(std::function<bool(int, Payload&, tlm::tlm_dmi&)> function)
   {
     Base::register_get_direct_mem_ptr(this, &CallbackMultiTargetSocket::direct_memory);
+    if (dmi) return;
     dmi = std::move(function);
   }
 
@@ -357,6 +362,58 @@ class CallbackTaggedInitiatorSocket
   void register_invalidate_direct_mem_ptr(std::function<void(int, sc_dt::uint64, sc_dt::uint64)> function, int id)
   {
     Base::register_invalidate_direct_mem_ptr(this, &CallbackTaggedInitiatorSocket::invalidate_memory, id);
+    invalidate = std::move(function);
+  }
+
+  /** @brief Forward borrowed invalidation values without recursive DMI requests. */
+  void invalidate_memory(int id, sc_dt::uint64 first, sc_dt::uint64 last)
+  {
+    invalidate(id, first, last);
+  }
+};
+/** @brief Native multi initiator callback bridge preserving upstream connection indices.
+ * @details Python retains callable/socket ownership. Payload/phase/delay are
+ * borrowed; callbacks acquire GIL and must not wait. Native errors propagate.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types, unsigned int Connections = 0,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackMultiInitiatorSocket
+  : public tlm_utils::multi_passthrough_initiator_socket<
+      CallbackMultiInitiatorSocket<Width, Types, Connections, Policy>, Width, Types, Connections, Policy>
+{
+  using Payload = typename Types::tlm_payload_type;
+  using Phase = typename Types::tlm_phase_type;
+  std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> response;
+  std::function<void(int, sc_dt::uint64, sc_dt::uint64)> invalidate;
+
+ public:
+  using Base =
+    tlm_utils::multi_passthrough_initiator_socket<CallbackMultiInitiatorSocket, Width, Types, Connections, Policy>;
+
+  /** @brief Construct during elaboration with native width/protocol/policy. */
+  explicit CallbackMultiInitiatorSocket(const char* name) : Base(name)
+  {
+  }
+
+  /** @brief Register backward response callback receiving native connection indices. */
+  void register_nb_transport_bw(std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> function)
+  {
+    Base::register_nb_transport_bw(this, &CallbackMultiInitiatorSocket::backward);
+    if (response) return;
+    response = std::move(function);
+  }
+
+  /** @brief Forward native mutable response arguments to retained callable. */
+  tlm::tlm_sync_enum backward(int id, Payload& payload, Phase& phase, sc_core::sc_time& delay)
+  {
+    return response(id, payload, phase, delay);
+  }
+
+  /** @brief Register invalidation callback with native full-width ranges and ID. */
+  void register_invalidate_direct_mem_ptr(std::function<void(int, sc_dt::uint64, sc_dt::uint64)> function)
+  {
+    Base::register_invalidate_direct_mem_ptr(this, &CallbackMultiInitiatorSocket::invalidate_memory);
+    if (invalidate) return;
     invalidate = std::move(function);
   }
 
