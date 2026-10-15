@@ -1,0 +1,179 @@
+"""Check FIFO debug indexing, output retention and native configuration defaults."""
+
+from amal.eda.systemc import sc_core as sc, tlm
+import ctypes
+import cppyy
+
+cppyy.cppdef("""
+/** @brief Inspect FIFO overloads through borrowed native base interfaces.
+ * @details No waits or GIL release are needed. Python callbacks acquire GIL;
+ * owners and output storage remain alive. Callback exceptions propagate.
+ */
+bool fifo_base_reference(tlm::tlm_get_peek_if<int>& ordinary,
+                        tlm::tlm_fifo_debug_if<int>& debug)
+{
+    int oldest = -1, newest = -1;
+    return ordinary.nb_peek(oldest) && debug.nb_peek(newest, 0)
+        && oldest == 23 && newest == 29;
+}
+""")
+
+
+class Debug:
+    """Expose newest-first debug values without simulation notifications."""
+
+    def __init__(self):
+        """Retain samples and debug callback counts."""
+        self.values = [41, 23]
+        self.calls = 0
+
+    def used(self):
+        """Return occupied entries."""
+        return len(self.values)
+
+    def size(self):
+        """Return native FIFO capacity."""
+        return 4
+
+    def debug(self):
+        """Record a debug inspection without changing entries."""
+        self.calls += 1
+
+    def nb_peek(self, index=None):
+        """Return an indexed sample or failure without changing values."""
+        if index is None:
+            return (True, self.values[-1]) if self.values else (False, 0)
+        return (True, self.values[index]) if 0 <= index < len(self.values) else (False, 0)
+
+    def put(self, value):
+        """Append after one native wait, sharing state with debug access."""
+        sc.wait(1, sc.SC_NS)
+        self.values.insert(0, int(value))
+
+    def nb_put(self, value):
+        """Append without waiting if capacity allows."""
+        if len(self.values) == 4:
+            return False
+        self.values.insert(0, int(value))
+        return True
+
+    def nb_can_put(self):
+        """Report capacity."""
+        return len(self.values) < 4
+
+    def get(self):
+        """Consume oldest entry."""
+        return self.values.pop()
+
+    def peek(self):
+        """Read oldest entry."""
+        return self.values[-1]
+
+    def nb_get(self):
+        """Consume only if available."""
+        return (True, self.values.pop()) if self.values else (False, 0)
+
+    def nb_can_get(self):
+        """Report available entries."""
+        return bool(self.values)
+
+    def nb_can_peek(self):
+        """Report peek availability."""
+        return bool(self.values)
+
+    def nb_poke(self, value, index):
+        """Replace an indexed entry, rejecting out-of-range writes."""
+        if not 0 <= index < len(self.values):
+            return False
+        self.values[index] = int(value)
+        return True
+
+
+class Config:
+    """Record configuration calls and their native default arguments."""
+
+    def __init__(self):
+        """Create an ordered call record."""
+        self.calls = []
+
+    def nb_expand(self, amount):
+        """Record expansion."""
+        self.calls.append(("expand", amount))
+
+    def nb_unbound(self, amount):
+        """Record unbounded capacity increment."""
+        self.calls.append(("unbound", amount))
+
+    def nb_reduce(self, amount):
+        """Record a successful reduction."""
+        self.calls.append(("reduce", amount))
+        return True
+
+    def nb_bound(self, amount):
+        """Record a rejected bound."""
+        self.calls.append(("bound", amount))
+        return False
+
+
+name = sc.sc_module_name("top")
+top = sc.sc_module(name)
+debug, config = Debug(), Config()
+debug_port = sc.sc_port[tlm.tlm_fifo_debug_if[int]]("debug")
+config_port = sc.sc_port[tlm.tlm_fifo_config_size_if]("config")
+debug_port(debug)
+config_port(config)
+put_port = sc.sc_port[tlm.tlm_fifo_put_if[int]]("put")
+get_port = sc.sc_port[tlm.tlm_fifo_get_if[int]]("get")
+put_port(debug)
+get_port(debug)
+del name
+interface = debug_port.get_interface()
+assert interface.used() == 2 and interface.size() == 4
+interface.debug()
+assert debug.calls == 1
+value = ctypes.c_int(-1)
+assert interface.nb_peek(value, 0) and value.value == 41
+assert interface.nb_peek(value, 1) and value.value == 23
+assert not interface.nb_peek(value, 2) and value.value == 23
+assert interface.nb_poke(17)
+assert debug.values == [17, 23]
+assert not interface.nb_poke(99, 2) and debug.values == [17, 23]
+interface = config_port.get_interface()
+interface.nb_expand()
+interface.nb_unbound()
+assert interface.nb_reduce()
+assert not interface.nb_bound(3)
+assert config.calls == [("expand", 1), ("unbound", 16), ("reduce", 1), ("bound", 3)]
+assert sc.sc_time_stamp() == sc.SC_ZERO_TIME
+records = []
+
+
+def exercise():
+    """Validate compound blocking and nonblocking overloads on shared samples."""
+    put = put_port.get_interface()
+    get = get_port.get_interface()
+    put.put(19)
+    assert put.nb_can_put() and put.nb_put(29)
+    assert debug.values == [29, 19, 17, 23]
+    assert cppyy.gbl.fifo_base_reference(get, get)
+    assert not put.nb_put(99)
+    assert get.peek() == 23
+    value = ctypes.c_int(-1)
+    get.peek(value)
+    assert value.value == 23
+    assert get.nb_peek(value, 0) and value.value == 29
+    assert get.nb_peek(value) and value.value == 23
+    assert get.get() == 23
+    get.get(value)
+    assert value.value == 17
+    assert get.nb_get(value) and value.value == 19
+    assert get.nb_get(value) and value.value == 29
+    assert not get.nb_get(value) and value.value == 29
+    records.append(str(sc.sc_time_stamp()))
+
+
+handle = sc.sc_spawn(exercise, "exercise")
+sc.sc_start(2, sc.SC_NS)
+assert handle.terminated() and records == ["1 ns"], records
+sc.sc_stop()
+print("STRUCTURAL_TLM_FIFO_COMPOUND_OK")

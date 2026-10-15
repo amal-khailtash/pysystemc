@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   preserve independent request/response template types and native output overloads.
 - Structural FIFO debug and size-configuration interfaces preserve indexed access,
   failed output values and native default arguments.
+- Structural FIFO put/get interfaces preserve ordinary and indexed peek overloads,
+  shared queue state and blocking process suspension.
 
 ### Fixed
 

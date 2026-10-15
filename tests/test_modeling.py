@@ -195,6 +195,11 @@ def test_structural_tlm_fifo_debug_and_configuration(tmp_path):
     assert "STRUCTURAL_TLM_FIFO_DEBUG_OK" in run_example(tmp_path, "tests/models/python_tlm_fifo_debug.py")
 
 
+def test_structural_tlm_fifo_compound_interfaces(tmp_path):
+    """Verify compound FIFO indexed/ordinary peek and shared blocking queue state."""
+    assert "STRUCTURAL_TLM_FIFO_COMPOUND_OK" in run_example(tmp_path, "tests/models/python_tlm_fifo_compound.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

@@ -157,6 +157,15 @@ for _direction in ("master", "slave"):
             )
         _METHODS[f"tlm::tlm_{_mode}{_direction}_if"] = _callbacks
 
+_METHODS["tlm::tlm_fifo_put_if"] = {
+    **_METHODS["tlm::tlm_fifo_debug_if"],
+    **_METHODS["tlm::tlm_put_if"],
+}
+_METHODS["tlm::tlm_fifo_get_if"] = {
+    **_METHODS["tlm::tlm_fifo_debug_if"],
+    **_METHODS["tlm::tlm_get_peek_if"],
+}
+
 
 def _adapt(interface, implementation, factory):
     """Validate and retain one native adapter for a Python implementation."""

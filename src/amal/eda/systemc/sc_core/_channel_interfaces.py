@@ -38,8 +38,9 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
-        if name.startswith("tlm::tlm_fifo_debug_if<"):
-            value = name.removeprefix("tlm::tlm_fifo_debug_if<").removesuffix(">")
+        fifo_family = name.split("<", 1)[0]
+        if fifo_family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if"):
+            value = name.split("<", 1)[1].removesuffix(">")
             methods = (
                 "virtual int used() const override = 0; virtual int size() const override = 0; "
                 "virtual void debug() const override = 0; "
@@ -49,6 +50,42 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 f"virtual std::pair<bool, {value}> debug_peek(int) const = 0; "
                 f"virtual bool debug_poke({value}, int) = 0; "
             )
+            if fifo_family == "tlm::tlm_fifo_put_if":
+                methods += (
+                    "private: sc_core::sc_event ready; public: "
+                    f"void put(const {value}& value) override {{ put_value(value); }} "
+                    f"bool nb_put(const {value}& value) override {{ return try_put_value(value); }} "
+                    f"bool nb_can_put(tlm::tlm_tag<{value}>* = nullptr) const override {{ return can_put(); }} "
+                    f"const sc_core::sc_event& ok_to_put(tlm::tlm_tag<{value}>* = nullptr) const override "
+                    "{ return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    f"virtual void put_value({value}) = 0; virtual bool try_put_value({value}) = 0; "
+                    "virtual bool can_put() const = 0; "
+                )
+            if fifo_family == "tlm::tlm_fifo_get_if":
+                methods += (
+                    "private: sc_core::sc_event get_ready, peek_ready; public: "
+                    f"{value} get(tlm::tlm_tag<{value}>* = nullptr) override {{ return get_value(); }} "
+                    f"void get({value}& value) override {{ value = get_value(); }} "
+                    f"{value} peek(tlm::tlm_tag<{value}>* = nullptr) const override {{ return peek_value(); }} "
+                    f"void peek({value}& value) const override {{ value = peek_value(); }} "
+                    f"bool nb_get({value}& value) override {{ auto result = try_get_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    f"bool nb_peek({value}& value) const override {{ auto result = try_peek_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    f"bool nb_can_get(tlm::tlm_tag<{value}>* = nullptr) const override {{ return can_get(); }} "
+                    f"bool nb_can_peek(tlm::tlm_tag<{value}>* = nullptr) const override {{ return can_peek(); }} "
+                    f"const sc_core::sc_event& ok_to_get(tlm::tlm_tag<{value}>* = nullptr) const override "
+                    "{ return get_ready; } "
+                    f"const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<{value}>* = nullptr) const override "
+                    "{ return peek_ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) "
+                    "{ get_ready.notify(delay); peek_ready.notify(delay); } "
+                    f"virtual {value} get_value() = 0; virtual {value} peek_value() const = 0; "
+                    f"virtual std::pair<bool, {value}> try_get_value() = 0; "
+                    f"virtual std::pair<bool, {value}> try_peek_value() const = 0; "
+                    "virtual bool can_get() const = 0; virtual bool can_peek() const = 0; "
+                )
         if name == "tlm::tlm_fifo_config_size_if":
             methods = (
                 "void nb_expand(unsigned int n = 1) override { expand_value(n); } "
