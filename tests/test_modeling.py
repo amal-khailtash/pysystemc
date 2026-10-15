@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_passthrough_socket_custom_protocol(tmp_path):
+    """Verify passthrough protocol specialization retains 137-bit fields and identity."""
+    assert "CUSTOM_PASSTHROUGH_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_custom.py")
+
+
 def test_passthrough_socket_callback_exception_state(tmp_path):
     """Verify passthrough callback errors preserve mutation, cleanup and kernel time."""
     assert "PASSTHROUGH_ERROR_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_error.py")

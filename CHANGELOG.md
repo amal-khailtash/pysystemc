@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Custom passthrough protocol regression checks 137-bit native payload fields,
+  transaction identity across callbacks and mutation after a blocking wait.
+
 - Passthrough callback exception regression checks error propagation, original
   payload mutation, delay changes, cleanup and kernel time at failure.
 
