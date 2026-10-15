@@ -8,11 +8,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Check custom PEQ high-bit values through native bit-proxy `to_bool()`.
+
 - Format first-party C++ function bodies across multiple lines and separate
   documented definitions with blank lines.
 - Refresh the README PyPI badge cache identity after the 0.6.0 publication.
 
 ### Added
+
+- Custom convenience socket protocol regression verifies 137-bit payload fields,
+  original transaction identity across forward/backward callbacks and timed mutation.
 
 - Hierarchical target socket regression verifies forward export and backward
   port resolution, callback state, debug bounds and blocking timing.

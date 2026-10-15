@@ -247,6 +247,11 @@ def test_convenience_initiator_socket_python_callbacks(tmp_path):
     assert "CALLBACK_INITIATOR_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_initiator.py")
 
 
+def test_convenience_socket_custom_protocol(tmp_path):
+    """Verify custom native payload identity, wide fields and forward/backward callbacks."""
+    assert "CUSTOM_CALLBACK_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_custom.py")
+
+
 def test_convenience_socket_reset_and_kill_cleanup(tmp_path):
     """Verify automatic GIL release and callback cleanup through reset/kill."""
     assert "CALLBACK_SOCKET_RESET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_reset.py")

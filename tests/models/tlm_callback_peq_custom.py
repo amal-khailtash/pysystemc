@@ -19,7 +19,7 @@ records = []
 def deliver(trans, phase):
     """Preserve borrowed payload identity and custom phase before raising a callback error."""
     assert cppyy.addressof(trans) == cppyy.addressof(payload)
-    assert trans.value[136] and trans.value.to_uint64() == 17
+    assert trans.value[136].to_bool() and trans.value.to_uint64() == 17
     records.append((int(phase), str(sc.sc_time_stamp())))
     trans.value = cppyy.gbl.sc_dt.sc_biguint[137](23)
     raise ValueError("custom PEQ callback failure")
