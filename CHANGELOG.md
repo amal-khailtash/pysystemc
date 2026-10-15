@@ -17,6 +17,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Organize subprocess regressions into tutorial, upstream, runtime, lifecycle,
+  modeling and runner modules with shared simulation helpers.
+
 - Publishing validates installed console arguments, exit status and tutorial
   behavior before uploading distributions.
 - Place `native-sanitize` in the Makefile's Build and validation help section;
