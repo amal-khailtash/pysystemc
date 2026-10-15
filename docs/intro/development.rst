@@ -63,8 +63,8 @@ Debug messages are opt-in and go to stderr::
    PYSYSTEMC_LOG_LEVEL=DEBUG make example-hello-py
    PYSYSTEMC_LOG_LEVEL=DEBUG PYSYSTEMC_COLOR=always make example-counter-py
 
-C++ runner notes use spdlog with external fmt and are visible at info level.
-``make setup-spdlog`` fetches its headers and is included in aggregate setup.
+The C++ runner reports source loading and failures on standard error.
+Native model output remains on its original streams.
 
 ``PYSYSTEMC_COLOR=auto`` enables terminal colors unless ``NO_COLOR`` is set.
 ``PYSYSTEMC_COLOR=always`` explicitly forces colors, including with ``NO_COLOR``.
@@ -74,3 +74,19 @@ keep their original form.
 The binding exposes ``amal.eda.systemc.__version__`` and prints it before the
 kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
 ``SC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the native SystemC banner.
+
+Native C++ source runner
+------------------------
+
+``pysystemc-cpp`` compiles source files in the order supplied and runs their
+native ``sc_main`` through the packaged startup adapter::
+
+   uv run pysystemc-cpp -I include helper.cpp model.cpp -- --cycles 20
+
+Each source directory is also an include directory. Arguments after ``--``
+are passed unchanged; ``argv[0]`` is the first source filename. Native return
+status becomes the command exit status. File, compilation and runtime errors
+produce diagnostics and a failure status. Run one model per interpreter; use
+another invocation for an independent kernel. The compatibility script
+``examples/run_sysc_cpp.py`` uses this same implementation. No external kernel
+source installation is required.

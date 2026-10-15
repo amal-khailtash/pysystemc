@@ -48,6 +48,7 @@ using sc_dt::SC_SAT_SYM; using sc_dt::SC_WRAP; using sc_dt::SC_WRAP_SM;
 """)
 # cppyy-generated port specializations use unqualified policy enum names.
 cppyy.cppdef("using sc_core::SC_ONE_OR_MORE_BOUND; using sc_core::SC_ZERO_OR_MORE_BOUND; using sc_core::SC_ALL_BOUND;")
+cppyy.cppdef("using sc_core::SC_ONE_WRITER; using sc_core::SC_MANY_WRITERS; using sc_core::SC_UNCHECKED_WRITERS;")
 
 from .sc_core import *
 from .sc_dt import *

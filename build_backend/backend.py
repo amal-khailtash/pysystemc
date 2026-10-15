@@ -102,6 +102,11 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
         files = {name: archive.read(name) for name in archive.namelist() if not name.endswith(("/", "/RECORD"))}
     for resource in NATIVE.rglob("*"):
         if resource.is_file():
+            # Wheels have no portable symlink installation contract. Store the
+            # SystemC payload once under the name used by runtime discovery;
+            # read_bytes follows the installation's unversioned symlink.
+            if resource.parent == NATIVE / "lib" and resource.name.startswith("libsystemc.so."):
+                continue
             # Installed CMake/pkg-config files refer to the build prefix and
             # are unnecessary for cppyy's runtime header/library discovery.
             if any(part in ("cmake", "pkgconfig") for part in resource.relative_to(NATIVE).parts):

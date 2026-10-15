@@ -35,5 +35,5 @@ model = cppyy.gbl.WheelModel("wheel_model")
 sc_core.sc_start(3, sc_core.SC_NS)
 assert model.calls == 2, model.calls
 assert sc_core.sc_time_stamp() == sc_core.sc_time(3, sc_core.SC_NS)
-assert __version__ == "0.3.0", __version__
+assert __version__ == "0.4.0", __version__
 print("Installed wheel: native resources, runtime C++ compilation and pthread wait passed")

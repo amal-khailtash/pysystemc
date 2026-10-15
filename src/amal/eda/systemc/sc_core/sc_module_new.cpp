@@ -18,6 +18,14 @@ namespace sc_core
 {
 
 /**
+ * @brief Read resolved logic through its native signal interface.
+ * @param signal Borrowed resolved channel retained by the caller.
+ * @return A value copy, avoiding borrowed storage escaping to Python.
+ * @details No callbacks or GIL release required; native update scheduling is unchanged.
+ */
+sc_dt::sc_logic python_read_resolved(const sc_signal_resolved& signal) { return signal.read(); }
+
+/**
  * @brief Select native time modulo without cppyy operator discovery ambiguity.
  * @param left Borrowed dividend time.
  * @param right Borrowed divisor time.

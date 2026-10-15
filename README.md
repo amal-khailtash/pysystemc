@@ -71,8 +71,9 @@ Detailed setup, validation, and logging instructions are in the
 
 ## Examples
 
-`examples/run_sysc_cpp.py` loads C++ source files and runs them through the
-native SystemC startup wrapper.
+`uv run pysystemc-cpp model.cpp -- --cycles 20` compiles native C++ sources
+and forwards arguments after `--` to `sc_main`. The compatibility script
+`examples/run_sysc_cpp.py` uses the same packaged runner.
 
 There are a few C++ and Python examples in `examples/` directory.
 

@@ -115,6 +115,15 @@ for name, member in sc_core_namespace.__dict__.items():
 sc_module = cppyy.gbl.sc_core.ScModule
 
 
+def _read_resolved(self: Any) -> Any:
+    """Return a copy of native resolved logic after the channel update phase."""
+    return cppyy.gbl.sc_core.python_read_resolved(self)
+
+
+if not hasattr(cppyy.gbl.sc_core.sc_signal_resolved, "read"):
+    cppyy.gbl.sc_core.sc_signal_resolved.read = _read_resolved
+
+
 def _time_modulo(self: Any, other: Any) -> Any:
     """Return native time remainder; reject a zero divisor with ValueError."""
     if other == cppyy.gbl.sc_core.SC_ZERO_TIME:

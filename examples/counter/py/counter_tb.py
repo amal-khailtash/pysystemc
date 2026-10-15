@@ -1,3 +1,5 @@
+"""Finite four-bit counter stimulus with native value and time assertions."""
+
 from amal.eda.systemc import main, sc_core, sc_dt
 
 from counter import Counter
@@ -6,8 +8,6 @@ from counter import Counter
 def sc_main(args: list) -> int:
     """Main function for the testbench"""
 
-    global wf, cnt, clock, reset, enable, counter_out
-
     clock = sc_core.sc_signal[bool]("clock")
     reset = sc_core.sc_signal[bool]("reset")
     enable = sc_core.sc_signal[bool]("enable")
@@ -15,7 +15,6 @@ def sc_main(args: list) -> int:
 
     # Connect the DUT
     counter = Counter("COUNTER")
-    cnt = counter
     counter.clock(clock)
     counter.reset(reset)
     counter.enable(enable)
@@ -62,6 +61,7 @@ def sc_main(args: list) -> int:
         sc_core.sc_start(1, sc_core.SC_NS)
         clock.write(True)
         sc_core.sc_start(1, sc_core.SC_NS)
+        assert counter_out.read().to_uint() == (i + 1) % 16
 
     print(f"@{sc_core.sc_time_stamp()} De-Asserting Enable")
     enable.write(False)  # De-assert enable
@@ -69,6 +69,8 @@ def sc_main(args: list) -> int:
     print(f"@{sc_core.sc_time_stamp()} Terminating simulation")
     sc_core.sc_close_vcd_trace_file(wf)
 
+    assert counter_out.read().to_uint() == 4
+    assert sc_core.sc_time_stamp() == sc_core.sc_time(81, sc_core.SC_NS)
     sc_core.sc_stop()
 
     return 0

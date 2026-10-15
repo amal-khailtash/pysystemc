@@ -1,7 +1,11 @@
+"""Native-style four-bit counter with retained ports and callback lifecycle."""
+
 from amal.eda.systemc import sc_core, sc_dt, print_hierarchy
 
 
 class Counter(sc_core.sc_module):
+    """Count modulo sixteen while preserving native signal scheduling."""
+
     def __init__(self, name: str):
         """Constructor for the counter
         Since this counter is a positive edge trigged one,
@@ -11,8 +15,6 @@ class Counter(sc_core.sc_module):
         module_name = sc_core.sc_module_name(name)
         super().__init__(module_name)
 
-        print("Executing new")
-
         self.clock = sc_core.sc_in_clk("clock")  # Clock input of the design
         self.reset = sc_core.sc_in[bool]("reset")  # active high, synchronous Reset input
         self.enable = sc_core.sc_in[bool]("enable")  # Active high enable signal for counter
@@ -20,15 +22,6 @@ class Counter(sc_core.sc_module):
 
         # Local Variables
         self.count = sc_dt.sc_uint[4](0)
-
-        # SC_NOBASE, SC_BIN, SC_OCT, SC_DEC, SC_HEX
-
-        # print(dir(self.count))
-        print(self.count.length())
-        print(self.count.to_string(sc_dt.SC_BIN))
-        print(self.count.to_string(sc_dt.SC_OCT))
-        print(self.count.to_string(sc_dt.SC_DEC))
-        print(self.count.to_string(sc_dt.SC_HEX))
 
         self.sc_method("incr_count", self.incr_count)
         self.sensitive(self.reset)
@@ -48,14 +41,18 @@ class Counter(sc_core.sc_module):
             print(f"@{sc_core.sc_time_stamp()} :: Incremented Counter {self.counter_out.read()}")
 
     def before_end_of_elaboration(self):
+        """Print hierarchy before native elaboration completes."""
         print(f">>> {sc_core.sc_time_stamp()} - [ {self.name():12} ] - Before End of Elaboration")
         print_hierarchy(True)
 
     def end_of_elaboration(self):
+        """Report completed native elaboration."""
         print(f">>> {sc_core.sc_time_stamp()} - [ {self.name():12} ] - Elaboration finished")
 
     def start_of_simulation(self):
+        """Report native simulation startup."""
         print(f">>> {sc_core.sc_time_stamp()} - [ {self.name():12} ] - Simulation started")
 
     def end_of_simulation(self):
+        """Report terminal native simulation lifecycle."""
         print(f">>> {sc_core.sc_time_stamp()} - [ {self.name():12} ] - Simulation finished")

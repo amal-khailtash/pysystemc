@@ -12,6 +12,13 @@ namespace pysystemc
 {
 
 /**
+ * @brief Optional native model entry, borrowed for a single interpreter run.
+ * @details Set before simulation while holding the GIL. Native dispatch does not acquire the GIL;
+ * exceptions propagate to the packaged SystemC startup wrapper.
+ */
+inline int (*native_model_entry)(int, char**) = nullptr;
+
+/**
  * @brief Own entry temporaries and GIL state until the native call leaves scope.
  * @details Construct only in an initialized Python interpreter. Destruction decrefs owned references while the GIL
  * is held, then releases acquired state, including during C++ exception unwinding. The module reference is borrowed.
@@ -44,6 +51,7 @@ struct PythonEntryScope
  */
 extern "C" int sc_main(int argc, char* argv[])
 {
+  if (pysystemc::native_model_entry) return pysystemc::native_model_entry(argc, argv);
   pysystemc::log(false, fmt::format("Entering sc_main with {} arguments", argc));
   pysystemc::PythonEntryScope scope;
   PyObject* module = PyImport_AddModule("__main__");  // Borrowed reference.

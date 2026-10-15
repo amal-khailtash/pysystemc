@@ -94,9 +94,9 @@ def test_upstream_report_rules_match_native(tmp_path):
         timeout=60,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    pattern = r"^report:.*|^ msg=.*"
+    pattern = r"^report: ID[1-4].*\n msg=.*"
     assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
-    assert len(re.findall(pattern, output, re.M)) == 80
+    assert len(re.findall(pattern, output, re.M)) == 40
 
 
 def test_upstream_reset_matches_native(tmp_path):
@@ -471,3 +471,219 @@ def test_hierarchy_children_and_status_helpers(tmp_path):
 def test_version_time_registry_and_introspection_apis(tmp_path):
     """Check post-2.3.1 time, registry, RTTI, never-event and initialized-signal behavior."""
     assert "VERSION_APIS_OK" in run_example(tmp_path, "tests/models/version_apis.py")
+
+
+def test_event_queue_and_resolved_signal_writers(tmp_path):
+    """Queued duplicate notifications and conflicting resolved writers preserve native semantics."""
+    assert "CHANNEL_EXTENSIONS_OK" in run_example(tmp_path, "tests/models/channel_extensions.py")
+
+
+def test_packaged_cpp_runner_arguments_and_status(tmp_path):
+    """Native runner forwards '--' arguments and propagates nonzero native status."""
+    source = tmp_path / "entry.cpp"
+    source.write_text("""#include <systemc>
+#include <iostream>
+int sc_main(int argc, char** argv) {
+  std::cout << "RUNNER_ARGS " << argc << "|" << argv[1] << "|" << argv[2] << std::endl;
+  return 7;
+}
+""")
+    result = subprocess.run(
+        [sys.executable, "-m", "amal.eda.systemc._runner", str(source), "--", "café", "--flag"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 7, result.stdout + result.stderr
+    assert "RUNNER_ARGS 3|café|--flag" in result.stdout
+
+
+def test_cpp_runner_multiple_sources_include_and_errors(tmp_path):
+    """Runner supports ordered compilation/includes and reports compile/runtime errors."""
+    includes = tmp_path / "headers"
+    includes.mkdir()
+    (includes / "value.h").write_text("int result_value();\n")
+    helper = tmp_path / "helper.cpp"
+    helper.write_text("int result_value() { return 0; }\n")
+    source = tmp_path / "main.cpp"
+    source.write_text("""#include <systemc>
+#include <value.h>
+#include <cstring>
+int sc_main(int argc, char** argv) {
+  if (sc_core::sc_argc() != argc) return 2;
+  if (std::strcmp(sc_core::sc_argv()[1], "native") != 0) return 3;
+  argv[1][0] = 'X';
+  if (std::strcmp(sc_core::sc_argv()[1], "native") != 0) return 4;
+  return result_value();
+}
+""")
+    command = [sys.executable, "-m", "amal.eda.systemc._runner"]
+    result = subprocess.run(
+        [*command, "-I", str(includes), str(helper), str(source), "--", "native"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    source.write_text("this is invalid C++\n")
+    result = subprocess.run([*command, str(source)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 1
+    assert "pysystemc-cpp:" in result.stderr
+    source.write_text(
+        '#include <systemc>\n#include <stdexcept>\nint sc_main(int, char**) { throw std::runtime_error("runner_failure_marker"); }\n'
+    )
+    result = subprocess.run([*command, str(source)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "runner_failure_marker" in result.stdout + result.stderr
+
+
+def test_runtime_missing_dependencies_report_actionable_errors(tmp_path):
+    """Actual loader reports controlled missing fmt, SystemC header and library failures."""
+    for scenario in ("fmt", "headers", "library", "abi"):
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "tests/models/runtime_errors.py"), str(ROOT), scenario],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "RUNTIME_ERRORS_OK" in result.stdout
+
+
+def test_native_vector_and_attribute_ownership(tmp_path):
+    """Native vector names/values and typed attributes follow object ownership."""
+    assert "VECTOR_ATTRIBUTES_OK" in run_example(tmp_path, "tests/models/vector_attributes.py")
+
+
+def test_extended_native_trace_formats_and_values(tmp_path):
+    """Inspect WIF and VCD output for resolved, fixed, time and event values."""
+    assert "TRACE_EXTENSIONS_OK" in run_example(tmp_path, "tests/models/trace_extensions.py")
+
+
+def test_counter_matches_native_values_and_trace(tmp_path):
+    """Compare every increment and VCD transition with the native tutorial."""
+    import re
+
+    python_dir = tmp_path / "python"
+    native_dir = tmp_path / "native"
+    python_dir.mkdir()
+    native_dir.mkdir()
+    output = run_example(python_dir, "examples/counter/py/counter_tb.py")
+    result = subprocess.run(
+        [sys.executable, "-m", "amal.eda.systemc._runner", str(ROOT / "examples/counter/cpp/counter_tb.cpp")],
+        cwd=native_dir,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    pattern = r"@(\d+ ns) :: Incremented Counter (\d+)"
+    assert re.findall(pattern, output) == re.findall(pattern, result.stdout)
+    assert len(re.findall(pattern, output)) == 20
+    python_trace = (python_dir / "counter.vcd").read_text()
+    native_trace = (native_dir / "counter.vcd").read_text()
+    assert python_trace[python_trace.index("$timescale") :] == native_trace[native_trace.index("$timescale") :]
+
+
+def test_fifo_resolved_ports_and_writer_policy_templates(tmp_path):
+    """Check bounded FIFO port traffic, resolved port values and policy instantiation."""
+    assert "PORT_EXTENSIONS_OK" in run_example(tmp_path, "tests/models/port_extensions.py")
+
+
+def test_native_writer_contention_reports(tmp_path):
+    """One-writer rejects both conflicts; many-writer permits later-delta writes."""
+    assert "WRITER_POLICIES_OK" in run_example(tmp_path, "tests/models/writer_policies.py")
+
+
+def test_concat_dynamic_widths_and_fixed_fast_arithmetic(tmp_path):
+    """Assert writable concat, arbitrary dynamic widths and fixed arithmetic."""
+    assert "DATATYPE_EXTENSIONS_OK" in run_example(tmp_path, "tests/models/datatype_extensions.py")
+
+
+def test_runtime_header_repair_and_override_preservation(tmp_path):
+    """Copy cached headers, alias lowercase installs and diagnose repair failure."""
+    for scenario in ("copy", "alias", "failure"):
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "tests/models/runtime_repair.py"), str(ROOT), scenario],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "RUNTIME_REPAIR_OK" in result.stdout
+
+
+def test_runner_invalid_inputs_and_repeated_invocation(tmp_path):
+    """Diagnose invalid sources/includes and reject a second Cling model invocation."""
+    source = tmp_path / "model.cpp"
+    source.write_text("#include <systemc>\nint sc_main(int, char**) { return 0; }\n")
+    probe = tmp_path / "probe.py"
+    probe.write_text(
+        "from amal.eda.systemc._runner import run_sources\n"
+        "import sys\n"
+        "for sources, includes in (([], []), ([sys.argv[1]], [sys.argv[1]])):\n"
+        "    try: run_sources(sources, includes=includes)\n"
+        "    except ValueError: pass\n"
+        "    else: raise AssertionError('invalid input accepted')\n"
+        "assert run_sources([sys.argv[1]]) == 0\n"
+        "try: run_sources([sys.argv[1]])\n"
+        "except RuntimeError as e: assert 'fresh interpreter' in str(e)\n"
+        "else: raise AssertionError('repeated invocation accepted')\n"
+    )
+    result = subprocess.run(
+        [sys.executable, str(probe), str(source)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    result = subprocess.run(
+        [sys.executable, "-m", "amal.eda.systemc._runner", str(tmp_path / "missing.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 1
+    assert "missing.cpp" in result.stderr
+
+
+def test_datatype_extensions_native_reference(tmp_path):
+    """Run native assertions for concatenation and dynamic/fixed arithmetic."""
+    result = subprocess.run(
+        [sys.executable, "-m", "amal.eda.systemc._runner", str(ROOT / "tests/native/datatype_extensions.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "DATATYPE_EXTENSIONS_OK" in result.stdout
+
+
+def test_source_event_wait_and_termination_corner_cases(tmp_path):
+    """Verify current-source empty-list/count errors and posttermination events."""
+    assert "SOURCE_CORNER_CASES_OK" in run_example(tmp_path, "tests/models/source_corner_cases.py")
+
+
+def test_channel_extensions_native_reference(tmp_path):
+    """Confirm queue duplicates/cancellation and resolved contention natively."""
+    result = subprocess.run(
+        [sys.executable, "-m", "amal.eda.systemc._runner", str(ROOT / "tests/native/channel_extensions.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "CHANNEL_EXTENSIONS_OK" in result.stdout
+
+
+def test_mutex_and_semaphore_contention(tmp_path):
+    """Check blocked lock wakeup times, ordering and semaphore count."""
+    assert "LOCK_CONTENTION_OK" in run_example(tmp_path, "tests/models/lock_contention.py")

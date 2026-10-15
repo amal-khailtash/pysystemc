@@ -35,18 +35,27 @@ Kernel and modeling
    * - sc_event
      - Immediate/delta/timed notifications and cancellation
      - Event cancellation, barrier and thread tests
-   * - sc_fifo
-     - Blocking producer/consumer exchange on pthreads
-     - FIFO test; reset inside native channel blocking calls unverified
+   * - sc_fifo, sc_fifo_in, sc_fifo_out
+     - Blocking producer/consumer exchange and capacity-one port traffic on pthreads
+     - Blocking methods require GIL release; reset inside channel calls unverified
+   * - sc_event_queue, resolved signals and ports
+     - Duplicate timed queue notifications, cancellation, resolved contention and port propagation
+     - Independent zero/one writers resolve to X; resolved port reads are checked
+   * - Signal writer policies
+     - One/many/unchecked template arguments, same-delta conflicts and later-delta ownership
+     - Suppressed native reports accept writes and transfer ownership
+   * - sc_vector, sc_attribute
+     - Signal indexing, generated names, values, native member assemblies and attribute add/remove ownership
+     - Retain vector elements and attributes for native use
    * - sc_export
      - Hierarchical interface forwarding
      - Upstream native comparison; use get_interface explicitly
-   * - sc_mutex, sc_semaphore
-     - Try-lock/unlock and count operations
-     - Namespace model; contention matrix untested
+   * - sc_mutex, sc_semaphore, sc_scoped_lock
+     - Blocking mutex wakeup at 2 ns, semaphore wakeup at 2.5 ns and idempotent scoped release
+     - Blocking methods require GIL release; reset inside channel waits unverified
    * - Reports and hierarchy helpers
      - Action masks, handler restoration, indexed hierarchy traversal
-     - 80 native report records, namespace/help, hierarchy child paths and status tests
+     - 40 native report/field pairs, namespace/help, hierarchy child paths and status tests
 
 Datatypes and tracing
 ---------------------
@@ -67,22 +76,24 @@ Datatypes and tracing
    * - sc_bv, sc_lv
      - 137-bit vectors, 17-bit four-state vectors and native signals
      - Full-width vector strings avoid implicit extension assumptions
-   * - sc_fixed
-     - 8/4 truncation, saturation/wrap and 73/19 construction
-     - Wider arithmetic/policy matrix untested
+   * - sc_fixed, sc_fixed_fast
+     - 8/4 truncation, saturation/wrap, 73/19 construction and 16/8 arithmetic
+     - Complete quantization/overflow policy matrix untested
+   * - concat and dynamic datatypes
+     - Writable integer concatenation; dynamic signed/unsigned and bv/lv storage
+     - Dynamic widths 7/73/193; retain concatenated operands
    * - sc_trace, vcd_trace
      - Native signal storage, declarations and transitions; explicit timescale; closure on exceptions
-     - Boolean, 17/137-bit integers and vectors; scalar Python temporaries unsuitable
+     - Boolean, integers, vectors, resolved logic, fixed/fast, time and event VCD; resolved/fixed WIF; scalar Python temporaries unsuitable
 
 Remaining features are accounted for
 ------------------------------------
 
 Native reflection exposes further classes and templates without wrapping them.
-Availability is not semantic support. WIF, fixed-point/resolved-signal tracing,
-resolved writer contention, custom Python channels/interfaces, full port policy
-matrices, concatenation, extended fixed-point arithmetic, attributes/vectors,
-TLM transport callbacks and platform/compiler expansion remain untested or
-planned. Direct export conversion, kernel restart and deletion of live module
+Availability is not semantic support. Custom Python channels/interfaces, complete
+port and fixed-point policy matrices, TLM transport callbacks and platform/compiler
+expansion remain untested or planned. The tables above describe the exercised
+combinations; they do not imply coverage of every overload. Direct export conversion, kernel restart and deletion of live module
 hosts are unsupported. Arbitrary process ``throw_it`` and reset inside native
 blocking channel operations remain outside the verified reset contract.
 
@@ -119,10 +130,10 @@ with older kernels.
 Later additions include time string conversion and ``sc_time_tuple``, interface
 RTTI, hierarchical name registration, ``sc_event::none``, process basename,
 scoped VCD names and time/event tracing. Selected additions are verified in the
-section below; others remain untested. Release fixes for empty event lists,
-invalid wait counts, initial asynchronous reset, terminated-process sensitivity,
-writer conflicts, fixed-point carry and signed scalar tracing also need targeted
-corner-case checks beyond representative examples. TLM socket changes require
+section below. Targeted checks also cover empty event lists, invalid wait counts,
+initial asynchronous reset, reset during counted waits, terminated-process
+sensitivity, writer conflicts, fixed-point carry and signed C scalar trace
+transitions. These checks cover selected combinations rather than every overload. TLM socket changes require
 matching kernel/TLM versions and remain part of future transport validation.
 
 Selected version additions now verified

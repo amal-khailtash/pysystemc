@@ -1,6 +1,6 @@
 [project]
 name = "pysystemc"
-version = "0.3.0"
+version = "0.4.0"
 description = "SystemC Python Binding using cppyy"
 readme = "README.md"
 license = "MIT"
@@ -20,8 +20,8 @@ Homepage = "https://github.com/amal-khailtash/pysystemc"
 Documentation = "https://pysystemc.readthedocs.io/"
 Issues = "https://github.com/amal-khailtash/pysystemc/issues"
 
-# [project.scripts]
-# pysystemc = "amal.eda.systemc:main"
+[project.scripts]
+pysystemc-cpp = "amal.eda.systemc._runner:main"
 
 [tool.uv.build-backend]
 module-name = "amal"

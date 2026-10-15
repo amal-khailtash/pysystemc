@@ -235,7 +235,10 @@ test-wheel:
 	cd /tmp; \
 	env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
 		uv run --no-project --with "$$wheel" \
-		python "$(MAKEFILE_DIR)/tools/check_published.py" "$(PACKAGE_VERSION)"
+		python "$(MAKEFILE_DIR)/tools/check_published.py" "$(PACKAGE_VERSION)"; \
+	env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
+		uv run --no-project --with "$$wheel" \
+		python "$(MAKEFILE_DIR)/tools/check_installed_examples.py"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)

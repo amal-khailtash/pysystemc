@@ -6,8 +6,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-15
+
 ### Fixed
 
+- Store the bundled SystemC shared library once in wheels, omitting duplicate
+  versioned aliases that wheel installers cannot portably restore as symlinks.
+- Expose native writer-policy enum template arguments and resolved signal reads
+  consistently through cppyy.
 - Reject missing VCD output directories before native delayed file creation.
 - Preserve native reset/kill unwind across Python thread waits and self-control,
   including finally cleanup; support OR/AND event-expression waits.
@@ -21,6 +27,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Packaged `pysystemc-cpp` console runner with source/include handling, native
+  arguments and exit status, compilation diagnostics and installed tutorial checks.
+- Queued/resolved channels, FIFO ports, writer contention, vector/attribute,
+  scoped VCD/WIF, dynamic datatype and native reference regressions.
+- Controlled runtime dependency/header repair diagnostics and override-preservation
+  checks without modifying shared dependency caches.
 - Verified API coverage tables, native modeling/VCD comparisons, datatype mutation
   and typed-port checks, binding diagnostics and trace/hierarchy regressions.
 - Native thread/reset reference checks, repeated reset/kill wait-family stress,
@@ -174,7 +186,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.1...v0.2.2
