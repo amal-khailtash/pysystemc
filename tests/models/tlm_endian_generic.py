@@ -204,4 +204,28 @@ for index in range(8):
     converted[index] = index + 1
 tlm.tlm_from_hostendian_generic["unsigned short"](payload, 4)
 assert [ord(value) for value in data] == [3, 4, 1, 2, 7, 8, 5, 6]
+payload = tlm.tlm_generic_payload()
+payload.resize_extensions()
+previous = []
+for address in (16, 19, 17):
+    data = cppyy.gbl.std.vector["unsigned char"](4, 99)
+    payload.set_command(tlm.TLM_READ_COMMAND)
+    payload.set_address(address)
+    payload.set_data_ptr(data.data())
+    payload.set_data_length(4)
+    payload.set_streaming_width(4)
+    payload.set_byte_enable_ptr(cppyy.nullptr)
+    payload.set_byte_enable_length(0)
+    tlm.tlm_to_hostendian_generic["unsigned short"](payload, 4)
+    converted = payload.get_data_ptr()
+    converted.reshape((payload.get_data_length(),))
+    for index in range(payload.get_data_length()):
+        converted[index] = address + index
+    tlm.tlm_from_hostendian(payload)
+    mapping = [((address + (i // 2) * 2 + 1 - i % 2) ^ 3) - 16 for i in range(4)]
+    values = [address + i for i in mapping]
+    assert [ord(value) for value in data] == values
+    for old_data, old_values in previous:
+        assert [ord(value) for value in old_data] == old_values
+    previous.append((data, values))
 print("ENDIAN_GENERIC_OK")

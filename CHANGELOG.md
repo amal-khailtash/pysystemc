@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Generic endian context-reuse checks verify sequential conversions target fresh
+  original buffers and leave completed response storage unchanged.
+
 - Explicit single-word endian response calls preserve address/status across all
   27 Python/native template combinations.
 
