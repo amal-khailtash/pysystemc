@@ -28,8 +28,25 @@ assert cppyy.addressof(av.get_extension(identifier)) == cppyy.addressof(x)
 assert cppyy.addressof(bv.get_extension(identifier)) == cppyy.addressof(y)
 assert not other.get_extension(identifier)
 assert cppyy.bind_object(av.get_extension(identifier), cppyy.gbl.PrivateValue).value == 17
+replacement = cppyy.gbl.PrivateValue()
+replacement.value = 31
+previous = av.set_extension(replacement)
+assert cppyy.addressof(previous) == cppyy.addressof(x)
+assert x.value == 17
+assert cppyy.addressof(av.get_extension(identifier)) == cppyy.addressof(replacement)
+assert cppyy.addressof(bv.get_extension(identifier)) == cppyy.addressof(y)
 av.clear_extension(identifier)
 assert not av.get_extension(identifier)
 assert cppyy.addressof(bv.get_extension(identifier)) == cppyy.addressof(y)
 bv.clear_extension(identifier)
+assert not first.get_extension(carrier_id)
+# Per-accessor references are invalid after the final clear releases their container.
+del av, bv
+fresh = a(first)
+assert not fresh.get_extension(identifier)
+assert not fresh.set_extension(x)
+assert cppyy.addressof(fresh.get_extension(identifier)) == cppyy.addressof(x)
+fresh.clear_extension(identifier)
+assert not first.get_extension(carrier_id)
+del fresh
 print("INSTANCE_EXTENSIONS_OK")

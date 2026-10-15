@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Private extension replacement and carrier-release checks verify borrowed old
+  pointers, accessor isolation, final-clear detachment and clean reattachment.
+
 - Instance-specific extension regression verifies accessor and transaction isolation,
   borrowed extension identity and explicit clearing after native carrier registration.
 
