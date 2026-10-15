@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Convenience initiator sockets register retained backward transport and DMI
+  invalidation Python callbacks with native phase/delay and 64-bit range semantics.
 - Convenience target sockets register nonblocking transport, debug transport and
   DMI Python callbacks, preserving native references and unsigned debug bounds.
 - Native convenience target sockets accept retained blocking Python callbacks

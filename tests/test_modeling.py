@@ -242,6 +242,11 @@ def test_convenience_target_socket_python_callback(tmp_path):
     assert "CALLBACK_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket.py")
 
 
+def test_convenience_initiator_socket_python_callbacks(tmp_path):
+    """Verify connected forward/backward convenience callbacks and 64-bit invalidation."""
+    assert "CALLBACK_INITIATOR_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_initiator.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

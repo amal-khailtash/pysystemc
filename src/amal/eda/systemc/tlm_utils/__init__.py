@@ -31,6 +31,41 @@ _callback_queues = []
 _callback_sockets = []
 
 
+def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
+    """Create a native simple initiator socket accepting backward Python callbacks.
+
+    Args:
+        name: Native socket name during elaboration.
+        width: Arbitrary native bus width.
+        protocol: Native protocol types, defaulting to base protocol.
+        policy: Native binding policy, defaulting to one or more bound.
+
+    Returns:
+        Native socket with backward transport and DMI invalidation registration.
+
+    Callbacks and socket are retained until shutdown after registration. Payload,
+    phase and delay are borrowed; backward callbacks must not wait. Callback
+    errors propagate and cppyy acquires the GIL on entry.
+    """
+    protocol = cppyy.gbl.tlm.tlm_base_protocol_types if protocol is None else protocol
+    policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND if policy is None else policy
+    socket_type = cppyy.gbl.pysystemc_interfaces.CallbackInitiatorSocket[width, protocol, policy]
+    if not getattr(socket_type, "_retained_registration", False):
+        for method in ("register_nb_transport_bw", "register_invalidate_direct_mem_ptr"):
+            native_register = getattr(socket_type, method)
+
+            def register(socket, callback, _native=native_register):
+                """Retain callable ownership after successful native registration."""
+                if not callable(callback):
+                    raise TypeError("socket callback must be callable")
+                _native(socket, callback)
+                _callback_sockets.append((socket, callback))
+
+            setattr(socket_type, method, register)
+        socket_type._retained_registration = True
+    return socket_type(name)
+
+
 def callback_target_socket(name, *, width=32, protocol=None, policy=None):
     """Create a native simple target socket accepting Python transport callbacks.
 
@@ -102,6 +137,7 @@ def callback_peq(name, callback, protocol=None):
 
 __all__.append("callback_peq")
 __all__.append("callback_target_socket")
+__all__.append("callback_initiator_socket")
 
 
 def __getattr__(name):

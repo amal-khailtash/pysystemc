@@ -1,4 +1,5 @@
 /** @file Member-pointer adapters for native convenience socket registration. */
+#include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
 
 #include <functional>
@@ -21,6 +22,7 @@ struct SocketCallbacks
   std::function<tlm::tlm_sync_enum(Payload&, Phase&, sc_core::sc_time&)> nonblocking;
   std::function<long(Payload&)> debug;
   std::function<bool(Payload&, tlm::tlm_dmi&)> dmi;
+  std::function<void(sc_dt::uint64, sc_dt::uint64)> invalidate;
   /** @brief Invoke borrowed payload/delay callback through a native member pointer. */
   void b_transport(Payload& payload, sc_core::sc_time& delay) { blocking(payload, delay); }
   /** @brief Forward mutable phase/delay references without suspension. */
@@ -38,6 +40,13 @@ struct SocketCallbacks
   }
   /** @brief Forward borrowed DMI output; caller retains granted memory. */
   bool get_direct_mem_ptr(Payload& payload, tlm::tlm_dmi& result) { return dmi(payload, result); }
+  /** @brief Forward backward response with mutable native phase/delay. */
+  tlm::tlm_sync_enum nb_transport_bw(Payload& payload, Phase& phase, sc_core::sc_time& delay)
+  {
+    return nonblocking(payload, phase, delay);
+  }
+  /** @brief Forward full-width invalidation range without requesting DMI. */
+  void invalidate_direct_mem_ptr(sc_dt::uint64 first, sc_dt::uint64 last) { invalidate(first, last); }
 };
 /** @brief Socket retains native behavior while accepting a callable blocking registration.
  * @details Width, protocol and port policy remain arbitrary native template parameters.
@@ -78,6 +87,37 @@ class CallbackTargetSocket : public tlm_utils::simple_target_socket_b<SocketCall
   {
     Base::register_get_direct_mem_ptr(&callbacks, &SocketCallbacks<Types>::get_direct_mem_ptr);
     callbacks.dmi = std::move(callback);
+  }
+};
+/** @brief Native simple initiator socket accepting retained Python callbacks.
+ * @details Python retains callback owners until shutdown. Protocol, width and
+ * policy remain native templates; backward callbacks must not wait. GIL is
+ * acquired by cppyy on callback entry; errors propagate to the native caller.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackInitiatorSocket
+  : public tlm_utils::simple_initiator_socket_b<SocketCallbacks<Types>, Width, Types, Policy>
+{
+  SocketCallbacks<Types> callbacks;
+
+ public:
+  using Base = tlm_utils::simple_initiator_socket_b<SocketCallbacks<Types>, Width, Types, Policy>;
+  /** @brief Construct during native elaboration. */
+  explicit CallbackInitiatorSocket(const char* name) : Base(name) {}
+  /** @brief Register response callback through native member-pointer checks. */
+  void register_nb_transport_bw(std::function<tlm::tlm_sync_enum(typename Types::tlm_payload_type&,
+                                                                 typename Types::tlm_phase_type&, sc_core::sc_time&)>
+                                  callback)
+  {
+    Base::register_nb_transport_bw(&callbacks, &SocketCallbacks<Types>::nb_transport_bw);
+    callbacks.nonblocking = std::move(callback);
+  }
+  /** @brief Register range invalidation callback without borrowing memory buffers. */
+  void register_invalidate_direct_mem_ptr(std::function<void(sc_dt::uint64, sc_dt::uint64)> callback)
+  {
+    Base::register_invalidate_direct_mem_ptr(&callbacks, &SocketCallbacks<Types>::invalidate_direct_mem_ptr);
+    callbacks.invalidate = std::move(callback);
   }
 };
 }  // namespace pysystemc_interfaces
