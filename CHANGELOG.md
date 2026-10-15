@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Hierarchical initiator socket regression verifies parent port/export resolution
+  and Python callback dispatch after native elaboration.
 - Tagged initiator sockets register backward transport and DMI invalidation
   callbacks with independent IDs and native phase/range semantics.
 - Tagged target nonblocking callbacks preserve independent user IDs, mutable
