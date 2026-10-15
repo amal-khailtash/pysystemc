@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Aligned endian buffer checks verify write word reversal and read response
+  copying into original borrowed storage.
+
 - Independent native single-word endian reference matches all 27 Python
   template, bus-width and address conversion records.
 
