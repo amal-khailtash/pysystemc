@@ -247,3 +247,8 @@ def test_structural_nonblocking_interface_binding(tmp_path):
 def test_structural_combined_get_interface(tmp_path):
     """Verify shared blocking/nonblocking queue access and native output overloads."""
     assert "PYTHON_COMBINED_GET_OK" in run_example(tmp_path, "tests/models/python_combined_get.py")
+
+
+def test_structural_combined_put_interface(tmp_path):
+    """Verify shared capacity, blocking dispatch and native readiness events."""
+    assert "PYTHON_COMBINED_PUT_OK" in run_example(tmp_path, "tests/models/python_combined_put.py")

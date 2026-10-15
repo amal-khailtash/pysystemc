@@ -90,3 +90,8 @@ For the combined get-peek interface, it notifies both separate events.
 and ``nb_can_get()`` on one object. Native blocking value/output overloads and
 nonblocking output assignment use that shared implementation. Blocking callbacks
 may use guarded waits; nonblocking callbacks must return immediately.
+
+``tlm_put_if[T]`` structural implementations provide ``put(value)``,
+``nb_put(value)`` and ``nb_can_put()``. Both put callbacks receive value copies.
+Blocking calls release the GIL, while nonblocking calls must return immediately.
+Adapter-owned ``ok_to_put()`` storage is notified through ``notify_ready()``.

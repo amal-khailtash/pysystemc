@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Combined TLM put interface forwards blocking and nonblocking operations to one
+  Python implementation with copied values and stable native readiness storage.
 - Combined TLM get interface supports shared Python blocking/nonblocking callbacks,
   native output overloads and stable readiness events.
 - Structural nonblocking TLM put/get/peek and combined get-peek bindings use

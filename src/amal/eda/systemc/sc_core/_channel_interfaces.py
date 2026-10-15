@@ -37,6 +37,24 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_put_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedPutAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Blocking/nonblocking put value-copy bridge. @details Ports borrow "
+                    "the owner; adapter owns readiness event. cppyy acquires GIL for callbacks; "
+                    "blocking callers release it. Nonblocking callbacks must not wait. Errors propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class CombinedPutAdapter : public tlm::tlm_put_if<T> { sc_core::sc_event ready; public: "
+                    "void put(const T& value) override { put_value(value); } "
+                    "bool nb_put(const T& value) override { return try_put_value(value); } "
+                    "bool nb_can_put(tlm::tlm_tag<T>* = nullptr) const override { return can_put(); } "
+                    "const sc_core::sc_event& ok_to_put(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    "virtual void put_value(T) = 0; virtual bool try_put_value(T) = 0; "
+                    "virtual bool can_put() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_put_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::CombinedPutAdapter<{argument}>"
         if name.startswith("tlm::tlm_get_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedGetAdapter"):
                 cppyy.cppdef(
