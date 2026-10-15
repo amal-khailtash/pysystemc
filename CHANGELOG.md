@@ -6,6 +6,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-15
+
 ### Added
 
 - Structural TLM-2 blocking transport supports ordinary b_transport callbacks,
@@ -271,7 +273,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.2...v0.2.3

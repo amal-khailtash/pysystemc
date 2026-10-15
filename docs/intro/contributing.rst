@@ -11,8 +11,8 @@ assert values, times and lifecycle ordering, and inspect waveform transitions.
 Run targeted tests while implementing a change, then ``make coverage``. Python
 statement coverage measures the binding code, not native SystemC API completeness.
 Compare Python models with native reference models. Build release artifacts with
-``uv build --out-dir dist/0.4.0`` and run
-``make test-wheel PACKAGE_VERSION=0.4.0`` outside dependency overrides. The wheel
+``uv build --out-dir dist/0.5.0`` and run
+``make test-wheel PACKAGE_VERSION=0.5.0`` outside dependency overrides. The wheel
 check covers native startup, console arguments/status and installed tutorials.
 
 Native library ownership
