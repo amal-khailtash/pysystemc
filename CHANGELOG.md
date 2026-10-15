@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Generic endian buffer regression checks read/write word ordering, converted
+  byte enables and disabled-byte preservation on response copying.
+
 - Word endian conversion checks verify write/read ordering, converted byte
   enables and preservation of disabled response bytes.
 
