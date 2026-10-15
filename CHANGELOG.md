@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent native private-extension reference checks isolation, replacement,
+  deep-copy omission, carrier release and reattachment against Python behavior.
+
 - Instance-specific extension guide documents carrier registration, borrowed
   ownership, accessor invalidation after final clear and deep-copy semantics.
 

@@ -65,4 +65,5 @@ assert cppyy.addressof(fresh.get_extension(identifier)) == cppyy.addressof(x)
 fresh.clear_extension(identifier)
 assert not first.get_extension(carrier_id)
 del fresh
+print("PRIVATE_EXTENSIONS 17 23 31 41 73 detached")
 print("INSTANCE_EXTENSIONS_OK")

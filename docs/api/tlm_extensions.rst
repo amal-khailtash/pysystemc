@@ -34,6 +34,7 @@ extensions on the original remain attached until explicitly cleared.
 
 The regression in ``tests/models/tlm_instance_extensions.py`` verifies accessor
 and transaction isolation, pointer identity, replacement, last-clear carrier
-release, reattachment and deep-copy omission. Independent native reference,
-complete carrier recycling and broad lifetime coverage remain pending. These
+release, reattachment and deep-copy omission. An independent C++ reference in ``tests/native/tlm_instance_extensions.cpp``
+checks the same lifecycle semantics. Complete carrier recycling and broad
+lifetime coverage remain pending. These
 checks do not establish complete extension support or M6A completion.

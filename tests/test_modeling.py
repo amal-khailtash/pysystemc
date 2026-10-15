@@ -268,6 +268,26 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_instance_specific_extensions_match_native_reference(tmp_path):
+    """Compare private extension lifecycle semantics against independent native APIs."""
+    python_output = run_example(tmp_path, "tests/models/tlm_instance_extensions.py")
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples/run_sysc_cpp.py"),
+            str(ROOT / "tests/native/tlm_instance_extensions.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    expected = ["PRIVATE_EXTENSIONS 17 23 31 41 73 detached"]
+    assert [line for line in python_output.splitlines() if line.startswith("PRIVATE_EXTENSIONS ")] == expected
+    assert [line for line in result.stdout.splitlines() if line.startswith("PRIVATE_EXTENSIONS ")] == expected
+
+
 def test_instance_specific_extension_accessor_isolation(tmp_path):
     """Verify private extensions isolate accessors and payloads with explicit cleanup."""
     assert "INSTANCE_EXTENSIONS_OK" in run_example(tmp_path, "tests/models/tlm_instance_extensions.py")
