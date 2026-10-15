@@ -2,6 +2,8 @@
 
 Adapted from Andy Goodrich's upstream example; see upstream LICENSE/NOTICE.
 The barrier is implemented in Python using native SystemC events and waits.
+
+Original source: examples/sysc/2.1/scx_barrier/main.cpp
 """
 
 from amal.eda.systemc import main, sc_core as sc

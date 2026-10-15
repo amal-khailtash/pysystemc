@@ -2,6 +2,8 @@
 
 See the upstream LICENSE and NOTICE. The native clock and signal topology and
 100-cycle active-low synchronous reset stimulus follow the C++ example.
+
+Original source: examples/sysc/2.1/reset_signal_is/reset_signal_is.cpp
 """
 
 from amal.eda.systemc import main, sc_core as sc

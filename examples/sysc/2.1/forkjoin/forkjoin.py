@@ -2,6 +2,8 @@
 
 Adapted from Accellera's Apache-2.0 example; see the upstream LICENSE/NOTICE.
 Python closures replace sc_bind/sc_ref and retain native process return values.
+
+Original source: examples/sysc/2.1/forkjoin/forkjoin.cpp
 """
 
 from amal.eda.systemc import main, sc_core as sc

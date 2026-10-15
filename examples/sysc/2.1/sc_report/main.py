@@ -2,6 +2,8 @@
 
 See upstream LICENSE/NOTICE. Demonstrates severity/id/action precedence,
 user-defined actions, and temporary suppression/forcing with a Python handler.
+
+Original source: examples/sysc/2.1/sc_report/main.cpp
 """
 
 from amal.eda.systemc import main, sc_core as sc
