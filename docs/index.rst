@@ -19,6 +19,7 @@
    :maxdepth: 2
 
    api/bindings
+   api/tlm_sockets
    api/coverage
 
 .. include:: ../README.md

@@ -72,8 +72,9 @@ interfaces and socket templates::
 
 Generic payloads do not own their data or byte-enable buffers. Retain native
 buffer storage throughout the transaction. Payload fields and fixed-point
-policies are tested; socket transport callbacks and custom Python interfaces
-still require validation and are not yet claimed as supported.
+policies are tested. Callable socket factories and their verification limits are
+described in :doc:`tlm_sockets`. Full transport and custom-interface coverage
+remains incomplete.
 
 Interactive help
 ----------------
