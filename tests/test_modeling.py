@@ -200,6 +200,11 @@ def test_structural_tlm_fifo_compound_interfaces(tmp_path):
     assert "STRUCTURAL_TLM_FIFO_COMPOUND_OK" in run_example(tmp_path, "tests/models/python_tlm_fifo_compound.py")
 
 
+def test_native_tlm_quantumkeeper_and_payload_queue(tmp_path):
+    """Verify quantum waits, PEQ due times, cancellation and payload identity."""
+    assert "TLM_UTILITIES_OK" in run_example(tmp_path, "tests/models/tlm_utilities.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")
