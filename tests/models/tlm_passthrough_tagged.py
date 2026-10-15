@@ -10,19 +10,19 @@ class Target:
 
     def nonblocking(self, identifier, payload, phase, delay):
         """Update native phase and latency without waiting."""
-        assert identifier == 67
+        assert identifier == 999
         phase.__assign__(tlm.BEGIN_RESP)
         delay.__assign__(sc.sc_time(1, sc.SC_NS))
         return tlm.TLM_UPDATED
 
     def debug(self, identifier, payload):
         """Return caller-controlled debug count for native range checks."""
-        assert identifier == 59
+        assert identifier == 999
         return self.count
 
     def dmi(self, identifier, payload, result):
         """Reject DMI with an explicit native range."""
-        assert identifier == 61
+        assert identifier == 999
         result.set_start_address(17)
         result.set_end_address(31)
         result.allow_none()
@@ -30,7 +30,7 @@ class Target:
 
     def transport(self, identifier, payload, delay):
         """Consume two nanoseconds of annotation and mutate native response state."""
-        assert identifier == 47
+        assert identifier == 999
         sc.wait(delay)
         delay.__assign__(sc.SC_ZERO_TIME)
         payload.set_address(payload.get_address() + 4)
@@ -47,6 +47,17 @@ socket.register_b_transport(target.transport, 47)
 socket.register_nb_transport_fw(target.nonblocking, 67)
 socket.register_transport_dbg(target.debug, 59)
 socket.register_get_direct_mem_ptr(target.dmi, 61)
+
+
+def duplicate(*args):
+    """Fail if native warning-and-return registration replaces the first callable."""
+    raise AssertionError("duplicate passthrough callback replaced original")
+
+
+socket.register_b_transport(duplicate, 999)
+socket.register_nb_transport_fw(duplicate, 999)
+socket.register_transport_dbg(duplicate, 999)
+socket.register_get_direct_mem_ptr(duplicate, 999)
 initiator = tlm_utils.callback_initiator_socket("initiator", width=73, tagged=True)
 backward_records = []
 

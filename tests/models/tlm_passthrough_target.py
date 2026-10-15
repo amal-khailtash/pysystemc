@@ -43,6 +43,17 @@ socket.register_b_transport(target.transport)
 socket.register_nb_transport_fw(target.nonblocking)
 socket.register_transport_dbg(target.debug)
 socket.register_get_direct_mem_ptr(target.dmi)
+
+
+def duplicate(*args):
+    """Fail if native warning-and-return registration replaces the first callable."""
+    raise AssertionError("duplicate passthrough callback replaced original")
+
+
+socket.register_b_transport(duplicate)
+socket.register_nb_transport_fw(duplicate)
+socket.register_transport_dbg(duplicate)
+socket.register_get_direct_mem_ptr(duplicate)
 initiator = tlm_utils.callback_initiator_socket("initiator", width=73)
 backward_records = []
 

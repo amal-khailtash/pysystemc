@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Passthrough duplicate registration regressions verify original callbacks survive
+  native warnings; tagged sockets update user IDs as the native API specifies.
+
 - Ordinary and tagged passthrough target sockets accept retained Python transport,
   debug and DMI callbacks with native templates, user IDs and blocking waits.
 
