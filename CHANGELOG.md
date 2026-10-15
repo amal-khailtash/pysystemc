@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Passthrough callback exception regression checks error propagation, original
+  payload mutation, delay changes, cleanup and kernel time at failure.
+
 - Passthrough transport reset/kill regression verifies Python cleanup ordering,
   process termination and unchanged borrowed transaction state after interruption.
 
