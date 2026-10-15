@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Registration error matrix verifies all 26 callable socket registrations reject
+  non-callable objects and permit subsequent valid optional elaboration.
+
 - Socket policy regressions verify optional zero-connection elaboration across
   callable families and rejection of missing required bindings.
 

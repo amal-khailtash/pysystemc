@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_convenience_socket_noncallable_registration_errors(tmp_path):
+    """Verify every callable registration rejects invalid objects before native mutation."""
+    assert "SOCKET_REGISTRATION_ERRORS_OK" in run_example(tmp_path, "tests/models/tlm_socket_registration_errors.py")
+
+
 def test_optional_convenience_socket_binding_policies(tmp_path):
     """Verify all callable socket families elaborate with the native optional policy."""
     assert "OPTIONAL_SOCKETS_OK" in run_example(tmp_path, "tests/models/tlm_optional_sockets.py")
