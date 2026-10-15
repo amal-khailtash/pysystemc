@@ -233,4 +233,54 @@ class CallbackInitiatorSocket
     callbacks.invalidate = std::move(callback);
   }
 };
+/** @brief Native tagged initiator callback bridge with independent registration IDs.
+ * @details Python retains callable/socket ownership. Payload/phase/delay are
+ * borrowed; callbacks acquire GIL and must not wait. Native errors propagate.
+ */
+template <unsigned int Width = 32, class Types = tlm::tlm_base_protocol_types,
+          sc_core::sc_port_policy Policy = sc_core::SC_ONE_OR_MORE_BOUND>
+class CallbackTaggedInitiatorSocket
+  : public tlm_utils::simple_initiator_socket_tagged_b<CallbackTaggedInitiatorSocket<Width, Types, Policy>, Width,
+                                                       Types, Policy>
+{
+  using Payload = typename Types::tlm_payload_type;
+  using Phase = typename Types::tlm_phase_type;
+  std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> response;
+  std::function<void(int, sc_dt::uint64, sc_dt::uint64)> invalidate;
+
+ public:
+  using Base = tlm_utils::simple_initiator_socket_tagged_b<CallbackTaggedInitiatorSocket, Width, Types, Policy>;
+
+  /** @brief Construct during elaboration with native width/protocol/policy. */
+  explicit CallbackTaggedInitiatorSocket(const char* name) : Base(name)
+  {
+  }
+
+  /** @brief Register backward response callback and independent user ID. */
+  void register_nb_transport_bw(std::function<tlm::tlm_sync_enum(int, Payload&, Phase&, sc_core::sc_time&)> function,
+                                int id)
+  {
+    Base::register_nb_transport_bw(this, &CallbackTaggedInitiatorSocket::backward, id);
+    response = std::move(function);
+  }
+
+  /** @brief Forward native mutable response arguments to retained callable. */
+  tlm::tlm_sync_enum backward(int id, Payload& payload, Phase& phase, sc_core::sc_time& delay)
+  {
+    return response(id, payload, phase, delay);
+  }
+
+  /** @brief Register invalidation callback with native full-width ranges and ID. */
+  void register_invalidate_direct_mem_ptr(std::function<void(int, sc_dt::uint64, sc_dt::uint64)> function, int id)
+  {
+    Base::register_invalidate_direct_mem_ptr(this, &CallbackTaggedInitiatorSocket::invalidate_memory, id);
+    invalidate = std::move(function);
+  }
+
+  /** @brief Forward borrowed invalidation values without recursive DMI requests. */
+  void invalidate_memory(int id, sc_dt::uint64 first, sc_dt::uint64 last)
+  {
+    invalidate(id, first, last);
+  }
+};
 }  // namespace pysystemc_interfaces

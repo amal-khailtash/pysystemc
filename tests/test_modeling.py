@@ -267,6 +267,11 @@ def test_tagged_target_socket_blocking_callback(tmp_path):
     assert "TAGGED_TARGET_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_tagged_target.py")
 
 
+def test_tagged_initiator_socket_backward_callbacks(tmp_path):
+    """Verify independent tagged response/invalidation IDs and native references."""
+    assert "TAGGED_INITIATOR_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_tagged_initiator.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

@@ -53,7 +53,7 @@ def _configure_forward_access(socket_type):
     socket_type._forward_gil_configured = True
 
 
-def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
+def callback_initiator_socket(name, *, width=32, protocol=None, policy=None, tagged=False):
     """Create a native simple initiator socket accepting backward Python callbacks.
 
     Args:
@@ -61,6 +61,7 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
         width: Arbitrary native bus width.
         protocol: Native protocol types, defaulting to base protocol.
         policy: Native binding policy, defaulting to one or more bound.
+        tagged: Use native tagged callbacks; registration also takes a user ID.
 
     Returns:
         Native socket with backward transport and DMI invalidation registration.
@@ -71,17 +72,22 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
     """
     protocol = cppyy.gbl.tlm.tlm_base_protocol_types if protocol is None else protocol
     policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND if policy is None else policy
-    socket_type = cppyy.gbl.pysystemc_interfaces.CallbackInitiatorSocket[width, protocol, policy]
+    template = (
+        cppyy.gbl.pysystemc_interfaces.CallbackTaggedInitiatorSocket
+        if tagged
+        else cppyy.gbl.pysystemc_interfaces.CallbackInitiatorSocket
+    )
+    socket_type = template[width, protocol, policy]
     _configure_forward_access(socket_type)
     if not getattr(socket_type, "_retained_registration", False):
         for method in ("register_nb_transport_bw", "register_invalidate_direct_mem_ptr"):
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, _native=native_register):
+            def register(socket, callback, *args, _native=native_register):
                 """Retain callable ownership after successful native registration."""
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
-                _native(socket, callback)
+                _native(socket, callback, *args)
                 _callback_sockets.append((socket, callback))
 
             setattr(socket_type, method, register)
