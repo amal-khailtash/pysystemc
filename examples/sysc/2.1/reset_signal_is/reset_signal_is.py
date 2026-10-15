@@ -11,6 +11,7 @@ class Consumer(sc.sc_module):
     """Clocked consumer with active-low synchronous reset."""
 
     def __init__(self, name):
+        """Register native clock/reset topology within a live module-name scope."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
         self.m_clk = sc.sc_in_clk("m_clk")
@@ -36,6 +37,7 @@ class Producer(sc.sc_module):
     """Clocked producer advancing values when the consumer is ready."""
 
     def __init__(self, name):
+        """Register native clock/reset topology within a live module-name scope."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
         self.m_clk = sc.sc_in_clk("m_clk")
@@ -61,6 +63,7 @@ class Testbench(sc.sc_module):
     """Connect producer/consumer and drive the upstream reset sequence."""
 
     def __init__(self, name):
+        """Register native clock/reset topology within a live module-name scope."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
         self.m_clk = sc.sc_in_clk("m_clk")

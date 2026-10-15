@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Preserve native reset/kill unwind across Python thread waits and self-control,
+  including finally cleanup; support OR/AND event-expression waits.
 - Keep native sc_module reflection intact while exposing the Python callback
   adapter locally; reject non-callable process registrations before native entry.
 - Reject Python entry statuses outside the native integer range, decode native
@@ -18,6 +20,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Native thread/reset reference checks, repeated reset/kill wait-family stress,
+  self-control and entry pause/resume lifecycle validation.
 - Module identity, callback registration and lifecycle isolation checks across
   multiple hosts with garbage collection before simulation.
 - Static method sensitivity and entry callable reference cleanup regressions.

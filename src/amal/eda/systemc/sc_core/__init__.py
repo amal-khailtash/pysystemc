@@ -298,34 +298,63 @@ def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> No
         cppyy.gbl.sc_core.set_python_report_handler(callback)
 
 
-_native_wait = cppyy.gbl.sc_core.wait
-cppyy.gbl.sc_core.wait_cycle.__release_gil__ = True
+_native_next_trigger = cppyy.gbl.sc_core.next_trigger
 
 
-def wait(*args: Any) -> Any:
-    """Suspend the current native thread, preserving SystemC wait overloads.
+def next_trigger(*args: Any) -> Any:
+    """Set dynamic method sensitivity using native arguments or event expressions.
 
-    A zero-argument call selects the cycle wait explicitly. Timed, event and
-    event-list calls retain native overload resolution and release the GIL.
-    Native reset/unwind behavior remains experimental for Python callbacks.
+    Args:
+        *args: Native next_trigger time/event arguments. Expressions are consumed
+            once; referenced events must outlive the scheduled invocation.
     """
-    if not args:
-        return cppyy.gbl.sc_core.wait_cycle()
-    return _native_wait(*args)
+    if len(args) == 1 and any(
+        isinstance(args[0], cppyy.gbl.sc_core.sc_event_expr[list_type])
+        for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
+    ):
+        return cppyy.gbl.sc_core.python_next_trigger(args[0])
+    return _native_next_trigger(*args)
 
 
-def _unsupported_reset(self, *args):
-    """Reject native reset until cppyy preserves SystemC unwind exceptions."""
-    raise NotImplementedError(
-        "Python process reset is not supported: cppyy consumes the native "
-        "sc_unwind_exception; native reset/unwind support is pending."
-    )
+def _process_control(adapter):
+    """Bind an explicit native control adapter with GIL released."""
+    adapter.__release_gil__ = True
+
+    def control(self, *args):
+        """Control a target from a running SystemC process; paused calls raise RuntimeError."""
+        if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_RUNNING:
+            raise RuntimeError("process reset/kill requires a running SystemC process")
+        if not adapter(self, *args):
+            raise _ProcessUnwind()
+
+    return control
 
 
-# Native unwind must cross a Python callback during process reset. Failing early
-# avoids SystemC's fatal F539 abort when cppyy translates that control exception.
-cppyy.gbl.sc_core.ScModule.reset_signal_is = _unsupported_reset
-cppyy.gbl.sc_core.ScModule.async_reset_signal_is = _unsupported_reset
+cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
+cppyy.gbl.sc_core.sc_process_handle.reset = _process_control(cppyy.gbl.sc_core.python_reset)
+
+
+cppyy.gbl.sc_core.python_wait.__release_gil__ = True
+
+
+class _ProcessUnwind(BaseException):
+    """Private signal that unwinds Python frames before native reset or kill."""
+
+
+def wait(*args: Any) -> None:
+    """Suspend a native thread with cycle, time, event or event-list sensitivity.
+
+    Args:
+        *args: Native wait arguments, including event OR/AND expressions.
+
+    Reset and kill unwind Python frames, execute finally blocks, and then restore
+    the original native scheduler exception. Do not suppress BaseException or
+    wait during unwind cleanup. Events and sensitivity targets must outlive waits.
+    Blocking scheduler calls release the GIL.
+    """
+    if not cppyy.gbl.sc_core.python_wait(*args):
+        raise _ProcessUnwind()
+
 
 # Publish native classes/enums and Python adapters for wildcard imports.
 from .._namespace import (

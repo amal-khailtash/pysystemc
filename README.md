@@ -46,8 +46,9 @@ change a test scenario or a traced signal in a script and rerun it. Changes to
 the implementation of a compiled C++ model still require rebuilding that model.
 SystemC's elaboration rules also still apply: most structural connections are
 made before simulation starts. Dynamic processes can be spawned during a run,
-but arbitrary structural changes and Python process reset are not currently
-supported by these bindings.
+but arbitrary structural changes remain constrained by native elaboration rules.
+Python thread reset and kill preserve scheduler unwind through the guarded wait
+adapter; see the supported behavior documentation for lifecycle constraints.
 
 
 ## Quickstart

@@ -99,20 +99,27 @@ def test_upstream_report_rules_match_native(tmp_path):
     assert len(re.findall(pattern, output, re.M)) == 80
 
 
-def test_reset_rejected_before_native_unwind(tmp_path):
-    """Unsupported reset must produce a clear failure rather than native abort."""
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "examples/sysc/2.1/reset_signal_is/reset_signal_is.py")],
+def test_upstream_reset_matches_native(tmp_path):
+    """Compare all synchronous reset/value records with the upstream native port."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/2.1/reset_signal_is/reset_signal_is.py")
+    native = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples/run_sysc_cpp.py"),
+            str(ROOT / "submodules/systemc/examples/sysc/2.1/reset_signal_is/reset_signal_is.cpp"),
+        ],
         cwd=tmp_path,
-        env=dict(os.environ),
         capture_output=True,
         text=True,
         timeout=60,
     )
-    assert result.returncode != 0
-    assert "Python process reset is not supported" in result.stderr
-    assert "F539" not in result.stderr
-    assert "segmentation" not in result.stderr
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"^\d+ (?:s|ns): (?:reset|\d+)$"
+    records = re.findall(pattern, output, re.M)
+    assert len(records) == 101
+    assert records == re.findall(pattern, native.stdout, re.M)
 
 
 def test_upstream_barrier_matches_native(tmp_path):
@@ -369,3 +376,53 @@ def test_shutdown_releases_module_and_callback_owners(tmp_path):
     records = marker.read_text().splitlines()
     assert records.count("callback") == 16, records
     assert records.count("module") == 16, records
+
+
+def test_thread_event_lists_clocked_wait_and_pause(tmp_path):
+    """Compare thread wake times, clock cycle waits and pause/resume with native C++."""
+    output = run_example(tmp_path, "tests/models/thread_semantics.py")
+    assert "THREAD_SEMANTICS_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/thread_semantics.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    records = sorted(line for line in output.splitlines() if line.startswith("THREAD_RECORD "))
+    assert len(records) == 6
+    assert records == sorted(line for line in native.stdout.splitlines() if line.startswith("THREAD_RECORD "))
+
+
+def test_experimental_reset_kill_unwind_feasibility(tmp_path):
+    """Preserved unwind restarts at 3 ns and terminates from a native controller."""
+    assert "UNWIND_PROBE_OK" in run_example(tmp_path, "tests/models/unwind_feasibility.py")
+
+
+def test_reset_kill_wait_families_and_cleanup(tmp_path):
+    """Repeated resets and kill preserve Python finally blocks across wait families."""
+    assert "RESET_WAITS_OK" in run_example(tmp_path, "tests/models/reset_waits.py")
+
+
+def test_self_reset_kill_executes_cleanup(tmp_path):
+    """Self control restores scheduler unwind and executes Python finally blocks."""
+    assert "SELF_CONTROL_OK" in run_example(tmp_path, "tests/models/self_control.py")
+
+
+def test_entry_arguments_and_simulation_lifecycle(tmp_path):
+    """Entry preserves argv while bounded starts and terminal hooks follow native state."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tests/models/entry_lifecycle.py"), "café", "--value=17"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ENTRY_LIFECYCLE_OK" in result.stdout
+
+
+def test_method_dynamic_event_and_timed_sensitivity(tmp_path):
+    """Method next_trigger handles event expressions and timed reactivation."""
+    assert "DYNAMIC_METHOD_OK" in run_example(tmp_path, "tests/models/dynamic_method.py")

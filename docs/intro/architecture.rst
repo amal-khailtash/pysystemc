@@ -42,11 +42,11 @@ elaboration hierarchy. Native templates retain arbitrary parameter values.
 Known blockers
 --------------
 
-* Reset/unwind: cppyy consumes native scheduler unwind exceptions. Python reset
-  configuration is rejected explicitly instead of entering the fatal path.
+* Direct cppyy wait calls bypass the guarded Python scheduler boundary. Use the
+  Python ``wait`` adapter for resettable processes.
 * Export conversion: use ``get_interface()`` for port/export interface binding.
 * TLM transport callbacks and custom Python interfaces require further validation.
-* Broad tracing, clocked-thread, resolved-signal and upstream example matrices
+* Broad tracing, resolved-signal and upstream example matrices
   remain incomplete.
 
 See :doc:`supported` for verified behavior. Availability through namespace
@@ -96,3 +96,18 @@ SystemC kernel itself. Static sensitivity to interfaces, ports, explicit events
 and positive-edge finders is compared with a native C++ reference, including
 ``dont_initialize()`` and bounded simulation starts. Python errors in method
 callbacks and all four lifecycle hooks are checked in isolated subprocesses.
+
+Thread reset and termination
+----------------------------
+
+The wait adapter catches native scheduler unwind before cppyy translates it. It
+retains the original exception on the native process OS thread and raises a
+private Python ``BaseException`` so ``finally`` blocks execute. Native callback
+dispatch then rethrows the original exception to SystemC. A callback must not
+suppress unwind or issue waits during cleanup. Bound module callbacks and
+dynamic spawned callbacks use the same dispatch boundary.
+
+Process-handle ``reset()`` and ``kill()`` release the GIL and require a running
+SystemC process as controller. Calling them from paused or stopped top-level
+Python raises ``RuntimeError``. Arbitrary ``throw_it`` exceptions and waits inside
+third-party native blocking channels are outside the resettable wait contract.

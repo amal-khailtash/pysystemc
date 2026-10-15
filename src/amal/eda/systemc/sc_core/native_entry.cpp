@@ -104,6 +104,8 @@ int sc_elab_and_sim(int argc, char* argv[])
     delete err_p;
   }
 
+  sc_in_action = false;
+
   for (int i = 0; i < argc; ++i)
   {
     delete[] argv_copy[i];

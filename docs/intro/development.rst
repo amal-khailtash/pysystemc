@@ -50,9 +50,9 @@ transitions. Upstream fork/join, report and barrier ports are compared with nati
 C++ examples. Coverage measures Python code, including subprocesses, not native
 C++. Sphinx HTML is written to ``build/docs``.
 
-Python reset configuration raises ``NotImplementedError``: cppyy currently
-consumes native unwind exceptions. The reset example is a draft, and general
-kill/unwind behavior is not yet verified.
+The synchronous reset port matches native C++. Guarded wait adapters preserve
+reset/kill unwind while Python cleanup runs; use the Python wait adapter and
+issue handle controls from running processes. See :doc:`supported` for limits.
 
 Logging and startup banners
 ---------------------------
