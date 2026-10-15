@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Generic endian type/offset matrix now checks read responses as well as writes,
+  verifying original storage against independent byte-address mapping.
+
 - Generic endian word-size/offset matrix verifies expanded buffers and enabled
   lane mapping for three native word types and every offset on two bus widths.
 
