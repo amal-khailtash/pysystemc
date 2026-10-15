@@ -122,3 +122,49 @@ def test_upstream_exports_match_native(tmp_path):
     assert records == ["10 ns In Channel run()", "17 ns In Channel run()", "20 ns In Channel run()"]
     protocol_output = run_example(tmp_path, "examples/sysc/2.1/sc_export/main_protocol.py")
     assert re.findall(pattern, protocol_output, re.M) == records
+
+
+def test_upstream_delay_pipe_matches_native(tmp_path):
+    """Compare all four-stage121bit exported-pipeline edge observations."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/2.1/dpipe/main.py")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "amal.eda.systemc._runner",
+            str(ROOT / "submodules/systemc/examples/sysc/2.1/dpipe/main.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    pattern = r"^(\d+): (\d+)$"
+    assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
+    assert len(re.findall(pattern, output, re.M)) == 10
+
+
+def test_upstream_mutex_policy_matches_native(tmp_path):
+    """Compare FIFO policy ownership order and all three acquisition times."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/2.1/scx_mutex_w_policy/scx_mutex_w_policy.py")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "amal.eda.systemc._runner",
+            str(ROOT / "submodules/systemc/examples/sysc/2.1/scx_mutex_w_policy/scx_mutex_w_policy.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    pattern = r"^t\d got mutex at .*"
+    assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
+    assert len(re.findall(pattern, output, re.M)) == 3
