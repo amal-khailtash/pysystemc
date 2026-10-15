@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Native convenience target sockets accept retained blocking Python callbacks
+  through a member-pointer bridge with arbitrary width and protocol parameters.
 - Callback payload event queues accept retained Python callables with native
   protocol types, phase copying, delta/timed scheduling and cancellation.
 - Independent native reference checks compare quantumkeeper and payload queue

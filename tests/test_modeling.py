@@ -237,6 +237,11 @@ def test_callback_payload_queue_custom_protocol_and_errors(tmp_path):
     assert "CUSTOM_CALLBACK_PEQ_OK" in run_example(tmp_path, "tests/models/tlm_callback_peq_custom.py")
 
 
+def test_convenience_target_socket_python_callback(tmp_path):
+    """Verify arbitrary width, retained blocking callback and borrowed transaction updates."""
+    assert "CALLBACK_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

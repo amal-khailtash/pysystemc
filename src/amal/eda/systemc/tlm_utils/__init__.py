@@ -26,7 +26,45 @@ for _header in (
 _namespace = cppyy.gbl.tlm_utils
 __all__ = _public_names(_namespace)
 cppyy.include(str(Path(__file__).with_name("callback_peq.h")))
+cppyy.include(str(Path(__file__).with_name("socket_callbacks.h")))
 _callback_queues = []
+_callback_sockets = []
+
+
+def callback_target_socket(name, *, width=32, protocol=None, policy=None):
+    """Create a native simple target socket accepting blocking Python callbacks.
+
+    Args:
+        name: Native socket name during elaboration.
+        width: Arbitrary native bus width.
+        protocol: Native protocol types; defaults to base protocol.
+        policy: Native port policy; defaults to one or more bound.
+
+    Returns:
+        Native socket with register_b_transport(callable), bind and native accessors.
+
+    Retain socket until simulation ends. Registered callbacks are retained until
+    shutdown. Payload/delay references are borrowed; guarded waits and errors
+    follow native process semantics. Nonblocking/debug/DMI registration is pending.
+    """
+    if protocol is None:
+        protocol = cppyy.gbl.tlm.tlm_base_protocol_types
+    if policy is None:
+        policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND
+    socket_type = cppyy.gbl.pysystemc_interfaces.CallbackTargetSocket[width, protocol, policy]
+    native_register = socket_type.register_b_transport
+    if not getattr(socket_type, "_retained_registration", False):
+
+        def register(socket, callback):
+            """Retain a callable after native registration succeeds."""
+            if not callable(callback):
+                raise TypeError("blocking transport callback must be callable")
+            native_register(socket, callback)
+            _callback_sockets.append((socket, callback))
+
+        socket_type.register_b_transport = register
+        socket_type._retained_registration = True
+    return socket_type(name)
 
 
 def callback_peq(name, callback, protocol=None):
@@ -57,6 +95,7 @@ def callback_peq(name, callback, protocol=None):
 
 
 __all__.append("callback_peq")
+__all__.append("callback_target_socket")
 
 
 def __getattr__(name):
