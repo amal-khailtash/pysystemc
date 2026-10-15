@@ -267,3 +267,8 @@ def test_structural_full_get_peek_interface(tmp_path):
 def test_structural_blocking_get_peek_interface(tmp_path):
     """Verify direct blocking-only structural binding and both output overloads."""
     assert "PYTHON_BLOCKING_GET_PEEK_OK" in run_example(tmp_path, "tests/models/python_blocking_get_peek.py")
+
+
+def test_structural_tlm_arbitrary_width_value_copies(tmp_path):
+    """Verify high-bit preservation, independent copies and wide output assignments."""
+    assert "PYTHON_TLM_WIDE_VALUES_OK" in run_example(tmp_path, "tests/models/python_tlm_wide_values.py")

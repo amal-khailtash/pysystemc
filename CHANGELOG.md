@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural TLM regression verifies 73-bit native value copies across blocking
+  and nonblocking put/get/peek calls, including preserved failure outputs.
 - Native-style port/export call syntax adapts structural Python implementations
   through the same path as bind, including annotated Protocol exports.
 - Blocking-only TLM get-peek interfaces accept structural Python implementations
