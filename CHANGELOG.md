@@ -6,6 +6,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Convenience socket exception regression checks callback error propagation,
+  payload/delay mutation and simulation time at failure.
+
 ## [0.6.0] - 2026-10-15
 
 This release expands TLM bindings. M6A remains incomplete; full public API,
