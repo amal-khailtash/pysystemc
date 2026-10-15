@@ -175,6 +175,22 @@ def channel_interface(interface: Any) -> Any:
     if name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_nonblocking_put_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPutAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Nonblocking put value/event bridge. @details Ports borrow the owner. "
+                    "The adapter owns its event; callbacks acquire GIL and must not wait. Errors propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class NonblockingPutAdapter : public tlm::tlm_nonblocking_put_if<T> { "
+                    "sc_core::sc_event ready; public: "
+                    "bool nb_put(const T& value) override { return put_value(value); } "
+                    "bool nb_can_put(tlm::tlm_tag<T>* = nullptr) const override { return can_put(); } "
+                    "const sc_core::sc_event& ok_to_put(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    "virtual bool put_value(T) = 0; virtual bool can_put() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_nonblocking_put_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::NonblockingPutAdapter<{argument}>"
         if name.startswith("tlm::tlm_transport_if<"):
             # Template parameter names avoid parsing nested C++ type arguments.
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "TransportAdapter"):

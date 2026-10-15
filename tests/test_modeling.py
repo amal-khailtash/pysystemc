@@ -205,3 +205,8 @@ def test_native_tlm1_blocking_and_analysis_python_dispatch(tmp_path):
 def test_native_tlm1_transport_and_peek_reference_overloads(tmp_path):
     """Verify TLM-1 request/response and peek preserve native output-reference semantics."""
     assert "NATIVE_TLM1_TRANSPORT_PEEK_OK" in run_example(tmp_path, "tests/models/native_tlm1_transport_peek.py")
+
+
+def test_native_tlm1_nonblocking_put_readiness_event(tmp_path):
+    """Verify nonblocking acceptance and stable native event wakeup through a port."""
+    assert "NATIVE_TLM1_NONBLOCKING_PUT_OK" in run_example(tmp_path, "tests/models/native_tlm1_nonblocking_put.py")
