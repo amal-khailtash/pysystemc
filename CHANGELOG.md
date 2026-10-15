@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Unaligned generic endian checks verify expanded bus windows, enabled byte lanes
+  and read/write data mapping across bus boundaries.
+
 - Generic endian streaming checks verify repeated address-window word ordering
   and read-response copying for transfers wider than their streaming width.
 
