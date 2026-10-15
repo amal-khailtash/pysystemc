@@ -6,6 +6,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-15
+
+This release expands TLM bindings. M6A remains incomplete; full public API,
+custom-type and lifecycle verification continues.
+
 ### Added
 
 - Convenience initiator sockets register retained backward transport and DMI
@@ -311,7 +316,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.3...v0.3.0
