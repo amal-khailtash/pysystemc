@@ -320,6 +320,13 @@ example-mixed-gate-py:
 	uv run examples/toy/mixed_gate.py
 
 # ----------------------------------------------------------------------------------------------------------------------
+# example-specialized-signals-py: ## Verify upstream integer signal concatenation and arithmetic
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-specialized-signals-py
+example-specialized-signals-py:
+	uv run examples/sysc/2.1/specialized_signals/main.py
+
+# ----------------------------------------------------------------------------------------------------------------------
 # example-barrier-py: ## Run the upstream Python event barrier example
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: example-barrier-py

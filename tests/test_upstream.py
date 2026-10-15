@@ -191,3 +191,27 @@ def test_upstream_async_host_notification_matches_native(tmp_path):
     pattern = r"^(?:Start SystemC.*|I'm busy!|Asked to stop.*|The dog barks.*|Program completed)$"
     assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
     assert len(re.findall(pattern, output, re.M)) == 5
+
+
+def test_upstream_specialized_signals_matches_native(tmp_path):
+    """Compare all concatenation outputs and assert26 native arithmetic checks."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/2.1/specialized_signals/main.py")
+    directory = ROOT / "submodules/systemc/examples/sysc/2.1/specialized_signals"
+    sources = [
+        directory / (stem + ".cpp")
+        for stem in ("scx_signal_int", "scx_signal_uint", "scx_signal_signed", "scx_signal_unsigned", "main")
+    ]
+    result = subprocess.run(
+        [sys.executable, "-m", "amal.eda.systemc._runner", *map(str, sources)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    pattern = r"^(?:\( m_in_|m_signal_|m_inout_).*"
+    assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
+    assert len(re.findall(pattern, output, re.M)) == 13
+    assert " != " not in result.stdout
