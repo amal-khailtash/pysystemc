@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Direct multi-to-multi socket regression verifies distinct forward target and
+  backward initiator indices, native binding sizes and independent transport waits.
+
 - Multi initiator sockets accept connection-indexed backward transport and DMI
   invalidation callbacks, with automatic GIL release for indexed blocking access.
 

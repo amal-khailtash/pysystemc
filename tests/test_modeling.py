@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_multi_to_multi_socket_connection_mapping(tmp_path):
+    """Verify direct multi binding preserves distinct target and initiator indices."""
+    assert "MULTI_TO_MULTI_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_multi_to_multi.py")
+
+
 def test_multi_initiator_socket_connection_callbacks(tmp_path):
     """Verify indexed forward waits and connection-indexed backward transport/invalidation."""
     assert "MULTI_INITIATOR_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_multi_initiator.py")
