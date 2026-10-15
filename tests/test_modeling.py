@@ -257,3 +257,8 @@ def test_structural_combined_put_interface(tmp_path):
 def test_structural_combined_peek_interface(tmp_path):
     """Verify blocking/native output overloads preserve nonconsuming access."""
     assert "PYTHON_COMBINED_PEEK_OK" in run_example(tmp_path, "tests/models/python_combined_peek.py")
+
+
+def test_structural_full_get_peek_interface(tmp_path):
+    """Verify consuming/nonconsuming dispatch through full and native base views."""
+    assert "PYTHON_COMBINED_GET_PEEK_OK" in run_example(tmp_path, "tests/models/python_combined_get_peek.py")

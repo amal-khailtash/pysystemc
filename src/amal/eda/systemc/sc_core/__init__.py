@@ -131,7 +131,6 @@ def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> A
     return channel
 
 
-
 def _read_resolved(self: Any) -> Any:
     """Return a copy of native resolved logic after the channel update phase."""
     return cppyy.gbl.sc_core.python_read_resolved(self)

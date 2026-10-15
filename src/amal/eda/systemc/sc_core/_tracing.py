@@ -10,6 +10,7 @@ from typing import Any
 
 import cppyy
 
+
 @contextmanager
 def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | None = None) -> Iterator[Any]:
     """Open a VCD trace and close it on normal exit or a Python exception.
@@ -64,5 +65,3 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
         value_type = bool if isinstance(sample, bool) else type(sample)
         return cppyy.gbl.sc_core.trace_signal[value_type](file, value, name)
     return _native_sc_trace(file, value, name, *args)
-
-

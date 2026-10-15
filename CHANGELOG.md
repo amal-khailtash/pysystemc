@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Full TLM get-peek interface supports shared blocking/nonblocking Python state
+  and dispatch through native blocking and nonblocking base-interface ports.
 - Combined TLM peek interface forwards blocking and nonblocking callbacks while
   preserving nonconsuming value/output overloads and native readiness storage.
 - Combined TLM put interface forwards blocking and nonblocking operations to one
@@ -65,6 +67,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Break up long conditions in core interface adapters for readability.
 - Split core interface declarations, structural binding and waveform helpers
   into related modules; simplify initializer imports and document setup order.
 - Use ordinary Python methods in TLM transport, peek and blocking-get models.

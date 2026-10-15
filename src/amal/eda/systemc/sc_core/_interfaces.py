@@ -70,6 +70,7 @@ def interface(protocol=None, *, methods=None):
     variadic parameters raise TypeError. References require explicit trusted C++ signatures; repeated-name overload
     declarations are not supported by the methods dictionary. Owners survive simulation; errors propagate.
     """
+
     def register(protocol):
         """Associate the structural contract with a lazily compiled native interface."""
         declarations = methods if methods is not None else _infer_methods(protocol)
@@ -80,8 +81,17 @@ def interface(protocol=None, *, methods=None):
 
     return register(protocol) if protocol is not None else register
 
+
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
+    "tlm::tlm_get_peek_if": {
+        "get_value": "get",
+        "peek_value": "peek",
+        "try_get_value": "nb_get",
+        "try_peek_value": "nb_peek",
+        "can_get": "nb_can_get",
+        "can_peek": "nb_can_peek",
+    },
     "tlm::tlm_peek_if": {"peek_value": "peek", "try_peek_value": "nb_peek", "can_peek": "nb_can_peek"},
     "tlm::tlm_put_if": {"put_value": "put", "try_put_value": "nb_put", "can_put": "nb_can_put"},
     "tlm::tlm_get_if": {"get_value": "get", "try_get_value": "nb_get", "can_get": "nb_can_get"},
@@ -94,8 +104,10 @@ _METHODS = {
     "tlm::tlm_nonblocking_get_if": {"get_value": "nb_get", "can_get": "nb_can_get"},
     "tlm::tlm_nonblocking_peek_if": {"peek_value": "nb_peek", "can_peek": "nb_can_peek"},
     "tlm::tlm_nonblocking_get_peek_if": {
-        "get_value": "nb_get", "can_get": "nb_can_get",
-        "peek_value": "nb_peek", "can_peek": "nb_can_peek",
+        "get_value": "nb_get",
+        "can_get": "nb_can_get",
+        "peek_value": "nb_peek",
+        "can_peek": "nb_can_peek",
     },
 }
 
@@ -115,6 +127,7 @@ def _adapt(interface, implementation, factory):
     if interface not in _classes:
         callbacks = {}
         for native_name, python_name in methods.items():
+
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
                 result = getattr(self._implementation, _method)(*args)
@@ -124,6 +137,7 @@ def _adapt(interface, implementation, factory):
                     value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
                     return cppyy.gbl.std.pair[bool, value_type](*result)
                 return result
+
             callbacks[native_name] = forward
         base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
         _classes[interface] = type(f"PythonPortAdapter{len(_classes)}", (base,), callbacks)

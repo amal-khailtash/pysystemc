@@ -37,6 +37,36 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_get_peek_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedGetPeekAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Complete blocking/nonblocking get-peek bridge. @details Ports borrow "
+                    "the owner; adapter owns distinct readiness events. cppyy acquires GIL for callbacks; "
+                    "blocking callers release it. Nonblocking callbacks must not wait. Errors propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class CombinedGetPeekAdapter : public tlm::tlm_get_peek_if<T> { "
+                    "sc_core::sc_event get_ready, peek_ready; public: "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
+                    "void get(T& value) override { value = get_value(); } "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
+                    "void peek(T& value) const override { value = peek_value(); } "
+                    "bool nb_get(T& value) override { auto result = try_get_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    "bool nb_peek(T& value) const override { auto result = try_peek_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    "bool nb_can_get(tlm::tlm_tag<T>* = nullptr) const override { return can_get(); } "
+                    "bool nb_can_peek(tlm::tlm_tag<T>* = nullptr) const override { return can_peek(); } "
+                    "const sc_core::sc_event& ok_to_get(tlm::tlm_tag<T>* = nullptr) const override { return get_ready; } "
+                    "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { "
+                    "get_ready.notify(delay); peek_ready.notify(delay); } "
+                    "virtual T get_value() = 0; virtual T peek_value() const = 0; "
+                    "virtual std::pair<bool, T> try_get_value() = 0; "
+                    "virtual std::pair<bool, T> try_peek_value() const = 0; "
+                    "virtual bool can_get() const = 0; virtual bool can_peek() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_get_peek_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::CombinedGetPeekAdapter<{argument}>"
         if name.startswith("tlm::tlm_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedPeekAdapter"):
                 cppyy.cppdef(
@@ -109,7 +139,10 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             argument = name.removeprefix("tlm::tlm_blocking_put_if<").removesuffix(">")
             name = f"pysystemc_interfaces::PutAdapter<{argument}>"
         if name.startswith("tlm::tlm_nonblocking_get_peek_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingGetPeekAdapter"):
+            if not hasattr(
+                getattr(cppyy.gbl, "pysystemc_interfaces", None),
+                "NonblockingGetPeekAdapter",
+            ):
                 cppyy.cppdef(
                     "/** @brief Combined nonblocking get/peek bridge. @details Ports borrow the owner; "
                     "the adapter owns both readiness events. cppyy acquires GIL for callbacks, which "
@@ -231,7 +264,10 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 f"void write(const {value_type}& value) override {{ write_value(value); }} "
                 f"virtual void write_value({value_type}) = 0; "
             )
-        if name.startswith("tlm::tlm_fw_transport_if<") or name.startswith("tlm::tlm_bw_transport_if<"):
+        if (
+            name.startswith("tlm::tlm_fw_transport_if<")
+            or name.startswith("tlm::tlm_bw_transport_if<")
+        ):
             # Redeclare inherited pure methods so cppyy builds every Python dispatcher override.
             types = f"{name}::protocol_types"
             payload = f"typename {types}::tlm_payload_type"

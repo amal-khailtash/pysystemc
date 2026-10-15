@@ -100,3 +100,9 @@ Adapter-owned ``ok_to_put()`` storage is notified through ``notify_ready()``.
 and ``nb_can_peek()``. Blocking value/output overloads receive copies; callbacks
 must preserve samples rather than consume them. Nonblocking callbacks return a
 ``(bool, value)`` tuple. ``notify_ready(delay)`` schedules native peek readiness.
+
+``tlm_get_peek_if[T]`` structural implementations combine ``get()``, ``peek()``,
+``nb_get()``, ``nb_peek()``, ``nb_can_get()`` and ``nb_can_peek()`` on one object.
+The native adapter implements the blocking/nonblocking get-peek inheritance
+hierarchy, so base-interface ports can bind the resulting native interface.
+``notify_ready()`` schedules both separate native readiness events.
