@@ -50,8 +50,8 @@ transport = implementation
 peek = Peek()
 transport_port = sc.sc_port[tlm.tlm_transport_if[int, int]]("transport_port")
 peek_port = sc.sc_port[tlm.tlm_blocking_peek_if[int]]("peek_port")
-transport_port.bind(transport)
-peek_port.bind(peek)
+transport_port(transport)
+peek_port(peek)
 missing_port = sc.sc_port[tlm.tlm_blocking_get_if[int], 1, sc.SC_ZERO_OR_MORE_BOUND]("missing")
 del module_name, implementation, transport
 gc.collect()

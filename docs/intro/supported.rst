@@ -110,3 +110,7 @@ hierarchy, so base-interface ports can bind the resulting native interface.
 ``tlm_blocking_get_peek_if[T]`` also accepts structural objects implementing
 only ``get()`` and ``peek()``. Both native value-return and output-reference
 forms forward to those Python value callbacks, with blocking GIL release.
+
+Native-style ``port(implementation)`` and ``export(implementation)`` binding
+syntax uses the same structural adaptation as ``bind(implementation)``. Native
+interface and parent-port arguments continue through the native bind overloads.

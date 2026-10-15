@@ -41,7 +41,7 @@ class D(sc.sc_module):
         super().__init__(module_name)
         self.IFP = sc.sc_export[C_if]("IFP")
         self.channel = C("C")
-        self.IFP.bind(self.channel)
+        self.IFP(self.channel)
 
 
 class E(sc.sc_module):
@@ -55,8 +55,8 @@ class E(sc.sc_module):
         self.child = D("D")
         self.IFP1 = sc.sc_export[C_if]("IFP1")
         self.IFP2 = sc.sc_export[C_if]("IFP2")
-        self.IFP1.bind(self.channel)
-        self.IFP2.bind(self.child.IFP.get_interface())
+        self.IFP1(self.channel)
+        self.IFP2(self.child.IFP.get_interface())
 
 
 class X(sc.sc_module):

@@ -191,5 +191,6 @@ class PortTemplate:
                 return native_bind(port, adapter)
 
             port_class.bind = bind
+            port_class.__call__ = bind
             port_class._python_interface_bind = True
         return port_class

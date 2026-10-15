@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Native-style port/export call syntax adapts structural Python implementations
+  through the same path as bind, including annotated Protocol exports.
 - Blocking-only TLM get-peek interfaces accept structural Python implementations
   with automatic GIL handling and native value/output overload forwarding.
 - Full TLM get-peek interface supports shared blocking/nonblocking Python state
