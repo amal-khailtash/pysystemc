@@ -6,6 +6,22 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Keep native sc_module reflection intact while exposing the Python callback
+  adapter locally; reject non-callable process registrations before native entry.
+- Reject Python entry statuses outside the native integer range, decode native
+  arguments with Python filesystem semantics, and retain spawn callbacks only
+  after successful registration.
+
+### Added
+
+- Module identity, callback registration and lifecycle isolation checks across
+  multiple hosts with garbage collection before simulation.
+- Static method sensitivity and entry callable reference cleanup regressions.
+- `make test-wheel` checks a local release wheel outside the checkout, verifying
+  the installed version, native startup, callback execution and simulation time.
+
 ## [0.3.0] - 2026-10-14
 
 ### Added

@@ -60,11 +60,14 @@ def _retain_process_callback(register):
     """Wrap registration to retain bound callables on their owning module."""
 
     def wrapper(self, name, callback, *args):
-        """Retain callable ownership before native process registration."""
+        """Retain callable ownership after successful native registration."""
+        if not callable(callback):
+            raise TypeError("process callback must be callable")
         if not hasattr(self, "_process_callbacks"):
             self._process_callbacks = []
+        result = register(self, name, callback, *args)
         self._process_callbacks.append(callback)
-        return register(self, name, callback, *args)
+        return result
 
     return wrapper
 
@@ -73,7 +76,7 @@ for _name in ("sc_method", "sc_thread", "sc_cthread"):
     setattr(cppyy.gbl.sc_core.ScModule, _name, _retain_process_callback(getattr(cppyy.gbl.sc_core.ScModule, _name)))
 
 # Replace with custom sc_module
-cppyy.gbl.sc_core.sc_module = cppyy.gbl.sc_core.ScModule
+# Keep the native namespace intact; expose the adapter only in Python.
 # # cppyy.gbl.sc_core.sc_module.__class__ = sc_module_metaclass
 # # globals()["sc_module"] = sc_core.sc_module
 
@@ -108,6 +111,10 @@ for name, member in sc_core_namespace.__dict__.items():
         globals()[name] = member
 
 
+# Compatibility alias for Python modeling; native C++ sc_module remains intact.
+sc_module = cppyy.gbl.sc_core.ScModule
+
+
 def __getattr__(name):
     """Resolve a native kernel name or raise AttributeError."""
     mod = _document_member(getattr(cppyy.gbl.sc_core, name))
@@ -116,6 +123,7 @@ def __getattr__(name):
 
 # Define a custom __dir__ for listing available attributes
 def __dir__():
+    """List Python adapters and resolvable native kernel API names."""
     return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
 
 
@@ -262,10 +270,12 @@ def sc_spawn(callback: Callable[[], Any], name: str = "", options: Any = None) -
     """
     if not callable(callback):
         raise TypeError("sc_spawn callback must be callable")
-    _spawn_callbacks.append(callback)
     if options is None:
-        return cppyy.gbl.sc_core.spawn_callback(callback, name)
-    return cppyy.gbl.sc_core.spawn_callback(callback, name, options)
+        handle = cppyy.gbl.sc_core.spawn_callback(callback, name)
+    else:
+        handle = cppyy.gbl.sc_core.spawn_callback(callback, name, options)
+    _spawn_callbacks.append(callback)
+    return handle
 
 
 _report_callback = None

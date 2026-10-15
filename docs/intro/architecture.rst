@@ -51,3 +51,30 @@ Known blockers
 
 See :doc:`supported` for verified behavior. Availability through namespace
 reflection does not establish that every native operation is safe from Python.
+
+Python module registration
+--------------------------
+
+``sc_core.sc_module`` is the Python modeling alias for the callback-capable
+native ``ScModule`` adapter. ``cppyy.gbl.sc_core.sc_module`` remains the original
+SystemC class, so C++ reflection and mixed-language models retain native identity.
+
+Keep each Python module proxy alive until all its processes finish and lifecycle
+callbacks have run. Store ports, signals, event finders and channels on the module
+or another owner with the same lifetime. Registration retains callable objects
+only after native registration succeeds; non-callables raise ``TypeError``.
+Garbage collection of temporary Python references does not invalidate registered
+callbacks while the module owner is retained. This is an explicit ownership
+contract, not support for deleting live modules during simulation.
+
+Method callbacks remain retained after ``sc_stop()``: stopping the kernel does
+not destroy its processes or their module hosts. Dynamic callbacks are likewise
+retained for the interpreter's simulation lifetime. Do not clear callback lists
+to reclaim memory while native hosts remain alive. Independent repeated runs
+use new subprocesses so kernel and callback ownership end together.
+
+The Python entry bridge borrows ``__main__`` and owns its temporary callable,
+argument list and result only for the call. It releases these references and
+the acquired GIL on success and Python errors. Arguments use Python filesystem
+decoding; returned statuses must fit a native ``int``. Conversion errors print
+their Python diagnostic and return ``-1``.

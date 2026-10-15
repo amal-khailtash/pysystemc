@@ -4,6 +4,8 @@
  */
 #include <Python.h>
 
+#include <limits>
+
 #include "binding_log.h"
 
 /**
@@ -30,7 +32,7 @@ extern "C" int sc_main(int argc, char* argv[])
       bool valid = true;
       for (int i = 0; i < argc; ++i)
       {
-        PyObject* item = PyUnicode_FromString(argv[i]);
+        PyObject* item = PyUnicode_DecodeFSDefault(argv[i]);
         if (!item)
         {
           valid = false;
@@ -43,7 +45,13 @@ extern "C" int sc_main(int argc, char* argv[])
     if (result)
     {
       long code = PyLong_AsLong(result);
-      if (!PyErr_Occurred()) status = static_cast<int>(code);
+      if (!PyErr_Occurred())
+      {
+        if (code < std::numeric_limits<int>::min() || code > std::numeric_limits<int>::max())
+          PyErr_SetString(PyExc_OverflowError, "sc_main return status must fit a native int");
+        else
+          status = static_cast<int>(code);
+      }
     }
   }
   else if (!PyErr_Occurred())

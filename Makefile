@@ -12,6 +12,9 @@ PYTHON_VERSION = $(shell .venv/bin/python -c "import sys; print(str(sys.version_
 # Select another release with: make test-testpypi PACKAGE_VERSION=0.2.1
 PACKAGE_VERSION ?= $(shell awk '/^version = / {gsub(/"/, "", $$3); print $$3; exit}' $(MAKEFILE_DIR)/pyproject.toml)
 
+# Release builds may use: uv build --out-dir dist/$(PACKAGE_VERSION).
+WHEEL_DIR ?= $(MAKEFILE_DIR)/dist/$(PACKAGE_VERSION)
+
 VENV := uv venv
 
 # CMake output locations and coroutine backend can be overridden on the command line.
@@ -132,7 +135,8 @@ remove-cppyy:
 .PHONY: check-systemc-version
 check-systemc-version:
 	@test -f submodules/systemc/configure || git submodule update --init --recursive
-	@test "$$(git -C submodules/systemc describe --tags --exact-match)" = "$(SYSTEMC_VERSION)" || { echo "Expected SystemC $(SYSTEMC_VERSION); restore the pinned submodule before building." >&2; exit 1; }
+	@test "$$(git -C submodules/systemc rev-parse HEAD)" = "$$(git ls-files --stage submodules/systemc | awk '{print $$2}')" || { echo "SystemC checkout differs from the pinned submodule; restore it before building." >&2; exit 1; }
+	@test "$$(awk '/^#define SC_VERSION_(MAJOR|MINOR|PATCH) / {version = version separator $$3; separator = "."} END {print version}' submodules/systemc/src/sysc/kernel/sc_ver.h)" = "$(SYSTEMC_VERSION)" || { echo "Expected SystemC $(SYSTEMC_VERSION); restore the pinned submodule before building." >&2; exit 1; }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # setup-systemc: ## Build and install SystemC with Autotools and pthreads
@@ -218,6 +222,20 @@ format-python:
 .PHONY: coverage
 coverage:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-wheel: ## Check local release wheel startup (override PACKAGE_VERSION and WHEEL_DIR)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: test-wheel
+test-wheel:
+	@set -e; \
+	wheel=$$(find "$(WHEEL_DIR)" -maxdepth 1 -name 'pysystemc-$(PACKAGE_VERSION)-*.whl' -print -quit); \
+	test -n "$$wheel" || { echo "No wheel for $(PACKAGE_VERSION) in $(WHEEL_DIR); run uv build --out-dir $(WHEEL_DIR)" >&2; exit 1; }; \
+	wheel=$$(realpath "$$wheel"); \
+	cd /tmp; \
+	env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
+		uv run --no-project --with "$$wheel" \
+		python "$(MAKEFILE_DIR)/tools/check_published.py" "$(PACKAGE_VERSION)"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)

@@ -9,6 +9,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def run_example(tmp_path, path):
+    """Run a finite simulation in a fresh process and return captured stdout.
+
+    Args:
+        tmp_path: Isolated working directory for simulation outputs.
+        path: Repository-relative example or semantic test script.
+
+    Raises:
+        AssertionError: If native/Python execution returns a failure status.
+        subprocess.TimeoutExpired: If the simulation exceeds 60 seconds.
+    """
     env = dict(os.environ, SYSTEMC_HOME=os.environ.get("SYSTEMC_HOME", str(ROOT / "submodules/systemc")))
     result = subprocess.run(
         [sys.executable, str(ROOT / path)], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=60
@@ -18,6 +28,7 @@ def run_example(tmp_path, path):
 
 
 def test_hello_callback_and_lifecycle(tmp_path):
+    """Verify method dispatch and all elaboration/simulation lifecycle hooks."""
     output = run_example(tmp_path, "examples/helloworld/py/helloworld.py")
     assert output.count("- hello2()") == 1
     for event in ("Before End of Elaboration", "Elaboration finished", "Simulation started", "Simulation finished"):
@@ -25,6 +36,7 @@ def test_hello_callback_and_lifecycle(tmp_path):
 
 
 def test_counter_sensitivity_and_trace(tmp_path):
+    """Check edge sensitivity, modulo counter values and actual VCD transitions."""
     output = run_example(tmp_path, "examples/counter/py/counter_tb.py")
     assert output.count("Incremented Counter") == 20
     assert "@74 ns :: Incremented Counter 0" in output
@@ -259,3 +271,39 @@ def test_main_missing_callable_reports_error(tmp_path):
 def test_spawn_options_and_static_wait(tmp_path):
     """Configured dynamic sensitivity and zero-argument waits execute correctly."""
     assert "PROCESS_OPTIONS_OK" in run_example(tmp_path, "tests/models/process_options.py")
+
+
+def test_module_identity_lifecycle_and_registration(tmp_path):
+    """Native namespace stays intact and independent hosts dispatch in order."""
+    assert "MODULE_ISOLATION_OK" in run_example(tmp_path, "tests/models/module_isolation.py")
+
+
+def test_method_exception_reports_failure(tmp_path):
+    """A Python method failure exits with diagnostics instead of hanging."""
+    code = """
+from amal.eda.systemc import main, sc_core as sc
+class Broken(sc.sc_module):
+    def __init__(self, name):
+        super().__init__(name)
+        self.sc_method("fail", self.fail)
+    def fail(self):
+        raise ValueError("method_failure_marker")
+def sc_main(args):
+    model = Broken("broken")
+    sc.sc_start(1, sc.SC_NS)
+    return 0
+main()
+"""
+    result = subprocess.run([sys.executable, "-c", code], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert result.returncode != 0
+    assert "method_failure_marker" in result.stderr
+
+
+def test_entry_status_arguments_and_reference_cleanup(tmp_path):
+    """Reject overflowing statuses and release callables on success and errors."""
+    assert "ENTRY_ERRORS_OK" in run_example(tmp_path, "tests/models/entry_errors.py")
+
+
+def test_method_static_sensitivity_and_initialization(tmp_path):
+    """Check interface, port, event and edge sensitivity after GC."""
+    assert "METHOD_SENSITIVITY_OK" in run_example(tmp_path, "tests/models/method_sensitivity.py")
