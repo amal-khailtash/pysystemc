@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Private carrier method checks verify null cloning and non-destructive native
+  copy/free behavior before explicit accessor cleanup.
+
 - Independent native private-extension reference checks isolation, replacement,
   deep-copy omission, carrier release and reattachment against Python behavior.
 

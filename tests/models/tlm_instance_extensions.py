@@ -28,6 +28,14 @@ assert cppyy.addressof(av.get_extension(identifier)) == cppyy.addressof(x)
 assert cppyy.addressof(bv.get_extension(identifier)) == cppyy.addressof(y)
 assert not other.get_extension(identifier)
 assert cppyy.bind_object(av.get_extension(identifier), cppyy.gbl.PrivateValue).value == 17
+carrier = cppyy.bind_object(first.get_extension(carrier_id), tlm_utils.instance_specific_extension_carrier)
+assert not carrier.clone()
+carrier.copy_from(carrier)
+carrier.free()
+assert cppyy.addressof(av.get_extension(identifier)) == cppyy.addressof(x)
+assert cppyy.addressof(bv.get_extension(identifier)) == cppyy.addressof(y)
+# Carrier is borrowed and becomes invalid when its last private extension is cleared.
+del carrier
 copied = tlm.tlm_generic_payload()
 copied.resize_extensions()
 first.set_address(73)
