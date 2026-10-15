@@ -19,88 +19,88 @@ def public_names(namespace):
     # class/template names, never template parameter values, then validate native resolution.
     seeds = {
         "sc_core": (
-            "sc_export",
-            "sc_port",
-            "sc_signal",
+            "sc_attr_base",
+            "sc_attr_cltn",
+            "sc_attribute",
             "sc_buffer",
-            "sc_fifo",
-            "sc_in",
-            "sc_out",
-            "sc_inout",
-            "sc_vector",
-            "sc_mutex",
-            "sc_semaphore",
-            "sc_interface",
-            "sc_prim_channel",
-            "sc_event_queue",
+            "sc_event_and_list",
             "sc_event_finder",
+            "sc_event_or_list",
+            "sc_event_queue",
+            "sc_export",
+            "sc_fifo",
+            "sc_in_resolved",
+            "sc_in_rv",
+            "sc_in",
+            "sc_inout_resolved",
+            "sc_inout_rv",
+            "sc_inout",
+            "sc_interface",
+            "sc_join",
+            "sc_mutex",
+            "sc_out_resolved",
+            "sc_out_rv",
+            "sc_out",
+            "sc_port",
+            "sc_prim_channel",
+            "sc_process_handle",
+            "sc_report_handler",
+            "sc_report",
+            "sc_semaphore",
             "sc_signal_resolved",
             "sc_signal_rv",
-            "sc_in_resolved",
-            "sc_out_resolved",
-            "sc_inout_resolved",
-            "sc_in_rv",
-            "sc_out_rv",
-            "sc_inout_rv",
-            "sc_event_or_list",
-            "sc_event_and_list",
-            "sc_process_handle",
+            "sc_signal",
             "sc_spawn_options",
-            "sc_join",
             "sc_time",
-            "sc_report",
-            "sc_report_handler",
             "sc_trace_file",
-            "sc_attr_base",
-            "sc_attribute",
-            "sc_attr_cltn",
+            "sc_vector",
         ),
         "sc_dt": (
-            "sc_uint",
-            "sc_int",
-            "sc_biguint",
             "sc_bigint",
-            "sc_bv",
-            "sc_lv",
-            "sc_fixed",
-            "sc_ufixed",
-            "sc_fixed_fast",
-            "sc_ufixed_fast",
-            "sc_logic",
-            "sc_signed",
-            "sc_unsigned",
-            "sc_uint_base",
-            "sc_int_base",
+            "sc_biguint",
             "sc_bv_base",
-            "sc_lv_base",
-            "sc_fix",
-            "sc_ufix",
+            "sc_bv",
             "sc_fix_fast",
-            "sc_ufix_fast",
-            "sc_fxval",
-            "sc_fxval_fast",
+            "sc_fix",
+            "sc_fixed_fast",
+            "sc_fixed",
+            "sc_fxcast_switch",
             "sc_fxnum",
             "sc_fxtype_params",
-            "sc_fxcast_switch",
+            "sc_fxval_fast",
+            "sc_fxval",
+            "sc_int_base",
+            "sc_int",
+            "sc_logic",
+            "sc_lv_base",
+            "sc_lv",
+            "sc_signed",
+            "sc_ufix_fast",
+            "sc_ufix",
+            "sc_ufixed_fast",
+            "sc_ufixed",
+            "sc_uint_base",
+            "sc_uint",
+            "sc_unsigned",
         ),
         "tlm": (
-            "tlm_initiator_socket",
-            "tlm_target_socket",
+            "tlm_analysis_if",
+            "tlm_analysis_port",
+            "tlm_base_protocol_types",
+            "tlm_bw_transport_if",
+            "tlm_dmi",
+            "tlm_extension_base",
             "tlm_extension",
             "tlm_fifo",
-            "tlm_analysis_port",
-            "tlm_generic_payload",
-            "tlm_dmi",
-            "tlm_phase",
             "tlm_fw_transport_if",
-            "tlm_bw_transport_if",
-            "tlm_base_protocol_types",
-            "tlm_mm_interface",
-            "tlm_extension_base",
-            "tlm_analysis_if",
-            "tlm_put_if",
+            "tlm_generic_payload",
             "tlm_get_if",
+            "tlm_initiator_socket",
+            "tlm_mm_interface",
             "tlm_peek_if",
+            "tlm_phase",
+            "tlm_put_if",
+            "tlm_target_socket",
             "tlm_transport_if",
         ),
     }
@@ -133,11 +133,15 @@ def document_member(member):
     is_enum = isinstance(member, type) and hasattr(member, "__underlying")
     if vars(member).get("__doc__") if is_enum else getattr(member, "__doc__", None):
         return member
+
     cpp_name = getattr(member, "__cpp_name__", None)
+
     if cpp_name is None:
         cpp_name = getattr(member, "__name__", None)
+
     if not cpp_name:
         return member
+
     if is_enum:
         values = [
             (name, value) for name, value in vars(member).items() if not name.startswith("_") and not callable(value)
@@ -159,6 +163,7 @@ def document_member(member):
         )
     else:
         return member
+
     try:
         if not is_enum:
             member.__doc__ = doc
@@ -166,6 +171,7 @@ def document_member(member):
         # values remain visible to pydoc; namespace help adds a readable list.
     except AttributeError, TypeError:
         pass
+
     return member
 
 
@@ -198,11 +204,13 @@ def namespace_help(module_globals, namespace):
         else:
             category = "Constants"
         groups[category].append(name)
+
     intro = module_globals.get("__doc__") or f"Native {namespace.__cpp_name__} SystemC namespace."
     lines = [intro.rstrip(), "\nNative API discovery", "--------------------"]
     for title, names in groups.items():
         if names:
             lines.append(f"{title}: " + ", ".join(names))
+
     for name in groups["Enums"]:
         enum = getattr(namespace, name)
         values = [(key, value) for key, value in vars(enum).items() if not key.startswith("_") and not callable(value)]

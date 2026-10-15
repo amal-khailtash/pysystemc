@@ -34,6 +34,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     """
     name = interface.__cpp_name__
     cache_name = (name, _copy_put)
+
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
@@ -84,6 +85,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_get_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::CombinedGetPeekAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedPeekAdapter"):
                 cppyy.cppdef(
@@ -104,6 +106,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::CombinedPeekAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedPutAdapter"):
                 cppyy.cppdef(
@@ -122,6 +125,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_put_if<").removesuffix(">")
             name = f"pysystemc_interfaces::CombinedPutAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_get_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedGetAdapter"):
                 cppyy.cppdef(
@@ -142,6 +146,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_get_if<").removesuffix(">")
             name = f"pysystemc_interfaces::CombinedGetAdapter<{argument}>"
+
         if _copy_put and name.startswith("tlm::tlm_blocking_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PutAdapter"):
                 cppyy.cppdef(
@@ -155,6 +160,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_blocking_put_if<").removesuffix(">")
             name = f"pysystemc_interfaces::PutAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_nonblocking_get_peek_if<"):
             if not hasattr(
                 getattr(cppyy.gbl, "pysystemc_interfaces", None),
@@ -183,6 +189,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_nonblocking_get_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::NonblockingGetPeekAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_nonblocking_get_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingGetAdapter"):
                 cppyy.cppdef(
@@ -201,6 +208,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_nonblocking_get_if<").removesuffix(">")
             name = f"pysystemc_interfaces::NonblockingGetAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_nonblocking_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPeekAdapter"):
                 cppyy.cppdef(
@@ -219,6 +227,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_nonblocking_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::NonblockingPeekAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_nonblocking_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPutAdapter"):
                 cppyy.cppdef(
@@ -235,6 +244,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_nonblocking_put_if<").removesuffix(">")
             name = f"pysystemc_interfaces::NonblockingPutAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_transport_if<"):
             # Template parameter names avoid parsing nested C++ type arguments.
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "TransportAdapter"):
@@ -249,6 +259,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             arguments = name.removeprefix("tlm::tlm_transport_if<").removesuffix(">")
             name = f"pysystemc_interfaces::TransportAdapter<{arguments}>"
+
         if name.startswith("tlm::tlm_blocking_get_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "GetAdapter"):
                 cppyy.cppdef(
@@ -262,6 +273,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_blocking_get_if<").removesuffix(">")
             name = f"pysystemc_interfaces::GetAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_blocking_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PeekAdapter"):
                 cppyy.cppdef(
@@ -275,12 +287,14 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_blocking_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::PeekAdapter<{argument}>"
+
         if name.startswith("tlm::tlm_analysis_if<"):
             value_type = name.removeprefix("tlm::tlm_analysis_if<").removesuffix(">")
             methods = (
                 f"void write(const {value_type}& value) override {{ write_value(value); }} "
                 f"virtual void write_value({value_type}) = 0; "
             )
+
         if (
             name.startswith("tlm::tlm_fw_transport_if<")
             or name.startswith("tlm::tlm_bw_transport_if<")
