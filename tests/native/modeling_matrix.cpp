@@ -16,6 +16,7 @@ struct Observer : sc_module
   sc_inout<bool> io{"io"};
   int changes = 0, updates = 0;
   SC_HAS_PROCESS(Observer);
+
   /** @brief Bind ports and register noninitializing native methods. */
   Observer(sc_module_name name, sc_signal<bool>& signal, sc_buffer<bool>& buffer) : sc_module(name)
   {
@@ -28,10 +29,18 @@ struct Observer : sc_module
     sensitive << io;
     dont_initialize();
   }
+
   /** @brief Count signal changes. */
-  void signal_tick() { ++changes; }
+  void signal_tick()
+  {
+    ++changes;
+  }
+
   /** @brief Count buffer updates. */
-  void buffer_tick() { ++updates; }
+  void buffer_tick()
+  {
+    ++updates;
+  }
 };
 
 /** @brief Run identical native stimuli and emit final records. */

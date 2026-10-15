@@ -5,6 +5,7 @@
  * The Python caller releases the GIL; sc_main reacquires it for Python callbacks.
  * Original Accellera license and modification notices are retained below.
  */
+
 /*****************************************************************************
 
   Licensed to Accellera Systems Initiative Inc. (Accellera) under one or
@@ -58,9 +59,15 @@ static char** argv_orig;  // Original argv value passed to sc_elab_and_sim.
 
 bool sc_in_action = false;
 
-int sc_argc() { return argc_orig; }
+int sc_argc()
+{
+  return argc_orig;
+}
 
-const char* const* sc_argv() { return argv_orig; }
+const char* const* sc_argv()
+{
+  return argv_orig;
+}
 
 int sc_elab_and_sim(int argc, char* argv[])
 {

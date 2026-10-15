@@ -42,7 +42,10 @@ inline std::shared_ptr<spdlog::logger> runner_logger()
 /**
  * @brief Emit a visible informational note; message text is never a format string.
  */
-inline void runner_note(const std::string& message) { runner_logger()->info("{}", message); }
+inline void runner_note(const std::string& message)
+{
+  runner_logger()->info("{}", message);
+}
 
 }  // namespace pysystemc
 #endif

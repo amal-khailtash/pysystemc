@@ -14,6 +14,7 @@ struct Model : sc_module
   sc_clock clock{"clock", sc_time(2, SC_NS)};
   sc_in<bool> port{"clock_port"};
   SC_HAS_PROCESS(Model);
+
   /** @brief Register equivalent native thread and clocked-thread processes. */
   Model(sc_module_name name) : sc_module(name)
   {
@@ -22,8 +23,13 @@ struct Model : sc_module
     SC_THREAD(drive);
     SC_CTHREAD(clocked, port.pos());
   }
+
   /** @brief Record native wake time. */
-  void record(const char* label) { std::cout << "THREAD_RECORD " << label << "|" << sc_time_stamp() << '\n'; }
+  void record(const char* label)
+  {
+    std::cout << "THREAD_RECORD " << label << "|" << sc_time_stamp() << '\n';
+  }
+
   /** @brief Wait for OR, AND and timeout, then pause. */
   void events()
   {
@@ -35,6 +41,7 @@ struct Model : sc_module
     record("timeout");
     sc_pause();
   }
+
   /** @brief Notify events at distinct times. */
   void drive()
   {
@@ -45,6 +52,7 @@ struct Model : sc_module
     wait(1, SC_NS);
     second.notify();
   }
+
   /** @brief Wait one and then two clock cycles. */
   void clocked()
   {
@@ -55,6 +63,7 @@ struct Model : sc_module
     record("clock_three");
   }
 };
+
 /** @brief Start, resume and stop the native simulation. */
 int sc_main(int, char**)
 {

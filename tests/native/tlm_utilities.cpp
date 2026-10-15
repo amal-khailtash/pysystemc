@@ -20,6 +20,7 @@ struct UtilityReference : sc_core::sc_module
   tlm_utils::tlm_quantumkeeper keeper;
   tlm::tlm_generic_payload first, second;
   SC_HAS_PROCESS(UtilityReference);
+
   /** @brief Register independent native processes; no Python callbacks or GIL. */
   explicit UtilityReference(sc_core::sc_module_name name) : sc_module(name), queue("queue")
   {
@@ -32,6 +33,7 @@ struct UtilityReference : sc_core::sc_module
     SC_THREAD(quantum);
     SC_THREAD(receive);
   }
+
   /** @brief Check temporal decoupling before and after both native sync APIs. */
   void quantum()
   {
@@ -46,6 +48,7 @@ struct UtilityReference : sc_core::sc_module
     keeper.set_and_sync(sc_core::sc_time(5, sc_core::SC_NS));
     std::cout << "UTILITY quantum " << sc_core::sc_time_stamp() << '\n';
   }
+
   /** @brief Drain borrowed transactions and verify cancellation without delivery. */
   void receive()
   {
@@ -65,6 +68,7 @@ struct UtilityReference : sc_core::sc_module
     verify(queue.get_next_transaction() == nullptr);
   }
 };
+
 /** @brief Run the reference kernel once; model owns resources until completion. */
 int sc_main(int, char**)
 {

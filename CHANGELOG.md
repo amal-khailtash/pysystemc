@@ -8,10 +8,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Format first-party C++ function bodies across multiple lines and separate
+  documented definitions with blank lines.
 - Refresh the README PyPI badge cache identity after the 0.6.0 publication.
 
 ### Added
 
+- Tagged target debug callbacks preserve independent registration IDs and
+  validate native unsigned return bounds.
 - Tagged convenience target sockets forward registered blocking callback IDs
   while preserving native bus width, payload references and simulation timing.
 - Convenience socket exception regression checks callback error propagation,

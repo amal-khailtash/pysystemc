@@ -40,16 +40,36 @@ struct Model : sc_module
   {
     std::cout << "RECORD " << kind << "|" << sc_time_stamp() << "|" << signal.read() << '\n';
   }
+
   /** @brief Observe the interface default event. */
-  void interface_tick() { record("interface"); }
+  void interface_tick()
+  {
+    record("interface");
+  }
+
   /** @brief Observe the bound port default event. */
-  void port_tick() { record("port"); }
+  void port_tick()
+  {
+    record("port");
+  }
+
   /** @brief Observe the positive edge finder. */
-  void edge_tick() { record("edge"); }
+  void edge_tick()
+  {
+    record("edge");
+  }
+
   /** @brief Observe the explicit event. */
-  void event_tick() { record("event"); }
+  void event_tick()
+  {
+    record("event");
+  }
+
   /** @brief Observe default method initialization. */
-  void initial_tick() { record("initial"); }
+  void initial_tick()
+  {
+    record("initial");
+  }
 };
 
 /** @brief Drive the reference through the same bounded starts as Python. */

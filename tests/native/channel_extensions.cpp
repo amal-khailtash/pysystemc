@@ -20,12 +20,24 @@ struct Model : sc_core::sc_module
     SC_THREAD(zero);
     SC_THREAD(one);
   }
+
   /** @brief Record one queued notification without suspending. */
-  void observe() { seen.push_back(sc_core::sc_time_stamp()); }
+  void observe()
+  {
+    seen.push_back(sc_core::sc_time_stamp());
+  }
+
   /** @brief Drive zero from an independent native process. */
-  void zero() { resolved.write(sc_dt::SC_LOGIC_0); }
+  void zero()
+  {
+    resolved.write(sc_dt::SC_LOGIC_0);
+  }
+
   /** @brief Drive one from an independent native process. */
-  void one() { resolved.write(sc_dt::SC_LOGIC_1); }
+  void one()
+  {
+    resolved.write(sc_dt::SC_LOGIC_1);
+  }
 };
 
 int sc_main(int, char**)

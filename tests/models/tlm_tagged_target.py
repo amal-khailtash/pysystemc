@@ -14,8 +14,9 @@ class Target:
         delay.__assign__(sc.sc_time(1, sc.SC_NS))
         return tlm.TLM_UPDATED
 
-    def debug(self, payload):
+    def debug(self, identifier, payload):
         """Return caller-controlled debug count for native range checks."""
+        assert identifier == 59
         return self.count
 
     def dmi(self, payload, result):
@@ -41,6 +42,7 @@ retained = weakref.ref(target)
 socket = tlm_utils.callback_target_socket("target", width=73, tagged=True)
 target.count = 0
 socket.register_b_transport(target.transport, 47)
+socket.register_transport_dbg(target.debug, 59)
 initiator = tlm_utils.callback_initiator_socket("initiator", width=73)
 backward_records = []
 
@@ -69,6 +71,17 @@ delay = sc.sc_time(2, sc.SC_NS)
 records = []
 interface = initiator.get_interface()
 assert interface.b_transport.__release_gil__
+for count in (0, 2**32 - 1):
+    retained().count = count
+    assert interface.transport_dbg(payload) == count
+for count in (-1, 2**32):
+    retained().count = count
+    try:
+        interface.transport_dbg(payload)
+    except Exception as error:
+        assert "outside unsigned int range" in str(error), error
+    else:
+        raise AssertionError("invalid tagged debug count accepted")
 delay.__assign__(sc.sc_time(2, sc.SC_NS))
 
 

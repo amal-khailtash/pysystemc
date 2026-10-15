@@ -37,15 +37,29 @@ class PythonInterface : public virtual sc_interface
 class PythonPrimChannel : public sc_prim_channel
 {
  public:
-  explicit PythonPrimChannel(const char* name) : sc_prim_channel(name) {}
+  explicit PythonPrimChannel(const char* name) : sc_prim_channel(name)
+  {
+  }
   ~PythonPrimChannel() override = default;
+
   using sc_prim_channel::async_attach_suspending;
   using sc_prim_channel::async_detach_suspending;
-  void update() override {}
-  void before_end_of_elaboration() override {}
-  void end_of_elaboration() override {}
-  void start_of_simulation() override {}
-  void end_of_simulation() override {}
+
+  void update() override
+  {
+  }
+  void before_end_of_elaboration() override
+  {
+  }
+  void end_of_elaboration() override
+  {
+  }
+  void start_of_simulation() override
+  {
+  }
+  void end_of_simulation() override
+  {
+  }
 };
 
 /**
@@ -58,7 +72,9 @@ template <class T>
 class PythonSignalChannel : public sc_signal<T>
 {
  public:
-  explicit PythonSignalChannel(const char* name) : sc_signal<T>(name) {}
+  explicit PythonSignalChannel(const char* name) : sc_signal<T>(name)
+  {
+  }
   ~PythonSignalChannel() override = default;
 };
 
@@ -73,7 +89,9 @@ template <class T>
 class PythonFifoChannel : public sc_fifo<T>
 {
  public:
-  PythonFifoChannel(const char* name, int size = 16) : sc_fifo<T>(name, size) {}
+  PythonFifoChannel(const char* name, int size = 16) : sc_fifo<T>(name, size)
+  {
+  }
   ~PythonFifoChannel() override = default;
 };
 
@@ -94,7 +112,10 @@ class PythonReadInterface : public sc_signal<T>
   {
   }
   ~PythonReadInterface() override = default;
-  void notify_changed() { this->write(reader()); }
+  void notify_changed()
+  {
+    this->write(reader());
+  }
 };
 
 /**
@@ -103,7 +124,10 @@ class PythonReadInterface : public sc_signal<T>
  * @return A value copy, avoiding borrowed storage escaping to Python.
  * @details No callbacks or GIL release required; native update scheduling is unchanged.
  */
-sc_dt::sc_logic python_read_resolved(const sc_signal_resolved& signal) { return signal.read(); }
+sc_dt::sc_logic python_read_resolved(const sc_signal_resolved& signal)
+{
+  return signal.read();
+}
 
 /**
  * @brief Select native time modulo without cppyy operator discovery ambiguity.
@@ -197,9 +221,16 @@ bool python_reset(sc_process_handle& handle, sc_descendant_inclusion_info descen
 }
 
 /** @brief Set the next method trigger from an OR expression, consuming its native auto-delete list. */
-void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression) { next_trigger(expression.release()); }
+void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression)
+{
+  next_trigger(expression.release());
+}
+
 /** @brief Set the next method trigger from an AND expression, consuming its native auto-delete list. */
-void python_next_trigger(const sc_event_expr<sc_event_and_list>& expression) { next_trigger(expression.release()); }
+void python_next_trigger(const sc_event_expr<sc_event_and_list>& expression)
+{
+  next_trigger(expression.release());
+}
 
 /**
  * @brief Dispatch Python and restore original native scheduler control flow.
@@ -411,27 +442,37 @@ class ScModule : public sc_module
   /**
    * @brief Construct within a live sc_module_name elaboration scope.
    */
-  ScModule(const sc_module_name& name) : sc_module(name) {}
+  ScModule(const sc_module_name& name) : sc_module(name)
+  {
+  }
 
   /**
    * @brief Override in Python before binding validation. cppyy acquires the GIL for dispatch.
    */
-  virtual void before_end_of_elaboration() override {}
+  virtual void before_end_of_elaboration() override
+  {
+  }
 
   /**
    * @brief Override in Python after elaboration completes. cppyy acquires the GIL for dispatch.
    */
-  virtual void end_of_elaboration() override {}
+  virtual void end_of_elaboration() override
+  {
+  }
 
   /**
    * @brief Override in Python before processes start. cppyy acquires the GIL for dispatch.
    */
-  virtual void start_of_simulation() override {}
+  virtual void start_of_simulation() override
+  {
+  }
 
   /**
    * @brief Override in Python after kernel stop. cppyy acquires the GIL for dispatch.
    */
-  virtual void end_of_simulation() override {}
+  virtual void end_of_simulation() override
+  {
+  }
 
   /**
    * @brief Register a method; waits are illegal in a method process.
@@ -465,22 +506,34 @@ class ScModule : public sc_module
   /**
    * @brief Add static sensitivity to an interface default event; caller retains the object.
    */
-  void sensitive(const sc_interface& value) { sc_module::sensitive << value; }
+  void sensitive(const sc_interface& value)
+  {
+    sc_module::sensitive << value;
+  }
 
   /**
    * @brief Add static sensitivity to a bound port; caller retains the object.
    */
-  void sensitive(const sc_port_base& value) { sc_module::sensitive << value; }
+  void sensitive(const sc_port_base& value)
+  {
+    sc_module::sensitive << value;
+  }
 
   /**
    * @brief Add static sensitivity to a port edge finder; caller retains the object.
    */
-  void sensitive(sc_event_finder& value) { sc_module::sensitive << value; }
+  void sensitive(sc_event_finder& value)
+  {
+    sc_module::sensitive << value;
+  }
 
   /**
    * @brief Add static sensitivity to a native event; caller retains the object.
    */
-  void sensitive(const sc_event& value) { sc_module::sensitive << value; }
+  void sensitive(const sc_event& value)
+  {
+    sc_module::sensitive << value;
+  }
 
  private:
   /**
