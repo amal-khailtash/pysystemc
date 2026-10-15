@@ -52,5 +52,7 @@ handles = [sc.sc_spawn(quantum_process, "quantum"), sc.sc_spawn(receiver, "recei
 sc.sc_start(11, sc.SC_NS)
 assert records == [(17, "2 ns"), (23, "4 ns"), ("quantum", "10 ns")], records
 assert all(handle.terminated() for handle in handles)
+for value, time in records:
+    print(f"UTILITY {value} {time}")
 sc.sc_stop()
 print("TLM_UTILITIES_OK")

@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent native reference checks compare quantumkeeper and payload queue
+  delivery order, simulation times, cancellation and local-time behavior.
 - Native `tlm_utils` namespace exposes convenience socket and utility templates;
   quantumkeeper waits release the GIL and payload queues retain native scheduling semantics.
 - Structural TLM-2 combined and standalone transport, debug and DMI interfaces

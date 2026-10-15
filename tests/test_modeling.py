@@ -205,6 +205,23 @@ def test_native_tlm_quantumkeeper_and_payload_queue(tmp_path):
     assert "TLM_UTILITIES_OK" in run_example(tmp_path, "tests/models/tlm_utilities.py")
 
 
+def test_tlm_utilities_match_native_reference(tmp_path):
+    """Compare all quantum/queue timing records with independent native processes."""
+    python_output = run_example(tmp_path, "tests/models/tlm_utilities.py")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_utilities.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    native_output = result.stdout
+    assert [line for line in python_output.splitlines() if line.startswith("UTILITY ")] == [
+        line for line in native_output.splitlines() if line.startswith("UTILITY ")
+    ]
+
+
 def test_tlm_quantumkeeper_reset_and_kill_cleanup(tmp_path):
     """Verify both quantum wait APIs restart and execute cleanup before termination."""
     assert "QUANTUM_RESET_OK" in run_example(tmp_path, "tests/models/tlm_quantum_reset.py")
