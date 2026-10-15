@@ -8,24 +8,36 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural Python implementations bind through native SystemC ports using
+  ordinary get, peek, transport and write methods, with retained adapters and
+  automatic GIL release for supported blocking calls.
+- Annotated Protocol interfaces infer native void, bool, double and cppyy value
+  signatures; explicit declarations remain available for reference signatures.
+- A Protocol-based sc_export example alongside the retained native implementation,
+  with both variants checked against the upstream reference.
+- Standalone interface composition experiments preserved outside the library.
+- TLM-1 combined nonblocking-get/peek adapter preserves output references and
+  supports native combined/base ports with separate channel-owned readiness events.
 - TLM-1 nonblocking-peek adapter with stable readiness events, preserved failure
   outputs and repeated nonconsuming reference reads.
-
 - TLM-1 nonblocking-get adapter preserves output references on failure and owns
   stable readiness events for native-port callbacks.
-
 - TLM-1 nonblocking-put adapter with Python acceptance/readiness callbacks and
   channel-owned readiness-event references for native ports.
-
 - TLM-1 blocking-get adapter preserves native value and reference-output
   overloads, including waits inside Python callbacks.
-
 - TLM-1 transport and blocking-peek adapters preserve both value-return and
   reference-output overloads through Python value callbacks.
-
+- Python-subclassable interface and primitive-channel bases with public native
+  constructors and update/lifecycle hooks; preserve the native namespace types.
+- Upstream asynchronous host-event port using the packaged primitive-channel
+  base, without example-local C++ declarations.
+- Specialized-signals Python port with all 13 native concatenation records and
+  26 mixed-arithmetic checks; explicit template adapters resolve cppyy overload gaps.
+- Python ports of the upstream 121-bit delay pipeline and FIFO mutex-policy
+  examples, with native comparisons of values, acquisition order and times.
 - TLM-1 analysis value-copy channel adapter and blocking put/get dispatch checks.
   Analysis callbacks currently use write_value to avoid cppyy reference conversion.
-
 - Combined TLM forward/backward channel adapters with phase/delay mutation,
   checked debug return ranges, DMI access and invalidation regressions.
 - Native initiator/target socket integration and Python memory-manager recycling
@@ -43,12 +55,15 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Split core interface declarations, structural binding and waveform helpers
+  into related modules; simplify initializer imports and document setup order.
+- Use ordinary Python methods in TLM transport, peek and blocking-get models.
 - Match sc_export example interface/channel class names to upstream C_if and C,
   retaining its native implementation and recording the original source path.
-
+- Record upstream source paths and copyright attribution in converted examples;
+  keep license text in dependency notices rather than copying it into ports.
 - Organize subprocess regressions into tutorial, upstream, runtime, lifecycle,
   modeling and runner modules with shared simulation helpers.
-
 - Publishing validates installed console arguments, exit status and tutorial
   behavior before uploading distributions.
 - Place `native-sanitize` in the Makefile's Build and validation help section;

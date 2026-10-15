@@ -67,8 +67,8 @@ def interface(protocol=None, *, methods=None):
 
     None returns map to void, bool to bool, float to double, and cppyy native
     classes retain their C++ type. Python int, missing annotations, defaults and
-    variadic parameters raise TypeError. References/overloads require explicit
-    trusted C++ signatures. Owners survive simulation; errors propagate.
+    variadic parameters raise TypeError. References require explicit trusted C++ signatures; repeated-name overload
+    declarations are not supported by the methods dictionary. Owners survive simulation; errors propagate.
     """
     def register(protocol):
         """Associate the structural contract with a lazily compiled native interface."""

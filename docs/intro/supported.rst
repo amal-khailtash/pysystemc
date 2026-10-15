@@ -74,6 +74,6 @@ becomes ``double``. Native cppyy classes, including SystemC template
 specializations, retain their C++ types. Inherited methods and resolvable string
 annotations are supported. Python ``int`` does not specify a native width and
 is rejected. Missing annotations, variadic/keyword-only parameters and defaults
-also require an explicit declaration. Reference qualifications and overloads
-can use ``@sc.interface(methods={...})`` with trusted native signatures.
+also require an explicit declaration. Reference qualifications can use ``@sc.interface(methods={...})`` with trusted native signatures.
+Repeated-name overload declarations are not supported by this dictionary.
 The two sc_export examples show native and annotated Protocol implementations.
