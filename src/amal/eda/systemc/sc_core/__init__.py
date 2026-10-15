@@ -4,52 +4,37 @@ Callbacks are retained for their native process lifetime. Blocking scheduler
 operations release the GIL; process reset remains explicitly unsupported.
 """
 
-from .._logging import log
 import atexit
-from contextlib import contextmanager
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from typing import Any
 from enum import Enum
 import pathlib
 import sys
-import re
 
 # The parent package selects the JIT C++ standard before importing cppyy.
 
 import cppyy
 
-#
+from .._logging import log
+from .._namespace import (
+    public_names as _public_names,
+    document_member as _document_member,
+    namespace_help as _namespace_help,
+)
+from ._channel_interfaces import channel_interface as channel_interface
+from ._channel_interfaces import declare_interface as declare_interface
+from ._interfaces import PortTemplate as _PortTemplate
+from ._interfaces import interface as interface
+from ._tracing import sc_trace as _python_sc_trace
+from ._tracing import vcd_trace as _python_vcd_trace
 
+# Compile first-party bridges before publishing native aliases or configuring
+# their methods. The parent package has already loaded SystemC and selected C++17.
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
+for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp"):
+    with (SCRIPT_PATH / _bridge).open() as _source:
+        cppyy.cppdef(_source.read())
 
-
-with open(SCRIPT_PATH / "sc_main.cpp") as fd:
-    cppyy.cppdef(fd.read())
-
-# Compile the licensed local SystemC entry adapter; no upstream source tree is needed.
-with open(SCRIPT_PATH / "native_entry.cpp") as fd:
-    cppyy.cppdef(fd.read())
-
-# Store the sc_core.sc_module and its metaclass
-# sc_module           = cppyy.gbl.sc_core.sc_module
-# sc_module_metaclass = type(cppyy.gbl.sc_core.sc_module)
-
-with open(SCRIPT_PATH / "sc_module_new.cpp") as fd:
-    cppyy.cppdef(fd.read())
-
-
-# print(f"type(sc_core.sc_module): {type(cppyy.gbl.sc_core.sc_module)}")
-
-# # ScModule           = cppyy.gbl.sc_core.ScModule
-# # ScModule.__class__ = sc_module_metaclass
-
-# # Replace sc_core.sc_module with the newly defined ScModule
-# # Replace the C++ sc_module with the C++ wrapper ScModule
-
-# # cppyy.gbl.sc_core.sc_module = ScModule
-
-# cppyy.gbl.sc_core.ScModule.__release_gil__ = True
-# cppyy.gbl.sc_core.ScModule.call_process.__release_gil__ = True
 cppyy.gbl.sc_core.sc_start.__release_gil__ = True
 cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
 cppyy.gbl.sc_main.__release_gil__ = True
@@ -75,14 +60,6 @@ def _retain_process_callback(register):
 
 for _name in ("sc_method", "sc_thread", "sc_cthread"):
     setattr(cppyy.gbl.sc_core.ScModule, _name, _retain_process_callback(getattr(cppyy.gbl.sc_core.ScModule, _name)))
-
-# Replace with custom sc_module
-# Keep the native namespace intact; expose the adapter only in Python.
-# # cppyy.gbl.sc_core.sc_module.__class__ = sc_module_metaclass
-# # globals()["sc_module"] = sc_core.sc_module
-
-# print(f"type(sc_core.sc_module): {type(cppyy.gbl.sc_core.sc_module)}")
-
 
 # Access the C++ sc_core namespace
 sc_core_namespace = cppyy.gbl.sc_core
@@ -112,13 +89,19 @@ for name, member in sc_core_namespace.__dict__.items():
         globals()[name] = member
 
 
-# Compatibility alias for Python modeling; native C++ sc_module remains intact.
+# Publish Python helpers after namespace copying so native overloads cannot
+# overwrite the adapters. Native C++ sc_module remains intact.
+sc_trace = _python_sc_trace
+vcd_trace = _python_vcd_trace
 sc_module = cppyy.gbl.sc_core.ScModule
 sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
 signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
 fifo_channel = cppyy.gbl.sc_core.PythonFifoChannel
+# Keep the public port specialization native; only Python bind gains adaptation.
+sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
+sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
 
 
@@ -147,238 +130,6 @@ def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> A
     _read_interface_callbacks.append(callback)
     return channel
 
-
-_interface_declarations = {}
-_channel_interfaces = {}
-
-
-def channel_interface(interface: Any) -> Any:
-    """Return a Python-subclassable native module implementing an interface.
-
-    Args:
-        interface: Native interface class returned by declare_interface or cppyy.
-
-    Returns:
-        Native combined base with an sc_module_name constructor.
-
-    The caller retains the channel throughout simulation. This combines native
-    bases before Python subclassing to avoid conflicting cppyy metaclasses.
-    Abstract interface methods must be implemented by the Python subclass.
-    Combined TLM forward interfaces currently use Python debug_transport callbacks.
-    Native callers use transport_dbg, which validates the unsigned return range.
-    Debug callbacks must never wait. TLM-1 transport and blocking peek use
-    transport_value and peek_value callbacks; native methods preserve value and
-    reference-output overloads. Callback naming parity remains pending.
-    """
-    name = interface.__cpp_name__
-    cache_name = name
-    if name not in _channel_interfaces:
-        identifier = f"ChannelInterface{len(_channel_interfaces)}"
-        methods = ""
-        if name.startswith("tlm::tlm_nonblocking_get_peek_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingGetPeekAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Combined nonblocking get/peek bridge. @details Ports borrow the owner; "
-                    "the adapter owns both readiness events. cppyy acquires GIL for callbacks, which "
-                    "must not wait. Exceptions propagate; failed calls preserve output references. */ "
-                    "namespace pysystemc_interfaces { template<class T> "
-                    "class NonblockingGetPeekAdapter : public tlm::tlm_nonblocking_get_peek_if<T> { "
-                    "sc_core::sc_event get_ready, peek_ready; public: "
-                    "bool nb_get(T& value) override { auto result = get_value(); "
-                    "if (!result.first) return false; value = result.second; return true; } "
-                    "bool nb_peek(T& value) const override { auto result = peek_value(); "
-                    "if (!result.first) return false; value = result.second; return true; } "
-                    "bool nb_can_get(tlm::tlm_tag<T>* = nullptr) const override { return can_get(); } "
-                    "bool nb_can_peek(tlm::tlm_tag<T>* = nullptr) const override { return can_peek(); } "
-                    "const sc_core::sc_event& ok_to_get(tlm::tlm_tag<T>* = nullptr) const override { return get_ready; } "
-                    "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_ready; } "
-                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { "
-                    "get_ready.notify(delay); peek_ready.notify(delay); } "
-                    "virtual std::pair<bool, T> get_value() = 0; "
-                    "virtual std::pair<bool, T> peek_value() const = 0; "
-                    "virtual bool can_get() const = 0; virtual bool can_peek() const = 0; }; }"
-                )
-            argument = name.removeprefix("tlm::tlm_nonblocking_get_peek_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::NonblockingGetPeekAdapter<{argument}>"
-        if name.startswith("tlm::tlm_nonblocking_get_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingGetAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Nonblocking get value/event bridge. @details Ports borrow the owner; "
-                    "event storage belongs to the adapter. Callbacks acquire GIL and must not wait. "
-                    "Value assignment occurs only after successful callback; exceptions propagate. */ "
-                    "namespace pysystemc_interfaces { template<class T> "
-                    "class NonblockingGetAdapter : public tlm::tlm_nonblocking_get_if<T> { "
-                    "sc_core::sc_event ready; public: "
-                    "bool nb_get(T& value) override { auto result = get_value(); "
-                    "if (!result.first) return false; value = result.second; return true; } "
-                    "bool nb_can_get(tlm::tlm_tag<T>* = nullptr) const override { return can_get(); } "
-                    "const sc_core::sc_event& ok_to_get(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
-                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
-                    "virtual std::pair<bool, T> get_value() = 0; virtual bool can_get() const = 0; }; }"
-                )
-            argument = name.removeprefix("tlm::tlm_nonblocking_get_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::NonblockingGetAdapter<{argument}>"
-        if name.startswith("tlm::tlm_nonblocking_peek_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPeekAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Nonblocking peek value/event bridge. @details Ports borrow the owner; "
-                    "event storage belongs to the adapter. Callbacks acquire GIL and must not wait. "
-                    "Value assignment occurs only after successful callback; exceptions propagate. */ "
-                    "namespace pysystemc_interfaces { template<class T> "
-                    "class NonblockingPeekAdapter : public tlm::tlm_nonblocking_peek_if<T> { "
-                    "sc_core::sc_event ready; public: "
-                    "bool nb_peek(T& value) const override { auto result = peek_value(); "
-                    "if (!result.first) return false; value = result.second; return true; } "
-                    "bool nb_can_peek(tlm::tlm_tag<T>* = nullptr) const override { return can_peek(); } "
-                    "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
-                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
-                    "virtual std::pair<bool, T> peek_value() const = 0; virtual bool can_peek() const = 0; }; }"
-                )
-            argument = name.removeprefix("tlm::tlm_nonblocking_peek_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::NonblockingPeekAdapter<{argument}>"
-        if name.startswith("tlm::tlm_nonblocking_put_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPutAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Nonblocking put value/event bridge. @details Ports borrow the owner. "
-                    "The adapter owns its event; callbacks acquire GIL and must not wait. Errors propagate. */ "
-                    "namespace pysystemc_interfaces { template<class T> "
-                    "class NonblockingPutAdapter : public tlm::tlm_nonblocking_put_if<T> { "
-                    "sc_core::sc_event ready; public: "
-                    "bool nb_put(const T& value) override { return put_value(value); } "
-                    "bool nb_can_put(tlm::tlm_tag<T>* = nullptr) const override { return can_put(); } "
-                    "const sc_core::sc_event& ok_to_put(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
-                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
-                    "virtual bool put_value(T) = 0; virtual bool can_put() const = 0; }; }"
-                )
-            argument = name.removeprefix("tlm::tlm_nonblocking_put_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::NonblockingPutAdapter<{argument}>"
-        if name.startswith("tlm::tlm_transport_if<"):
-            # Template parameter names avoid parsing nested C++ type arguments.
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "TransportAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Value-copy TLM response bridge. @details Ports borrow the owner; "
-                    "cppyy acquires GIL for callbacks. Blocking callers release GIL. Errors propagate. */ "
-                    "namespace pysystemc_interfaces { template<class Req, class Rsp> "
-                    "class TransportAdapter : public tlm::tlm_transport_if<Req, Rsp> { public: "
-                    "Rsp transport(const Req& req) override { return transport_value(req); } "
-                    "void transport(const Req& req, Rsp& rsp) override { rsp = transport_value(req); } "
-                    "virtual Rsp transport_value(Req) = 0; }; }"
-                )
-            arguments = name.removeprefix("tlm::tlm_transport_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::TransportAdapter<{arguments}>"
-        if name.startswith("tlm::tlm_blocking_get_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "GetAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Value-copy TLM get bridge. @details Ports borrow the owner; "
-                    "cppyy acquires GIL for callbacks. Blocking callers release GIL. Errors propagate. */ "
-                    "namespace pysystemc_interfaces { template<class T> "
-                    "class GetAdapter : public tlm::tlm_blocking_get_if<T> { public: "
-                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
-                    "void get(T& value) override { value = get_value(); } "
-                    "virtual T get_value() = 0; }; }"
-                )
-            argument = name.removeprefix("tlm::tlm_blocking_get_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::GetAdapter<{argument}>"
-        if name.startswith("tlm::tlm_blocking_peek_if<"):
-            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PeekAdapter"):
-                cppyy.cppdef(
-                    "/** @brief Value-copy TLM peek bridge. @details Ports borrow the owner; "
-                    "cppyy acquires GIL for callbacks. Errors propagate; retain owner through simulation. */ "
-                    "namespace pysystemc_interfaces { template<class T> "
-                    "class PeekAdapter : public tlm::tlm_blocking_peek_if<T> { public: "
-                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
-                    "void peek(T& value) const override { value = peek_value(); } "
-                    "virtual T peek_value() const = 0; }; }"
-                )
-            argument = name.removeprefix("tlm::tlm_blocking_peek_if<").removesuffix(">")
-            name = f"pysystemc_interfaces::PeekAdapter<{argument}>"
-        if name.startswith("tlm::tlm_analysis_if<"):
-            value_type = name.removeprefix("tlm::tlm_analysis_if<").removesuffix(">")
-            methods = (
-                f"void write(const {value_type}& value) override {{ write_value(value); }} "
-                f"virtual void write_value({value_type}) = 0; "
-            )
-        if name.startswith("tlm::tlm_fw_transport_if<") or name.startswith("tlm::tlm_bw_transport_if<"):
-            # Redeclare inherited pure methods so cppyy builds every Python dispatcher override.
-            types = f"{name}::protocol_types"
-            payload = f"typename {types}::tlm_payload_type"
-            phase = f"typename {types}::tlm_phase_type"
-            direction = "fw" if "tlm_fw_transport_if" in name else "bw"
-            methods = (
-                f"virtual tlm::tlm_sync_enum nb_transport_{direction}({payload}&, {phase}&, "
-                "sc_core::sc_time&) override = 0; "
-            )
-            if direction == "fw":
-                methods += (
-                    f"virtual void b_transport({payload}&, sc_core::sc_time&) override = 0; "
-                    f"virtual bool get_direct_mem_ptr({payload}&, tlm::tlm_dmi&) override = 0; "
-                    f"unsigned int transport_dbg({payload}& trans) override {{ auto value = debug_transport(trans); "
-                    "if (value < 0 || static_cast<unsigned long>(value) > std::numeric_limits<unsigned int>::max()) "
-                    'throw std::out_of_range("transport_dbg result outside unsigned int range"); '
-                    "return static_cast<unsigned int>(value); } "
-                    f"virtual long debug_transport({payload}&) = 0; "
-                )
-            else:
-                methods += "virtual void invalidate_direct_mem_ptr(sc_dt::uint64, sc_dt::uint64) override = 0; "
-        cppyy.cppdef(
-            "/** @brief Combined Python channel interface. "
-            "@details Ports borrow the owner through simulation. cppyy acquires the GIL for overrides; "
-            "blocking native calls must release it. Callback exceptions propagate to the caller. "
-            "Debug transport validates unsigned range and must not wait. */ "
-            f"namespace pysystemc_interfaces {{ class {identifier} : public sc_core::ScModule, public {name} {{ "
-            f"public: explicit {identifier}(sc_core::sc_module_name name) : sc_core::ScModule(name) {{}} "
-            f"~{identifier}() override = default; {methods} }}; }}"
-        )
-        base = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
-        _channel_interfaces[cache_name] = base
-    return _channel_interfaces[cache_name]
-
-
-from ._interfaces import PortTemplate as _PortTemplate
-
-sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
-
-
-def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
-    """Declare a native interface for Python overrides and templated ports.
-
-    Args:
-        name: Unique C++ identifier for the interface.
-        methods: Map method names to (C++ return type, C++ argument declarations).
-            Reference arguments preserve native semantics; retain their storage.
-
-    Returns:
-        Native class usable as a Python base and sc_port template argument.
-
-    Raises:
-        ValueError: Names are invalid or a declaration conflicts with an earlier one.
-        RuntimeError: Cling cannot compile the supplied native signatures.
-
-    Signatures are trusted C++ declarations. Ports borrow implementations; retain
-    Python owners through simulation. cppyy acquires the GIL for overrides.
-    Blocking implementations must use guarded wait; do not suppress reset unwind.
-    """
-    if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", name) or not methods:
-        raise ValueError("interface requires a C++ identifier and at least one method")
-    for method, signature in methods.items():
-        if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", method) or len(signature) != 2:
-            raise ValueError("method requires an identifier and (return type, arguments)")
-    declaration = tuple(sorted(methods.items()))
-    if name in _interface_declarations:
-        previous, interface = _interface_declarations[name]
-        if previous != declaration:
-            raise ValueError(f"interface already declared with different methods: {name}")
-        return interface
-    signatures = "\n".join(
-        f"virtual {result} {method}({arguments}) = 0;" for method, (result, arguments) in declaration
-    )
-    cppyy.cppdef(
-        f"namespace pysystemc_interfaces {{ class {name} : public virtual sc_core::PythonInterface {{ "
-        f"public: {name}() = default; ~{name}() override = default; {signatures} }}; }}"
-    )
-    interface = getattr(cppyy.gbl.pysystemc_interfaces, name)
-    _interface_declarations[name] = (declaration, interface)
-    return interface
 
 
 def _read_resolved(self: Any) -> Any:
@@ -462,10 +213,6 @@ class ScStatus(Enum):
     def from_cpp_enum(cls, cpp_enum_value):
         """Convert a SystemC sc_status int value to the corresponding ScStatus enum."""
         return ScStatus(cpp_enum_value)
-        # try:
-        #     return ScStatus(cpp_enum_value)
-        # except ValueError:
-        #     return ScStatus.SC_INVALID_STATUS  # Fallback if the value is invalid
 
     def __str__(self):
         """Return the string representation of the ScStatus enum."""
@@ -476,62 +223,6 @@ def sc_status() -> ScStatus:
     """Return the current kernel lifecycle state as ScStatus."""
     status = cppyy.gbl.sc_core.sc_get_status()
     return ScStatus(status)  # Convert to Python enum
-
-
-@contextmanager
-def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | None = None) -> Iterator[Any]:
-    """Open a VCD trace and close it on normal exit or a Python exception.
-
-    Args:
-        filename: Native trace filename stem (SystemC appends .vcd).
-        time_unit: Optional (value, sc_time_unit) pair for trace timestamps.
-
-    Yields:
-        Native sc_trace_file accepted by sc_trace().
-
-    Raises:
-        RuntimeError: If the kernel cannot create the trace file.
-        Exception: Exceptions from the body propagate after trace closure.
-
-    Retain traced signals until the context exits. Closing a trace does not
-    stop the kernel; independent simulations still require new subprocesses.
-    Native process aborts cannot execute Python cleanup.
-    """
-    trace_path = pathlib.Path(str(filename) + ".vcd")
-    if not trace_path.parent.is_dir():
-        raise RuntimeError(f"Cannot create VCD trace: directory does not exist: {trace_path.parent}")
-    trace = cppyy.gbl.sc_core.sc_create_vcd_trace_file(str(filename))
-    if not trace:
-        raise RuntimeError(f"Cannot create VCD trace: {filename}")
-    try:
-        if time_unit is not None:
-            trace.set_time_unit(*time_unit)
-        yield trace
-    finally:
-        cppyy.gbl.sc_core.sc_close_vcd_trace_file(trace)
-
-
-_native_sc_trace = cppyy.gbl.sc_core.sc_trace
-
-
-def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
-    """Register a named waveform using stable native signal storage.
-
-    Args:
-        file: Open SystemC trace file.
-        value: Native signal/interface or scalar accepted by SystemC.
-        name: Name to record in the waveform.
-        *args: Additional native scalar tracing arguments.
-
-    Signal template types are instantiated on demand. Keep the traced object
-    alive until the trace file closes; Python scalar temporaries are unsuitable
-    for tracking mutable native state.
-    """
-    if hasattr(value, "read"):
-        sample = value.read()
-        value_type = bool if isinstance(sample, bool) else type(sample)
-        return cppyy.gbl.sc_core.trace_signal[value_type](file, value, name)
-    return _native_sc_trace(file, value, name, *args)
 
 
 # Native waits suspend an OS thread. Release the GIL for every overload so
@@ -645,11 +336,6 @@ def wait(*args: Any) -> None:
 
 
 # Publish native classes/enums and Python adapters for wildcard imports.
-from .._namespace import (
-    public_names as _public_names,
-    document_member as _document_member,
-    namespace_help as _namespace_help,
-)
 
 __all__ = sorted(
     set(_public_names(cppyy.gbl.sc_core))
@@ -663,6 +349,7 @@ __all__ = sorted(
         "sc_elab_and_sim",
         "sc_stop",
         "vcd_trace",
+        "interface",
         "declare_interface",
         "channel_interface",
         "read_interface",

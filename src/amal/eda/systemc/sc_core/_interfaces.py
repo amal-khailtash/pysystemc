@@ -8,6 +8,32 @@ import cppyy
 
 _owners = []
 _classes = {}
+_protocol_interfaces = {}
+
+
+def interface(*, methods):
+    """Decorate a Protocol with explicit native SystemC method signatures.
+
+    Args:
+        methods: Mapping of method names to C++ (return type, arguments).
+
+    Returns:
+        Decorator retaining the Protocol for typing and registering its native type.
+
+    Signatures are trusted C++ declarations, including reference qualifications.
+    Python annotations do not determine native widths or ownership. Native
+    compilation errors propagate; implementations are checked when bound.
+    """
+    def register(protocol):
+        """Associate the structural contract with a lazily compiled native interface."""
+        from ._channel_interfaces import declare_interface
+
+        native = declare_interface(f"ProtocolInterface{len(_protocol_interfaces)}", methods)
+        _protocol_interfaces[protocol] = native
+        _METHODS[native.__cpp_name__] = {name: name for name in methods}
+        return protocol
+
+    return register
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
@@ -66,8 +92,9 @@ class PortTemplate:
     def __getitem__(self, arguments):
         """Return the native specialization with an adapting bind overload."""
         parameters = arguments if isinstance(arguments, tuple) else (arguments,)
-        interface = parameters[0]
-        port_class = self._template[arguments]
+        interface = _protocol_interfaces.get(parameters[0], parameters[0])
+        native_arguments = (interface, *parameters[1:])
+        port_class = self._template[native_arguments if len(native_arguments) > 1 else interface]
         if not getattr(port_class, "_python_interface_bind", False):
             native_bind = port_class.bind
             factory = self._factory
