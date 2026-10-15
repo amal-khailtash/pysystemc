@@ -6,8 +6,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-14
+
 ### Added
 
+- Native fixed-point templates and policy enums, TLM namespace types, grouped
+  help and enum inventories without restricting native template parameters.
+- Context-managed VCD cleanup, hierarchical export port, and finite event and
+  mixed C++/Python examples with semantic comparisons.
 - Semantic test CI with Python 3.14, native dependency setup, Ruff checks,
   XML/HTML coverage artifacts and Codecov uploads; add test and coverage badges.
 - Ruff development tooling and modern annotations for callback/trace adapters.
@@ -141,7 +147,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/amal-khailtash/pysystemc/compare/v0.2.0...v0.2.1
