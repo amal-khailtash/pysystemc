@@ -242,3 +242,8 @@ def test_protocol_interface_annotation_inference(tmp_path):
 def test_structural_nonblocking_interface_binding(tmp_path):
     """Verify ordinary readiness/value callbacks dispatch through native base ports."""
     assert "PYTHON_NONBLOCKING_BINDING_OK" in run_example(tmp_path, "tests/models/python_nonblocking_binding.py")
+
+
+def test_structural_combined_get_interface(tmp_path):
+    """Verify shared blocking/nonblocking queue access and native output overloads."""
+    assert "PYTHON_COMBINED_GET_OK" in run_example(tmp_path, "tests/models/python_combined_get.py")

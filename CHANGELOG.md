@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Combined TLM get interface supports shared Python blocking/nonblocking callbacks,
+  native output overloads and stable readiness events.
 - Structural nonblocking TLM put/get/peek and combined get-peek bindings use
   familiar callback names and Python success/value tuples with native event storage.
 - Structural blocking-put binding copies native const-reference values into Python

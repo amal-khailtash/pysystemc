@@ -82,6 +82,7 @@ def interface(protocol=None, *, methods=None):
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
+    "tlm::tlm_get_if": {"get_value": "get", "try_get_value": "nb_get", "can_get": "nb_can_get"},
     "tlm::tlm_blocking_put_if": {"put_value": "put"},
     "tlm::tlm_transport_if": {"transport_value": "transport"},
     "tlm::tlm_blocking_get_if": {"get_value": "get"},

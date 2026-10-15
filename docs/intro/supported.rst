@@ -85,3 +85,8 @@ boolean success flag; the native output argument is assigned only on success.
 These callbacks must not wait. Native readiness events belong to the adapter;
 ``port.get_interface().notify_ready(delay)`` schedules readiness notification.
 For the combined get-peek interface, it notifies both separate events.
+
+``tlm_get_if[T]`` structural implementations provide ``get()``, ``nb_get()``
+and ``nb_can_get()`` on one object. Native blocking value/output overloads and
+nonblocking output assignment use that shared implementation. Blocking callbacks
+may use guarded waits; nonblocking callbacks must return immediately.

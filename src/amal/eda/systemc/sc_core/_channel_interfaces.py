@@ -37,6 +37,26 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_get_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedGetAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Blocking/nonblocking get bridge. @details Ports borrow the owner; "
+                    "the adapter owns readiness storage. cppyy acquires GIL for callbacks; blocking "
+                    "callers release it. Nonblocking callbacks must not wait. Exceptions propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class CombinedGetAdapter : public tlm::tlm_get_if<T> { sc_core::sc_event ready; public: "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
+                    "void get(T& value) override { value = get_value(); } "
+                    "bool nb_get(T& value) override { auto result = try_get_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    "bool nb_can_get(tlm::tlm_tag<T>* = nullptr) const override { return can_get(); } "
+                    "const sc_core::sc_event& ok_to_get(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    "virtual T get_value() = 0; virtual std::pair<bool, T> try_get_value() = 0; "
+                    "virtual bool can_get() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_get_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::CombinedGetAdapter<{argument}>"
         if _copy_put and name.startswith("tlm::tlm_blocking_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PutAdapter"):
                 cppyy.cppdef(
