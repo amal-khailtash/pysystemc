@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Instance-specific extension regression verifies accessor and transaction isolation,
+  borrowed extension identity and explicit clearing after native carrier registration.
+
 - Multi target debug conversion checks cover unsigned endpoints and invalid
   negative/overflow counts independently on both connections.
 

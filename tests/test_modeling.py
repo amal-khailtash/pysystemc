@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_instance_specific_extension_accessor_isolation(tmp_path):
+    """Verify private extensions isolate accessors and payloads with explicit cleanup."""
+    assert "INSTANCE_EXTENSIONS_OK" in run_example(tmp_path, "tests/models/tlm_instance_extensions.py")
+
+
 def test_convenience_socket_noncallable_registration_errors(tmp_path):
     """Verify every callable registration rejects invalid objects before native mutation."""
     assert "SOCKET_REGISTRATION_ERRORS_OK" in run_example(tmp_path, "tests/models/tlm_socket_registration_errors.py")
