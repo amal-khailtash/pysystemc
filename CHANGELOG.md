@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural blocking-put binding copies native const-reference values into Python
+  put callbacks and automatically releases the GIL for blocking port calls.
 - Structural Python implementations bind through native SystemC ports using
   ordinary get, peek, transport and write methods, with retained adapters and
   automatic GIL release for supported blocking calls.

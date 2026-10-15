@@ -82,6 +82,7 @@ def interface(protocol=None, *, methods=None):
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
+    "tlm::tlm_blocking_put_if": {"put_value": "put"},
     "tlm::tlm_transport_if": {"transport_value": "transport"},
     "tlm::tlm_blocking_get_if": {"get_value": "get"},
     "tlm::tlm_blocking_peek_if": {"peek_value": "peek"},
@@ -108,11 +109,12 @@ def _adapt(interface, implementation, factory):
                 """Forward a native callback to the retained ordinary Python method."""
                 return getattr(self._implementation, _method)(*args)
             callbacks[native_name] = forward
-        _classes[interface] = type(f"PythonPortAdapter{len(_classes)}", (factory(interface),), callbacks)
+        base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
+        _classes[interface] = type(f"PythonPortAdapter{len(_classes)}", (base,), callbacks)
     name = cppyy.gbl.sc_core.sc_module_name(cppyy.gbl.sc_core.sc_gen_unique_name("python_interface", False))
     adapter = _classes[interface](name)
     adapter._implementation = implementation
-    for method in ("transport", "get", "peek"):
+    for method in ("transport", "get", "peek", "put"):
         overload = getattr(type(adapter), method, None)
         if overload is not None and hasattr(overload, "__release_gil__"):
             overload.__release_gil__ = True

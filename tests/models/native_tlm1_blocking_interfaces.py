@@ -6,13 +6,11 @@ from amal.eda.systemc import sc_core as sc
 from amal.eda.systemc import tlm
 
 
-class Put(sc.channel_interface(tlm.tlm_blocking_put_if[int])):
+class Put:
     """Store samples after a blocking service delay."""
 
-    def __init__(self, name):
+    def __init__(self):
         """Initialize channel identity and retained sample records."""
-        module_name = sc.sc_module_name(name)
-        super().__init__(module_name)
         self.values = []
 
     def put(self, value):
@@ -50,7 +48,7 @@ class Analysis(sc.channel_interface(tlm.tlm_analysis_if[int])):
 
 module_name = sc.sc_module_name("top")
 model = sc.sc_module(module_name)
-put = Put("put")
+put = Put()
 get = Get()
 analysis = Analysis("analysis")
 put_port = sc.sc_port[tlm.tlm_blocking_put_if[int]]("put_port")
@@ -60,7 +58,6 @@ put_port.bind(put)
 get_port.bind(get)
 analysis_port.bind(analysis)
 del module_name
-type(put_port.get_interface()).put.__release_gil__ = True
 records = []
 
 

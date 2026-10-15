@@ -14,7 +14,7 @@ _interface_declarations = {}
 _channel_interfaces = {}
 
 
-def channel_interface(interface: Any) -> Any:
+def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     """Return a Python-subclassable native module implementing an interface.
 
     Args:
@@ -33,10 +33,23 @@ def channel_interface(interface: Any) -> Any:
     reference-output overloads. Callback naming parity remains pending.
     """
     name = interface.__cpp_name__
-    cache_name = name
-    if name not in _channel_interfaces:
+    cache_name = (name, _copy_put)
+    if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if _copy_put and name.startswith("tlm::tlm_blocking_put_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PutAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Value-copy blocking put bridge. @details Ports borrow the owner; "
+                    "cppyy acquires GIL for callbacks. Blocking callers release it; exceptions propagate. "
+                    "The callback receives a copy, never borrowed reference storage. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class PutAdapter : public tlm::tlm_blocking_put_if<T> { public: "
+                    "void put(const T& value) override { put_value(value); } "
+                    "virtual void put_value(T) = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_blocking_put_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::PutAdapter<{argument}>"
         if name.startswith("tlm::tlm_nonblocking_get_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingGetPeekAdapter"):
                 cppyy.cppdef(
@@ -236,4 +249,3 @@ def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
     interface = getattr(cppyy.gbl.pysystemc_interfaces, name)
     _interface_declarations[name] = (declaration, interface)
     return interface
-

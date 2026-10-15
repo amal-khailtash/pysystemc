@@ -34,11 +34,11 @@ Structural Python interface implementations
 ------------------------------------------
 
 ``sc_core.sc_port[IF](name).bind(implementation)`` accepts ordinary Python
-objects for TLM blocking-get, blocking-peek, transport and analysis interfaces.
-Implement ``get()``, ``peek()``, ``transport(request)`` or ``write(value)`` using
+objects for TLM blocking-put, blocking-get, blocking-peek, transport and analysis interfaces.
+Implement ``put(value)``, ``get()``, ``peek()``, ``transport(request)`` or ``write(value)`` using
 the familiar SystemC method name. Native value-return and output-reference
 calls are forwarded by a package adapter; Python methods return values.
-Blocking get/peek/transport calls through the adapter release the GIL.
+Blocking put/get/peek/transport calls through the adapter release the GIL.
 
 For example::
 
