@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Multi socket lifecycle regression verifies both suspended connections restart
+  on reset and execute Python cleanup on reset/kill without completing transport.
+
 - Direct multi-to-multi socket regression verifies distinct forward target and
   backward initiator indices, native binding sizes and independent transport waits.
 
