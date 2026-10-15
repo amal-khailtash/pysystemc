@@ -1,5 +1,7 @@
 """Check TLM-1 blocking put/get and analysis callbacks through native ports."""
 
+import ctypes
+
 from amal.eda.systemc import sc_core as sc
 from amal.eda.systemc import tlm
 
@@ -28,7 +30,7 @@ class Get(sc.channel_interface(tlm.tlm_blocking_get_if[int])):
         super().__init__(module_name)
         self.value = 23
 
-    def get(self, tag=None):
+    def get_value(self):
         """Wait one nanosecond and return the next native integer value."""
         sc.wait(1, sc.SC_NS)
         return self.value
@@ -70,15 +72,18 @@ def process():
     put_port.get_interface().put(17)
     value = get_port.get_interface().get()
     assert value == 23
+    response = ctypes.c_int(-1)
+    get_port.get_interface().get(response)
+    assert response.value == 23
     analysis_port.write(value)
     records.append(str(sc.sc_time_stamp()))
 
 
 handle = sc.sc_spawn(process, "process")
-sc.sc_start(3, sc.SC_NS)
+sc.sc_start(4, sc.SC_NS)
 assert put.values == [17]
 assert analysis.values == [23]
-assert records == ["2 ns"], records
+assert records == ["3 ns"], records
 assert handle.terminated()
 sc.sc_stop()
 print("NATIVE_TLM1_BLOCKING_INTERFACES_OK")

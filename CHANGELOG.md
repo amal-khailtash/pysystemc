@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- TLM-1 blocking-get adapter preserves native value and reference-output
+  overloads, including waits inside Python callbacks.
+
 - TLM-1 transport and blocking-peek adapters preserve both value-return and
   reference-output overloads through Python value callbacks.
 

@@ -189,6 +189,19 @@ def channel_interface(interface: Any) -> Any:
                 )
             arguments = name.removeprefix("tlm::tlm_transport_if<").removesuffix(">")
             name = f"pysystemc_interfaces::TransportAdapter<{arguments}>"
+        if name.startswith("tlm::tlm_blocking_get_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "GetAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Value-copy TLM get bridge. @details Ports borrow the owner; "
+                    "cppyy acquires GIL for callbacks. Blocking callers release GIL. Errors propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class GetAdapter : public tlm::tlm_blocking_get_if<T> { public: "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
+                    "void get(T& value) override { value = get_value(); } "
+                    "virtual T get_value() = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_blocking_get_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::GetAdapter<{argument}>"
         if name.startswith("tlm::tlm_blocking_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "PeekAdapter"):
                 cppyy.cppdef(
