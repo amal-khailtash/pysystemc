@@ -12,6 +12,7 @@ from typing import Any
 from enum import Enum
 import pathlib
 import sys
+import re
 
 # The parent package selects the JIT C++ standard before importing cppyy.
 
@@ -113,6 +114,109 @@ for name, member in sc_core_namespace.__dict__.items():
 
 # Compatibility alias for Python modeling; native C++ sc_module remains intact.
 sc_module = cppyy.gbl.sc_core.ScModule
+sc_channel = sc_module
+sc_interface = cppyy.gbl.sc_core.PythonInterface
+sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
+signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
+fifo_channel = cppyy.gbl.sc_core.PythonFifoChannel
+_read_interface_callbacks = []
+
+
+def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> Any:
+    """Create a native signal read interface backed by a Python value callback.
+
+    Args:
+        value_type: Native scalar/datatype used as the interface template argument.
+        name: Channel name within the current module construction scope.
+        callback: Nonblocking callable returning a value convertible to value_type.
+
+    Returns:
+        Native channel with stable read/event references and notify_changed().
+
+    Raises:
+        TypeError: Callback is not callable or native value conversion fails.
+
+    Callback and channel must survive simulation. Callback retention lasts through
+    interpreter shutdown. notify_changed samples the callback and schedules a native signal update; reads
+    never invoke Python. Call it from the simulation thread after changing state.
+    Native bool/logic edge interfaces use the same stable signal storage.
+    """
+    if not callable(callback):
+        raise TypeError("read interface callback must be callable")
+    channel = cppyy.gbl.sc_core.PythonReadInterface[value_type](name, callback)
+    _read_interface_callbacks.append(callback)
+    return channel
+
+
+_interface_declarations = {}
+_channel_interfaces = {}
+
+
+def channel_interface(interface: Any) -> Any:
+    """Return a Python-subclassable native module implementing an interface.
+
+    Args:
+        interface: Native interface class returned by declare_interface or cppyy.
+
+    Returns:
+        Native combined base with an sc_module_name constructor.
+
+    The caller retains the channel throughout simulation. This combines native
+    bases before Python subclassing to avoid conflicting cppyy metaclasses.
+    Abstract interface methods must be implemented by the Python subclass.
+    """
+    name = interface.__cpp_name__
+    if name not in _channel_interfaces:
+        identifier = f"ChannelInterface{len(_channel_interfaces)}"
+        cppyy.cppdef(
+            f"namespace pysystemc_interfaces {{ class {identifier} : public sc_core::ScModule, public {name} {{ "
+            f"public: explicit {identifier}(sc_core::sc_module_name name) : sc_core::ScModule(name) {{}} "
+            f"~{identifier}() override = default; }}; }}"
+        )
+        _channel_interfaces[name] = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
+    return _channel_interfaces[name]
+
+
+def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
+    """Declare a native interface for Python overrides and templated ports.
+
+    Args:
+        name: Unique C++ identifier for the interface.
+        methods: Map method names to (C++ return type, C++ argument declarations).
+            Reference arguments preserve native semantics; retain their storage.
+
+    Returns:
+        Native class usable as a Python base and sc_port template argument.
+
+    Raises:
+        ValueError: Names are invalid or a declaration conflicts with an earlier one.
+        RuntimeError: Cling cannot compile the supplied native signatures.
+
+    Signatures are trusted C++ declarations. Ports borrow implementations; retain
+    Python owners through simulation. cppyy acquires the GIL for overrides.
+    Blocking implementations must use guarded wait; do not suppress reset unwind.
+    """
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", name) or not methods:
+        raise ValueError("interface requires a C++ identifier and at least one method")
+    for method, signature in methods.items():
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", method) or len(signature) != 2:
+            raise ValueError("method requires an identifier and (return type, arguments)")
+    declaration = tuple(sorted(methods.items()))
+    if name in _interface_declarations:
+        previous, interface = _interface_declarations[name]
+        if previous != declaration:
+            raise ValueError(f"interface already declared with different methods: {name}")
+        return interface
+    signatures = "\n".join(
+        f"virtual {result} {method}({arguments}) = 0;" for method, (result, arguments) in declaration
+    )
+    cppyy.cppdef(
+        f"namespace pysystemc_interfaces {{ class {name} : public virtual sc_core::PythonInterface {{ "
+        f"public: {name}() = default; ~{name}() override = default; {signatures} }}; }}"
+    )
+    interface = getattr(cppyy.gbl.pysystemc_interfaces, name)
+    _interface_declarations[name] = (declaration, interface)
+    return interface
 
 
 def _read_resolved(self: Any) -> Any:
@@ -397,6 +501,11 @@ __all__ = sorted(
         "sc_elab_and_sim",
         "sc_stop",
         "vcd_trace",
+        "declare_interface",
+        "channel_interface",
+        "read_interface",
+        "signal_channel",
+        "fifo_channel",
     }
 )
 

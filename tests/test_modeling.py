@@ -121,3 +121,48 @@ def test_channel_extensions_native_reference(tmp_path):
 def test_mutex_and_semaphore_contention(tmp_path):
     """Check blocked lock wakeup times, ordering and semaphore count."""
     assert "LOCK_CONTENTION_OK" in run_example(tmp_path, "tests/models/lock_contention.py")
+
+
+def test_python_custom_interface_native_port_dispatch(tmp_path):
+    """Verify package-declared interfaces dispatch through native templated ports."""
+    assert "CUSTOM_INTERFACE_OK" in run_example(tmp_path, "tests/models/custom_interface.py")
+
+
+def test_python_channel_interface_blocking_dispatch(tmp_path):
+    """Assert multiple native bases and guarded waits through an interface port."""
+    assert "INTERFACE_CHANNEL_OK" in run_example(tmp_path, "tests/models/interface_channel.py")
+
+
+def test_native_mutex_interface_python_implementation(tmp_path):
+    """Check source-native mutex virtual methods and blocking port dispatch."""
+    assert "NATIVE_MUTEX_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_mutex_interface.py")
+
+
+def test_native_signal_interface_python_reference_returns(tmp_path):
+    """Verify native signal interface values and reference-event sensitivity."""
+    assert "NATIVE_SIGNAL_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_signal_interface.py")
+
+
+def test_native_semaphore_interface_python_implementation(tmp_path):
+    """Check source-native semaphore methods, blocked wakeup and token accounting."""
+    assert "NATIVE_SEMAPHORE_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_semaphore_interface.py")
+
+
+def test_callback_signal_interface_stable_native_references(tmp_path):
+    """Check computed Python read values and explicit interface notifications."""
+    assert "CALLBACK_READ_INTERFACE_OK" in run_example(tmp_path, "tests/models/callback_read_interface.py")
+
+
+def test_callback_bool_logic_reference_and_edge_interfaces(tmp_path):
+    """Assert native bool/logic edge methods and sampled update timestamps."""
+    assert "CALLBACK_EDGE_INTERFACES_OK" in run_example(tmp_path, "tests/models/callback_edge_interfaces.py")
+
+
+def test_native_fifo_interface_reference_overloads_and_events(tmp_path):
+    """Check native FIFO interfaces through Python-owned storage and native ports."""
+    assert "NATIVE_FIFO_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_fifo_interface.py")
+
+
+def test_native_event_queue_interface_python_overloads(tmp_path):
+    """Check native-port notification overloads, duplicate deltas and cancellation."""
+    assert "NATIVE_EVENT_QUEUE_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_event_queue_interface.py")

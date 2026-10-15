@@ -18,6 +18,86 @@ namespace sc_core
 {
 
 /**
+ * @brief Public constructor for Python-defined native interfaces.
+ * @details Native ports borrow interfaces; Python must retain the implementing object through simulation.
+ * cppyy dispatch acquires the GIL for Python overrides. Overrides must not return temporary events.
+ */
+class PythonInterface : public virtual sc_interface
+{
+ public:
+  PythonInterface() = default;
+  ~PythonInterface() override = default;
+};
+
+/**
+ * @brief Public primitive-channel constructor and virtual update hooks for Python subclasses.
+ * @details Kernel registration borrows the channel for its simulation lifetime. Retain the Python owner.
+ * cppyy acquires the GIL for overrides; update must never wait. Callback errors propagate to simulation.
+ */
+class PythonPrimChannel : public sc_prim_channel
+{
+ public:
+  explicit PythonPrimChannel(const char* name) : sc_prim_channel(name) {}
+  ~PythonPrimChannel() override = default;
+  using sc_prim_channel::async_attach_suspending;
+  using sc_prim_channel::async_detach_suspending;
+  void update() override {}
+  void before_end_of_elaboration() override {}
+  void end_of_elaboration() override {}
+  void start_of_simulation() override {}
+  void end_of_simulation() override {}
+};
+
+/**
+ * @brief Stable native storage for Python-controlled signal interfaces.
+ * @details Ports borrow this channel and its references. Retain the owner through simulation.
+ * Native update scheduling and events belong to sc_signal; no Python reference-return dispatcher is used.
+ * No callbacks or GIL release occur in reads/writes; Python processes may drive the channel normally.
+ */
+template <class T>
+class PythonSignalChannel : public sc_signal<T>
+{
+ public:
+  explicit PythonSignalChannel(const char* name) : sc_signal<T>(name) {}
+  ~PythonSignalChannel() override = default;
+};
+
+/**
+ * @brief Python-subclassable FIFO with stable native reference arguments and events.
+ * @details Native ports borrow the channel; retain its Python owner through simulation.
+ * sc_fifo owns storage, delta-cycle accounting and blocking behavior. Blocking read/write calls
+ * must release the GIL so other Python processes can run. Exceptions propagate to the caller;
+ * overrides of reference-return methods are unsupported by cppyy and must use the native methods.
+ */
+template <class T>
+class PythonFifoChannel : public sc_fifo<T>
+{
+ public:
+  PythonFifoChannel(const char* name, int size = 16) : sc_fifo<T>(name, size) {}
+  ~PythonFifoChannel() override = default;
+};
+
+/**
+ * @brief Adapt a Python value callback to stable native signal storage.
+ * @details Caller retains callback/channel through simulation. cppyy acquires the GIL for callback
+ * dispatch. notify_changed samples once and schedules a native write; reads never call Python.
+ * Native sc_signal owns stable value/event/edge references and deferred update scheduling.
+ * Call sampling from the simulation thread, never a separate host thread; callback must not wait.
+ */
+template <class T>
+class PythonReadInterface : public sc_signal<T>
+{
+  std::function<T()> reader;
+
+ public:
+  PythonReadInterface(const char* name, std::function<T()> callback) : sc_signal<T>(name), reader(std::move(callback))
+  {
+  }
+  ~PythonReadInterface() override = default;
+  void notify_changed() { this->write(reader()); }
+};
+
+/**
  * @brief Read resolved logic through its native signal interface.
  * @param signal Borrowed resolved channel retained by the caller.
  * @return A value copy, avoiding borrowed storage escaping to Python.
