@@ -6,6 +6,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore CI formatting and strict documentation builds after structural interface changes.
+- Compare installed-wheel versions with distribution metadata rather than a stale release literal.
+- Verify repaired release wheels on a separate Ubuntu runner before publication, away from the manylinux compiler environment.
+
 ## [0.5.0] - 2026-10-15
 
 ### Added

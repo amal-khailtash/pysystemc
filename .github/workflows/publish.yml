@@ -33,6 +33,25 @@ jobs:
           uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
           rm dist/*.whl
           mv repaired/*.whl dist/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: distributions
+          path: dist/*
+  verify:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+      - uses: actions/download-artifact@v7
+        with:
+          name: distributions
+          path: dist/
+      # Test as a wheel consumer, without the manylinux compiler toolset's
+      # headers and runtime paths affecting Cling's runtime C++ compilation.
       - name: Install and test bundled wheel
         run: |
           wheel=$(realpath dist/*.whl)
@@ -41,12 +60,8 @@ jobs:
           cd /tmp
           uv run --no-project --with "$wheel" python -c "import subprocess, sys; subprocess.run([sys.executable, sys.argv[1]], check=True, timeout=120)" "$check"
           uv run --no-project --with "$wheel" python "$examples_check"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: distributions
-          path: dist/*
   publish:
-    needs: build
+    needs: verify
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'push' && 'pypi' || inputs.repository }}
     permissions:

@@ -5,6 +5,7 @@ resource discovery, runtime compilation, process execution or timing is wrong.
 """
 
 from pathlib import Path
+from importlib.metadata import version
 from amal.eda.systemc import __version__, sc_core
 import amal.eda.systemc as systemc
 import cppyy
@@ -35,5 +36,5 @@ model = cppyy.gbl.WheelModel("wheel_model")
 sc_core.sc_start(3, sc_core.SC_NS)
 assert model.calls == 2, model.calls
 assert sc_core.sc_time_stamp() == sc_core.sc_time(3, sc_core.SC_NS)
-assert __version__ == "0.4.0", __version__
+assert __version__ == version("pysystemc"), __version__
 print("Installed wheel: native resources, runtime C++ compilation and pthread wait passed")

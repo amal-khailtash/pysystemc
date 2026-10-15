@@ -31,7 +31,7 @@ interfaces and the full upstream feature matrix remain
 incomplete. API exposure alone is not a compatibility claim.
 
 Structural Python interface implementations
-------------------------------------------
+-------------------------------------------
 
 ``sc_core.sc_port[IF](name).bind(implementation)`` accepts ordinary Python
 objects for TLM blocking-put, blocking-get, blocking-peek, transport and analysis interfaces.

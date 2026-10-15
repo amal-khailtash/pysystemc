@@ -9,7 +9,6 @@ from amal.eda.systemc import sc_core as sc
 from amal.eda.systemc import tlm
 
 
-
 class TransportInterface(Protocol):
     """Python value-return spelling of the native transport contract."""
 

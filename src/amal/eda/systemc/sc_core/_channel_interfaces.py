@@ -295,10 +295,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 f"virtual void write_value({value_type}) = 0; "
             )
 
-        if (
-            name.startswith("tlm::tlm_fw_transport_if<")
-            or name.startswith("tlm::tlm_bw_transport_if<")
-        ):
+        if name.startswith(("tlm::tlm_fw_transport_if<", "tlm::tlm_bw_transport_if<")):
             # Redeclare inherited pure methods so cppyy builds every Python dispatcher override.
             types = f"{name}::protocol_types"
             payload = f"typename {types}::tlm_payload_type"
