@@ -70,7 +70,7 @@ payload.set_address(17)
 delay = sc.sc_time(2, sc.SC_NS)
 records = []
 interface = initiator.get_interface()
-interface.b_transport.__release_gil__ = True
+assert interface.b_transport.__release_gil__
 phase = tlm.tlm_phase(tlm.BEGIN_REQ)
 assert interface.nb_transport_fw(payload, phase, delay) == tlm.TLM_UPDATED
 assert phase == tlm.BEGIN_RESP and delay == sc.sc_time(1, sc.SC_NS)

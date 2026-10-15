@@ -31,6 +31,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Convenience initiator forward-interface access configures blocking GIL release;
+  socket callback reset/kill preserves Python cleanup and native unwind.
 - Callback payload queues convert primitive protocol phases by value while
   preserving native class phase references and callback exception propagation.
 - Quantumkeeper synchronization preserves native reset/kill unwind and Python

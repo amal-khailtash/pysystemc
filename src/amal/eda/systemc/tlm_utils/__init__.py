@@ -31,6 +31,25 @@ _callback_queues = []
 _callback_sockets = []
 
 
+def _configure_forward_access(socket_type):
+    """Release GIL on concrete forward interfaces returned by a native socket."""
+    if getattr(socket_type, "_forward_gil_configured", False):
+        return
+    native_get = socket_type.get_interface
+
+    def get_interface(socket, *args):
+        """Return the native interface with blocking dispatch configured for waits."""
+        interface = native_get(socket, *args)
+        if interface:
+            method = getattr(type(interface), "b_transport", None)
+            if method is not None and hasattr(method, "__release_gil__"):
+                method.__release_gil__ = True
+        return interface
+
+    socket_type.get_interface = get_interface
+    socket_type._forward_gil_configured = True
+
+
 def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
     """Create a native simple initiator socket accepting backward Python callbacks.
 
@@ -50,6 +69,7 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None):
     protocol = cppyy.gbl.tlm.tlm_base_protocol_types if protocol is None else protocol
     policy = cppyy.gbl.sc_core.SC_ONE_OR_MORE_BOUND if policy is None else policy
     socket_type = cppyy.gbl.pysystemc_interfaces.CallbackInitiatorSocket[width, protocol, policy]
+    _configure_forward_access(socket_type)
     if not getattr(socket_type, "_retained_registration", False):
         for method in ("register_nb_transport_bw", "register_invalidate_direct_mem_ptr"):
             native_register = getattr(socket_type, method)
