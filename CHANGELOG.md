@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Private extension deep-copy checks verify native payload state copies while
+  instance-private carrier information stays exclusive to the original transaction.
+
 - Private extension replacement and carrier-release checks verify borrowed old
   pointers, accessor isolation, final-clear detachment and clean reattachment.
 

@@ -28,6 +28,22 @@ assert cppyy.addressof(av.get_extension(identifier)) == cppyy.addressof(x)
 assert cppyy.addressof(bv.get_extension(identifier)) == cppyy.addressof(y)
 assert not other.get_extension(identifier)
 assert cppyy.bind_object(av.get_extension(identifier), cppyy.gbl.PrivateValue).value == 17
+copied = tlm.tlm_generic_payload()
+copied.resize_extensions()
+first.set_address(73)
+copied.deep_copy_from(first)
+assert copied.get_address() == 73
+assert not copied.get_extension(carrier_id)
+copy_access = a(copied)
+assert not copy_access.get_extension(identifier)
+copy_value = cppyy.gbl.PrivateValue()
+copy_value.value = 41
+assert not copy_access.set_extension(copy_value)
+assert cppyy.addressof(av.get_extension(identifier)) == cppyy.addressof(x)
+assert cppyy.addressof(copy_access.get_extension(identifier)) == cppyy.addressof(copy_value)
+copy_access.clear_extension(identifier)
+assert not copied.get_extension(carrier_id)
+del copy_access
 replacement = cppyy.gbl.PrivateValue()
 replacement.value = 31
 previous = av.set_extension(replacement)
