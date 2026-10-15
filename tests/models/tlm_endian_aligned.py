@@ -59,4 +59,27 @@ for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
     assert [ord(value) for value in data] == expected
     assert [ord(value) for value in enables] == [255, 255, 0, 0, 255, 255, 0, 0]
     assert payload.get_byte_enable_length() == 8
+for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
+    payload = tlm.tlm_generic_payload()
+    payload.resize_extensions()
+    data = cppyy.gbl.std.vector["unsigned char"](8, 17)
+    enables = cppyy.gbl.std.vector["unsigned char"](8, 255)
+    payload.set_command(command)
+    payload.set_address(32)
+    payload.set_data_ptr(data.data())
+    payload.set_data_length(8)
+    payload.set_streaming_width(8)
+    payload.set_byte_enable_ptr(enables.data())
+    payload.set_byte_enable_length(8)
+    original_data = cppyy.addressof(payload.get_data_ptr())
+    original_enables = cppyy.addressof(payload.get_byte_enable_ptr())
+    tlm.tlm_to_hostendian_aligned["unsigned int"](payload, 4)
+    assert cppyy.addressof(payload.get_data_ptr()) == original_data
+    assert cppyy.addressof(payload.get_byte_enable_ptr()) == original_enables
+    assert payload.get_address() == 32
+    if command == tlm.TLM_READ_COMMAND:
+        payload.get_data_ptr()[0] = 23
+    tlm.tlm_from_hostendian(payload)
+    assert [ord(value) for value in data] == ([23] + [17] * 7 if command == tlm.TLM_READ_COMMAND else [17] * 8)
+    assert cppyy.addressof(payload.get_data_ptr()) == original_data
 print("ENDIAN_ALIGNED_OK")

@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Aligned endian equal-width checks verify original data/enable pointer identity
+  and in-place read response mutation on the native no-conversion path.
+
 - Aligned endian byte-enable checks verify enable reversal, unchanged original
   enable storage and preservation of disabled read-response bytes.
 
