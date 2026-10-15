@@ -38,6 +38,82 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_fifo_debug_if<"):
+            value = name.removeprefix("tlm::tlm_fifo_debug_if<").removesuffix(">")
+            methods = (
+                "virtual int used() const override = 0; virtual int size() const override = 0; "
+                "virtual void debug() const override = 0; "
+                f"bool nb_peek({value}& value, int n) const override {{ auto result = debug_peek(n); "
+                "if (!result.first) return false; value = result.second; return true; } "
+                f"bool nb_poke(const {value}& value, int n = 0) override {{ return debug_poke(value, n); }} "
+                f"virtual std::pair<bool, {value}> debug_peek(int) const = 0; "
+                f"virtual bool debug_poke({value}, int) = 0; "
+            )
+        if name == "tlm::tlm_fifo_config_size_if":
+            methods = (
+                "void nb_expand(unsigned int n = 1) override { expand_value(n); } "
+                "void nb_unbound(unsigned int n = 16) override { unbound_value(n); } "
+                "bool nb_reduce(unsigned int n = 1) override { return reduce_value(n); } "
+                "bool nb_bound(unsigned int n) override { return bound_value(n); } "
+                "virtual void expand_value(unsigned int) = 0; virtual void unbound_value(unsigned int) = 0; "
+                "virtual bool reduce_value(unsigned int) = 0; virtual bool bound_value(unsigned int) = 0; "
+            )
+        family = name.split("<", 1)[0]
+        compound = {
+            f"tlm::tlm_{mode}{direction}_if": (mode, direction)
+            for mode in ("", "blocking_", "nonblocking_")
+            for direction in ("master", "slave")
+        }
+        if family in compound:
+            mode, direction = compound[family]
+            # Extract native template arguments in C++, preserving nested types.
+            traits = f"{identifier}Types"
+            put_type, get_type = ("Req", "Rsp") if direction == "master" else ("Rsp", "Req")
+            cppyy.cppdef(
+                "/** @brief Native request/response type extraction for compound adapters. "
+                "@details Type-only traits own no objects and require no GIL. */ "
+                f"namespace pysystemc_interfaces {{ template<class T> struct {traits}; "
+                f"template<class Req, class Rsp> struct {traits}<{family}<Req, Rsp>> {{ "
+                f"using Put = {put_type}; using Get = {get_type}; }}; }}"
+            )
+            put = f"typename {traits}<{name}>::Put"
+            get = f"typename {traits}<{name}>::Get"
+            if mode != "nonblocking_":
+                methods += (
+                    f"void put(const {put}& value) override {{ put_value(value); }} "
+                    f"{get} get(tlm::tlm_tag<{get}>* = nullptr) override {{ return get_value(); }} "
+                    f"void get({get}& value) override {{ value = get_value(); }} "
+                    f"{get} peek(tlm::tlm_tag<{get}>* = nullptr) const override {{ return peek_value(); }} "
+                    f"void peek({get}& value) const override {{ value = peek_value(); }} "
+                    f"virtual void put_value({put}) = 0; virtual {get} get_value() = 0; "
+                    f"virtual {get} peek_value() const = 0; "
+                )
+            if mode != "blocking_":
+                methods += (
+                    "private: sc_core::sc_event put_ready, get_ready, peek_ready; public: "
+                    f"bool nb_put(const {put}& value) override {{ return try_put_value(value); }} "
+                    f"bool nb_get({get}& value) override {{ auto result = try_get_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    f"bool nb_peek({get}& value) const override {{ auto result = try_peek_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    f"bool nb_can_put(tlm::tlm_tag<{put}>* = nullptr) const override {{ return can_put(); }} "
+                    f"bool nb_can_get(tlm::tlm_tag<{get}>* = nullptr) const override {{ return can_get(); }} "
+                    f"bool nb_can_peek(tlm::tlm_tag<{get}>* = nullptr) const override {{ return can_peek(); }} "
+                    f"const sc_core::sc_event& ok_to_put(tlm::tlm_tag<{put}>* = nullptr) const override "
+                    "{ return put_ready; } "
+                    f"const sc_core::sc_event& ok_to_get(tlm::tlm_tag<{get}>* = nullptr) const override "
+                    "{ return get_ready; } "
+                    f"const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<{get}>* = nullptr) const override "
+                    "{ return peek_ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) "
+                    "{ put_ready.notify(delay); get_ready.notify(delay); peek_ready.notify(delay); } "
+                    f"virtual bool try_put_value({put}) = 0; "
+                    f"virtual std::pair<bool, {get}> try_get_value() = 0; "
+                    f"virtual std::pair<bool, {get}> try_peek_value() const = 0; "
+                    "virtual bool can_put() const = 0; virtual bool can_get() const = 0; "
+                    "virtual bool can_peek() const = 0; "
+                )
+            methods += f"using output_pair = std::pair<bool, {get}>; "
         if name.startswith("tlm::tlm_blocking_get_peek_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "BlockingGetPeekAdapter"):
                 cppyy.cppdef(
@@ -293,6 +369,16 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             methods = (
                 f"void write(const {value_type}& value) override {{ write_value(value); }} "
                 f"virtual void write_value({value_type}) = 0; "
+            )
+
+        if name.startswith("tlm::tlm_transport_dbg_if<"):
+            payload = name.removeprefix("tlm::tlm_transport_dbg_if<").removesuffix(">")
+            methods = (
+                f"unsigned int transport_dbg({payload}& trans) override {{ auto value = debug_transport(trans); "
+                "if (value < 0 || static_cast<unsigned long>(value) > std::numeric_limits<unsigned int>::max()) "
+                'throw std::out_of_range("transport_dbg result outside unsigned int range"); '
+                "return static_cast<unsigned int>(value); } "
+                f"virtual long debug_transport({payload}&) = 0; "
             )
 
         if name.startswith(("tlm::tlm_fw_transport_if<", "tlm::tlm_bw_transport_if<")):

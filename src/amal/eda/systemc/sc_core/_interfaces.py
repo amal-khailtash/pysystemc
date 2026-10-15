@@ -84,6 +84,34 @@ def interface(protocol=None, *, methods=None):
 
 # Native callback spellings stay private to the composition bridge.
 _METHODS = {
+    "tlm::tlm_fifo_config_size_if": {
+        "expand_value": "nb_expand",
+        "unbound_value": "nb_unbound",
+        "reduce_value": "nb_reduce",
+        "bound_value": "nb_bound",
+    },
+    "tlm::tlm_fifo_debug_if": {
+        "used": "used",
+        "size": "size",
+        "debug": "debug",
+        "debug_peek": "nb_peek",
+        "debug_poke": "nb_poke",
+    },
+    "tlm::tlm_fw_transport_if": {
+        "nb_transport_fw": "nb_transport_fw",
+        "b_transport": "b_transport",
+        "debug_transport": "transport_dbg",
+        "get_direct_mem_ptr": "get_direct_mem_ptr",
+    },
+    "tlm::tlm_bw_transport_if": {
+        "nb_transport_bw": "nb_transport_bw",
+        "invalidate_direct_mem_ptr": "invalidate_direct_mem_ptr",
+    },
+    "tlm::tlm_fw_nonblocking_transport_if": {"nb_transport_fw": "nb_transport_fw"},
+    "tlm::tlm_bw_nonblocking_transport_if": {"nb_transport_bw": "nb_transport_bw"},
+    "tlm::tlm_fw_direct_mem_if": {"get_direct_mem_ptr": "get_direct_mem_ptr"},
+    "tlm::tlm_bw_direct_mem_if": {"invalidate_direct_mem_ptr": "invalidate_direct_mem_ptr"},
+    "tlm::tlm_transport_dbg_if": {"debug_transport": "transport_dbg"},
     "tlm::tlm_blocking_transport_if": {"b_transport": "b_transport"},
     "tlm::tlm_blocking_get_peek_if": {"get_value": "get", "peek_value": "peek"},
     "tlm::tlm_get_peek_if": {
@@ -113,6 +141,22 @@ _METHODS = {
     },
 }
 
+for _direction in ("master", "slave"):
+    for _mode in ("", "blocking_", "nonblocking_"):
+        _callbacks = {}
+        if _mode != "nonblocking_":
+            _callbacks.update(put_value="put", get_value="get", peek_value="peek")
+        if _mode != "blocking_":
+            _callbacks.update(
+                try_put_value="nb_put",
+                try_get_value="nb_get",
+                try_peek_value="nb_peek",
+                can_put="nb_can_put",
+                can_get="nb_can_get",
+                can_peek="nb_can_peek",
+            )
+        _METHODS[f"tlm::tlm_{_mode}{_direction}_if"] = _callbacks
+
 
 def _adapt(interface, implementation, factory):
     """Validate and retain one native adapter for a Python implementation."""
@@ -127,6 +171,8 @@ def _adapt(interface, implementation, factory):
         if native_interface == interface and owner is implementation:
             return adapter
     if interface not in _classes:
+        base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
+        output_pair = getattr(base, "output_pair", None)
         callbacks = {}
         for native_name, python_name in methods.items():
 
@@ -136,12 +182,13 @@ def _adapt(interface, implementation, factory):
                 if _method in ("nb_get", "nb_peek"):
                     if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
                         raise TypeError(f"{_method} must return a (bool, value) tuple")
+                    if output_pair is not None:
+                        return output_pair(*result)
                     value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
                     return cppyy.gbl.std.pair[bool, value_type](*result)
                 return result
 
             callbacks[native_name] = forward
-        base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
         _classes[interface] = type(f"PythonPortAdapter{len(_classes)}", (base,), callbacks)
     name = cppyy.gbl.sc_core.sc_module_name(cppyy.gbl.sc_core.sc_gen_unique_name("python_interface", False))
     adapter = _classes[interface](name)

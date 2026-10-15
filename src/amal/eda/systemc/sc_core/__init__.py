@@ -105,6 +105,20 @@ sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
 
 
+def sc_is_running(context=None) -> bool:
+    """Return whether the native simulation is running in the selected context.
+
+    Args:
+        context: Borrowed native simulation context; defaults to the current context.
+
+    Returns:
+        Native running state. The context must remain alive during this call.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_is_running(context)
+
+
 def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> Any:
     """Create a native signal read interface backed by a Python value callback.
 

@@ -180,6 +180,21 @@ def test_native_tlm_combined_forward_backward_python_interfaces(tmp_path):
     )
 
 
+def test_structural_tlm2_combined_and_standalone_interfaces(tmp_path):
+    """Check ordinary callbacks, native references, debug limits and blocking waits."""
+    assert "STRUCTURAL_TLM2_INTERFACES_OK" in run_example(tmp_path, "tests/models/python_tlm2_interfaces.py")
+
+
+def test_structural_tlm_master_slave_interfaces(tmp_path):
+    """Verify all six compound families preserve distinct native input/output types."""
+    assert "STRUCTURAL_TLM_MASTER_SLAVE_OK" in run_example(tmp_path, "tests/models/python_tlm_master_slave.py")
+
+
+def test_structural_tlm_fifo_debug_and_configuration(tmp_path):
+    """Verify indexed debug access, unchanged failure outputs and native defaults."""
+    assert "STRUCTURAL_TLM_FIFO_DEBUG_OK" in run_example(tmp_path, "tests/models/python_tlm_fifo_debug.py")
+
+
 def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
     """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
     assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")

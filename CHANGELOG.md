@@ -6,8 +6,18 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Structural TLM-2 combined and standalone transport, debug and DMI interfaces
+  accept ordinary Python callbacks with native method names.
+- Structural TLM-1 blocking, nonblocking and combined master/slave interfaces
+  preserve independent request/response template types and native output overloads.
+- Structural FIFO debug and size-configuration interfaces preserve indexed access,
+  failed output values and native default arguments.
+
 ### Fixed
 
+- Restore the native default simulation context for Python `sc_is_running()` calls.
 - Restore CI formatting and strict documentation builds after structural interface changes.
 - Compare installed-wheel versions with distribution metadata rather than a stale release literal.
 - Verify repaired release wheels on a separate Ubuntu runner before publication, away from the manylinux compiler environment.

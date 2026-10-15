@@ -33,6 +33,21 @@ incomplete. API exposure alone is not a compatibility claim.
 Structural Python interface implementations
 -------------------------------------------
 
+Ordinary Python implementations also bind to TLM-2 forward/backward transport,
+standalone nonblocking transport, DMI and debug interfaces. Use native method
+names including ``transport_dbg``; debug results outside the native unsigned
+integer range raise an error. Blocking calls release the GIL so guarded waits
+can suspend. Nonblocking, debug and DMI callbacks must obey native restrictions
+on waiting and side effects.
+
+All six TLM-1 master/slave interface families support structural implementations,
+with independent request and response template types. Blocking callbacks use
+``put``, ``get`` and ``peek``; nonblocking callbacks use ``nb_put``, ``nb_get``,
+``nb_peek`` and their ``nb_can_*`` methods. Nonblocking get/peek return a
+``(bool, value)`` tuple. Failed calls leave the native output unchanged.
+Adapters retain owners until interpreter shutdown; complete teardown and
+cross-interface event identity remain unverified.
+
 ``sc_core.sc_port[IF](name).bind(implementation)`` accepts ordinary Python
 objects for TLM blocking-put, blocking-get, blocking-peek, transport and analysis interfaces.
 Implement ``put(value)``, ``get()``, ``peek()``, ``transport(request)`` or ``write(value)`` using
