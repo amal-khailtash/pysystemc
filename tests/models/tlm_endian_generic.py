@@ -152,4 +152,38 @@ for word, size in (("unsigned char", 1), ("unsigned short", 2), ("unsigned int",
                     [50 + index for index in mapping] if command == tlm.TLM_READ_COMMAND else list(range(1, length + 1))
                 )
                 assert [ord(value) for value in data] == expected
+for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
+    payload = tlm.tlm_generic_payload()
+    payload.resize_extensions()
+    data = cppyy.gbl.std.vector["unsigned char"](8, 99)
+    enables = cppyy.gbl.std.vector["unsigned char"](2, 0)
+    enables[0] = 255
+    payload.set_command(command)
+    payload.set_address(17)
+    payload.set_data_ptr(data.data())
+    payload.set_data_length(8)
+    payload.set_streaming_width(4)
+    payload.set_byte_enable_ptr(enables.data())
+    payload.set_byte_enable_length(2)
+    tlm.tlm_to_hostendian_generic["unsigned short"](payload, 4)
+    assert payload.get_address() == 16
+    assert payload.get_data_length() == 16 and payload.get_streaming_width() == 8
+    converted = payload.get_data_ptr()
+    converted_enables = payload.get_byte_enable_ptr()
+    converted.reshape((16,))
+    converted_enables.reshape((16,))
+    mapping = [((17 + (i // 2) * 2 + 1 - i % 2) ^ 3) - 16 for i in range(4)]
+    enabled_positions = [mapping[i] + window * 8 for window in range(2) for i in (0, 2)]
+    assert [i for i in range(16) if converted_enables[i] == 255] == sorted(enabled_positions)
+    if command == tlm.TLM_READ_COMMAND:
+        for i in range(16):
+            converted[i] = 40 + i
+    else:
+        assert all(converted[i] == 99 for i in enabled_positions)
+    tlm.tlm_from_hostendian(payload)
+    expected = [
+        40 + mapping[i % 4] + (i // 4) * 8 if i % 2 == 0 and command == tlm.TLM_READ_COMMAND else 99 for i in range(8)
+    ]
+    assert [ord(value) for value in data] == expected
+    assert [ord(value) for value in enables] == [255, 0]
 print("ENDIAN_GENERIC_OK")

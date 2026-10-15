@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Combined generic endian streaming/enable checks verify unaligned repeated
+  windows, repeating enable masks and disabled-byte response preservation.
+
 - Generic endian type/offset matrix now checks read responses as well as writes,
   verifying original storage against independent byte-address mapping.
 
