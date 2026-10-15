@@ -114,4 +114,34 @@ for address in (17, 18, 19):
         assert [ord(value) for value in data] == (
             [10 + index for index in mapping] if command == tlm.TLM_READ_COMMAND else [1, 2, 3, 4]
         )
+for word, size in (("unsigned char", 1), ("unsigned short", 2), ("unsigned int", 4)):
+    for bus in (4, 8):
+        for offset in range(bus):
+            payload = tlm.tlm_generic_payload()
+            payload.resize_extensions()
+            length = size * 2
+            data = cppyy.gbl.std.vector["unsigned char"](length, 0)
+            for index in range(length):
+                data[index] = index + 1
+            address = 32 + offset
+            payload.set_command(tlm.TLM_WRITE_COMMAND)
+            payload.set_address(address)
+            payload.set_data_ptr(data.data())
+            payload.set_data_length(length)
+            payload.set_streaming_width(length)
+            tlm.tlm_to_hostendian_generic[word](payload, bus)
+            expanded = ((offset + length + bus - 1) // bus) * bus
+            assert payload.get_address() == 32 and payload.get_data_length() == expanded
+            converted = payload.get_data_ptr()
+            enables = payload.get_byte_enable_ptr()
+            converted.reshape((expanded,))
+            enables.reshape((expanded,))
+            mapping = [
+                ((address + (index // size) * size + size - 1 - index % size) ^ (bus - 1)) - 32
+                for index in range(length)
+            ]
+            assert [converted[index] for index in mapping] == list(range(1, length + 1))
+            assert [index for index in range(expanded) if enables[index] == 255] == sorted(mapping)
+            tlm.tlm_from_hostendian(payload)
+            assert [ord(value) for value in data] == list(range(1, length + 1))
 print("ENDIAN_GENERIC_OK")

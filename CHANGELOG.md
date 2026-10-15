@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Generic endian word-size/offset matrix verifies expanded buffers and enabled
+  lane mapping for three native word types and every offset on two bus widths.
+
 - Unaligned generic endian checks verify expanded bus windows, enabled byte lanes
   and read/write data mapping across bus boundaries.
 
