@@ -53,4 +53,6 @@ model.signal.write(False)
 sc.sc_start(1, sc.SC_NS)
 assert sorted(model.records[-2:]) == [("interface", "3 ns", False), ("port", "3 ns", False)], model.records
 sc.sc_stop()
+for kind, time, value in model.records:
+    print(f"RECORD {kind}|{time}|{int(value)}")
 print("METHOD_SENSITIVITY_OK")

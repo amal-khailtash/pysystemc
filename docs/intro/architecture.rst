@@ -72,9 +72,27 @@ not destroy its processes or their module hosts. Dynamic callbacks are likewise
 retained for the interpreter's simulation lifetime. Do not clear callback lists
 to reclaim memory while native hosts remain alive. Independent repeated runs
 use new subprocesses so kernel and callback ownership end together.
+Normal interpreter shutdown is checked with multiple module owners, bound-method
+cycles and standalone callables: all owners and callbacks are destroyed after
+their verified process execution. Callback destructors can run late in Python
+shutdown, when module globals and builtins have been cleared; user cleanup code
+must retain any resources it needs rather than importing or looking up globals.
 
 The Python entry bridge borrows ``__main__`` and owns its temporary callable,
 argument list and result only for the call. It releases these references and
 the acquired GIL on success and Python errors. Arguments use Python filesystem
 decoding; returned statuses must fit a native ``int``. Conversion errors print
 their Python diagnostic and return ``-1``.
+``SystemExit`` and ``KeyboardInterrupt`` raised inside ``sc_main`` follow the
+same failure path; they do not bypass bridge cleanup or produce a successful
+entry status. Scoped ownership releases references and GIL state during native
+C++ exception unwinding as well. Allocation failure paths share this cleanup,
+although forced out-of-memory behavior has not been validated.
+
+The native process adapter allocates callback storage before creating a kernel
+process. Rejected argument conversions add no process and retain no Python
+callback. This does not promise rollback for allocation failures inside the
+SystemC kernel itself. Static sensitivity to interfaces, ports, explicit events
+and positive-edge finders is compared with a native C++ reference, including
+``dont_initialize()`` and bounded simulation starts. Python errors in method
+callbacks and all four lifecycle hooks are checked in isolated subprocesses.

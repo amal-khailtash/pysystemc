@@ -18,20 +18,35 @@ class Entry:
     def __call__(self, args):
         """Validate argument decoding and return the configured status."""
         assert args == ["entry", "café"]
+        if isinstance(self.result, BaseException):
+            raise self.result
         return self.result
 
 
-for value, expected in [(0, 0), (-7, -7), (2**31 - 1, 2**31 - 1), (2**31, -1), (2**100, -1), (None, -1)]:
+for value, expected in [
+    (0, 0),
+    (-7, -7),
+    (2**31 - 1, 2**31 - 1),
+    (2**31, -1),
+    (2**100, -1),
+    (None, -1),
+    (ValueError("entry_failure"), -1),
+    (SystemExit(0), -1),
+    (KeyboardInterrupt(), -1),
+]:
     callback = Entry(value)
     reference = weakref.ref(callback)
     sys.modules["__main__"].sc_main = callback
     assert cppyy.gbl.sc_main(2, ["entry", "café"]) == expected
     del sys.modules["__main__"].sc_main
     del callback
+    if isinstance(value, BaseException):
+        value.__traceback__ = None
     gc.collect()
     assert reference() is None, "entry bridge leaked its callable"
 
 sys.modules["__main__"].sc_main = 42
 assert cppyy.gbl.sc_main(0, []) == -1
+assert cppyy.gbl.sc_main(-1, []) == -1
 assert sc.sc_get_status() == sc.SC_ELABORATION
 print("ENTRY_ERRORS_OK")

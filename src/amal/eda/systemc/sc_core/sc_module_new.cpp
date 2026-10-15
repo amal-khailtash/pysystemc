@@ -177,9 +177,16 @@ class ScModule : public sc_module
 
   /**
    * @brief Create a process with this module as host and select its sensitivity.
+   * @details Allocate callback storage before touching the kernel. Native creation failures destroy the pending
+   * callback; attaching it to the completed process uses a map node and cannot allocate. Python callers retain
+   * their callable after successful registration. cppyy supplies Python callback entry and GIL acquisition.
    */
   sc_process_handle register_process(const char* name, std::function<void()> callback, sc_curr_proc_kind kind)
   {
+    if (!callback) throw std::invalid_argument("Process callback must be callable");
+    std::map<sc_object*, std::function<void()>> pending;
+    pending.emplace(nullptr, std::move(callback));
+    auto callback_node = pending.extract(pending.begin());
     auto context = sc_get_curr_simcontext();
     sc_process_handle handle;
     auto entry = SC_MAKE_FUNC_PTR(ScModule, call_process);
@@ -197,7 +204,8 @@ class ScModule : public sc_module
     default:
       throw std::invalid_argument("Unknown SystemC process kind");
     }
-    callbacks.emplace(handle.get_process_object(), std::move(callback));
+    callback_node.key() = handle.get_process_object();
+    callbacks.insert(std::move(callback_node));
     pysystemc::log(false, fmt::format("Registered process {} (kind {})", handle.name(), static_cast<int>(kind)));
     sc_module::sensitive << handle;
     sc_module::sensitive_pos << handle;

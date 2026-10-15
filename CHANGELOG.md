@@ -13,12 +13,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Reject Python entry statuses outside the native integer range, decode native
   arguments with Python filesystem semantics, and retain spawn callbacks only
   after successful registration.
+- Preserve entry cleanup for SystemExit and KeyboardInterrupt, and release
+  entry references and GIL state through scoped native ownership.
 
 ### Added
 
 - Module identity, callback registration and lifecycle isolation checks across
   multiple hosts with garbage collection before simulation.
 - Static method sensitivity and entry callable reference cleanup regressions.
+- Native reference comparison for method sensitivity, callback lifetime and
+  failed-registration cleanup checks, and all four lifecycle exception checks.
 - `make test-wheel` checks a local release wheel outside the checkout, verifying
   the installed version, native startup, callback execution and simulation time.
 

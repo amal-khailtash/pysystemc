@@ -305,5 +305,67 @@ def test_entry_status_arguments_and_reference_cleanup(tmp_path):
 
 
 def test_method_static_sensitivity_and_initialization(tmp_path):
-    """Check interface, port, event and edge sensitivity after GC."""
-    assert "METHOD_SENSITIVITY_OK" in run_example(tmp_path, "tests/models/method_sensitivity.py")
+    """Compare interface, port, event and edge sensitivity with native C++ after GC."""
+    output = run_example(tmp_path, "tests/models/method_sensitivity.py")
+    assert "METHOD_SENSITIVITY_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/method_sensitivity.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    python_records = sorted(line for line in output.splitlines() if line.startswith("RECORD "))
+    native_records = sorted(line for line in native.stdout.splitlines() if line.startswith("RECORD "))
+    assert len(python_records) == 7
+    assert python_records == native_records
+
+
+def test_registration_failure_releases_callbacks(tmp_path):
+    """Failed conversions retain no callback and do not add native processes."""
+    assert "REGISTRATION_FAILURE_OK" in run_example(tmp_path, "tests/models/registration_failure.py")
+
+
+def test_callback_retained_through_kernel_stop(tmp_path):
+    """Module-owned callable survives temporary reference GC and kernel stop."""
+    assert "CALLBACK_LIFETIME_OK" in run_example(tmp_path, "tests/models/callback_lifetime.py")
+
+
+def test_lifecycle_exceptions_report_useful_failures(tmp_path):
+    """All four lifecycle exceptions leave entry without native abort or hang."""
+    for hook in (
+        "before_end_of_elaboration",
+        "end_of_elaboration",
+        "start_of_simulation",
+        "end_of_simulation",
+    ):
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "tests/models/lifecycle_failure.py"), hook],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode > 0, result.stdout + result.stderr
+        assert f"lifecycle_failure_marker:{hook}" in result.stderr
+        assert "segmentation violation" not in result.stderr
+        assert "F539" not in result.stderr
+
+
+def test_shutdown_releases_module_and_callback_owners(tmp_path):
+    """Normal subprocess exit destroys module cycles and standalone callbacks."""
+    marker = tmp_path / "released.txt"
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tests/models/shutdown_release.py"), str(marker)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "SHUTDOWN_READY" in result.stdout
+    assert "Exception ignored" not in result.stderr
+    records = marker.read_text().splitlines()
+    assert records.count("callback") == 16, records
+    assert records.count("module") == 16, records
