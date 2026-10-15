@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Explicit single-word endian response calls preserve address/status across all
+  27 Python/native template combinations.
+
 - Explicit generic, word and aligned endian response templates verify read
   copying alongside the generic response dispatcher.
 

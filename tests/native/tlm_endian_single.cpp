@@ -28,6 +28,9 @@ void check()
       tlm::tlm_from_hostendian(&payload);
       if (payload.get_address() != expected || !payload.is_response_ok())
         throw std::runtime_error("endian response mismatch");
+      tlm::tlm_from_hostendian_single<Word>(&payload, bus);
+      if (payload.get_address() != expected || !payload.is_response_ok())
+        throw std::runtime_error("explicit endian response mismatch");
       std::cout << "ENDIAN " << sizeof(Word) << ' ' << bus << ' ' << address << ' ' << expected << '\n';
     }
   }
