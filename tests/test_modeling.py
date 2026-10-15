@@ -252,3 +252,8 @@ def test_structural_combined_get_interface(tmp_path):
 def test_structural_combined_put_interface(tmp_path):
     """Verify shared capacity, blocking dispatch and native readiness events."""
     assert "PYTHON_COMBINED_PUT_OK" in run_example(tmp_path, "tests/models/python_combined_put.py")
+
+
+def test_structural_combined_peek_interface(tmp_path):
+    """Verify blocking/native output overloads preserve nonconsuming access."""
+    assert "PYTHON_COMBINED_PEEK_OK" in run_example(tmp_path, "tests/models/python_combined_peek.py")

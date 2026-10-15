@@ -37,6 +37,26 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
     if cache_name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
+        if name.startswith("tlm::tlm_peek_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedPeekAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Blocking/nonblocking peek bridge. @details Ports borrow the owner; "
+                    "adapter owns readiness event. cppyy acquires GIL for callbacks; blocking callers "
+                    "release it. Nonblocking callbacks must not wait. Errors propagate; outputs are copies. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class CombinedPeekAdapter : public tlm::tlm_peek_if<T> { sc_core::sc_event ready; public: "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
+                    "void peek(T& value) const override { value = peek_value(); } "
+                    "bool nb_peek(T& value) const override { auto result = try_peek_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    "bool nb_can_peek(tlm::tlm_tag<T>* = nullptr) const override { return can_peek(); } "
+                    "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    "virtual T peek_value() const = 0; virtual std::pair<bool, T> try_peek_value() const = 0; "
+                    "virtual bool can_peek() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_peek_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::CombinedPeekAdapter<{argument}>"
         if name.startswith("tlm::tlm_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "CombinedPutAdapter"):
                 cppyy.cppdef(

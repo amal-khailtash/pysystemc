@@ -95,3 +95,8 @@ may use guarded waits; nonblocking callbacks must return immediately.
 ``nb_put(value)`` and ``nb_can_put()``. Both put callbacks receive value copies.
 Blocking calls release the GIL, while nonblocking calls must return immediately.
 Adapter-owned ``ok_to_put()`` storage is notified through ``notify_ready()``.
+
+``tlm_peek_if[T]`` structural implementations provide ``peek()``, ``nb_peek()``
+and ``nb_can_peek()``. Blocking value/output overloads receive copies; callbacks
+must preserve samples rather than consume them. Nonblocking callbacks return a
+``(bool, value)`` tuple. ``notify_ready(delay)`` schedules native peek readiness.

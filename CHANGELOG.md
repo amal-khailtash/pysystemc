@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Combined TLM peek interface forwards blocking and nonblocking callbacks while
+  preserving nonconsuming value/output overloads and native readiness storage.
 - Combined TLM put interface forwards blocking and nonblocking operations to one
   Python implementation with copied values and stable native readiness storage.
 - Combined TLM get interface supports shared Python blocking/nonblocking callbacks,
