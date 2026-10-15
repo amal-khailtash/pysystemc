@@ -268,6 +268,24 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_optional_convenience_socket_binding_policies(tmp_path):
+    """Verify all callable socket families elaborate with the native optional policy."""
+    assert "OPTIONAL_SOCKETS_OK" in run_example(tmp_path, "tests/models/tlm_optional_sockets.py")
+
+
+def test_required_convenience_socket_binding_policy(tmp_path):
+    """Verify native required policy rejects unbound sockets during elaboration."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tests/models/tlm_optional_sockets.py"), "required"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "REQUIRED_SOCKETS_REJECTED" in result.stdout
+
+
 def test_passthrough_custom_protocol_matches_native_reference(tmp_path):
     """Compare custom passthrough state and timing with an independent native model."""
     python_output = run_example(tmp_path, "tests/models/tlm_passthrough_custom.py")

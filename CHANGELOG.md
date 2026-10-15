@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Socket policy regressions verify optional zero-connection elaboration across
+  callable families and rejection of missing required bindings.
+
 - Independent native passthrough reference checks Python/native custom payload
   identity, transport state, wide-field mutation and blocking timing.
 
