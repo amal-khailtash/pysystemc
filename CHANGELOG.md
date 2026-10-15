@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- TLM-1 nonblocking-peek adapter with stable readiness events, preserved failure
+  outputs and repeated nonconsuming reference reads.
+
 - TLM-1 nonblocking-get adapter preserves output references on failure and owns
   stable readiness events for native-port callbacks.
 

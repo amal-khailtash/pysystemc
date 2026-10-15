@@ -193,6 +193,24 @@ def channel_interface(interface: Any) -> Any:
                 )
             argument = name.removeprefix("tlm::tlm_nonblocking_get_if<").removesuffix(">")
             name = f"pysystemc_interfaces::NonblockingGetAdapter<{argument}>"
+        if name.startswith("tlm::tlm_nonblocking_peek_if<"):
+            if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPeekAdapter"):
+                cppyy.cppdef(
+                    "/** @brief Nonblocking peek value/event bridge. @details Ports borrow the owner; "
+                    "event storage belongs to the adapter. Callbacks acquire GIL and must not wait. "
+                    "Value assignment occurs only after successful callback; exceptions propagate. */ "
+                    "namespace pysystemc_interfaces { template<class T> "
+                    "class NonblockingPeekAdapter : public tlm::tlm_nonblocking_peek_if<T> { "
+                    "sc_core::sc_event ready; public: "
+                    "bool nb_peek(T& value) const override { auto result = peek_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    "bool nb_can_peek(tlm::tlm_tag<T>* = nullptr) const override { return can_peek(); } "
+                    "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
+                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
+                    "virtual std::pair<bool, T> peek_value() const = 0; virtual bool can_peek() const = 0; }; }"
+                )
+            argument = name.removeprefix("tlm::tlm_nonblocking_peek_if<").removesuffix(">")
+            name = f"pysystemc_interfaces::NonblockingPeekAdapter<{argument}>"
         if name.startswith("tlm::tlm_nonblocking_put_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "NonblockingPutAdapter"):
                 cppyy.cppdef(

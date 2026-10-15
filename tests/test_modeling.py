@@ -215,3 +215,8 @@ def test_native_tlm1_nonblocking_put_readiness_event(tmp_path):
 def test_native_tlm1_nonblocking_get_output_and_readiness(tmp_path):
     """Verify failed get preserves output and successful get consumes one native value."""
     assert "NATIVE_TLM1_NONBLOCKING_GET_OK" in run_example(tmp_path, "tests/models/native_tlm1_nonblocking_get.py")
+
+
+def test_native_tlm1_nonblocking_peek_output_and_readiness(tmp_path):
+    """Verify failed peek preserves output and repeated peeks do not consume samples."""
+    assert "NATIVE_TLM1_NONBLOCKING_PEEK_OK" in run_example(tmp_path, "tests/models/native_tlm1_nonblocking_peek.py")
