@@ -166,3 +166,30 @@ def test_native_fifo_interface_reference_overloads_and_events(tmp_path):
 def test_native_event_queue_interface_python_overloads(tmp_path):
     """Check native-port notification overloads, duplicate deltas and cancellation."""
     assert "NATIVE_EVENT_QUEUE_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_event_queue_interface.py")
+
+
+def test_native_tlm_blocking_interface_python_reference_dispatch(tmp_path):
+    """Verify native TLM payload/time references and blocking Python service calls."""
+    assert "NATIVE_TLM_BLOCKING_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_blocking_interface.py")
+
+
+def test_native_tlm_combined_forward_backward_python_interfaces(tmp_path):
+    """Check phase/delay references, sync enums, debug and DMI invalidation callbacks."""
+    assert "NATIVE_TLM_COMBINED_INTERFACES_OK" in run_example(
+        tmp_path, "tests/models/native_tlm_combined_interfaces.py"
+    )
+
+
+def test_native_tlm_dmi_pointer_access_and_lifetime(tmp_path):
+    """Verify granted DMI reads/writes survive GC and preserve native memory identity."""
+    assert "NATIVE_TLM_DMI_INTERFACE_OK" in run_example(tmp_path, "tests/models/native_tlm_dmi_interface.py")
+
+
+def test_native_tlm_socket_forward_backward_binding(tmp_path):
+    """Check native sockets bind Python interfaces and preserve DMI/phase dispatch."""
+    assert "NATIVE_TLM_SOCKETS_OK" in run_example(tmp_path, "tests/models/native_tlm_sockets.py")
+
+
+def test_native_tlm_memory_manager_reference_count_and_recycle(tmp_path):
+    """Verify native reference counting invokes the retained Python manager at zero."""
+    assert "NATIVE_TLM_MEMORY_MANAGER_OK" in run_example(tmp_path, "tests/models/native_tlm_memory_manager.py")

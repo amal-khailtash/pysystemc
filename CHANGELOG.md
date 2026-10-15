@@ -8,11 +8,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Combined TLM forward/backward channel adapters with phase/delay mutation,
+  checked debug return ranges, DMI access and invalidation regressions.
+- Native initiator/target socket integration and Python memory-manager recycling
+  checks. Debug callbacks currently use debug_transport due to cppyy limitations.
 - Package custom interface/channel factories and Python-subclassable primitive,
   signal and FIFO channel bases with native-port dispatch checks.
 - Callback-sampled signal storage with deferred updates and bool/logic edges.
 - Python native-interface checks for mutex, semaphore and event-queue methods.
-
 - Optional `make native-sanitize` ASan/UBSan checks for first-party native
   reference models; the SystemC dependency library is not instrumented.
 - Contribution and troubleshooting guidance covering native library ownership,

@@ -164,16 +164,47 @@ def channel_interface(interface: Any) -> Any:
     The caller retains the channel throughout simulation. This combines native
     bases before Python subclassing to avoid conflicting cppyy metaclasses.
     Abstract interface methods must be implemented by the Python subclass.
+    Combined TLM forward interfaces currently use Python debug_transport callbacks.
+    Native callers use transport_dbg, which validates the unsigned return range.
+    Debug callbacks must never wait.
     """
     name = interface.__cpp_name__
     if name not in _channel_interfaces:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
+        methods = ""
+        if name.startswith("tlm::tlm_fw_transport_if<") or name.startswith("tlm::tlm_bw_transport_if<"):
+            # Redeclare inherited pure methods so cppyy builds every Python dispatcher override.
+            types = f"{name}::protocol_types"
+            payload = f"typename {types}::tlm_payload_type"
+            phase = f"typename {types}::tlm_phase_type"
+            direction = "fw" if "tlm_fw_transport_if" in name else "bw"
+            methods = (
+                f"virtual tlm::tlm_sync_enum nb_transport_{direction}({payload}&, {phase}&, "
+                "sc_core::sc_time&) override = 0; "
+            )
+            if direction == "fw":
+                methods += (
+                    f"virtual void b_transport({payload}&, sc_core::sc_time&) override = 0; "
+                    f"virtual bool get_direct_mem_ptr({payload}&, tlm::tlm_dmi&) override = 0; "
+                    f"unsigned int transport_dbg({payload}& trans) override {{ auto value = debug_transport(trans); "
+                    "if (value < 0 || static_cast<unsigned long>(value) > std::numeric_limits<unsigned int>::max()) "
+                    'throw std::out_of_range("transport_dbg result outside unsigned int range"); '
+                    "return static_cast<unsigned int>(value); } "
+                    f"virtual long debug_transport({payload}&) = 0; "
+                )
+            else:
+                methods += "virtual void invalidate_direct_mem_ptr(sc_dt::uint64, sc_dt::uint64) override = 0; "
         cppyy.cppdef(
+            "/** @brief Combined Python channel interface. "
+            "@details Ports borrow the owner through simulation. cppyy acquires the GIL for overrides; "
+            "blocking native calls must release it. Callback exceptions propagate to the caller. "
+            "Debug transport validates unsigned range and must not wait. */ "
             f"namespace pysystemc_interfaces {{ class {identifier} : public sc_core::ScModule, public {name} {{ "
             f"public: explicit {identifier}(sc_core::sc_module_name name) : sc_core::ScModule(name) {{}} "
-            f"~{identifier}() override = default; }}; }}"
+            f"~{identifier}() override = default; {methods} }}; }}"
         )
-        _channel_interfaces[name] = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
+        base = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
+        _channel_interfaces[name] = base
     return _channel_interfaces[name]
 
 
