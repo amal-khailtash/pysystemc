@@ -175,6 +175,7 @@ for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
     mapping = [((17 + (i // 2) * 2 + 1 - i % 2) ^ 3) - 16 for i in range(4)]
     enabled_positions = [mapping[i] + window * 8 for window in range(2) for i in (0, 2)]
     assert [i for i in range(16) if converted_enables[i] == 255] == sorted(enabled_positions)
+    print("GENERIC enables", *list(converted_enables))
     if command == tlm.TLM_READ_COMMAND:
         for i in range(16):
             converted[i] = 40 + i
@@ -186,4 +187,6 @@ for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
     ]
     assert [ord(value) for value in data] == expected
     assert [ord(value) for value in enables] == [255, 0]
+    print("GENERIC response", *[ord(value) for value in data])
+    print("GENERIC source-enables", *[ord(value) for value in enables])
 print("ENDIAN_GENERIC_OK")

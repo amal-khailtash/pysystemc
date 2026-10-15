@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent generic endian streaming reference compares actual enable masks,
+  source enables and masked response bytes with Python conversion results.
+
 - Combined generic endian streaming/enable checks verify unaligned repeated
   windows, repeating enable masks and disabled-byte response preservation.
 

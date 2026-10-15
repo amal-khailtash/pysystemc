@@ -268,6 +268,22 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_generic_endian_streaming_matches_native_reference(tmp_path):
+    """Compare actual converted enables and masked responses with native execution."""
+    python_output = run_example(tmp_path, "tests/models/tlm_endian_generic.py")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_endian_generic.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    records = [line for line in python_output.splitlines() if line.startswith("GENERIC ")]
+    assert len(records) == 6
+    assert records == [line for line in result.stdout.splitlines() if line.startswith("GENERIC ")]
+
+
 def test_generic_endian_native_buffer_conversion(tmp_path):
     """Verify generic converter data ordering and masked response copying."""
     assert "ENDIAN_GENERIC_OK" in run_example(tmp_path, "tests/models/tlm_endian_generic.py")
