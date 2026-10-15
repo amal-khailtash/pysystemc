@@ -59,4 +59,27 @@ for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
     assert [ord(value) for value in data] == expected
     assert [ord(value) for value in enables] == [255, 255, 0, 0, 255, 255, 0, 0]
     assert payload.get_byte_enable_length() == 8
+for command in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
+    payload = tlm.tlm_generic_payload()
+    payload.resize_extensions()
+    data = cppyy.gbl.std.vector["unsigned char"](8, 0)
+    for index in range(8):
+        data[index] = index + 1
+    payload.set_command(command)
+    payload.set_address(16)
+    payload.set_data_ptr(data.data())
+    payload.set_data_length(8)
+    payload.set_streaming_width(4)
+    tlm.tlm_to_hostendian_generic["unsigned short"](payload, 4)
+    assert payload.get_streaming_width() == 4 and payload.get_data_length() == 8
+    converted = payload.get_data_ptr()
+    converted.reshape((8,))
+    expected = [3, 4, 1, 2, 7, 8, 5, 6]
+    if command == tlm.TLM_WRITE_COMMAND:
+        assert list(converted) == expected
+    else:
+        for index in range(8):
+            converted[index] = index + 1
+    tlm.tlm_from_hostendian(payload)
+    assert [ord(value) for value in data] == (expected if command == tlm.TLM_READ_COMMAND else list(range(1, 9)))
 print("ENDIAN_GENERIC_OK")

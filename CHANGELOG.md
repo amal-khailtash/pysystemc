@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Generic endian streaming checks verify repeated address-window word ordering
+  and read-response copying for transfers wider than their streaming width.
+
 - Generic endian buffer regression checks read/write word ordering, converted
   byte enables and disabled-byte preservation on response copying.
 
