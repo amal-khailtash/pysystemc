@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Single-word endian utility regression checks native word/bus templates,
+  address lane conversion and generic response conversion dispatch.
+
 - Private carrier method checks verify null cloning and non-destructive native
   copy/free behavior before explicit accessor cleanup.
 

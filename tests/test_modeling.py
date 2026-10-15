@@ -268,6 +268,11 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_native_single_word_endian_conversion(tmp_path):
+    """Verify native word/bus templates, converted addresses and response dispatch."""
+    assert "ENDIAN_SINGLE_OK" in run_example(tmp_path, "tests/models/tlm_endian_single.py")
+
+
 def test_instance_specific_extensions_match_native_reference(tmp_path):
     """Compare private extension lifecycle semantics against independent native APIs."""
     python_output = run_example(tmp_path, "tests/models/tlm_instance_extensions.py")
