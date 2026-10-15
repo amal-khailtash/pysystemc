@@ -268,6 +268,22 @@ def test_custom_socket_protocol_matches_native_reference(tmp_path):
     assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
 
 
+def test_passthrough_custom_protocol_matches_native_reference(tmp_path):
+    """Compare custom passthrough state and timing with an independent native model."""
+    python_output = run_example(tmp_path, "tests/models/tlm_passthrough_custom.py")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_passthrough_custom.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    expected = ["CUSTOM_SOCKET 21 23 0 2 ns"]
+    assert [line for line in python_output.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
+    assert [line for line in result.stdout.splitlines() if line.startswith("CUSTOM_SOCKET ")] == expected
+
+
 def test_passthrough_socket_custom_protocol(tmp_path):
     """Verify passthrough protocol specialization retains 137-bit fields and identity."""
     assert "CUSTOM_PASSTHROUGH_OK" in run_example(tmp_path, "tests/models/tlm_passthrough_custom.py")

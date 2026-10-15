@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent native passthrough reference checks Python/native custom payload
+  identity, transport state, wide-field mutation and blocking timing.
+
 - Custom passthrough protocol regression checks 137-bit native payload fields,
   transaction identity across callbacks and mutation after a blocking wait.
 
