@@ -52,7 +52,7 @@ C++. Sphinx HTML is written to ``build/docs``.
 
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
-issue handle controls from running processes. See :doc:`supported` for limits.
+issue handle controls from running processes. See :doc:`features` for limits.
 
 Logging and startup banners
 ---------------------------

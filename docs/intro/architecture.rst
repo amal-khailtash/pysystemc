@@ -49,7 +49,7 @@ Known blockers
 * Broad tracing, resolved-signal and upstream example matrices
   remain incomplete.
 
-See :doc:`supported` for verified behavior. Availability through namespace
+See :doc:`features` for verified behavior. Availability through namespace
 reflection does not establish that every native operation is safe from Python.
 
 Python module registration

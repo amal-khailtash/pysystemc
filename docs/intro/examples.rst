@@ -51,7 +51,7 @@ Upstream ports
 The sysc/2.1 ports preserve the upstream directory hierarchy. Fork/join,
 barrier, report rules and hierarchical exports are compared against native C++.
 Run ``make example-export-py``, ``make example-forkjoin-py`` or
-``make example-report-py``. See :doc:`supported` for tested behavior and limits.
+``make example-report-py``. See :doc:`features` for tested behavior and limits.
 
 The specialized-signals port preserves deferred signal updates and input/inout
 port wiring. It checks writable concatenations and mixed signed/unsigned

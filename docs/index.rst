@@ -5,7 +5,7 @@
 
    intro/setup
    intro/examples
-   intro/supported
+   intro/features
    intro/development
    intro/contributing
    intro/architecture
