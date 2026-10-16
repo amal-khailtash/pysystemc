@@ -170,3 +170,11 @@ identity. Each specialization remains a distinct native interface/module.
 Returned native objects and owners are retained through shutdown. Scalar signal
 storage other than bool, signal reset registration, FIFO partial-interface
 families, full reset/error matrices and pre-shutdown teardown remain open.
+
+The separate ``sc_fifo_blocking_in_if[T]``, ``sc_fifo_blocking_out_if[T]``,
+``sc_fifo_nonblocking_in_if[T]`` and ``sc_fifo_nonblocking_out_if[T]`` templates
+also accept structural owners. Blocking input requires only ``read``; blocking
+output requires only ``write``. Nonblocking input requires ``nb_read`` and
+``data_written_event``; nonblocking output requires ``nb_write`` and
+``data_read_event``. Counts belong to combined interfaces. Borrowed events,
+failed-output preservation and blocking GIL/wait rules match the combined adapters.

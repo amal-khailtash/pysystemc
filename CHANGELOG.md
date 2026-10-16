@@ -8,12 +8,15 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Separate blocking/nonblocking native FIFO input/output structural adapters.
+  Owners need only their selected interface callbacks; wide read overloads,
+  copied writes, borrowed events and failed-output preservation are retained.
+
 - Structural native signal input/inout and FIFO input/output adapters with ordinary
   Python callbacks, borrowed event identity, wide signal reference storage,
   bool/logic edge events, and automatic GIL release for blocking FIFO calls.
 - FIFO checks preserve failed nonblocking outputs and compare 137-bit blocking
   transfers at 2 ns and 3 ns against an independent native model.
-
 - Structural custom interfaces now preserve native lvalue reference results
   through pointer trampolines, retaining returned storage and shared event
   identity. Checks cover mutable/const 137-bit values, replacement, invalid
@@ -24,7 +27,6 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   matched to semantic evidence; this does not claim complete binding support.
 - Header-based audit regression checks for blocking-get and extension overloads,
   protected wait/quantum hooks, specialization retention and enum spelling.
-
 
 ## [0.7.0] - 2026-10-15
 

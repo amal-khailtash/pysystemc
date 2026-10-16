@@ -195,6 +195,15 @@ _METHODS["sc_core::sc_fifo_out_if"] = {
     "python_reference_data_read_event": "data_read_event",
 }
 
+for _direction, _event in (("in", "data_written_event"), ("out", "data_read_event")):
+    _METHODS[f"sc_core::sc_fifo_blocking_{_direction}_if"] = (
+        {"read_value": "read"} if _direction == "in" else {"write_value": "write"}
+    )
+    _METHODS[f"sc_core::sc_fifo_nonblocking_{_direction}_if"] = {
+        **({"try_read_value": "nb_read"} if _direction == "in" else {"try_write_value": "nb_write"}),
+        f"python_reference_{_event}": _event,
+    }
+
 
 def _adapt(interface, implementation, factory):
     """Validate and retain one native adapter for a Python implementation."""

@@ -84,34 +84,57 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             if fifo_family.endswith("inout_if"):
                 methods += f"virtual void write(const {value}&) override = 0; "
             _reference_callbacks[name] = {k: v for k, v in callbacks.items() if v.startswith("python_reference_")}
-        elif fifo_family in ("sc_core::sc_fifo_in_if", "sc_core::sc_fifo_out_if"):
+        elif fifo_family in (
+            "sc_core::sc_fifo_in_if",
+            "sc_core::sc_fifo_out_if",
+            "sc_core::sc_fifo_blocking_in_if",
+            "sc_core::sc_fifo_blocking_out_if",
+            "sc_core::sc_fifo_nonblocking_in_if",
+            "sc_core::sc_fifo_nonblocking_out_if",
+        ):
             value = name.split("<", 1)[1].removesuffix(">")
             incoming = fifo_family.endswith("in_if")
+            combined = fifo_family in ("sc_core::sc_fifo_in_if", "sc_core::sc_fifo_out_if")
+            blocking = combined or "nonblocking" not in fifo_family
+            nonblocking = combined or "nonblocking" in fifo_family
             event = "data_written_event" if incoming else "data_read_event"
-            methods = (
-                f"virtual const sc_core::sc_event* python_reference_{event}() const = 0; "
-                f"const sc_core::sc_event& {event}() const override {{ auto* value = python_reference_{event}(); "
-                'if (!value) throw std::runtime_error("event callback returned null"); return *value; } '
-                f"const sc_core::sc_event& default_event() const override {{ return {event}(); }} "
-            )
-            _reference_callbacks[name] = {event: f"python_reference_{event}"}
-            if incoming:
+            if nonblocking:
                 methods += (
-                    f"using output_pair = std::pair<bool, {value}>; "
-                    "virtual output_pair try_read_value() = 0; "
-                    f"virtual {value} read_value() = 0; "
-                    f"bool nb_read({value}& value) override {{ auto result = try_read_value(); "
-                    "if (!result.first) return false; value = result.second; return true; } "
-                    f"void read({value}& value) override {{ value = read_value(); }} "
-                    f"{value} read() override {{ return read_value(); }} "
-                    "virtual int num_available() const override = 0; "
+                    f"virtual const sc_core::sc_event* python_reference_{event}() const = 0; "
+                    f"const sc_core::sc_event& {event}() const override {{ auto* value = python_reference_{event}(); "
+                    'if (!value) throw std::runtime_error("event callback returned null"); return *value; } '
+                    f"const sc_core::sc_event& default_event() const override {{ return {event}(); }} "
                 )
-            else:
+                _reference_callbacks[name] = {event: f"python_reference_{event}"}
+                if incoming:
+                    methods += (
+                        f"using output_pair = std::pair<bool, {value}>; "
+                        "virtual output_pair try_read_value() = 0; "
+                        f"bool nb_read({value}& value) override {{ auto result = try_read_value(); "
+                        "if (!result.first) return false; value = result.second; return true; } "
+                    )
+                else:
+                    methods += (
+                        f"virtual bool try_write_value({value}) = 0; "
+                        f"bool nb_write(const {value}& value) override {{ return try_write_value(value); }} "
+                    )
+            if blocking:
+                if incoming:
+                    methods += (
+                        f"virtual {value} read_value() = 0; "
+                        f"void read({value}& value) override {{ value = read_value(); }} "
+                        f"{value} read() override {{ return read_value(); }} "
+                    )
+                else:
+                    methods += (
+                        f"virtual void write_value({value}) = 0; "
+                        f"void write(const {value}& value) override {{ write_value(value); }} "
+                    )
+            if combined:
                 methods += (
-                    f"virtual void write_value({value}) = 0; virtual bool try_write_value({value}) = 0; "
-                    f"void write(const {value}& value) override {{ write_value(value); }} "
-                    f"bool nb_write(const {value}& value) override {{ return try_write_value(value); }} "
-                    "virtual int num_free() const override = 0; "
+                    "virtual int num_available() const override = 0; "
+                    if incoming
+                    else "virtual int num_free() const override = 0; "
                 )
         elif fifo_family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if"):
             value = name.split("<", 1)[1].removesuffix(">")

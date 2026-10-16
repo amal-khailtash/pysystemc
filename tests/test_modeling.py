@@ -623,3 +623,18 @@ def test_native_structural_fifo(tmp_path):
     )
     assert native.returncode == 0, native.stdout + native.stderr
     assert "FIFO_REFERENCE 2 3 4 ns" in output and "FIFO_REFERENCE 2 3 4 ns" in native.stdout
+
+
+def test_native_fifo_partial_interfaces(tmp_path):
+    """Check partial FIFO contracts, wide overloads, failed outputs and timed waits."""
+    output = run_example(tmp_path, "tests/models/native_fifo_partial.py")
+    assert "NATIVE_FIFO_PARTIAL_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/structural_fifo.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert "FIFO_REFERENCE 2 3 4 ns" in output and "FIFO_REFERENCE 2 3 4 ns" in native.stdout
