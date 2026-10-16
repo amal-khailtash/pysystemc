@@ -6,167 +6,37 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
-### Fixed
+## [0.7.0] - 2026-10-15
 
-- Multi socket duplicate registrations retain the original callback after native
-  registration warnings, matching upstream behavior.
-
-- Check custom PEQ high-bit values through native bit-proxy `to_bool()`.
-
-- Format first-party C++ function bodies across multiple lines and separate
-  documented definitions with blank lines.
-- Refresh the README PyPI badge cache identity after the 0.6.0 publication.
+This release adds callable socket families and expands native semantic validation.
+M6A remains incomplete: the full public declaration audit, general custom-channel
+reference returns, adapter teardown and remaining type/lifetime matrices are open.
 
 ### Added
 
-- Independent native word endian matrix matches 72 actual buffer lengths,
-  enable masks and read/write response records against Python.
+- Tagged simple target and initiator sockets with independent callback IDs.
+- Multi target and initiator sockets with connection-indexed callbacks, direct
+  multi-to-multi binding and automatic GIL release for indexed blocking calls.
+- Ordinary and tagged passthrough target sockets accepting Python callbacks.
+- Socket checks for hierarchical binding, custom 137-bit payload identity,
+  optional policies, registration errors, debug bounds and reset/kill/error cleanup.
+- Independent native references for simple and passthrough custom transactions.
+- Instance-specific extension isolation, replacement, carrier release, deep-copy
+  omission and clone/copy/free checks, with an independent native reference.
+- Endian conversion checks for generic, word, aligned and single-word families,
+  including unaligned transfers, streaming, byte enables and explicit response APIs.
+  Native comparisons cover single-word addresses, the word type/offset matrix and
+  generic unaligned streaming buffers.
+- Public guides for socket callbacks, private extension lifecycles and endian
+  conversion preconditions, ownership and verification limits.
 
-- Generic endian context-reuse checks verify sequential conversions target fresh
-  original buffers and leave completed response storage unchanged.
+### Fixed
 
-- Explicit single-word endian response calls preserve address/status across all
-  27 Python/native template combinations.
-
-- Explicit generic, word and aligned endian response templates verify read
-  copying alongside the generic response dispatcher.
-
-- Word endian read/write matrix covers three native word types and every offset
-  on two bus widths, checking actual native buffer sizes and byte mapping.
-
-- Word endian unaligned checks verify expanded request windows, enabled lanes
-  and read/write byte placement across bus boundaries.
-
-- Endian utility guide documents native converter preconditions, context and
-  buffer ownership, response metadata behavior and current verification limits.
-
-- Independent generic endian streaming reference compares actual enable masks,
-  source enables and masked response bytes with Python conversion results.
-
-- Combined generic endian streaming/enable checks verify unaligned repeated
-  windows, repeating enable masks and disabled-byte response preservation.
-
-- Generic endian type/offset matrix now checks read responses as well as writes,
-  verifying original storage against independent byte-address mapping.
-
-- Generic endian word-size/offset matrix verifies expanded buffers and enabled
-  lane mapping for three native word types and every offset on two bus widths.
-
-- Unaligned generic endian checks verify expanded bus windows, enabled byte lanes
-  and read/write data mapping across bus boundaries.
-
-- Generic endian streaming checks verify repeated address-window word ordering
-  and read-response copying for transfers wider than their streaming width.
-
-- Generic endian buffer regression checks read/write word ordering, converted
-  byte enables and disabled-byte preservation on response copying.
-
-- Word endian conversion checks verify write/read ordering, converted byte
-  enables and preservation of disabled response bytes.
-
-- Aligned endian equal-width checks verify original data/enable pointer identity
-  and in-place read response mutation on the native no-conversion path.
-
-- Aligned endian byte-enable checks verify enable reversal, unchanged original
-  enable storage and preservation of disabled read-response bytes.
-
-- Aligned endian buffer checks verify write word reversal and read response
-  copying into original borrowed storage.
-
-- Independent native single-word endian reference matches all 27 Python
-  template, bus-width and address conversion records.
-
-- Single-word endian utility regression checks native word/bus templates,
-  address lane conversion and generic response conversion dispatch.
-
-- Private carrier method checks verify null cloning and non-destructive native
-  copy/free behavior before explicit accessor cleanup.
-
-- Independent native private-extension reference checks isolation, replacement,
-  deep-copy omission, carrier release and reattachment against Python behavior.
-
-- Instance-specific extension guide documents carrier registration, borrowed
-  ownership, accessor invalidation after final clear and deep-copy semantics.
-
-- Private extension deep-copy checks verify native payload state copies while
-  instance-private carrier information stays exclusive to the original transaction.
-
-- Private extension replacement and carrier-release checks verify borrowed old
-  pointers, accessor isolation, final-clear detachment and clean reattachment.
-
-- Instance-specific extension regression verifies accessor and transaction isolation,
-  borrowed extension identity and explicit clearing after native carrier registration.
-
-- Multi target debug conversion checks cover unsigned endpoints and invalid
-  negative/overflow counts independently on both connections.
-
-- Public socket guide documents callable factories, signatures, connection IDs,
-  optional policies, borrowing, callback retention and current verification limits.
-
-- Registration error matrix verifies all 26 callable socket registrations reject
-  non-callable objects and permit subsequent valid optional elaboration.
-
-- Socket policy regressions verify optional zero-connection elaboration across
-  callable families and rejection of missing required bindings.
-
-- Independent native passthrough reference checks Python/native custom payload
-  identity, transport state, wide-field mutation and blocking timing.
-
-- Custom passthrough protocol regression checks 137-bit native payload fields,
-  transaction identity across callbacks and mutation after a blocking wait.
-
-- Passthrough callback exception regression checks error propagation, original
-  payload mutation, delay changes, cleanup and kernel time at failure.
-
-- Passthrough transport reset/kill regression verifies Python cleanup ordering,
-  process termination and unchanged borrowed transaction state after interruption.
-
-- Passthrough duplicate registration regressions verify original callbacks survive
-  native warnings; tagged sockets update user IDs as the native API specifies.
-
-- Ordinary and tagged passthrough target sockets accept retained Python transport,
-  debug and DMI callbacks with native templates, user IDs and blocking waits.
-
-- Indexed multi transport exception regression checks visible Python errors,
-  borrowed payload/delay mutations, cleanup and simulation time at failure.
-
-- Custom multi socket protocol regression checks original transaction identity
-  and 137-bit field preservation across both directions and timed payload mutation.
-
-- Multi socket lifecycle regression verifies both suspended connections restart
-  on reset and execute Python cleanup on reset/kill without completing transport.
-
-- Direct multi-to-multi socket regression verifies distinct forward target and
-  backward initiator indices, native binding sizes and independent transport waits.
-
-- Multi initiator sockets accept connection-indexed backward transport and DMI
-  invalidation callbacks, with automatic GIL release for indexed blocking access.
-
-- Multi target sockets accept retained Python callbacks for blocking/nonblocking
-  transport, debug and DMI, preserving native connection indices and templates.
-
-- Independent native custom socket reference verifies Python/native equivalence
-  for payload identity, wide-field mutation, forward/backward transport and timing.
-
-- Custom convenience socket protocol regression verifies 137-bit payload fields,
-  original transaction identity across forward/backward callbacks and timed mutation.
-
-- Hierarchical target socket regression verifies forward export and backward
-  port resolution, callback state, debug bounds and blocking timing.
-- Hierarchical initiator socket regression verifies parent port/export resolution
-  and Python callback dispatch after native elaboration.
-- Tagged initiator sockets register backward transport and DMI invalidation
-  callbacks with independent IDs and native phase/range semantics.
-- Tagged target nonblocking callbacks preserve independent user IDs, mutable
-  phase/delay references and native synchronization enum results.
-- Tagged target DMI callbacks preserve independent user IDs and borrowed native
-  DMI result fields alongside blocking and debug callback registrations.
-- Tagged target debug callbacks preserve independent registration IDs and
-  validate native unsigned return bounds.
-- Tagged convenience target sockets forward registered blocking callback IDs
-  while preserving native bus width, payload references and simulation timing.
-- Convenience socket exception regression checks callback error propagation,
-  payload/delay mutation and simulation time at failure.
+- Preserve original multi and passthrough callbacks after native duplicate
+  registration warnings, including native tagged passthrough ID updates.
+- Check custom PEQ high-bit values through native bit-proxy `to_bool()`.
+- Separate documented C++ functions with blank lines and expand short bodies.
+- Refresh the README PyPI badge cache identity for the release.
 
 ## [0.6.0] - 2026-10-15
 
@@ -379,7 +249,6 @@ custom-type and lifecycle verification continues.
 
 - Publish to production PyPI on release-tag pushes after checking the tag matches
   the package version; retain manual TestPyPI and PyPI publishing.
-
 - HTML coverage report under `build/coverage/html` alongside the terminal summary
   when running `make coverage`.
 
@@ -389,7 +258,6 @@ custom-type and lifecycle verification continues.
 
 - Install documentation dependencies into the Read the Docs virtual environment
   so hosted Sphinx builds can import MyST and the theme.
-
 - Replace the README badge table's empty header with Category and Status labels
   and refresh the production PyPI version badge.
 
@@ -405,7 +273,6 @@ custom-type and lifecycle verification continues.
 
 - Discover CPyCppyy API headers in the active environment before importing cppyy,
   preventing API-discovery warnings with uv cached installations.
-
 - Exclude ZIP directory entries from wheel RECORD so auditwheel can inspect and
   repair bundled native libraries.
 
@@ -429,7 +296,6 @@ custom-type and lifecycle verification continues.
   their native resources in platform wheels, staging builds outside the source tree.
 - Validate installed wheels with runtime C++ compilation and pthread waits; build
   publishing wheels in manylinux 2.28 and repair them with auditwheel.
-
 - Name the distribution `pysystemc`, retaining the `amal.eda.systemc` namespace;
   update version lookup, PyPI badges, dependency lock and package artifacts.
 - Keep the README concise and move detailed development notes into a Sphinx page.
