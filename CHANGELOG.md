@@ -6,6 +6,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Reproducible M6A source declaration inventory covering the checked-out core,
+  datatype, TLM and TLM utility headers, with overloads, template parameters,
+  access levels and portable source locations. Entries remain unreviewed until
+  matched to semantic evidence; this does not claim complete binding support.
+- Header-based audit regression checks for blocking-get and extension overloads,
+  protected wait/quantum hooks, specialization retention and enum spelling.
+
+
 ## [0.7.0] - 2026-10-15
 
 This release adds callable socket families and expands native semantic validation.
