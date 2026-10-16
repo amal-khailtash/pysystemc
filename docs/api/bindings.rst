@@ -125,3 +125,23 @@ Native library loading and CPyCppyy header repair are centralized in the private
 runtime module. The package ships its licensed native entry adapter and requires
 no external kernel source file at startup. Existing environment overrides remain
 available; ordinary installed wheels discover bundled dependencies automatically.
+
+Structural reference results
+----------------------------
+
+Explicit ``sc.interface(methods=...)`` declarations support lvalue reference
+results such as ``const sc_dt::sc_biguint<137>&`` and ``sc_core::sc_event&``.
+The ordinary Python method returns a cppyy native object. A native pointer
+trampoline preserves its address rather than copying the value. The structural
+adapter retains each distinct returned object through interpreter shutdown, so
+previously borrowed references survive replacement of the owner's storage.
+Return long-lived storage: creating a fresh object on every call retains all
+those objects. Python scalars are rejected for reference results.
+
+Mutable results preserve writable native identity; event results preserve
+sensitivity to the original event. Named scalar arguments are supported.
+Defaults, template-valued argument declarations, rvalue-reference results and
+repeated-name overloads require a dedicated native adapter. This implementation
+does not yet adapt native signal/FIFO reference-return interfaces automatically.
+Callbacks use cppyy's GIL acquisition; blocking callers must release the GIL and
+callbacks must use guarded waits. Owner teardown before shutdown remains open.

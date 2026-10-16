@@ -582,3 +582,24 @@ def test_structural_blocking_get_peek_interface(tmp_path):
 def test_structural_tlm_arbitrary_width_value_copies(tmp_path):
     """Verify high-bit preservation, independent copies and wide output assignments."""
     assert "PYTHON_TLM_WIDE_VALUES_OK" in run_example(tmp_path, "tests/models/python_tlm_wide_values.py")
+
+
+def test_custom_reference_returns(tmp_path):
+    """Check wide reference identity, event sensitivity, errors and retained storage."""
+    output = run_example(tmp_path, "tests/models/custom_reference_returns.py")
+    assert "CUSTOM_REFERENCE_RETURNS_OK" in output
+    native = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples/run_sysc_cpp.py"),
+            str(ROOT / "tests/native/custom_reference_returns.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert [line for line in output.splitlines() if line.startswith("REFERENCE_RESULT")] == [
+        line for line in native.stdout.splitlines() if line.startswith("REFERENCE_RESULT")
+    ]

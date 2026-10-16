@@ -9,7 +9,7 @@ from typing import get_type_hints
 
 import cppyy
 
-from ._channel_interfaces import declare_interface
+from ._channel_interfaces import declare_interface, _reference_callbacks
 
 _owners = []
 _classes = {}
@@ -67,7 +67,10 @@ def interface(protocol=None, *, methods=None):
 
     None returns map to void, bool to bool, float to double, and cppyy native
     classes retain their C++ type. Python int, missing annotations, defaults and
-    variadic parameters raise TypeError. References require explicit trusted C++ signatures; repeated-name overload
+    variadic parameters raise TypeError. Lvalue reference results require explicit trusted C++ signatures and native
+    object storage; returned objects are retained through shutdown and keep native
+    identity. Reference arguments must have names; defaults and template-valued
+    argument declarations require a native adapter. Repeated-name overload
     declarations are not supported by the methods dictionary. Owners survive simulation; errors propagate.
     """
 
@@ -76,7 +79,9 @@ def interface(protocol=None, *, methods=None):
         declarations = methods if methods is not None else _infer_methods(protocol)
         native = declare_interface(f"ProtocolInterface{len(_protocol_interfaces)}", declarations)
         _protocol_interfaces[protocol] = native
-        _METHODS[native.__cpp_name__] = {name: name for name in declarations}
+        _METHODS[native.__cpp_name__] = {
+            _reference_callbacks[native.__cpp_name__].get(name, name): name for name in declarations
+        }
         return protocol
 
     return register(protocol) if protocol is not None else register
@@ -188,6 +193,10 @@ def _adapt(interface, implementation, factory):
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
                 result = getattr(self._implementation, _method)(*args)
+                if _reference_callbacks.get(interface.__cpp_name__, {}).get(_method):
+                    if not hasattr(type(result), "__cpp_name__"):
+                        raise TypeError(f"{_method} must return retained native storage for a reference result")
+                    self._reference_results[cppyy.addressof(result)] = result
                 if _method in ("nb_get", "nb_peek"):
                     if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
                         raise TypeError(f"{_method} must return a (bool, value) tuple")
@@ -202,6 +211,7 @@ def _adapt(interface, implementation, factory):
     name = cppyy.gbl.sc_core.sc_module_name(cppyy.gbl.sc_core.sc_gen_unique_name("python_interface", False))
     adapter = _classes[interface](name)
     adapter._implementation = implementation
+    adapter._reference_results = {}
     for method in ("transport", "get", "peek", "put", "b_transport"):
         overload = getattr(type(adapter), method, None)
         if overload is not None and hasattr(overload, "__release_gil__"):

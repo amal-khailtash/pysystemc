@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural custom interfaces now preserve native lvalue reference results
+  through pointer trampolines, retaining returned storage and shared event
+  identity. Checks cover mutable/const 137-bit values, replacement, invalid
+  results, owner retention and event timing with an independent native reference.
+
 - Reproducible M6A source declaration inventory covering the checked-out core,
   datatype, TLM and TLM utility headers, with overloads, template parameters,
   access levels and portable source locations. Entries remain unreviewed until

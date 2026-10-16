@@ -12,6 +12,7 @@ import cppyy
 
 _interface_declarations = {}
 _channel_interfaces = {}
+_reference_callbacks = {}
 
 
 def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
@@ -461,6 +462,8 @@ def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
         name: Unique C++ identifier for the interface.
         methods: Map method names to (C++ return type, C++ argument declarations).
             Reference arguments preserve native semantics; retain their storage.
+            Lvalue reference results use a pointer trampoline; structural callbacks
+            must return native objects, which the adapter retains through shutdown.
 
     Returns:
         Native class usable as a Python base and sc_port template argument.
@@ -484,13 +487,38 @@ def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
         if previous != declaration:
             raise ValueError(f"interface already declared with different methods: {name}")
         return interface
-    signatures = "\n".join(
-        f"virtual {result} {method}({arguments}) = 0;" for method, (result, arguments) in declaration
-    )
+    signatures = []
+    reference_callbacks = {}
+    for method, (result, arguments) in declaration:
+        if result.rstrip().endswith("&") and not result.rstrip().endswith("&&"):
+            pointee = result.rstrip()[:-1].strip()
+            callback = f"python_reference_{method}"
+            if "<" in arguments or "=" in arguments:
+                raise ValueError("reference-return arguments with templates or defaults require a native adapter")
+            parameters = []
+            for argument in arguments.split(",") if arguments.strip() else []:
+                match = re.search(r"([A-Za-z_][A-Za-z_0-9]*)\s*$", argument)
+                if match is None:
+                    raise ValueError("reference-return methods require named arguments without defaults")
+                parameters.append(match[1])
+            signatures.append(
+                "/** @brief Borrow retained Python callback storage as a native reference. "
+                "@details cppyy acquires the GIL for the pointer callback; the structural adapter "
+                "retains returned storage through shutdown. Null results throw; callback exceptions "
+                "propagate. Blocking callbacks require guarded waits and a GIL-releasing caller. */ "
+                f"virtual {pointee}* {callback}({arguments}) = 0; "
+                f"virtual {result} {method}({arguments}) {{ auto* value = {callback}({', '.join(parameters)}); "
+                'if (!value) throw std::runtime_error("reference callback returned null"); return *value; }'
+            )
+            reference_callbacks[method] = callback
+        else:
+            signatures.append(f"virtual {result} {method}({arguments}) = 0;")
+    signatures = "\n".join(signatures)
     cppyy.cppdef(
         f"namespace pysystemc_interfaces {{ class {name} : public virtual sc_core::PythonInterface {{ "
         f"public: {name}() = default; ~{name}() override = default; {signatures} }}; }}"
     )
     interface = getattr(cppyy.gbl.pysystemc_interfaces, name)
+    _reference_callbacks[interface.__cpp_name__] = reference_callbacks
     _interface_declarations[name] = (declaration, interface)
     return interface
