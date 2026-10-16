@@ -8,10 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Native FIFO callback validation rejects non-bool write results and malformed
+  read pairs; error checks preserve outputs and verify recovery after exceptions.
 - Separate blocking/nonblocking native FIFO input/output structural adapters.
   Owners need only their selected interface callbacks; wide read overloads,
   copied writes, borrowed events and failed-output preservation are retained.
-
 - Structural native signal input/inout and FIFO input/output adapters with ordinary
   Python callbacks, borrowed event identity, wide signal reference storage,
   bool/logic edge events, and automatic GIL release for blocking FIFO calls.

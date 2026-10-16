@@ -638,3 +638,8 @@ def test_native_fifo_partial_interfaces(tmp_path):
     )
     assert native.returncode == 0, native.stdout + native.stderr
     assert "FIFO_REFERENCE 2 3 4 ns" in output and "FIFO_REFERENCE 2 3 4 ns" in native.stdout
+
+
+def test_native_fifo_callback_errors(tmp_path):
+    """Reject malformed callbacks and preserve outputs while allowing recovery."""
+    assert "NATIVE_FIFO_ERRORS_OK" in run_example(tmp_path, "tests/models/native_fifo_errors.py")

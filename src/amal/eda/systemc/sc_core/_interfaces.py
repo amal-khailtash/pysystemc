@@ -241,6 +241,8 @@ def _adapt(interface, implementation, factory):
                     if not hasattr(type(result), "__cpp_name__"):
                         raise TypeError(f"{_method} must return retained native storage for a reference result")
                     self._reference_results[cppyy.addressof(result)] = result
+                if family.startswith("sc_core::sc_fifo_") and _method == "nb_write" and not isinstance(result, bool):
+                    raise TypeError("nb_write must return bool")
                 if _method in ("nb_get", "nb_peek", "nb_read"):
                     if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
                         raise TypeError(f"{_method} must return a (bool, value) tuple")

@@ -178,3 +178,9 @@ output requires only ``write``. Nonblocking input requires ``nb_read`` and
 ``data_written_event``; nonblocking output requires ``nb_write`` and
 ``data_read_event``. Counts belong to combined interfaces. Borrowed events,
 failed-output preservation and blocking GIL/wait rules match the combined adapters.
+
+Native FIFO ``nb_write`` callbacks must return an actual Python bool; integers,
+strings and None raise ``TypeError``. Nonblocking reads require a two-item tuple
+with a bool success flag and a convertible native value. Invalid results and
+callback exceptions preserve the caller's read output. Blocking callback errors
+propagate to the caller; after correcting owner state, later calls remain usable.
