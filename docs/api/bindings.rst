@@ -153,7 +153,7 @@ Native structural signal and FIFO interfaces
 ordinary Python owners implementing ``read``, ``get_data_ref``,
 ``value_changed_event`` and ``event`` (plus ``write`` for inout). Native datatype
 objects returned by read/trace callbacks preserve borrowed address identity.
-Bool uses a stable adapter-owned scalar slot; logic and bool owners also supply
+Fundamental C++ scalar types use stable adapter-owned read/trace slots; logic and bool owners also supply
 ``posedge``, ``negedge`` and their event callbacks. ``default_event`` delegates
 to the owner's value-changed event. Owners must implement native update/delta
 semantics; the adapter does not schedule signal writes for them.
@@ -167,9 +167,8 @@ Blocking calls release the GIL and callbacks must use guarded waits.
 
 Events returned by different adapter specializations retain the owner's event
 identity. Each specialization remains a distinct native interface/module.
-Returned native objects and owners are retained through shutdown. Scalar signal
-storage other than bool, signal reset registration, FIFO partial-interface
-families, full reset/error matrices and pre-shutdown teardown remain open.
+Returned native objects and owners are retained through shutdown. Full scalar conversion/range/trace matrices, signal reset registration,
+full reset/error matrices and pre-shutdown teardown remain open.
 
 The separate ``sc_fifo_blocking_in_if[T]``, ``sc_fifo_blocking_out_if[T]``,
 ``sc_fifo_nonblocking_in_if[T]`` and ``sc_fifo_nonblocking_out_if[T]`` templates
@@ -184,3 +183,10 @@ strings and None raise ``TypeError``. Nonblocking reads require a two-item tuple
 with a bool success flag and a convertible native value. Invalid results and
 callback exceptions preserve the caller's read output. Blocking callback errors
 propagate to the caller; after correcting owner state, later calls remain usable.
+
+
+Scalar owners return Python values from ``read``; ``get_data_ref`` uses the same
+native slot and does not require another owner callback. Successful reads update
+that slot immediately; owners are responsible for native update/delta semantics.
+Different adapter specializations have separate scalar slots even when they borrow
+the same event. Invalid conversions propagate; later valid reads remain usable.

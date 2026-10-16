@@ -13,6 +13,25 @@ import cppyy
 _interface_declarations = {}
 _channel_interfaces = {}
 _reference_callbacks = {}
+_SCALAR_TYPES = frozenset(
+    {
+        "bool",
+        "char",
+        "signed char",
+        "unsigned char",
+        "short",
+        "unsigned short",
+        "int",
+        "unsigned int",
+        "long",
+        "unsigned long",
+        "long long",
+        "unsigned long long",
+        "float",
+        "double",
+        "long double",
+    }
+)
 
 
 def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
@@ -59,15 +78,15 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     f"const {result}& {method}() const override {{ auto* value = {callback}(); "
                     'if (!value) throw std::runtime_error("reference callback returned null"); return *value; } '
                 )
-            if value == "bool":
-                # Native bool has no Python-owned cppyy scalar object. Keep one stable slot.
+            if value in _SCALAR_TYPES:
+                # Fundamental Python values need adapter-owned native reference storage.
                 methods = methods.replace(
-                    "virtual const bool* python_reference_read() const = 0;",
-                    "mutable bool sampled = false; virtual bool read_value() const = 0; "
-                    "const bool* python_reference_read() const { sampled = read_value(); return &sampled; }",
+                    f"virtual const {value}* python_reference_read() const = 0;",
+                    f"using scalar_value = {value}; using scalar_pair = std::pair<scalar_value, bool>; mutable scalar_value sampled{{}}; virtual scalar_pair read_value() const = 0; "
+                    f"const {value}* python_reference_read() const {{ sampled = read_value().first; return &sampled; }}",
                 ).replace(
-                    "virtual const bool* python_reference_get_data_ref() const = 0;",
-                    "const bool* python_reference_get_data_ref() const { return python_reference_read(); }",
+                    f"virtual const {value}* python_reference_get_data_ref() const = 0;",
+                    "const " + value + "* python_reference_get_data_ref() const { return python_reference_read(); }",
                 )
                 callbacks = {"read": "read_value", "value_changed_event": "python_reference_value_changed_event"}
             if value in ("bool", "sc_dt::sc_logic"):

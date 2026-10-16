@@ -1,5 +1,7 @@
 # Changelog
 
+<!-- markdownlint-disable MD024 -->
+
 Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
@@ -8,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural scalar signal interfaces use stable native read/trace storage for
+  fundamental C++ types, with signed, floating and 64-bit conversion checks.
 - Native FIFO callback validation rejects non-bool write results and malformed
   read pairs; error checks preserve outputs and verify recovery after exceptions.
 - Separate blocking/nonblocking native FIFO input/output structural adapters.
@@ -367,7 +371,8 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.3.0...v0.4.0

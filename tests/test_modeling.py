@@ -643,3 +643,8 @@ def test_native_fifo_partial_interfaces(tmp_path):
 def test_native_fifo_callback_errors(tmp_path):
     """Reject malformed callbacks and preserve outputs while allowing recovery."""
     assert "NATIVE_FIFO_ERRORS_OK" in run_example(tmp_path, "tests/models/native_fifo_errors.py")
+
+
+def test_native_scalar_signal_interfaces(tmp_path):
+    """Verify signed/floating/wide scalar signals, sensitivity and invalid-result recovery."""
+    assert "NATIVE_SCALAR_SIGNAL_OK" in run_example(tmp_path, "tests/models/native_scalar_signal.py")

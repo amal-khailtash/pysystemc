@@ -9,7 +9,7 @@ from typing import get_type_hints
 
 import cppyy
 
-from ._channel_interfaces import declare_interface, _reference_callbacks
+from ._channel_interfaces import declare_interface, _reference_callbacks, _SCALAR_TYPES
 
 _owners = []
 _classes = {}
@@ -214,7 +214,7 @@ def _adapt(interface, implementation, factory):
     if family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
         methods = dict(methods)
         value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
-        if value == "bool":
+        if value in _SCALAR_TYPES:
             methods.pop("python_reference_read")
             methods.pop("python_reference_get_data_ref")
             methods["read_value"] = "read"
@@ -231,12 +231,15 @@ def _adapt(interface, implementation, factory):
     if interface not in _classes:
         base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
         output_pair = getattr(base, "output_pair", None)
+        scalar_pair = getattr(base, "scalar_pair", None)
         callbacks = {}
         for native_name, python_name in methods.items():
 
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
                 result = getattr(self._implementation, _method)(*args)
+                if scalar_pair is not None and _method == "read":
+                    return scalar_pair(result, True)
                 if _reference_callbacks.get(interface.__cpp_name__, {}).get(_method):
                     if not hasattr(type(result), "__cpp_name__"):
                         raise TypeError(f"{_method} must return retained native storage for a reference result")
