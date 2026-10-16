@@ -172,12 +172,47 @@ _METHODS["tlm::tlm_fifo_get_if"] = {
 }
 
 
+for _family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
+    _METHODS[_family] = {
+        "python_reference_read": "read",
+        "python_reference_get_data_ref": "get_data_ref",
+        "python_reference_value_changed_event": "value_changed_event",
+        "event": "event",
+    }
+    if _family.endswith("inout_if"):
+        _METHODS[_family]["write"] = "write"
+
+_METHODS["sc_core::sc_fifo_in_if"] = {
+    "read_value": "read",
+    "try_read_value": "nb_read",
+    "num_available": "num_available",
+    "python_reference_data_written_event": "data_written_event",
+}
+_METHODS["sc_core::sc_fifo_out_if"] = {
+    "write_value": "write",
+    "try_write_value": "nb_write",
+    "num_free": "num_free",
+    "python_reference_data_read_event": "data_read_event",
+}
+
+
 def _adapt(interface, implementation, factory):
     """Validate and retain one native adapter for a Python implementation."""
     family = interface.__cpp_name__.split("<", 1)[0]
     methods = _METHODS.get(family)
     if methods is None:
         raise TypeError(f"automatic Python binding is not supported for {interface.__cpp_name__}")
+    if family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
+        methods = dict(methods)
+        value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+        if value == "bool":
+            methods.pop("python_reference_read")
+            methods.pop("python_reference_get_data_ref")
+            methods["read_value"] = "read"
+        if value in ("bool", "sc_dt::sc_logic"):
+            for edge in ("posedge", "negedge"):
+                methods[edge] = edge
+                methods[f"python_reference_{edge}_event"] = f"{edge}_event"
     for method in methods.values():
         if not callable(getattr(implementation, method, None)):
             raise TypeError(f"{family} requires callable {method}")
@@ -197,7 +232,7 @@ def _adapt(interface, implementation, factory):
                     if not hasattr(type(result), "__cpp_name__"):
                         raise TypeError(f"{_method} must return retained native storage for a reference result")
                     self._reference_results[cppyy.addressof(result)] = result
-                if _method in ("nb_get", "nb_peek"):
+                if _method in ("nb_get", "nb_peek", "nb_read"):
                     if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
                         raise TypeError(f"{_method} must return a (bool, value) tuple")
                     if output_pair is not None:
@@ -212,7 +247,7 @@ def _adapt(interface, implementation, factory):
     adapter = _classes[interface](name)
     adapter._implementation = implementation
     adapter._reference_results = {}
-    for method in ("transport", "get", "peek", "put", "b_transport"):
+    for method in ("transport", "get", "peek", "put", "b_transport", "read", "write"):
         overload = getattr(type(adapter), method, None)
         if overload is not None and hasattr(overload, "__release_gil__"):
             overload.__release_gil__ = True

@@ -40,7 +40,80 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
         identifier = f"ChannelInterface{len(_channel_interfaces)}"
         methods = ""
         fifo_family = name.split("<", 1)[0]
-        if fifo_family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if"):
+        # Native reference wrappers borrow storage retained by the structural owner cache.
+        # Pointer overrides let cppyy preserve identity instead of translating references.
+        if fifo_family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
+            value = name.split("<", 1)[1].removesuffix(">")
+            references = {
+                "read": (value, "const"),
+                "get_data_ref": (value, "const"),
+                "value_changed_event": ("sc_core::sc_event", "const"),
+            }
+            callbacks = {}
+            methods = "virtual bool event() const override = 0; "
+            for method, (result, qualifier) in references.items():
+                callback = f"python_reference_{method}"
+                callbacks[method] = callback
+                methods += (
+                    f"virtual const {result}* {callback}() {qualifier} = 0; "
+                    f"const {result}& {method}() const override {{ auto* value = {callback}(); "
+                    'if (!value) throw std::runtime_error("reference callback returned null"); return *value; } '
+                )
+            if value == "bool":
+                # Native bool has no Python-owned cppyy scalar object. Keep one stable slot.
+                methods = methods.replace(
+                    "virtual const bool* python_reference_read() const = 0;",
+                    "mutable bool sampled = false; virtual bool read_value() const = 0; "
+                    "const bool* python_reference_read() const { sampled = read_value(); return &sampled; }",
+                ).replace(
+                    "virtual const bool* python_reference_get_data_ref() const = 0;",
+                    "const bool* python_reference_get_data_ref() const { return python_reference_read(); }",
+                )
+                callbacks = {"read": "read_value", "value_changed_event": "python_reference_value_changed_event"}
+            if value in ("bool", "sc_dt::sc_logic"):
+                for edge in ("posedge", "negedge"):
+                    callbacks[f"{edge}_event"] = f"python_reference_{edge}_event"
+                    methods += (
+                        f"virtual bool {edge}() const override = 0; "
+                        f"virtual const sc_core::sc_event* python_reference_{edge}_event() const = 0; "
+                        f"const sc_core::sc_event& {edge}_event() const override {{ "
+                        f"auto* value = python_reference_{edge}_event(); "
+                        'if (!value) throw std::runtime_error("event callback returned null"); return *value; } '
+                    )
+            methods += "const sc_core::sc_event& default_event() const override { return value_changed_event(); } "
+            if fifo_family.endswith("inout_if"):
+                methods += f"virtual void write(const {value}&) override = 0; "
+            _reference_callbacks[name] = {k: v for k, v in callbacks.items() if v.startswith("python_reference_")}
+        elif fifo_family in ("sc_core::sc_fifo_in_if", "sc_core::sc_fifo_out_if"):
+            value = name.split("<", 1)[1].removesuffix(">")
+            incoming = fifo_family.endswith("in_if")
+            event = "data_written_event" if incoming else "data_read_event"
+            methods = (
+                f"virtual const sc_core::sc_event* python_reference_{event}() const = 0; "
+                f"const sc_core::sc_event& {event}() const override {{ auto* value = python_reference_{event}(); "
+                'if (!value) throw std::runtime_error("event callback returned null"); return *value; } '
+                f"const sc_core::sc_event& default_event() const override {{ return {event}(); }} "
+            )
+            _reference_callbacks[name] = {event: f"python_reference_{event}"}
+            if incoming:
+                methods += (
+                    f"using output_pair = std::pair<bool, {value}>; "
+                    "virtual output_pair try_read_value() = 0; "
+                    f"virtual {value} read_value() = 0; "
+                    f"bool nb_read({value}& value) override {{ auto result = try_read_value(); "
+                    "if (!result.first) return false; value = result.second; return true; } "
+                    f"void read({value}& value) override {{ value = read_value(); }} "
+                    f"{value} read() override {{ return read_value(); }} "
+                    "virtual int num_available() const override = 0; "
+                )
+            else:
+                methods += (
+                    f"virtual void write_value({value}) = 0; virtual bool try_write_value({value}) = 0; "
+                    f"void write(const {value}& value) override {{ write_value(value); }} "
+                    f"bool nb_write(const {value}& value) override {{ return try_write_value(value); }} "
+                    "virtual int num_free() const override = 0; "
+                )
+        elif fifo_family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if"):
             value = name.split("<", 1)[1].removesuffix(">")
             methods = (
                 "virtual int used() const override = 0; virtual int size() const override = 0; "
@@ -445,7 +518,8 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             "/** @brief Combined Python channel interface. "
             "@details Ports borrow the owner through simulation. cppyy acquires the GIL for overrides; "
             "blocking native calls must release it. Callback exceptions propagate to the caller. "
-            "Debug transport validates unsigned range and must not wait. */ "
+            "Debug transport validates unsigned range and must not wait. Reference pointer callbacks "
+            "borrow storage retained through shutdown; null pointers throw and events preserve owner identity. */ "
             f"namespace pysystemc_interfaces {{ class {identifier} : public sc_core::ScModule, public {name} {{ "
             f"public: explicit {identifier}(sc_core::sc_module_name name) : sc_core::ScModule(name) {{}} "
             f"~{identifier}() override = default; {methods} }}; }}"

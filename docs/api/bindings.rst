@@ -141,7 +141,32 @@ those objects. Python scalars are rejected for reference results.
 Mutable results preserve writable native identity; event results preserve
 sensitivity to the original event. Named scalar arguments are supported.
 Defaults, template-valued argument declarations, rvalue-reference results and
-repeated-name overloads require a dedicated native adapter. This implementation
-does not yet adapt native signal/FIFO reference-return interfaces automatically.
+repeated-name overloads require a dedicated native adapter. Native signal and FIFO structural adapters are described below.
 Callbacks use cppyy's GIL acquisition; blocking callers must release the GIL and
 callbacks must use guarded waits. Owner teardown before shutdown remains open.
+
+
+Native structural signal and FIFO interfaces
+--------------------------------------------
+
+``sc_port[sc_signal_in_if[T]]`` and ``sc_port[sc_signal_inout_if[T]]`` accept
+ordinary Python owners implementing ``read``, ``get_data_ref``,
+``value_changed_event`` and ``event`` (plus ``write`` for inout). Native datatype
+objects returned by read/trace callbacks preserve borrowed address identity.
+Bool uses a stable adapter-owned scalar slot; logic and bool owners also supply
+``posedge``, ``negedge`` and their event callbacks. ``default_event`` delegates
+to the owner's value-changed event. Owners must implement native update/delta
+semantics; the adapter does not schedule signal writes for them.
+
+``sc_port[sc_fifo_in_if[T]]`` accepts ``read()``, ``nb_read()`` returning a
+``(bool, value)`` pair, ``num_available`` and ``data_written_event``.
+``sc_fifo_out_if[T]`` accepts ``write(value)``, ``nb_write(value)``, ``num_free``
+and ``data_read_event``. Native read overloads return a value or assign an output;
+a failed nonblocking read preserves the output. Write callbacks receive copies.
+Blocking calls release the GIL and callbacks must use guarded waits.
+
+Events returned by different adapter specializations retain the owner's event
+identity. Each specialization remains a distinct native interface/module.
+Returned native objects and owners are retained through shutdown. Scalar signal
+storage other than bool, signal reset registration, FIFO partial-interface
+families, full reset/error matrices and pre-shutdown teardown remain open.

@@ -603,3 +603,23 @@ def test_custom_reference_returns(tmp_path):
     assert [line for line in output.splitlines() if line.startswith("REFERENCE_RESULT")] == [
         line for line in native.stdout.splitlines() if line.startswith("REFERENCE_RESULT")
     ]
+
+
+def test_native_structural_signal(tmp_path):
+    """Verify native signal input/inout reference identity and event sensitivity."""
+    assert "NATIVE_STRUCTURAL_SIGNAL_OK" in run_example(tmp_path, "tests/models/native_structural_signal.py")
+
+
+def test_native_structural_fifo(tmp_path):
+    """Verify FIFO event identity, failed output preservation and timed blocking reads."""
+    output = run_example(tmp_path, "tests/models/native_structural_fifo.py")
+    assert "NATIVE_STRUCTURAL_FIFO_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/structural_fifo.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert "FIFO_REFERENCE 2 3 4 ns" in output and "FIFO_REFERENCE 2 3 4 ns" in native.stdout
