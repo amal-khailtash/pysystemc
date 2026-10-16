@@ -8,10 +8,15 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-16
+
+Adds structural native reference, signal and FIFO adapters. Full public API
+coverage, reset/error matrices and adapter teardown remain incomplete.
+
 ### Added
 
 - Comprehensive Features checklist covering implemented capabilities, open binding
-  requirements, upstream example audits and deferred extensions.
+  requirements and upstream example audits.
 - Structural scalar signal interfaces use stable native read/trace storage for
   fundamental C++ types, with signed, floating and 64-bit conversion checks.
 - Native FIFO callback validation rejects non-bool write results and malformed
