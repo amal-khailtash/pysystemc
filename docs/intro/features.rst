@@ -1,18 +1,12 @@
 Features
 ========
 
-This checklist tracks implemented and verified capabilities alongside remaining
-work. It is maintained with the development plan as implementation groups land.
+Features marked ☑ have been implemented and tested for the scope described.
+Items marked ☐ remain incomplete or untested.
 
-* ☑ Delivered and verified for the described scope.
-* ☐ Open requirement: incomplete, failing or untested as stated.
-* ☐ Deferred roadmap item: planned after the binding and example milestones.
-
-A checked item does not establish every overload, type, lifetime or platform
-combination. Open completeness gates remain visible beside delivered increments.
-Native symbol availability alone does not establish Python support.
-See :doc:`../api/coverage` for verification evidence and
-:doc:`../api/bindings` for usage and lifetime rules.
+See :doc:`../api/coverage` for tested combinations,
+:doc:`../api/bindings` for usage and lifetime rules, and
+:doc:`development` for future development.
 
 Environment and runtime
 -----------------------
@@ -86,8 +80,8 @@ than a supported-width registry. Trace storage must survive native use.
 Public binding implementation and audit
 ---------------------------------------
 
-The following groups mirror the detailed M6A checklist. They retain open audit
-and lifecycle requirements even where representative implementations pass.
+The following sections cover custom interfaces, TLM and the remaining API
+coverage and lifetime requirements.
 
 Public declaration inventory and Python mapping — incomplete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,8 +118,8 @@ Custom interfaces and channels — partially implemented
 * ☐ Adapter teardown and release of retained callback owners before shutdown.
 * ☐ Complete custom-channel error/reset/GIL/access-path matrix.
 
-TLM interface families — implemented increments; full matrix open
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TLM interface families — partial
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ Structural TLM1 blocking put/get/peek/transport/analysis adapters.
 * ☑ Structural TLM1 nonblocking put/get/peek and combined get/put/peek/get-peek adapters.
@@ -134,8 +128,8 @@ TLM interface families — implemented increments; full matrix open
 * ☑ Selected wide native payload/value identity and failed-output preservation checks.
 * ☐ Full public overload/type/event/lifetime and independent native reference matrices.
 
-Callable sockets — delivered API families; completeness open
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Callable sockets — partial
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ Simple target: all four forward registrations; simple initiator: both backward registrations.
 * ☑ Tagged target/initiator registrations with independent user IDs.
@@ -170,8 +164,8 @@ TLM timing, payloads, extensions and endian utilities — partial
 * ☐ Complete extension clone/copy/free/mm and payload memory-manager ownership matrices.
 * ☐ Complete timing/extension/endian public declarations and context/lifetime audit.
 
-Core semantics and final gates — incomplete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Core API coverage
+~~~~~~~~~~~~~~~~~
 
 * ☐ Full datatype/proxy/concat/implicit-conversion/overload audit.
 * ☐ Full writer/port/fixed-point policy audit.
@@ -181,7 +175,7 @@ Core semantics and final gates — incomplete
 * ☐ Verify host/kernel lifetime and adapter ownership release.
 * ☑ Public socket, instance-extension and endian guides added with precise limits.
 * ☑ Strict Sphinx validation of the published API guides.
-* ☐ Reconciled full regression and coverage for the final M6A implementation.
+* ☐ Reconciled full regression and coverage for the complete public API.
 * ☐ Review first-party adapters and verify latest installed wheel and sdist.
 * ☐ Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
 
@@ -197,7 +191,8 @@ Examples and C++ interoperability
 * ☐ Complete Python ports of all upstream sysc and tlm groups with native equivalence.
 * ☐ Per-variant documentation, licensing, regression and installed-artifact checks.
 
-Passing selected ports does not complete M6B. The remaining group audit includes:
+The following upstream example groups still need a complete variant audit and
+Python/native comparison:
 
 * ☐ ``sysc/2.1/dpipe``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/2.1/forkjoin``: complete executable-variant audit and Python/native equivalence.
@@ -241,26 +236,5 @@ Packaging, documentation and quality
 * ☑ Semantic regression CI, lint/format checks and strict Sphinx documentation builds.
 * ☑ Quickstart, architecture/lifetime, API guides, examples and troubleshooting.
 * ☑ Optional native sanitizer/leak validation tooling.
-* ☐ Final full regression, measured coverage and installed wheel/sdist gates for M6A.
+* ☐ Final full regression, measured coverage and installed wheel/sdist gates for the complete public API.
 * ☐ Complete public declaration-to-Python semantic mapping and upstream reconciliation.
-
-Deferred extensions
--------------------
-
-These roadmap capabilities follow M6A/M6B and are not implemented support claims.
-
-* ☐ Deferred: SystemC Verification library integration and transaction recording.
-* ☐ Deferred: CRAVE constrained randomization and reproducibility.
-* ☐ Deferred: FC4SC functional coverage and report export.
-* ☐ Deferred: UVM-SystemC components, sequences and phase/objection behavior.
-* ☐ Deferred: Verilog/SystemVerilog simulator integration through Verilator or VPI/DPI.
-
-Maintaining this checklist
---------------------------
-
-Update the affected feature group with each implementation change. Check an item
-only when its described behavior has semantic evidence. Split broad requirements
-into delivered increments and remaining gates rather than checking a whole family
-from one passing example. Mark failures, untested behavior and deferred work
-explicitly. Keep detailed usage in API guides and session state outside published
-documentation.
