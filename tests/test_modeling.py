@@ -675,3 +675,8 @@ def test_structural_callback_contracts(tmp_path):
 def test_tlm_boolean_callback_contracts(tmp_path):
     """Verify five TLM boolean callbacks reject malformed results and recover."""
     assert "TLM_BOOLEAN_CONTRACTS_OK" in run_example(tmp_path, "tests/models/tlm_boolean_contracts.py")
+
+
+def test_tlm_fifo_callback_contracts(tmp_path):
+    """Reject malformed FIFO config/debug returns and verify defaults and recovery."""
+    assert "TLM_FIFO_CALLBACK_CONTRACTS_OK" in run_example(tmp_path, "tests/models/tlm_fifo_callback_contracts.py")

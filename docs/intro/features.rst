@@ -133,6 +133,12 @@ Custom interfaces and channels — partially implemented
 TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ TLM FIFO expansion callback None-result validation and recovery.
+* ☑ TLM FIFO unbound callback None-result validation and recovery.
+* ☑ TLM FIFO reduction callback bool-result validation and recovery.
+* ☑ TLM FIFO bound callback bool-result validation and recovery.
+* ☑ TLM FIFO debug poke callback bool-result validation and recovery.
+
 * ☑ TLM nonblocking put callback bool validation and recovery.
 * ☑ TLM put-readiness callback bool validation and recovery.
 * ☑ TLM get-readiness callback bool validation and recovery.

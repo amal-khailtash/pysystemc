@@ -247,6 +247,15 @@ def _adapt(interface, implementation, factory):
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
                 result = getattr(self._implementation, _method)(*args)
+                if family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_expand", "nb_unbound"):
+                    if result is not None:
+                        raise TypeError(f"{_method} must return None")
+                if (family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_reduce", "nb_bound")) or (
+                    family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if")
+                    and _method == "nb_poke"
+                ):
+                    if not isinstance(result, bool):
+                        raise TypeError(f"{_method} must return bool")
                 if (
                     family.startswith("tlm::")
                     and _method in ("nb_put", "nb_can_put", "nb_can_get", "nb_can_peek", "get_direct_mem_ptr")

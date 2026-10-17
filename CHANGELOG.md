@@ -15,6 +15,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- TLM FIFO expansion/unbound callbacks require None; reduction, bound and debug
+  poke callbacks require bool, with native defaults and recovery checks.
 - Structural TLM nonblocking put, readiness and DMI callbacks require bool
   results, with malformed-result rejection and recovery checks.
 - Structural callback validation covers mutex/semaphore integer bounds, signal

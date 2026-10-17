@@ -221,3 +221,8 @@ Structural TLM ``nb_put``, ``nb_can_put``, ``nb_can_get``, ``nb_can_peek`` and
 strings and other truthy objects raise ``TypeError`` rather than being converted
 implicitly. Later valid callbacks remain usable. Callback mutations of payloads,
 DMI descriptors or owner state are not rolled back when result validation fails.
+
+Structural TLM FIFO ``nb_expand`` and ``nb_unbound`` callbacks return None, matching
+the native void interface. ``nb_reduce``, ``nb_bound`` and debug ``nb_poke`` return
+Python bool. Invalid results raise ``TypeError``; default arguments remain native
+(expand/reduce 1, unbound 16, poke index 0). Owner mutations are not rolled back.
