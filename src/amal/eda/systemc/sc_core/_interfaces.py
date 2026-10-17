@@ -272,6 +272,18 @@ def _adapt(interface, implementation, factory):
                     copy.__assign__(args[0])
                     args = (copy, *args[1:])
                 result = getattr(self._implementation, _method)(*args)
+                if (
+                    (
+                        _method == "write"
+                        and (
+                            family
+                            in ("sc_core::sc_signal_inout_if", "sc_core::sc_signal_write_if", "tlm::tlm_analysis_if")
+                            or family.startswith("sc_core::sc_fifo_")
+                        )
+                    )
+                    or (_method == "put" and family.startswith("tlm::"))
+                ) and result is not None:
+                    raise TypeError(f"{_method} must return None")
                 if family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if") and _method in (
                     "used",
                     "size",

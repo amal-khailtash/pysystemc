@@ -108,6 +108,9 @@ Public declaration inventory and Python mapping — incomplete
 Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Signal inout write callbacks require None with invalid-result recovery.
+* ☑ Write-only signal callbacks require None with invalid-result recovery.
+* ☑ Blocking FIFO write callbacks require None across partial/combined interfaces.
 * ☑ Write-only signal and combined/partial FIFO callback values retain independent native storage.
 * ☑ Structural signal inout writes copy callback arguments; retained storage and mutation isolation verified.
 * ☑ Structural signal inout writer-policy forwarding, native default and invalid-policy recovery.
@@ -143,6 +146,8 @@ Custom interfaces and channels — partially implemented
 TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ TLM analysis write callbacks require None with copied-value preservation.
+* ☑ TLM blocking put callbacks require None across standalone/combined interfaces.
 * ☑ TLM FIFO debug used/size signed-int validation, boundary values and recovery.
 * ☑ TLM analysis/put/debug-poke callback values retain independent native storage.
 * ☑ TLM FIFO expansion callback None-result validation and recovery.

@@ -27,6 +27,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Structural signal inout/write-only, blocking FIFO write, TLM analysis write and
+  blocking put callbacks reject non-None results instead of silently discarding them.
+  Recovery checks preserve copied native arguments; callback mutations are not rolled back.
+
 - Custom quantumkeepers reuse one native dispatcher while retaining independent
   callback owners; native hook dispatch rejects null result pointers.
 

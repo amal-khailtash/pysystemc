@@ -717,3 +717,8 @@ def test_custom_quantumkeeper_reset_and_kill(tmp_path):
 def test_custom_quantumkeeper_post_wait_errors_and_boundaries(tmp_path):
     """Check hook error recovery after synchronization and remaining global quantum."""
     assert "CUSTOM_QUANTUM_ERRORS_OK" in run_example(tmp_path, "tests/models/tlm_custom_quantum_errors.py")
+
+
+def test_structural_void_write_and_put_results(tmp_path):
+    """Require None from five native void callback families and verify recovery."""
+    assert "VOID_WRITE_CONTRACTS_OK" in run_example(tmp_path, "tests/models/void_write_contracts.py")

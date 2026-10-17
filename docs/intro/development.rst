@@ -144,3 +144,12 @@ already cleared by reset. Both guarded wait APIs preserve reset/kill cleanup.
 For native global boundaries, the callback can return
 ``tlm.tlm_global_quantum.instance().compute_local_quantum()``. At a simulation time
 between boundaries, this returns the remaining time rather than the full quantum.
+
+Structural void callbacks
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Structural signal ``write``, blocking FIFO ``write``, TLM analysis ``write`` and
+blocking TLM ``put`` callbacks must return ``None``, matching native void methods.
+Returning a status or value raises ``TypeError`` after the callback executes.
+Validation does not roll back owner mutations. Callback input values still receive
+independent native copies under the documented write ownership contract.
