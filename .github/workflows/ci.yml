@@ -47,6 +47,7 @@ jobs:
           path: build/coverage/
           if-no-files-found: warn
       - name: Upload coverage to Codecov
+        if: ${{ !cancelled() && hashFiles('build/coverage/coverage.xml') != '' }}
         uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Accept equivalent Clang namespace qualification in the source inventory test.
+- Upload generated coverage reports when tests fail while retaining CI failure.
+
 ### Added
 
 - Structural TLM nonblocking put, readiness and DMI callbacks require bool

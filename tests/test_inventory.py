@@ -40,6 +40,14 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
         assert entry["line"] and entry["line"] > 0
         assert entry["status"] == "untested" and entry["classification"] == "unreviewed"
     extension = named("tlm::tlm_generic_payload::get_extension")
-    assert any(entry["signature"] == "tlm::tlm_extension_base *(unsigned int) const" for entry in extension)
+    # Clang versions differ in qualification of types within their own namespace.
+    assert any(
+        entry["signature"]
+        in {
+            "tlm::tlm_extension_base *(unsigned int) const",
+            "tlm_extension_base *(unsigned int) const",
+        }
+        for entry in extension
+    ), [entry["signature"] for entry in extension]
     assert any(entry["signature"] == "T *() const" for entry in extension)
     assert any(line.startswith("#define SC_METHOD(") for line in inventory["macros"])
