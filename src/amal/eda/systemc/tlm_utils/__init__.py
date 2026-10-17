@@ -382,3 +382,56 @@ def _set_and_sync(self, time):
 
 _namespace.tlm_quantumkeeper.sync = _sync
 _namespace.tlm_quantumkeeper.set_and_sync = _set_and_sync
+
+
+cppyy.include(str(Path(__file__).with_name("callback_quantumkeeper.h")))
+
+
+def callback_quantumkeeper(callback):
+    """Create a native quantumkeeper with a Python local-quantum computation.
+
+    Args:
+        callback: Zero-argument callable returning a live native sc_time. It must
+            not wait and should respect the remaining global quantum, as required
+            by the native compute_local_quantum hook.
+
+    Returns:
+        Python-owned native keeper supporting reset, sync and set_and_sync.
+
+    Raises:
+        TypeError: Callback is not callable or returns a non-native/null time.
+        Exception: Callback exceptions propagate to the caller.
+
+    The keeper retains the callback and copied result slot until deletion. Retain
+    the keeper while native code borrows it, including across suspension. cppyy
+    acquires the GIL for callbacks; guarded synchronization releases it for waits.
+    Failed reset follows native ordering: local time is cleared before the hook.
+    """
+    if not callable(callback):
+        raise TypeError("local quantum callback must be callable")
+
+    class Keeper(cppyy.gbl.pysystemc_interfaces.CallbackQuantumKeeper):
+        """Own callback and stable native time storage for the protected hook."""
+
+        def __init__(self):
+            """Construct the native base and retain callback state."""
+            super().__init__()
+            self._callback = callback
+            self._quantum = cppyy.gbl.sc_core.sc_time()
+
+        def local_quantum_pointer(self):
+            """Validate and copy native time before returning its borrowed address."""
+            result = self._callback()
+            if not isinstance(result, cppyy.gbl.sc_core.sc_time) or not cppyy.addressof(result):
+                raise TypeError("local quantum callback must return a live native sc_time")
+            self._quantum.__assign__(result)
+            return self._quantum
+
+    Keeper.sync = _sync
+    Keeper.set_and_sync = _set_and_sync
+    Keeper.set_global_quantum = staticmethod(_namespace.tlm_quantumkeeper.set_global_quantum)
+    Keeper.get_global_quantum = staticmethod(_namespace.tlm_quantumkeeper.get_global_quantum)
+    return Keeper()
+
+
+__all__.append("callback_quantumkeeper")

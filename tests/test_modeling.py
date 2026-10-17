@@ -690,3 +690,20 @@ def test_native_write_callback_retention(tmp_path):
 def test_tlm_write_callback_retention(tmp_path):
     """Verify retained analysis, put and debug arguments preserve independent values."""
     assert "TLM_WRITE_RETENTION_OK" in run_example(tmp_path, "tests/models/tlm_write_retention.py")
+
+
+def test_custom_quantumkeeper_native_hook_and_lifetime(tmp_path):
+    """Compare overridden hook thresholds and check callback error/ownership contracts."""
+    output = run_example(tmp_path, "tests/models/tlm_custom_quantum.py")
+    assert "CUSTOM_QUANTUM_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_custom_quantum.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert [line for line in output.splitlines() if line.startswith("CUSTOM_QUANTUM ")] == [
+        line for line in native.stdout.splitlines() if line.startswith("CUSTOM_QUANTUM ")
+    ]

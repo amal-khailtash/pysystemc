@@ -122,3 +122,18 @@ separate review. Specialization IDs include template arguments. Unqualified frie
 declarations use their enclosing namespace. Review batches validate all supplied
 fields before applying any updates, so a stale or malformed row leaves the batch
 unapplied.
+
+Custom local quantum
+~~~~~~~~~~~~~~~~~~~~
+
+``tlm_utils.callback_quantumkeeper(compute)`` creates a native keeper whose protected
+``compute_local_quantum`` hook calls ``compute()``. Return a live native ``sc_time``;
+the adapter copies it. The callback must not wait and should return no more than
+the remaining global quantum, following native requirements. Use the ordinary
+``reset()``, ``sync()`` and ``set_and_sync(time)`` methods. Callback errors propagate;
+a failed reset has already cleared local time, following native ordering.
+
+The keeper owns the callback until deletion. Retain the keeper while native code
+borrows it or synchronization is suspended. Guarded synchronization preserves
+scheduler unwind; arbitrary Python overrides of the other native virtual methods
+are not covered by this factory.

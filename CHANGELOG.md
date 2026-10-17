@@ -10,9 +10,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Custom quantumkeeper factory dispatches the protected local-quantum hook to a
+  Python callback with copied native time, result validation, exception recovery,
+  guarded synchronization and callback ownership checks against native timing.
+
 - Declaration inventories discover all TLM utility headers, attribute active macro
   definitions to source locations and preserve specialization template arguments.
-
 - Public API inventory supports baseline/modeling conditional configurations and
   retains inheritance and overload parameter/default metadata.
 - Portable declaration IDs and validated review input link source declarations to
@@ -21,6 +24,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Event queue overload regression uses structural callbacks and borrowed event
+  forwarding, preserving duplicate-delta notification and cancellation checks.
 - Inventory friend qualification preserves the enclosing namespace; specialization
   IDs distinguish template arguments. Review batches reject malformed optional fields
   and validate completely before applying updates.
