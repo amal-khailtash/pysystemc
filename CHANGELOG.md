@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Write-only signal and native FIFO output callbacks receive Python-owned native
+  copies that remain valid when retained after the native call returns.
 - Structural signal inout write callbacks receive independent value copies,
   preventing retained or mutated callback arguments from aliasing caller storage.
 - Structural signal inout interfaces forward an optional owner writer-policy

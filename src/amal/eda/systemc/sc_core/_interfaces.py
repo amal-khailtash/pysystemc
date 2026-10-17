@@ -260,8 +260,11 @@ def _adapt(interface, implementation, factory):
                 ):
                     return base.default_writer_policy()
                 if (
-                    family == "sc_core::sc_signal_inout_if"
-                    and _method == "write"
+                    (
+                        family in ("sc_core::sc_signal_inout_if", "sc_core::sc_signal_write_if")
+                        or family.startswith("sc_core::sc_fifo_")
+                    )
+                    and _method in ("write", "nb_write")
                     and hasattr(type(args[0]), "__cpp_name__")
                 ):
                     copy = type(args[0])()

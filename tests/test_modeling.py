@@ -680,3 +680,8 @@ def test_tlm_boolean_callback_contracts(tmp_path):
 def test_tlm_fifo_callback_contracts(tmp_path):
     """Reject malformed FIFO config/debug returns and verify defaults and recovery."""
     assert "TLM_FIFO_CALLBACK_CONTRACTS_OK" in run_example(tmp_path, "tests/models/tlm_fifo_callback_contracts.py")
+
+
+def test_native_write_callback_retention(tmp_path):
+    """Verify retained write-only signal and FIFO callback values survive native return."""
+    assert "NATIVE_WRITE_RETENTION_OK" in run_example(tmp_path, "tests/models/native_write_retention.py")

@@ -236,3 +236,7 @@ Signal inout ``write(value)`` callbacks receive a native value copy, like write-
 signal and FIFO adapters. Retaining or mutating that callback argument does not
 alter the native caller's storage. The owner still controls its signal state and
 native update/notification scheduling.
+
+Write-only signal and native FIFO blocking/nonblocking output callbacks also
+receive Python-owned native copies. Owners can retain the callback object after
+the call; caller reassignment or deletion does not invalidate that object.
