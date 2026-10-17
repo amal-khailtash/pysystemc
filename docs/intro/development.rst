@@ -158,3 +158,9 @@ The same ``None`` contract applies to structural event queue ``notify`` and
 ``cancel_all``, TLM ``b_transport`` and ``invalidate_direct_mem_ptr``, and FIFO
 ``debug`` callbacks. Transport references remain borrowed. A callback may mutate
 payload or delay before result validation; rejected results do not undo those changes.
+
+Structural FIFO ``num_available``/``num_free`` callbacks return signed native
+integers, excluding bool and overflow. Scalar bool signal reads require bool;
+signed/unsigned integer reads require Python int within the selected native
+type bounds. Rejection occurs before native sampled storage is updated. Plain
+char and floating-point conversion policies remain outside this strict matrix.

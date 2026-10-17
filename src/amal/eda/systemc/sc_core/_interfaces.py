@@ -295,6 +295,9 @@ def _adapt(interface, implementation, factory):
                 ):
                     if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
                         raise TypeError(f"{_method} must return a native int in range")
+                if family.startswith("sc_core::sc_fifo_") and _method in ("num_available", "num_free"):
+                    if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
+                        raise TypeError(f"{_method} must return a native int in range")
                 if family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_expand", "nb_unbound"):
                     if result is not None:
                         raise TypeError(f"{_method} must return None")
@@ -336,6 +339,16 @@ def _adapt(interface, implementation, factory):
                     if not isinstance(result, cppyy.gbl.sc_core.sc_event) or not cppyy.addressof(result):
                         raise TypeError(f"{_method} must return a live native sc_event")
                 if scalar_pair is not None and _method == "read":
+                    scalar = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+                    if scalar == "bool":
+                        if not isinstance(result, bool):
+                            raise TypeError("read must return bool for a bool signal")
+                    elif scalar not in ("float", "double", "long double", "char"):
+                        bits = cppyy.sizeof(scalar) * 8
+                        unsigned = scalar.startswith("unsigned")
+                        lower, upper = (0, 2**bits) if unsigned else (-(2 ** (bits - 1)), 2 ** (bits - 1))
+                        if isinstance(result, bool) or not isinstance(result, int) or not lower <= result < upper:
+                            raise TypeError(f"read must return a native {scalar} integer in range")
                     return scalar_pair(result, True)
                 if _reference_callbacks.get(interface.__cpp_name__, {}).get(_method):
                     if not hasattr(type(result), "__cpp_name__"):

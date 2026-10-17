@@ -12,11 +12,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 - Custom quantumkeeper checks cover reset/kill cleanup, hook exceptions and invalid
   results after guarded waits, and remaining-global-quantum boundary timing.
-
 - Custom quantumkeeper factory dispatches the protected local-quantum hook to a
   Python callback with copied native time, result validation, exception recovery,
   guarded synchronization and callback ownership checks against native timing.
-
 - Declaration inventories discover all TLM utility headers, attribute active macro
   definitions to source locations and preserve specialization template arguments.
 - Public API inventory supports baseline/modeling conditional configurations and
@@ -27,16 +25,17 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Structural FIFO available/free counts enforce signed native integer bounds.
+- Structural bool and signed/unsigned integer signal reads validate exact result
+  types and native-width bounds, with read/trace accessor recovery checks.
+
 - Structural event queue notify/cancel, TLM blocking transport/DMI invalidation and
   FIFO debug callbacks require None, with overload, argument and recovery checks.
-
 - Structural signal inout/write-only, blocking FIFO write, TLM analysis write and
   blocking put callbacks reject non-None results instead of silently discarding them.
   Recovery checks preserve copied native arguments; callback mutations are not rolled back.
-
 - Custom quantumkeepers reuse one native dispatcher while retaining independent
   callback owners; native hook dispatch rejects null result pointers.
-
 - Event queue overload regression uses structural callbacks and borrowed event
   forwarding, preserving duplicate-delta notification and cancellation checks.
 - Inventory friend qualification preserves the enclosing namespace; specialization

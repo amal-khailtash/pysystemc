@@ -110,6 +110,11 @@ Custom interfaces and channels — partially implemented
 
 * ☑ Event queue notify callbacks require None across both native overloads.
 * ☑ Event queue cancellation callbacks require None with recovery.
+* ☑ Native FIFO num_available callbacks validate signed integer range and recovery.
+* ☑ Native FIFO num_free callbacks validate signed integer range and recovery.
+* ☑ Structural bool signal reads require actual bool through read/trace accessors.
+* ☑ Structural signed integer signal reads enforce native widths and reject implicit conversion.
+* ☑ Structural unsigned integer signal reads enforce native widths and reject negative/overflow results.
 * ☑ Signal inout write callbacks require None with invalid-result recovery.
 * ☑ Write-only signal callbacks require None with invalid-result recovery.
 * ☑ Blocking FIFO write callbacks require None across partial/combined interfaces.

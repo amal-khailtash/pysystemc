@@ -727,3 +727,8 @@ def test_structural_void_write_and_put_results(tmp_path):
 def test_structural_void_transport_queue_and_debug_results(tmp_path):
     """Require None from queue notify/cancel, transport, invalidation and debug."""
     assert "VOID_TRANSPORT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/void_transport_contracts.py")
+
+
+def test_structural_scalar_and_fifo_count_contracts(tmp_path):
+    """Check five scalar/count contracts across native widths and result accessors."""
+    assert "SCALAR_COUNT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/scalar_count_contracts.py")
