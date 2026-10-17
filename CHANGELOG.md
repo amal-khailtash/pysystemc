@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Structural signal inout write callbacks receive independent value copies,
+  preventing retained or mutated callback arguments from aliasing caller storage.
 - Structural signal inout interfaces forward an optional owner writer-policy
   callback, preserving the native default when absent and validating explicit policies.
 - Accept equivalent Clang namespace qualification in the source inventory test.

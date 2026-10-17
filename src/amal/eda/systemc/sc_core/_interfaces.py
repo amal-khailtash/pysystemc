@@ -180,7 +180,7 @@ for _family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
         "event": "event",
     }
     if _family.endswith("inout_if"):
-        _METHODS[_family]["write"] = "write"
+        _METHODS[_family]["write_value"] = "write"
         _METHODS[_family]["writer_policy"] = "get_writer_policy"
 
 _METHODS["sc_core::sc_fifo_in_if"] = {
@@ -259,6 +259,14 @@ def _adapt(interface, implementation, factory):
                     and not hasattr(self._implementation, _method)
                 ):
                     return base.default_writer_policy()
+                if (
+                    family == "sc_core::sc_signal_inout_if"
+                    and _method == "write"
+                    and hasattr(type(args[0]), "__cpp_name__")
+                ):
+                    copy = type(args[0])()
+                    copy.__assign__(args[0])
+                    args = (copy,)
                 result = getattr(self._implementation, _method)(*args)
                 if family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_expand", "nb_unbound"):
                     if result is not None:

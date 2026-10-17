@@ -120,7 +120,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     )
             methods += "const sc_core::sc_event& default_event() const override { return value_changed_event(); } "
             if fifo_family.endswith("inout_if"):
-                methods += f"virtual void write(const {value}&) override = 0; "
+                methods += f"virtual void write_value({value}) = 0; void write(const {value}& value) override {{ write_value(value); }} "
                 methods += (
                     "static sc_core::sc_writer_policy default_writer_policy() { return SC_DEFAULT_WRITER_POLICY; } "
                     "virtual sc_core::sc_writer_policy writer_policy() const = 0; "

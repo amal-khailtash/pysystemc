@@ -30,6 +30,7 @@ class Owner:
 
     def write(self, value):
         """Assign storage and notify next delta."""
+        self.argument = value
         self.value.__assign__(value)
         self.changed.notify(sc.SC_ZERO_TIME)
 
@@ -82,7 +83,13 @@ seen = []
 top.sc_method("observe", lambda: seen.append((native.read().to_uint(), native.event())))
 top.sensitive(native.default_event())
 top.dont_initialize()
-native.write(sc_dt.sc_biguint[137](29))
+source = sc_dt.sc_biguint[137](29)
+native.write(source)
+assert cppyy.addressof(owner.argument) != cppyy.addressof(source)
+owner.argument[136] = True
+assert source.to_string() == sc_dt.sc_biguint[137](29).to_string()
+source.__assign__(73)
+assert owner.argument.to_uint() == 29 and owner.argument[136]
 sc.sc_start(1, sc.SC_NS)
 assert seen == [(29, True)], seen
 assert native.read().to_uint() == 29

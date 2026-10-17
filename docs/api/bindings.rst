@@ -231,3 +231,8 @@ Signal inout owners may implement ``get_writer_policy`` to report their native
 policy. Without this callback, the adapter returns ``SC_DEFAULT_WRITER_POLICY``.
 Explicit callbacks use the same policy validation as write-only interfaces.
 Policy reporting does not independently enforce owner write scheduling or contention.
+
+Signal inout ``write(value)`` callbacks receive a native value copy, like write-only
+signal and FIFO adapters. Retaining or mutating that callback argument does not
+alter the native caller's storage. The owner still controls its signal state and
+native update/notification scheduling.

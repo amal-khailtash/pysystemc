@@ -99,8 +99,8 @@ Public declaration inventory and Python mapping — incomplete
 Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Structural signal inout writes copy callback arguments; retained storage and mutation isolation verified.
 * ☑ Structural signal inout writer-policy forwarding, native default and invalid-policy recovery.
-
 * ☑ Mutex callback integer result validation and boundary/recovery checks.
 * ☑ Semaphore callback integer result validation and boundary/recovery checks.
 * ☑ Signal event/edge callback bool result validation.
