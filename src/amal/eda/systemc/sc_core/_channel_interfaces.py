@@ -121,6 +121,11 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             methods += "const sc_core::sc_event& default_event() const override { return value_changed_event(); } "
             if fifo_family.endswith("inout_if"):
                 methods += f"virtual void write(const {value}&) override = 0; "
+                methods += (
+                    "static sc_core::sc_writer_policy default_writer_policy() { return SC_DEFAULT_WRITER_POLICY; } "
+                    "virtual sc_core::sc_writer_policy writer_policy() const = 0; "
+                    "sc_core::sc_writer_policy get_writer_policy() const override { return writer_policy(); } "
+                )
             _reference_callbacks[name] = {k: v for k, v in callbacks.items() if v.startswith("python_reference_")}
         elif fifo_family in (
             "sc_core::sc_fifo_in_if",

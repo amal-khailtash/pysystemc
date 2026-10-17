@@ -66,6 +66,18 @@ assert cppyy.addressof(native.read()) == cppyy.addressof(owner.value)
 assert cppyy.addressof(native.get_data_ref()) == cppyy.addressof(owner.value)
 assert cppyy.addressof(native.value_changed_event()) == cppyy.addressof(owner.changed)
 assert cppyy.addressof(reader.get_interface().value_changed_event()) == cppyy.addressof(owner.changed)
+assert native.get_writer_policy() == sc.SC_ONE_WRITER
+owner.get_writer_policy = lambda: sc.SC_MANY_WRITERS
+assert native.get_writer_policy() == sc.SC_MANY_WRITERS
+owner.get_writer_policy = lambda: -1
+try:
+    native.get_writer_policy()
+except ValueError:
+    pass
+else:
+    raise AssertionError("invalid inout writer policy accepted")
+owner.get_writer_policy = lambda: sc.SC_UNCHECKED_WRITERS
+assert native.get_writer_policy() == sc.SC_UNCHECKED_WRITERS
 seen = []
 top.sc_method("observe", lambda: seen.append((native.read().to_uint(), native.event())))
 top.sensitive(native.default_event())

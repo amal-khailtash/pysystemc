@@ -181,6 +181,7 @@ for _family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
     }
     if _family.endswith("inout_if"):
         _METHODS[_family]["write"] = "write"
+        _METHODS[_family]["writer_policy"] = "get_writer_policy"
 
 _METHODS["sc_core::sc_fifo_in_if"] = {
     "read_value": "read",
@@ -232,6 +233,12 @@ def _adapt(interface, implementation, factory):
                 methods[edge] = edge
                 methods[f"python_reference_{edge}_event"] = f"{edge}_event"
     for method in methods.values():
+        if (
+            family == "sc_core::sc_signal_inout_if"
+            and method == "get_writer_policy"
+            and not hasattr(implementation, method)
+        ):
+            continue
         if not callable(getattr(implementation, method, None)):
             raise TypeError(f"{family} requires callable {method}")
     for native_interface, owner, adapter in _owners:
@@ -246,6 +253,12 @@ def _adapt(interface, implementation, factory):
 
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
+                if (
+                    family == "sc_core::sc_signal_inout_if"
+                    and _method == "get_writer_policy"
+                    and not hasattr(self._implementation, _method)
+                ):
+                    return base.default_writer_policy()
                 result = getattr(self._implementation, _method)(*args)
                 if family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_expand", "nb_unbound"):
                     if result is not None:
@@ -272,7 +285,10 @@ def _adapt(interface, implementation, factory):
                 ):
                     if not isinstance(result, bool):
                         raise TypeError(f"{_method} must return bool")
-                if family == "sc_core::sc_signal_write_if" and _method == "get_writer_policy":
+                if (
+                    family in ("sc_core::sc_signal_write_if", "sc_core::sc_signal_inout_if")
+                    and _method == "get_writer_policy"
+                ):
                     if isinstance(result, bool) or result not in (
                         cppyy.gbl.sc_core.SC_ONE_WRITER,
                         cppyy.gbl.sc_core.SC_MANY_WRITERS,

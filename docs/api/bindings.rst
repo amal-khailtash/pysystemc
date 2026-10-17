@@ -226,3 +226,8 @@ Structural TLM FIFO ``nb_expand`` and ``nb_unbound`` callbacks return None, matc
 the native void interface. ``nb_reduce``, ``nb_bound`` and debug ``nb_poke`` return
 Python bool. Invalid results raise ``TypeError``; default arguments remain native
 (expand/reduce 1, unbound 16, poke index 0). Owner mutations are not rolled back.
+
+Signal inout owners may implement ``get_writer_policy`` to report their native
+policy. Without this callback, the adapter returns ``SC_DEFAULT_WRITER_POLICY``.
+Explicit callbacks use the same policy validation as write-only interfaces.
+Policy reporting does not independently enforce owner write scheduling or contention.
