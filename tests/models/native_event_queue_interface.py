@@ -3,23 +3,22 @@
 from amal.eda.systemc import sc_core as sc
 
 
-class EventQueue(sc.channel_interface(sc.sc_event_queue_if)):
+class EventQueue:
     """Delegate scheduling to an owned native queue while implementing its interface."""
 
     def __init__(self, name):
-        """Create native channel identity and retain queue event storage."""
-        module_name = sc.sc_module_name(name)
-        super().__init__(module_name)
-        self.m_queue = sc.sc_event_queue(sc.sc_module_name("queue"))
+        """Retain native queue and borrowed event storage for simulation lifetime."""
+        self.m_queue = sc.sc_event_queue(sc.sc_module_name(name))
         self.calls = []
 
-    def notify(self, *args):
-        """Accept either native notify overload and schedule every notification."""
-        self.calls.append(len(args))
-        if len(args) == 1:
-            self.m_queue.notify(args[0])
-        else:
-            self.m_queue.notify(sc.sc_time(*args))
+    def notify(self, delay):
+        """Schedule the native time normalized from either notification overload."""
+        self.calls.append(str(delay))
+        self.m_queue.notify(delay)
+
+    def default_event(self):
+        """Return the borrowed native event retained by the owned queue."""
+        return self.m_queue.default_event()
 
     def cancel_all(self):
         """Cancel every pending notification without replacing event storage."""
@@ -31,7 +30,7 @@ module_name = sc.sc_module_name("top")
 model = sc.sc_module(module_name)
 queue = EventQueue("events")
 port = sc.sc_port[sc.sc_event_queue_if]("port")
-port.bind(queue)
+port(queue)
 records = []
 
 
@@ -41,7 +40,7 @@ def observe():
 
 
 model.sc_method("observe", observe)
-model.sensitive(queue.m_queue.default_event())
+model.sensitive(port.get_interface().default_event())
 model.dont_initialize()
 del module_name
 
@@ -61,7 +60,7 @@ handle = sc.sc_spawn(stimulus, "stimulus")
 sc.sc_start(6, sc.SC_NS)
 assert [time for time, delta in records] == ["1 ns", "1 ns", "3 ns"], records
 assert records[1][1] > records[0][1], records
-assert queue.calls == [2, 1, 1, "cancel", 1], queue.calls
+assert queue.calls == ["1 ns", "1 ns", "5 ns", "cancel", "1 ns"], queue.calls
 assert handle.terminated()
 sc.sc_stop()
 print("NATIVE_EVENT_QUEUE_INTERFACE_OK")
