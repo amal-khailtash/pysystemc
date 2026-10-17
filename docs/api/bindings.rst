@@ -245,3 +245,8 @@ Structural TLM analysis ``write``, blocking/nonblocking ``put`` and debug
 ``nb_poke`` callbacks receive Python-owned value copies. Retained arguments remain
 valid after return and do not alias caller storage. Debug index arguments are
 preserved. Transaction transport callbacks continue to borrow native transactions.
+
+FIFO debug ``used`` and ``size`` callbacks return signed native 32-bit integers.
+Bool, noninteger and out-of-range results raise ``TypeError``. Negative values
+remain representable for native sentinel semantics; the owner determines whether
+its counts are consistent with its FIFO state.

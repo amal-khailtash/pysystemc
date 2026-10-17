@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- TLM FIFO debug count callbacks reject invalid integer conversions while
+  preserving native signed bounds and negative sentinel values.
 - TLM analysis, put and debug-poke callbacks receive independent native value
   storage that can be retained after the call; debug indices remain intact.
 - Write-only signal and native FIFO output callbacks receive Python-owned native

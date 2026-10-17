@@ -55,6 +55,19 @@ for owner, invoke, method, arguments in checks:
         owner.result = result
         assert invoke() == result
         assert owner.calls[-1] == (method, arguments)
+for method in ("used", "size"):
+    invoke = getattr(debug_port.get_interface(), method)
+    for result in (None, True, 1.5, 2**31, -(2**31) - 1):
+        debug.result = result
+        try:
+            invoke()
+        except TypeError as error:
+            assert method in str(error)
+        else:
+            raise AssertionError("invalid count accepted")
+    for result in (-(2**31), -1, 0, 2**31 - 1):
+        debug.result = result
+        assert invoke() == result
 assert sc.sc_time_stamp() == sc.SC_ZERO_TIME
 sc.sc_start(sc.SC_ZERO_TIME)
 sc.sc_stop()

@@ -272,6 +272,12 @@ def _adapt(interface, implementation, factory):
                     copy.__assign__(args[0])
                     args = (copy, *args[1:])
                 result = getattr(self._implementation, _method)(*args)
+                if family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if") and _method in (
+                    "used",
+                    "size",
+                ):
+                    if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
+                        raise TypeError(f"{_method} must return a native int in range")
                 if family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_expand", "nb_unbound"):
                     if result is not None:
                         raise TypeError(f"{_method} must return None")

@@ -137,6 +137,8 @@ Custom interfaces and channels — partially implemented
 TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ TLM FIFO debug used/size signed-int validation, boundary values and recovery.
+
 * ☑ TLM analysis/put/debug-poke callback values retain independent native storage.
 
 * ☑ TLM FIFO expansion callback None-result validation and recovery.
