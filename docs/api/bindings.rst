@@ -190,3 +190,21 @@ native slot and does not require another owner callback. Successful reads update
 that slot immediately; owners are responsible for native update/delta semantics.
 Different adapter specializations have separate scalar slots even when they borrow
 the same event. Invalid conversions propagate; later valid reads remain usable.
+
+Structural synchronization and write interfaces
+------------------------------------------------
+
+``sc_port[sc_mutex_if]`` accepts owners with ``lock``, ``trylock`` and ``unlock``.
+``sc_port[sc_semaphore_if]`` requires ``wait``, ``trywait``, ``post`` and
+``get_value``. Blocking adapter calls release the GIL. Python callbacks use guarded
+waits; callbacks delegating to a blocking native channel must also enable GIL
+release on that native call. Retain channel state through simulation.
+
+``sc_port[sc_event_queue_if]`` requires ``notify(time)``, ``cancel_all`` and
+``default_event``. Both native notify overloads forward a native sc_time value.
+The default event callback returns retained native event storage.
+
+``sc_port[sc_signal_write_if[T]]`` requires ``write(value)`` and
+``get_writer_policy``. Write callbacks receive a value copy. The owner provides
+native update scheduling and writer policy; the adapter does not enforce a policy
+independently. Full reset/error/type and teardown matrices remain open.

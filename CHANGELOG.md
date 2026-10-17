@@ -8,6 +8,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Structural mutex, semaphore and event queue interfaces, including blocking GIL
+  release, notify overloads, borrowed event identity and cancellation.
+- Structural signal-write interfaces with copied arbitrary-width values and
+  owner writer-policy callbacks; native reference checks cover timing and values.
+
 ## [0.8.0] - 2026-10-16
 
 Adds structural native reference, signal and FIFO adapters. Full public API

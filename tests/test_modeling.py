@@ -648,3 +648,20 @@ def test_native_fifo_callback_errors(tmp_path):
 def test_native_scalar_signal_interfaces(tmp_path):
     """Verify signed/floating/wide scalar signals, sensitivity and invalid-result recovery."""
     assert "NATIVE_SCALAR_SIGNAL_OK" in run_example(tmp_path, "tests/models/native_scalar_signal.py")
+
+
+def test_structural_sync_and_write_interfaces(tmp_path):
+    """Verify mutex/semaphore waits, queue overloads/cancellation and writer policy."""
+    output = run_example(tmp_path, "tests/models/structural_sync_interfaces.py")
+    assert "STRUCTURAL_SYNC_INTERFACES_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/structural_sync.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert [line for line in output.splitlines() if line.startswith("SYNC_RESULT")] == [
+        line for line in native.stdout.splitlines() if line.startswith("SYNC_RESULT")
+    ]

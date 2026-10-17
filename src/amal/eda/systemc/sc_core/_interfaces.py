@@ -204,6 +204,15 @@ for _direction, _event in (("in", "data_written_event"), ("out", "data_read_even
         f"python_reference_{_event}": _event,
     }
 
+_METHODS["sc_core::sc_mutex_if"] = {name: name for name in ("lock", "trylock", "unlock")}
+_METHODS["sc_core::sc_semaphore_if"] = {name: name for name in ("wait", "trywait", "post", "get_value")}
+_METHODS["sc_core::sc_event_queue_if"] = {
+    "notify_time": "notify",
+    "cancel_all": "cancel_all",
+    "event_pointer": "default_event",
+}
+_METHODS["sc_core::sc_signal_write_if"] = {"write_value": "write", "writer_policy": "get_writer_policy"}
+
 
 def _adapt(interface, implementation, factory):
     """Validate and retain one native adapter for a Python implementation."""
@@ -261,7 +270,7 @@ def _adapt(interface, implementation, factory):
     adapter = _classes[interface](name)
     adapter._implementation = implementation
     adapter._reference_results = {}
-    for method in ("transport", "get", "peek", "put", "b_transport", "read", "write"):
+    for method in ("transport", "get", "peek", "put", "b_transport", "read", "write", "lock", "wait"):
         overload = getattr(type(adapter), method, None)
         if overload is not None and hasattr(overload, "__release_gil__"):
             overload.__release_gil__ = True

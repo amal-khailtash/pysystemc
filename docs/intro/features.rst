@@ -99,6 +99,12 @@ Public declaration inventory and Python mapping — incomplete
 Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Structural native mutex interface callbacks with timed contention/wakeup.
+* ☑ Structural native semaphore interface callbacks with timed wait/post.
+* ☑ Structural event queue interface callbacks, both notify overloads and cancellation.
+* ☑ Structural native signal-write interface callbacks with copied arbitrary-width values.
+* ☑ Structural signal-write writer-policy callback forwarding.
+
 * ☑ Structural port/export binding and native-style call syntax delivered.
 * ☑ Annotated Protocol declaration and explicit native signature support delivered.
 * ☑ Ordinary Python callback spelling adaptation delivered for tested TLM families.

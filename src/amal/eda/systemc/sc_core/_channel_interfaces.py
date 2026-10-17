@@ -61,7 +61,26 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
         fifo_family = name.split("<", 1)[0]
         # Native reference wrappers borrow storage retained by the structural owner cache.
         # Pointer overrides let cppyy preserve identity instead of translating references.
-        if fifo_family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
+        if fifo_family == "sc_core::sc_mutex_if":
+            methods = "virtual int lock() override = 0; virtual int trylock() override = 0; virtual int unlock() override = 0; "
+        elif fifo_family == "sc_core::sc_semaphore_if":
+            methods = "virtual int wait() override = 0; virtual int trywait() override = 0; virtual int post() override = 0; virtual int get_value() const override = 0; "
+        elif fifo_family == "sc_core::sc_event_queue_if":
+            methods = (
+                "virtual void notify_time(sc_core::sc_time) = 0; "
+                "void notify(double when, sc_core::sc_time_unit unit) override { notify_time(sc_core::sc_time(when, unit)); } "
+                "void notify(const sc_core::sc_time& when) override { notify_time(when); } "
+                "virtual void cancel_all() override = 0; "
+                "virtual const sc_core::sc_event* event_pointer() const = 0; "
+                "const sc_core::sc_event& default_event() const override { auto* value = event_pointer(); "
+                'if (!value) throw std::runtime_error("event callback returned null"); return *value; } '
+            )
+            _reference_callbacks[name] = {"default_event": "event_pointer"}
+        elif fifo_family == "sc_core::sc_signal_write_if":
+            value = name.split("<", 1)[1].removesuffix(">")
+            methods = f"virtual void write_value({value}) = 0; void write(const {value}& value) override {{ write_value(value); }} "
+            methods += "virtual sc_core::sc_writer_policy writer_policy() const = 0; sc_core::sc_writer_policy get_writer_policy() const override { return writer_policy(); } "
+        elif fifo_family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
             value = name.split("<", 1)[1].removesuffix(">")
             references = {
                 "read": (value, "const"),
