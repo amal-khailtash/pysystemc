@@ -153,3 +153,8 @@ blocking TLM ``put`` callbacks must return ``None``, matching native void method
 Returning a status or value raises ``TypeError`` after the callback executes.
 Validation does not roll back owner mutations. Callback input values still receive
 independent native copies under the documented write ownership contract.
+
+The same ``None`` contract applies to structural event queue ``notify`` and
+``cancel_all``, TLM ``b_transport`` and ``invalidate_direct_mem_ptr``, and FIFO
+``debug`` callbacks. Transport references remain borrowed. A callback may mutate
+payload or delay before result validation; rejected results do not undo those changes.

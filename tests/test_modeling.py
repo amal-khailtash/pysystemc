@@ -722,3 +722,8 @@ def test_custom_quantumkeeper_post_wait_errors_and_boundaries(tmp_path):
 def test_structural_void_write_and_put_results(tmp_path):
     """Require None from five native void callback families and verify recovery."""
     assert "VOID_WRITE_CONTRACTS_OK" in run_example(tmp_path, "tests/models/void_write_contracts.py")
+
+
+def test_structural_void_transport_queue_and_debug_results(tmp_path):
+    """Require None from queue notify/cancel, transport, invalidation and debug."""
+    assert "VOID_TRANSPORT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/void_transport_contracts.py")

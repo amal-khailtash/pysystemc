@@ -284,6 +284,11 @@ def _adapt(interface, implementation, factory):
                     or (_method == "put" and family.startswith("tlm::"))
                 ) and result is not None:
                     raise TypeError(f"{_method} must return None")
+                if (
+                    (family == "sc_core::sc_event_queue_if" and _method in ("notify", "cancel_all"))
+                    or (family.startswith("tlm::") and _method in ("b_transport", "invalidate_direct_mem_ptr", "debug"))
+                ) and result is not None:
+                    raise TypeError(f"{_method} must return None")
                 if family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if") and _method in (
                     "used",
                     "size",

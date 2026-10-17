@@ -27,6 +27,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Structural event queue notify/cancel, TLM blocking transport/DMI invalidation and
+  FIFO debug callbacks require None, with overload, argument and recovery checks.
+
 - Structural signal inout/write-only, blocking FIFO write, TLM analysis write and
   blocking put callbacks reject non-None results instead of silently discarding them.
   Recovery checks preserve copied native arguments; callback mutations are not rolled back.

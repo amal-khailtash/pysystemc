@@ -108,6 +108,8 @@ Public declaration inventory and Python mapping — incomplete
 Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Event queue notify callbacks require None across both native overloads.
+* ☑ Event queue cancellation callbacks require None with recovery.
 * ☑ Signal inout write callbacks require None with invalid-result recovery.
 * ☑ Write-only signal callbacks require None with invalid-result recovery.
 * ☑ Blocking FIFO write callbacks require None across partial/combined interfaces.
@@ -146,6 +148,9 @@ Custom interfaces and channels — partially implemented
 TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ TLM blocking transport callbacks require None across standalone/combined interfaces.
+* ☑ TLM DMI invalidation callbacks require None and preserve native address arguments.
+* ☑ TLM FIFO debug callbacks require None with rejection and recovery.
 * ☑ TLM analysis write callbacks require None with copied-value preservation.
 * ☑ TLM blocking put callbacks require None across standalone/combined interfaces.
 * ☑ TLM FIFO debug used/size signed-int validation, boundary values and recovery.
