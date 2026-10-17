@@ -247,6 +247,28 @@ def _adapt(interface, implementation, factory):
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
                 result = getattr(self._implementation, _method)(*args)
+                if family in ("sc_core::sc_mutex_if", "sc_core::sc_semaphore_if"):
+                    if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
+                        raise TypeError(f"{_method} must return a native int in range")
+                if family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if") and _method in (
+                    "event",
+                    "posedge",
+                    "negedge",
+                ):
+                    if not isinstance(result, bool):
+                        raise TypeError(f"{_method} must return bool")
+                if family == "sc_core::sc_signal_write_if" and _method == "get_writer_policy":
+                    if isinstance(result, bool) or result not in (
+                        cppyy.gbl.sc_core.SC_ONE_WRITER,
+                        cppyy.gbl.sc_core.SC_MANY_WRITERS,
+                        cppyy.gbl.sc_core.SC_UNCHECKED_WRITERS,
+                    ):
+                        raise ValueError("get_writer_policy must return a native writer policy")
+                if _reference_callbacks.get(interface.__cpp_name__, {}).get(_method) and (
+                    _method.endswith("event") or family == "sc_core::sc_event_queue_if"
+                ):
+                    if not isinstance(result, cppyy.gbl.sc_core.sc_event) or not cppyy.addressof(result):
+                        raise TypeError(f"{_method} must return a live native sc_event")
                 if scalar_pair is not None and _method == "read":
                     return scalar_pair(result, True)
                 if _reference_callbacks.get(interface.__cpp_name__, {}).get(_method):

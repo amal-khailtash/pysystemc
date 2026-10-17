@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural callback validation covers mutex/semaphore integer bounds, signal
+  event flags, writer policies and live native event returns, with recovery checks.
 - Structural mutex, semaphore and event queue interfaces, including blocking GIL
   release, notify overloads, borrowed event identity and cancellation.
 - Structural signal-write interfaces with copied arbitrary-width values and

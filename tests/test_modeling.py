@@ -665,3 +665,8 @@ def test_structural_sync_and_write_interfaces(tmp_path):
     assert [line for line in output.splitlines() if line.startswith("SYNC_RESULT")] == [
         line for line in native.stdout.splitlines() if line.startswith("SYNC_RESULT")
     ]
+
+
+def test_structural_callback_contracts(tmp_path):
+    """Validate mutex/semaphore ints, signal flags, writer policy and event results."""
+    assert "STRUCTURAL_CALLBACK_CONTRACTS_OK" in run_example(tmp_path, "tests/models/structural_callback_contracts.py")

@@ -208,3 +208,10 @@ The default event callback returns retained native event storage.
 ``get_writer_policy``. Write callbacks receive a value copy. The owner provides
 native update scheduling and writer policy; the adapter does not enforce a policy
 independently. Full reset/error/type and teardown matrices remain open.
+
+Synchronization callbacks return signed native 32-bit integers; Python bools,
+non-integers and out-of-range values raise ``TypeError``. Signal event/edge flags
+must return bool. Writer-policy callbacks return one of the native one/many/unchecked
+policies. Borrowed event callbacks require a live native sc_event object; wrong
+types and null event proxies raise ``TypeError`` before native pointer dispatch.
+These checks do not prevent callbacks from mutating owner state before raising.

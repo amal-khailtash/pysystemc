@@ -99,6 +99,12 @@ Public declaration inventory and Python mapping — incomplete
 Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Mutex callback integer result validation and boundary/recovery checks.
+* ☑ Semaphore callback integer result validation and boundary/recovery checks.
+* ☑ Signal event/edge callback bool result validation.
+* ☑ Signal-write callback writer-policy result validation.
+* ☑ Borrowed event callback native type/liveness validation.
+
 * ☑ Structural native mutex interface callbacks with timed contention/wakeup.
 * ☑ Structural native semaphore interface callbacks with timed wait/post.
 * ☑ Structural event queue interface callbacks, both notify overloads and cancellation.
