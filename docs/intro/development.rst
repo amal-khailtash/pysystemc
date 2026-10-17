@@ -114,3 +114,11 @@ public and supply nonempty Python spelling, ownership, GIL, errors and an eviden
 list identifying executable checks. Review validation checks the record structure;
 a reviewer must assess the cited evidence and source rationale. Unreviewed rows
 remain untested. Keep local audit records under the ignored ``.ai/`` directory.
+
+The tool discovers every ``tlm_utils/*.h`` header in the selected checkout and
+records that list. ``macro_declarations`` attributes active preprocessor definitions
+to depot source paths and line numbers; inactive conditional branches still require
+separate review. Specialization IDs include template arguments. Unqualified friend
+declarations use their enclosing namespace. Review batches validate all supplied
+fields before applying any updates, so a stale or malformed row leaves the batch
+unapplied.

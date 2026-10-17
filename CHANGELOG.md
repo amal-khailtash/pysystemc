@@ -10,11 +10,20 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Declaration inventories discover all TLM utility headers, attribute active macro
+  definitions to source locations and preserve specialization template arguments.
+
 - Public API inventory supports baseline/modeling conditional configurations and
   retains inheritance and overload parameter/default metadata.
 - Portable declaration IDs and validated review input link source declarations to
   classification, Python spelling, ownership, GIL, errors and semantic evidence.
   Full public declaration classification and semantic coverage remain incomplete.
+
+### Fixed
+
+- Inventory friend qualification preserves the enclosing namespace; specialization
+  IDs distinguish template arguments. Review batches reject malformed optional fields
+  and validate completely before applying updates.
 
 ## [0.9.0] - 2026-10-17
 

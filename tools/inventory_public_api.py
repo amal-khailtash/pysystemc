@@ -6,25 +6,18 @@ Semantic evidence and internal/public classification require a separate review.
 """
 
 import argparse
+from copy import deepcopy
 from functools import cache
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-HEADERS = (
-    "tlm_quantumkeeper.h",
-    "peq_with_get.h",
-    "peq_with_cb_and_phase.h",
-    "simple_initiator_socket.h",
-    "simple_target_socket.h",
-    "passthrough_target_socket.h",
-    "multi_passthrough_initiator_socket.h",
-    "multi_passthrough_target_socket.h",
-    "instance_specific_extensions.h",
-)
+HEADERS = tuple(sorted(path.name for path in (ROOT / "submodules/systemc/src/tlm_utils").glob("*.h")))
+
 DECLARATIONS = {
     "CXXRecordDecl",
     "ClassTemplateDecl",
@@ -65,7 +58,7 @@ def source_text(filename):
     return Path(filename).read_bytes()
 
 
-def declarations(node, scope=(), filename=None, access="public"):
+def declarations(node, scope=(), filename=None, access="public", namespace=()):
     """Walk declaration contexts, retaining protected/private candidates for review.
 
     Function bodies, implicit declarations and locationless AST cross-references
@@ -86,6 +79,11 @@ def declarations(node, scope=(), filename=None, access="public"):
                 "name": "::".join((*scope, name)),
                 "kind": kind,
                 "signature": node.get("type", {}).get("qualType"),
+                "template_arguments": [
+                    {key: deepcopy(value) for key, value in child.items() if key in {"type", "value", "isPack"}}
+                    for child in node.get("inner", [])
+                    if child["kind"] == "TemplateArgument"
+                ],
                 "template_parameters": [
                     {"name": child.get("name"), "kind": child["kind"], "type": child.get("type", {}).get("qualType")}
                     for child in node.get("inner", [])
@@ -135,6 +133,8 @@ def declarations(node, scope=(), filename=None, access="public"):
         or (kind == "EnumDecl" and node.get("scopedEnumTag"))
     ):
         nested_scope = (*scope, name)
+    if kind == "NamespaceDecl" and name:
+        namespace = (*namespace, name)
     child_access = "private" if kind == "CXXRecordDecl" and node.get("tagUsed") == "class" else "public"
     for child in node.get("inner", []):
         if child["kind"] == "AccessSpecDecl":
@@ -142,9 +142,10 @@ def declarations(node, scope=(), filename=None, access="public"):
         else:
             yield from declarations(
                 child,
-                nested_scope[:-1] if kind == "FriendDecl" else nested_scope,
+                namespace if kind == "FriendDecl" else nested_scope,
                 filename,
                 "public" if kind == "FriendDecl" else child_access,
+                namespace,
             )
 
 
@@ -154,7 +155,9 @@ def declaration_id(entry):
     Template/specialization kind and source distinguish otherwise identical names.
     The ID is an audit key, not a claim of ABI or cross-release stability.
     """
-    identity = {key: entry[key] for key in ("name", "kind", "signature", "template_parameters", "source")}
+    identity = {
+        key: entry[key] for key in ("name", "kind", "signature", "template_parameters", "template_arguments", "source")
+    }
     return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
@@ -169,6 +172,7 @@ def apply_reviews(entries, reviews):
     if not isinstance(reviews, dict):
         raise ValueError("Reviews must be a JSON object keyed by declaration ID")
     indexed = {entry["id"]: entry for entry in entries}
+    updates = []
     for identifier, review in reviews.items():
         if identifier not in indexed:
             raise ValueError(f"Unknown declaration ID: {identifier}")
@@ -192,6 +196,12 @@ def apply_reviews(entries, reviews):
             if classification != "public":
                 raise ValueError(f"Supported declaration must be public: {identifier}")
             required.update({"python", "ownership", "gil", "errors", "evidence"})
+        for field, value in review.items():
+            if field == "evidence":
+                if not isinstance(value, list) or not all(isinstance(v, str) and v.strip() for v in value):
+                    raise ValueError(f"Invalid evidence: {identifier}")
+            elif not isinstance(value, str) or not value.strip():
+                raise ValueError(f"Invalid {field}: {identifier}")
         for field in required:
             value = review.get(field)
             if field == "evidence":
@@ -200,7 +210,29 @@ def apply_reviews(entries, reviews):
                 valid = isinstance(value, str) and bool(value.strip())
             if not valid:
                 raise ValueError(f"Missing or invalid {field}: {identifier}")
-        indexed[identifier].update(review)
+        updates.append((indexed[identifier], review))
+    for entry, review in updates:
+        entry.update(review)
+
+
+def macro_declarations(preprocessed):
+    """Extract active macro definitions with portable preprocessor source locations.
+
+    Compiler builtins and translation-unit feature switches have no depot source
+    and are excluded. Redefinitions retain separate locations for manual review.
+    """
+    filename = None
+    line_number = 0
+    for line in preprocessed.splitlines():
+        marker = re.match(r'^# (\d+) "([^"]+)"', line)
+        if marker:
+            line_number, filename = int(marker[1]), marker[2]
+            continue
+        if filename and line.startswith(("#define SC_", "#define TLM_")):
+            path = (ROOT / filename).resolve()
+            if path.is_relative_to(ROOT / "submodules/systemc/src"):
+                yield {"definition": line, "source": path.relative_to(ROOT).as_posix(), "line": line_number}
+        line_number += 1
 
 
 def main():
@@ -247,6 +279,14 @@ def main():
             check=True,
             timeout=60,
         )
+        attributed = subprocess.run(
+            [*command, "-dD", "-E", str(translation)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
+        )
     macros = [line for line in result.stdout.splitlines() if line.startswith(("#define SC_", "#define TLM_"))]
     unique = {json.dumps(entry, sort_keys=True): entry for entry in entries}
     for entry in unique.values():
@@ -266,7 +306,9 @@ def main():
         json.dumps(
             {
                 "systemc_revision": revision,
-                "schema_version": 2,
+                "schema_version": 3,
+                "utility_headers": list(HEADERS),
+                "macro_declarations": list(macro_declarations(attributed.stdout)),
                 "configuration": ["C++17", *defines],
                 "effective_defines": [
                     name

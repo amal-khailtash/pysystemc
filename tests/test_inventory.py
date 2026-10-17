@@ -20,6 +20,14 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     inventory = json.loads(output.read_text())
+    assert inventory["schema_version"] == 3
+    assert set(inventory["utility_headers"]) == {
+        path.name for path in (ROOT / "submodules/systemc/src/tlm_utils").glob("*.h")
+    }
+    assert any(
+        row["definition"].startswith("#define SC_METHOD(") and row["source"].endswith("sc_module.h") and row["line"] > 0
+        for row in inventory["macro_declarations"]
+    )
     entries = inventory["declarations"]
 
     def named(name):
@@ -135,3 +143,60 @@ def test_inventory_configurations_and_review_contract(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
     reviewed = next(row for row in json.loads(output.read_text())["declarations"] if row["id"] == entry["id"])
     assert all(reviewed[key] == value for key, value in review.items())
+
+
+def test_inventory_friend_specialization_and_atomic_reviews():
+    """Keep namespace friends and specialization IDs distinct; reject partial reviews."""
+    import runpy
+
+    import pytest
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    source = str(ROOT / "submodules/systemc/src/tlm")
+    friend = {
+        "kind": "FunctionDecl",
+        "name": "visit",
+        "loc": {"file": source, "line": 1},
+        "type": {"qualType": "void ()"},
+    }
+    node = {
+        "kind": "NamespaceDecl",
+        "name": "outer",
+        "inner": [
+            {
+                "kind": "NamespaceDecl",
+                "name": "inner",
+                "inner": [
+                    {
+                        "kind": "CXXRecordDecl",
+                        "name": "Host",
+                        "loc": {"file": source, "line": 1},
+                        "inner": [{"kind": "FriendDecl", "inner": [friend]}],
+                    }
+                ],
+            }
+        ],
+    }
+    entries = list(api["declarations"](node))
+    assert any(entry["name"] == "outer::inner::visit" for entry in entries)
+    pattern = {
+        "kind": "ClassTemplateSpecializationDecl",
+        "name": "Box",
+        "loc": {"file": source, "line": 1},
+        "inner": [{"kind": "TemplateArgument", "type": {"qualType": "int"}}],
+    }
+    first = next(api["declarations"](pattern))
+    pattern["inner"][0]["type"]["qualType"] = "double"
+    second = next(api["declarations"](pattern))
+    assert api["declaration_id"](first) != api["declaration_id"](second)
+    for entry in entries:
+        entry["id"] = api["declaration_id"](entry)
+    before = json.dumps(entries, sort_keys=True)
+    with pytest.raises(ValueError):
+        api["apply_reviews"](
+            entries, {entries[0]["id"]: {"classification": "public", "rationale": "header"}, "stale": {}}
+        )
+    assert json.dumps(entries, sort_keys=True) == before
+    for review in ({"evidence": "file.py"}, {"ownership": 7}, {"gil": ""}):
+        with pytest.raises(ValueError):
+            api["apply_reviews"](entries, {entries[0]["id"]: review})

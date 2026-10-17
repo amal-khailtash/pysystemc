@@ -87,6 +87,11 @@ Public declaration inventory and Python mapping — incomplete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ Reproducible compiler-derived declaration scaffold across core/datatypes/TLM/utilities.
+* ☑ Discover and compile every checked-out TLM utility header.
+* ☑ Attribute active macro definitions to portable source paths and line numbers.
+* ☑ Qualify unqualified friend declarations in their enclosing namespace.
+* ☑ Include template argument metadata in specialization declaration IDs.
+* ☑ Validate all supplied review fields and apply review batches atomically.
 * ☑ Real-header regression checks overloads/templates/access, source locations and enum spelling.
 * ☑ Selectable baseline/modeling conditional-header inventories with recorded configuration.
 * ☑ Native inheritance metadata retained for inherited API reconciliation.
