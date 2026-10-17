@@ -90,3 +90,27 @@ produce diagnostics and a failure status. Run one model per interpreter; use
 another invocation for an independent kernel. The compatibility script
 ``examples/run_sysc_cpp.py`` uses this same implementation. No external kernel
 source installation is required.
+
+Public declaration audit
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Run ``uv run python tools/inventory_public_api.py`` to extract the modeling
+configuration, or add ``--configuration baseline`` to omit explicit dynamic-process
+and fixed-point defines. The JSON records both requested configuration and effective
+feature defines: convenience socket and PEQ headers can enable dynamic processes.
+Inheritance metadata and parameter default presence help reconcile inherited APIs
+and callable overloads. These records do not establish semantic support.
+
+To retain an audit, pass ``--reviews path/to/reviews.json``. The file is a JSON
+object keyed by the emitted declaration ``id``. IDs distinguish overloads and
+remain unchanged when source lines move; header, signature or template changes
+can require a new review. Unknown IDs fail validation rather than silently losing
+reviews. A review may contain ``classification`` (unreviewed, public, internal),
+``status`` (untested, supported, failing, unsupported, deferred), ``rationale``,
+``python``, ``ownership``, ``gil``, ``errors`` and ``evidence``.
+
+Classified declarations require a rationale. Supported declarations must be
+public and supply nonempty Python spelling, ownership, GIL, errors and an evidence
+list identifying executable checks. Review validation checks the record structure;
+a reviewer must assess the cited evidence and source rationale. Unreviewed rows
+remain untested. Keep local audit records under the ignored ``.ai/`` directory.

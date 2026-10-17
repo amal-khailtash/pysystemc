@@ -7,6 +7,7 @@ Semantic evidence and internal/public classification require a separate review.
 
 import argparse
 from functools import cache
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -95,6 +96,16 @@ def declarations(node, scope=(), filename=None, access="public"):
                 or (source_text(path).count(b"\n", 0, location["offset"]) + 1 if "offset" in location else None),
                 "offset": location.get("offset"),
                 "access": access,
+                "bases": node.get("bases", []),
+                "parameters": [
+                    {
+                        "name": child.get("name"),
+                        "type": child.get("type", {}).get("qualType"),
+                        "has_default": "init" in child,
+                    }
+                    for child in node.get("inner", [])
+                    if child["kind"] == "ParmVarDecl"
+                ],
                 "python_candidate": "amal.eda.systemc." + ".".join((*scope, name)),
                 "classification": "unreviewed",
                 "status": "untested",
@@ -137,13 +148,71 @@ def declarations(node, scope=(), filename=None, access="public"):
             )
 
 
+def declaration_id(entry):
+    """Return a portable overload identity independent of source line movement.
+
+    Template/specialization kind and source distinguish otherwise identical names.
+    The ID is an audit key, not a claim of ABI or cross-release stability.
+    """
+    identity = {key: entry[key] for key in ("name", "kind", "signature", "template_parameters", "source")}
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+
+def apply_reviews(entries, reviews):
+    """Apply explicit audit records, rejecting stale IDs and incomplete claims.
+
+    Public and internal classifications need source-based rationale. Supported
+    records also need Python, ownership, GIL, error and executable evidence fields.
+    Unreviewed declarations retain their default status; no reflection is support.
+    Raises ValueError for malformed, stale or insufficient review records.
+    """
+    if not isinstance(reviews, dict):
+        raise ValueError("Reviews must be a JSON object keyed by declaration ID")
+    indexed = {entry["id"]: entry for entry in entries}
+    for identifier, review in reviews.items():
+        if identifier not in indexed:
+            raise ValueError(f"Unknown declaration ID: {identifier}")
+        if not isinstance(review, dict):
+            raise ValueError(f"Review must be an object: {identifier}")
+        classification = review.get("classification", "unreviewed")
+        status = review.get("status", "untested")
+        if classification not in {"unreviewed", "public", "internal"}:
+            raise ValueError(f"Invalid classification: {identifier}")
+        if status not in {"untested", "supported", "failing", "unsupported", "deferred"}:
+            raise ValueError(f"Invalid status: {identifier}")
+        allowed = {"classification", "status", "rationale", "python", "ownership", "gil", "errors", "evidence"}
+        if set(review) - allowed:
+            raise ValueError(f"Unknown review fields: {identifier}")
+        required = set()
+        if classification != "unreviewed":
+            required.add("rationale")
+        if status != "untested":
+            required.add("rationale")
+        if status == "supported":
+            if classification != "public":
+                raise ValueError(f"Supported declaration must be public: {identifier}")
+            required.update({"python", "ownership", "gil", "errors", "evidence"})
+        for field in required:
+            value = review.get(field)
+            if field == "evidence":
+                valid = isinstance(value, list) and bool(value) and all(isinstance(v, str) and v.strip() for v in value)
+            else:
+                valid = isinstance(value, str) and bool(value.strip())
+            if not valid:
+                raise ValueError(f"Missing or invalid {field}: {identifier}")
+        indexed[identifier].update(review)
+
+
 def main():
     """Compile the public umbrella headers and write a portable audit scaffold."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compiler", default="clang++")
     parser.add_argument("--output", type=Path, default=ROOT / ".ai/PUBLIC_API_INVENTORY.json")
+    parser.add_argument("--configuration", choices=("modeling", "baseline"), default="modeling")
+    parser.add_argument("--reviews", type=Path, help="JSON object keyed by declaration ID")
     args = parser.parse_args()
-    source = "#define SC_INCLUDE_DYNAMIC_PROCESSES\n#define SC_INCLUDE_FX\n#include <tlm>\n"
+    defines = ["SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX"] if args.configuration == "modeling" else []
+    source = "".join(f"#define {define}\n" for define in defines) + "#include <tlm>\n"
     source += "".join(f"#include <tlm_utils/{header}>\n" for header in HEADERS)
     entries = []
     with tempfile.TemporaryDirectory(prefix="pysystemc-inventory-") as temporary:
@@ -180,6 +249,10 @@ def main():
         )
     macros = [line for line in result.stdout.splitlines() if line.startswith(("#define SC_", "#define TLM_"))]
     unique = {json.dumps(entry, sort_keys=True): entry for entry in entries}
+    for entry in unique.values():
+        entry["id"] = declaration_id(entry)
+    if args.reviews:
+        apply_reviews(list(unique.values()), json.loads(args.reviews.read_text()))
     revision = subprocess.run(
         ["git", "-C", "submodules/systemc", "rev-parse", "HEAD"],
         cwd=ROOT,
@@ -193,7 +266,13 @@ def main():
         json.dumps(
             {
                 "systemc_revision": revision,
-                "configuration": ["C++17", "SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX"],
+                "schema_version": 2,
+                "configuration": ["C++17", *defines],
+                "effective_defines": [
+                    name
+                    for name in ("SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX")
+                    if any(line.split()[1] == name for line in macros)
+                ],
                 "limits": "Declaration scaffold only. Review mappings, access, internals, macros and semantic evidence.",
                 "declarations": sorted(
                     unique.values(), key=lambda entry: (entry["name"], entry["source"], entry["offset"] or 0)

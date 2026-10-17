@@ -88,6 +88,11 @@ Public declaration inventory and Python mapping — incomplete
 
 * ☑ Reproducible compiler-derived declaration scaffold across core/datatypes/TLM/utilities.
 * ☑ Real-header regression checks overloads/templates/access, source locations and enum spelling.
+* ☑ Selectable baseline/modeling conditional-header inventories with recorded configuration.
+* ☑ Native inheritance metadata retained for inherited API reconciliation.
+* ☑ Overload parameter names, types and default-argument presence retained.
+* ☑ Portable declaration IDs independent of source line movement.
+* ☑ Validated declaration review input for classification, Python mapping, ownership, GIL, errors and evidence.
 * ☐ Inventory every public declaration/overload in systemc/sysc.
 * ☐ Inventory every public declaration/overload in tlm/tlm_core.
 * ☐ Inventory every public declaration/overload in tlm_utils.
