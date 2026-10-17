@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- TLM analysis, put and debug-poke callbacks receive independent native value
+  storage that can be retained after the call; debug indices remain intact.
 - Write-only signal and native FIFO output callbacks receive Python-owned native
   copies that remain valid when retained after the native call returns.
 - Structural signal inout write callbacks receive independent value copies,

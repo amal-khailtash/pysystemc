@@ -263,13 +263,14 @@ def _adapt(interface, implementation, factory):
                     (
                         family in ("sc_core::sc_signal_inout_if", "sc_core::sc_signal_write_if")
                         or family.startswith("sc_core::sc_fifo_")
+                        or family.startswith("tlm::")
                     )
-                    and _method in ("write", "nb_write")
+                    and _method in ("write", "nb_write", "put", "nb_put", "nb_poke")
                     and hasattr(type(args[0]), "__cpp_name__")
                 ):
                     copy = type(args[0])()
                     copy.__assign__(args[0])
-                    args = (copy,)
+                    args = (copy, *args[1:])
                 result = getattr(self._implementation, _method)(*args)
                 if family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_expand", "nb_unbound"):
                     if result is not None:

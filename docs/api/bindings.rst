@@ -240,3 +240,8 @@ native update/notification scheduling.
 Write-only signal and native FIFO blocking/nonblocking output callbacks also
 receive Python-owned native copies. Owners can retain the callback object after
 the call; caller reassignment or deletion does not invalidate that object.
+
+Structural TLM analysis ``write``, blocking/nonblocking ``put`` and debug
+``nb_poke`` callbacks receive Python-owned value copies. Retained arguments remain
+valid after return and do not alias caller storage. Debug index arguments are
+preserved. Transaction transport callbacks continue to borrow native transactions.

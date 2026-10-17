@@ -137,6 +137,8 @@ Custom interfaces and channels — partially implemented
 TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ TLM analysis/put/debug-poke callback values retain independent native storage.
+
 * ☑ TLM FIFO expansion callback None-result validation and recovery.
 * ☑ TLM FIFO unbound callback None-result validation and recovery.
 * ☑ TLM FIFO reduction callback bool-result validation and recovery.

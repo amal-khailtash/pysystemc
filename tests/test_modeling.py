@@ -685,3 +685,8 @@ def test_tlm_fifo_callback_contracts(tmp_path):
 def test_native_write_callback_retention(tmp_path):
     """Verify retained write-only signal and FIFO callback values survive native return."""
     assert "NATIVE_WRITE_RETENTION_OK" in run_example(tmp_path, "tests/models/native_write_retention.py")
+
+
+def test_tlm_write_callback_retention(tmp_path):
+    """Verify retained analysis, put and debug arguments preserve independent values."""
+    assert "TLM_WRITE_RETENTION_OK" in run_example(tmp_path, "tests/models/tlm_write_retention.py")
