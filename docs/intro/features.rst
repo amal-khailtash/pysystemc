@@ -156,6 +156,11 @@ TLM interface families — partial
 * ☑ TLM blocking transport callbacks require None across standalone/combined interfaces.
 * ☑ TLM DMI invalidation callbacks require None and preserve native address arguments.
 * ☑ TLM FIFO debug callbacks require None with rejection and recovery.
+* ☑ Structural TLM forward nonblocking callbacks validate native synchronization enums.
+* ☑ Structural TLM backward nonblocking callbacks validate native synchronization enums.
+* ☑ Structural TLM debug callbacks validate unsigned count types and bounds.
+* ☑ Failed structural TLM nb_get accepts absent values and preserves native output.
+* ☑ Failed structural TLM nb_peek accepts absent values and preserves native output.
 * ☑ TLM analysis write callbacks require None with copied-value preservation.
 * ☑ TLM blocking put callbacks require None across standalone/combined interfaces.
 * ☑ TLM FIFO debug used/size signed-int validation, boundary values and recovery.

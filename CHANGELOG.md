@@ -25,14 +25,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Structural TLM callbacks validate forward/backward synchronization enums and
+  unsigned debug counts before conversion; failed nonblocking get/peek accepts
+  an absent value while preserving caller output.
+- Refresh changelog comparison links through 0.9.0 and keep adjacent bullets together.
 - Convenience socket callbacks validate void, DMI bool, unsigned debug count and
   native nonblocking synchronization enum results before cppyy conversion, retaining
   callback ownership and borrowed argument behavior across all factory families.
-
 - Structural FIFO available/free counts enforce signed native integer bounds.
 - Structural bool and signed/unsigned integer signal reads validate exact result
   types and native-width bounds, with read/trace accessor recovery checks.
-
 - Structural event queue notify/cancel, TLM blocking transport/DMI invalidation and
   FIFO debug callbacks require None, with overload, argument and recovery checks.
 - Structural signal inout/write-only, blocking FIFO write, TLM analysis write and
@@ -449,7 +451,9 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.4.0...v0.5.0

@@ -313,6 +313,20 @@ def _adapt(interface, implementation, factory):
                     and not isinstance(result, bool)
                 ):
                     raise TypeError(f"{_method} must return bool")
+                if family.startswith("tlm::") and _method in ("nb_transport_fw", "nb_transport_bw"):
+                    if isinstance(result, bool) or not isinstance(result, cppyy.gbl.tlm.tlm_sync_enum):
+                        raise TypeError(f"{_method} must return native tlm_sync_enum")
+                    if result not in (
+                        cppyy.gbl.tlm.TLM_ACCEPTED,
+                        cppyy.gbl.tlm.TLM_UPDATED,
+                        cppyy.gbl.tlm.TLM_COMPLETED,
+                    ):
+                        raise ValueError(f"{_method} returned invalid tlm_sync_enum")
+                if family.startswith("tlm::") and _method == "transport_dbg":
+                    if isinstance(result, bool) or not isinstance(result, int):
+                        raise TypeError("transport_dbg must return int")
+                    if not 0 <= result < 2**32:
+                        raise ValueError("transport_dbg result outside unsigned int range")
                 if family in ("sc_core::sc_mutex_if", "sc_core::sc_semaphore_if"):
                     if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
                         raise TypeError(f"{_method} must return a native int in range")
@@ -360,9 +374,14 @@ def _adapt(interface, implementation, factory):
                     if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
                         raise TypeError(f"{_method} must return a (bool, value) tuple")
                     if output_pair is not None:
+                        if _method in ("nb_get", "nb_peek") and not result[0] and result[1] is None:
+                            return output_pair()
                         return output_pair(*result)
                     value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
-                    return cppyy.gbl.std.pair[bool, value_type](*result)
+                    pair = cppyy.gbl.std.pair[bool, value_type]
+                    if _method in ("nb_get", "nb_peek") and not result[0] and result[1] is None:
+                        return pair()
+                    return pair(*result)
                 return result
 
             callbacks[native_name] = forward

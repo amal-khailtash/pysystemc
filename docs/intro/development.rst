@@ -164,3 +164,8 @@ integers, excluding bool and overflow. Scalar bool signal reads require bool;
 signed/unsigned integer reads require Python int within the selected native
 type bounds. Rejection occurs before native sampled storage is updated. Plain
 char and floating-point conversion policies remain outside this strict matrix.
+
+Structural TLM nonblocking transport callbacks require valid native synchronization
+enums; debug callbacks return unsigned32-bit integer counts excluding bool. Failed
+``nb_get``/``nb_peek`` may return ``(False, None)``: the native caller output remains
+unchanged. Successful results still supply a value convertible to the native type.

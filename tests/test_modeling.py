@@ -737,3 +737,8 @@ def test_structural_scalar_and_fifo_count_contracts(tmp_path):
 def test_convenience_socket_result_contracts(tmp_path):
     """Check five callback result families through simple/tagged/passthrough sockets."""
     assert "SOCKET_RESULT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/socket_result_contracts.py")
+
+
+def test_structural_tlm_results_and_absent_failed_output(tmp_path):
+    """Check five enum/count/get/peek contracts across partial and combined interfaces."""
+    assert "TLM_RESULT_COMPLETION_OK" in run_example(tmp_path, "tests/models/tlm_result_completion.py")
