@@ -88,7 +88,6 @@ Public declaration inventory and Python mapping — incomplete
 
 * ☑ Reproducible compiler-derived declaration scaffold across core/datatypes/TLM/utilities.
 * ☑ Real-header regression checks overloads/templates/access, source locations and enum spelling.
-
 * ☐ Inventory every public declaration/overload in systemc/sysc.
 * ☐ Inventory every public declaration/overload in tlm/tlm_core.
 * ☐ Inventory every public declaration/overload in tlm_utils.
@@ -100,7 +99,6 @@ Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ Write-only signal and combined/partial FIFO callback values retain independent native storage.
-
 * ☑ Structural signal inout writes copy callback arguments; retained storage and mutation isolation verified.
 * ☑ Structural signal inout writer-policy forwarding, native default and invalid-policy recovery.
 * ☑ Mutex callback integer result validation and boundary/recovery checks.
@@ -108,13 +106,11 @@ Custom interfaces and channels — partially implemented
 * ☑ Signal event/edge callback bool result validation.
 * ☑ Signal-write callback writer-policy result validation.
 * ☑ Borrowed event callback native type/liveness validation.
-
 * ☑ Structural native mutex interface callbacks with timed contention/wakeup.
 * ☑ Structural native semaphore interface callbacks with timed wait/post.
 * ☑ Structural event queue interface callbacks, both notify overloads and cancellation.
 * ☑ Structural native signal-write interface callbacks with copied arbitrary-width values.
 * ☑ Structural signal-write writer-policy callback forwarding.
-
 * ☑ Structural port/export binding and native-style call syntax delivered.
 * ☑ Annotated Protocol declaration and explicit native signature support delivered.
 * ☑ Ordinary Python callback spelling adaptation delivered for tested TLM families.
@@ -138,21 +134,17 @@ TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ TLM FIFO debug used/size signed-int validation, boundary values and recovery.
-
 * ☑ TLM analysis/put/debug-poke callback values retain independent native storage.
-
 * ☑ TLM FIFO expansion callback None-result validation and recovery.
 * ☑ TLM FIFO unbound callback None-result validation and recovery.
 * ☑ TLM FIFO reduction callback bool-result validation and recovery.
 * ☑ TLM FIFO bound callback bool-result validation and recovery.
 * ☑ TLM FIFO debug poke callback bool-result validation and recovery.
-
 * ☑ TLM nonblocking put callback bool validation and recovery.
 * ☑ TLM put-readiness callback bool validation and recovery.
 * ☑ TLM get-readiness callback bool validation and recovery.
 * ☑ TLM peek-readiness callback bool validation and recovery.
 * ☑ TLM DMI permission callback bool validation and recovery.
-
 * ☑ Structural TLM1 blocking put/get/peek/transport/analysis adapters.
 * ☑ Structural TLM1 nonblocking put/get/peek and combined get/put/peek/get-peek adapters.
 * ☑ Structural TLM1 master/slave families and FIFO debug/config/compound adapters.
