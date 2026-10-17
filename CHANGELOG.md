@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-17
+
+Expands structural synchronization interfaces and callback ownership/validation.
+M6A remains incomplete; full API, reset/error and teardown audits are open.
+
 ### Fixed
 
 - TLM FIFO debug count callbacks reject invalid integer conversions while
