@@ -25,6 +25,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Convenience socket callbacks validate void, DMI bool, unsigned debug count and
+  native nonblocking synchronization enum results before cppyy conversion, retaining
+  callback ownership and borrowed argument behavior across all factory families.
+
 - Structural FIFO available/free counts enforce signed native integer bounds.
 - Structural bool and signed/unsigned integer signal reads validate exact result
   types and native-width bounds, with read/trace accessor recovery checks.

@@ -102,3 +102,15 @@ payload probes preserve 137-bit native fields and transaction identity. Simple
 and passthrough custom probes have independent C++ references. These checks do
 not establish complete socket overload, protocol, hierarchy or lifetime coverage.
 M6A remains incomplete.
+
+Callback return contracts
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Convenience factory registrations validate Python results before native conversion.
+Blocking transport and DMI invalidation return ``None``; DMI permission returns
+``bool``; debug transport returns an integer from zero through ``2**32 - 1``,
+excluding bool. Forward and backward nonblocking callbacks return a native
+``tlm_sync_enum`` value: ``TLM_ACCEPTED``, ``TLM_UPDATED`` or ``TLM_COMPLETED``.
+Malformed types raise ``TypeError``; invalid ranges raise ``ValueError``. Payload,
+phase and delay arguments remain borrowed and callback mutations precede validation.
+These contracts apply to simple, tagged, passthrough and multi factories.

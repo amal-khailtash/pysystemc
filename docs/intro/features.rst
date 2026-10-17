@@ -180,6 +180,11 @@ TLM interface families — partial
 Callable sockets — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Convenience socket blocking transport callbacks require None.
+* ☑ Convenience socket DMI invalidation callbacks require None.
+* ☑ Convenience socket DMI permission callbacks require actual bool.
+* ☑ Convenience socket debug callbacks validate unsigned native count type and range.
+* ☑ Convenience socket forward/backward nonblocking callbacks require valid native sync enums.
 * ☑ Simple target: all four forward registrations; simple initiator: both backward registrations.
 * ☑ Tagged target/initiator registrations with independent user IDs.
 * ☑ Multi target/initiator registrations with native connection IDs.

@@ -732,3 +732,8 @@ def test_structural_void_transport_queue_and_debug_results(tmp_path):
 def test_structural_scalar_and_fifo_count_contracts(tmp_path):
     """Check five scalar/count contracts across native widths and result accessors."""
     assert "SCALAR_COUNT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/scalar_count_contracts.py")
+
+
+def test_convenience_socket_result_contracts(tmp_path):
+    """Check five callback result families through simple/tagged/passthrough sockets."""
+    assert "SOCKET_RESULT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/socket_result_contracts.py")

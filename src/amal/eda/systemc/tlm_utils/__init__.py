@@ -31,6 +31,38 @@ _callback_queues = []
 _callback_sockets = []
 
 
+def _checked_socket_callback(method, callback):
+    """Validate Python callback results before std::function native conversion.
+
+    The wrapper retains the original callable; arguments remain borrowed. Result
+    rejection follows callback mutations and does not roll them back. GIL entry,
+    guarded waits and exceptions retain the registration bridge's native contract.
+    """
+
+    def checked(*args):
+        """Invoke the retained callback and enforce its native return contract."""
+        result = callback(*args)
+        if method in ("register_b_transport", "register_invalidate_direct_mem_ptr"):
+            if result is not None:
+                raise TypeError(f"{method} callback must return None")
+        elif method == "register_get_direct_mem_ptr":
+            if not isinstance(result, bool):
+                raise TypeError(f"{method} callback must return bool")
+        elif method == "register_transport_dbg":
+            if isinstance(result, bool) or not isinstance(result, int):
+                raise TypeError("transport_dbg callback must return int")
+            if not 0 <= result < 2**32:
+                raise ValueError("transport_dbg result outside unsigned int range")
+        elif method in ("register_nb_transport_fw", "register_nb_transport_bw"):
+            if isinstance(result, bool) or not isinstance(result, cppyy.gbl.tlm.tlm_sync_enum):
+                raise TypeError(f"{method} callback must return native tlm_sync_enum")
+            if result not in (cppyy.gbl.tlm.TLM_ACCEPTED, cppyy.gbl.tlm.TLM_UPDATED, cppyy.gbl.tlm.TLM_COMPLETED):
+                raise ValueError(f"{method} callback returned invalid tlm_sync_enum")
+        return result
+
+    return checked
+
+
 def _configure_forward_access(socket_type):
     """Release GIL on concrete forward interfaces returned by a native socket."""
     if getattr(socket_type, "_forward_gil_configured", False):
@@ -83,12 +115,13 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None, tag
         for method in ("register_nb_transport_bw", "register_invalidate_direct_mem_ptr"):
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, *args, _native=native_register):
+            def register(socket, callback, *args, _native=native_register, _method=method):
                 """Retain callable ownership after successful native registration."""
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
-                _native(socket, callback, *args)
-                _callback_sockets.append((socket, callback))
+                checked = _checked_socket_callback(_method, callback)
+                _native(socket, checked, *args)
+                _callback_sockets.append((socket, checked))
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -141,12 +174,13 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged
         for method in methods:
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, *args, _native=native_register):
+            def register(socket, callback, *args, _native=native_register, _method=method):
                 """Retain a callable after native registration succeeds."""
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
-                _native(socket, callback, *args)
-                _callback_sockets.append((socket, callback))
+                checked = _checked_socket_callback(_method, callback)
+                _native(socket, checked, *args)
+                _callback_sockets.append((socket, checked))
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -199,12 +233,13 @@ def callback_passthrough_target_socket(name, *, width=32, protocol=None, policy=
         for method in methods:
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, *args, _native=native_register):
+            def register(socket, callback, *args, _native=native_register, _method=method):
                 """Retain a callable after native registration succeeds."""
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
-                _native(socket, callback, *args)
-                _callback_sockets.append((socket, callback))
+                checked = _checked_socket_callback(_method, callback)
+                _native(socket, checked, *args)
+                _callback_sockets.append((socket, checked))
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -237,12 +272,13 @@ def callback_multi_initiator_socket(name, *, width=32, protocol=None, connection
         for method in ("register_nb_transport_bw", "register_invalidate_direct_mem_ptr"):
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, _native=native_register):
+            def register(socket, callback, _native=native_register, _method=method):
                 """Retain callback ownership after native registration succeeds."""
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
-                _native(socket, callback)
-                _callback_sockets.append((socket, callback))
+                checked = _checked_socket_callback(_method, callback)
+                _native(socket, checked)
+                _callback_sockets.append((socket, checked))
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -279,12 +315,13 @@ def callback_multi_target_socket(name, *, width=32, protocol=None, connections=0
         ):
             native_register = getattr(socket_type, method)
 
-            def register(socket, callback, _native=native_register):
+            def register(socket, callback, _native=native_register, _method=method):
                 """Retain callable ownership after native registration succeeds."""
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
-                _native(socket, callback)
-                _callback_sockets.append((socket, callback))
+                checked = _checked_socket_callback(_method, callback)
+                _native(socket, checked)
+                _callback_sockets.append((socket, checked))
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
