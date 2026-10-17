@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Structural TLM nonblocking put, readiness and DMI callbacks require bool
+  results, with malformed-result rejection and recovery checks.
 - Structural callback validation covers mutex/semaphore integer bounds, signal
   event flags, writer policies and live native event returns, with recovery checks.
 - Structural mutex, semaphore and event queue interfaces, including blocking GIL

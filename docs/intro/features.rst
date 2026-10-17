@@ -133,6 +133,12 @@ Custom interfaces and channels — partially implemented
 TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ TLM nonblocking put callback bool validation and recovery.
+* ☑ TLM put-readiness callback bool validation and recovery.
+* ☑ TLM get-readiness callback bool validation and recovery.
+* ☑ TLM peek-readiness callback bool validation and recovery.
+* ☑ TLM DMI permission callback bool validation and recovery.
+
 * ☑ Structural TLM1 blocking put/get/peek/transport/analysis adapters.
 * ☑ Structural TLM1 nonblocking put/get/peek and combined get/put/peek/get-peek adapters.
 * ☑ Structural TLM1 master/slave families and FIFO debug/config/compound adapters.

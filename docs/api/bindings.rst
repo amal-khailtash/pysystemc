@@ -215,3 +215,9 @@ must return bool. Writer-policy callbacks return one of the native one/many/unch
 policies. Borrowed event callbacks require a live native sc_event object; wrong
 types and null event proxies raise ``TypeError`` before native pointer dispatch.
 These checks do not prevent callbacks from mutating owner state before raising.
+
+Structural TLM ``nb_put``, ``nb_can_put``, ``nb_can_get``, ``nb_can_peek`` and
+``get_direct_mem_ptr`` callbacks must return Python bool values. None, integers,
+strings and other truthy objects raise ``TypeError`` rather than being converted
+implicitly. Later valid callbacks remain usable. Callback mutations of payloads,
+DMI descriptors or owner state are not rolled back when result validation fails.

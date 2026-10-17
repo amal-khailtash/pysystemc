@@ -247,6 +247,12 @@ def _adapt(interface, implementation, factory):
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
                 result = getattr(self._implementation, _method)(*args)
+                if (
+                    family.startswith("tlm::")
+                    and _method in ("nb_put", "nb_can_put", "nb_can_get", "nb_can_peek", "get_direct_mem_ptr")
+                    and not isinstance(result, bool)
+                ):
+                    raise TypeError(f"{_method} must return bool")
                 if family in ("sc_core::sc_mutex_if", "sc_core::sc_semaphore_if"):
                     if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
                         raise TypeError(f"{_method} must return a native int in range")

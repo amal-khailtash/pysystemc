@@ -670,3 +670,8 @@ def test_structural_sync_and_write_interfaces(tmp_path):
 def test_structural_callback_contracts(tmp_path):
     """Validate mutex/semaphore ints, signal flags, writer policy and event results."""
     assert "STRUCTURAL_CALLBACK_CONTRACTS_OK" in run_example(tmp_path, "tests/models/structural_callback_contracts.py")
+
+
+def test_tlm_boolean_callback_contracts(tmp_path):
+    """Verify five TLM boolean callbacks reject malformed results and recover."""
+    assert "TLM_BOOLEAN_CONTRACTS_OK" in run_example(tmp_path, "tests/models/tlm_boolean_contracts.py")
