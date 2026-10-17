@@ -137,3 +137,10 @@ The keeper owns the callback until deletion. Retain the keeper while native code
 borrows it or synchronization is suspended. Guarded synchronization preserves
 scheduler unwind; arbitrary Python overrides of the other native virtual methods
 are not covered by this factory.
+
+Custom keepers share a dispatcher type and retain independent callbacks. Hook
+errors after a completed wait can be caught in the Python process; local time is
+already cleared by reset. Both guarded wait APIs preserve reset/kill cleanup.
+For native global boundaries, the callback can return
+``tlm.tlm_global_quantum.instance().compute_local_quantum()``. At a simulation time
+between boundaries, this returns the remaining time rather than the full quantum.

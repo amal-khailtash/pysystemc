@@ -707,3 +707,13 @@ def test_custom_quantumkeeper_native_hook_and_lifetime(tmp_path):
     assert [line for line in output.splitlines() if line.startswith("CUSTOM_QUANTUM ")] == [
         line for line in native.stdout.splitlines() if line.startswith("CUSTOM_QUANTUM ")
     ]
+
+
+def test_custom_quantumkeeper_reset_and_kill(tmp_path):
+    """Verify custom hooks survive restart and cleanup precedes kill in both waits."""
+    assert "CUSTOM_QUANTUM_RESET_OK" in run_example(tmp_path, "tests/models/tlm_custom_quantum_reset.py")
+
+
+def test_custom_quantumkeeper_post_wait_errors_and_boundaries(tmp_path):
+    """Check hook error recovery after synchronization and remaining global quantum."""
+    assert "CUSTOM_QUANTUM_ERRORS_OK" in run_example(tmp_path, "tests/models/tlm_custom_quantum_errors.py")

@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Custom quantumkeeper checks cover reset/kill cleanup, hook exceptions and invalid
+  results after guarded waits, and remaining-global-quantum boundary timing.
+
 - Custom quantumkeeper factory dispatches the protected local-quantum hook to a
   Python callback with copied native time, result validation, exception recovery,
   guarded synchronization and callback ownership checks against native timing.
@@ -23,6 +26,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   Full public declaration classification and semantic coverage remain incomplete.
 
 ### Fixed
+
+- Custom quantumkeepers reuse one native dispatcher while retaining independent
+  callback owners; native hook dispatch rejects null result pointers.
 
 - Event queue overload regression uses structural callbacks and borrowed event
   forwarding, preserving duplicate-delta notification and cancellation checks.

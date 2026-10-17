@@ -186,6 +186,11 @@ TLM timing, payloads, extensions and endian utilities — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ Quantumkeeper guarded sync/set_and_sync and reset/kill probes.
+* ☑ Custom quantumkeeper reset/kill cleanup through both guarded wait APIs.
+* ☑ Custom local-quantum callback exception recovery after sync suspension.
+* ☑ Custom local-quantum invalid-result recovery after set_and_sync suspension.
+* ☑ Custom quantumkeeper remaining-global-quantum boundary computation.
+* ☑ Cached custom quantumkeeper dispatcher with independent callback ownership.
 * ☑ Custom quantumkeeper protected local-quantum callback dispatch.
 * ☑ Custom quantumkeeper native sc_time result validation and copied storage.
 * ☑ Custom quantumkeeper callback exception propagation and reset recovery.

@@ -387,6 +387,9 @@ _namespace.tlm_quantumkeeper.set_and_sync = _set_and_sync
 cppyy.include(str(Path(__file__).with_name("callback_quantumkeeper.h")))
 
 
+_quantumkeeper_type = None
+
+
 def callback_quantumkeeper(callback):
     """Create a native quantumkeeper with a Python local-quantum computation.
 
@@ -410,13 +413,17 @@ def callback_quantumkeeper(callback):
     if not callable(callback):
         raise TypeError("local quantum callback must be callable")
 
+    global _quantumkeeper_type
+    if _quantumkeeper_type is not None:
+        return _quantumkeeper_type(callback)
+
     class Keeper(cppyy.gbl.pysystemc_interfaces.CallbackQuantumKeeper):
         """Own callback and stable native time storage for the protected hook."""
 
-        def __init__(self):
+        def __init__(self, computation):
             """Construct the native base and retain callback state."""
             super().__init__()
-            self._callback = callback
+            self._callback = computation
             self._quantum = cppyy.gbl.sc_core.sc_time()
 
         def local_quantum_pointer(self):
@@ -431,7 +438,8 @@ def callback_quantumkeeper(callback):
     Keeper.set_and_sync = _set_and_sync
     Keeper.set_global_quantum = staticmethod(_namespace.tlm_quantumkeeper.set_global_quantum)
     Keeper.get_global_quantum = staticmethod(_namespace.tlm_quantumkeeper.get_global_quantum)
-    return Keeper()
+    _quantumkeeper_type = Keeper
+    return Keeper(callback)
 
 
 __all__.append("callback_quantumkeeper")

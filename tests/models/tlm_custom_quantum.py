@@ -33,6 +33,17 @@ except TypeError:
 else:
     raise AssertionError("noncallable accepted")
 keeper = tlm_utils.callback_quantumkeeper(compute)
+other = Compute()
+other_reference = weakref.ref(other)
+other_keeper = tlm_utils.callback_quantumkeeper(other)
+assert type(other_keeper) is type(keeper)
+other_keeper.reset()
+assert not compute.calls and len(other.calls) == 1
+other_keeper = None
+other = None
+gc.collect()
+assert other_reference() is None
+assert reference() is not None
 keeper.set_global_quantum(sc.sc_time(10, sc.SC_NS))
 for mode, exception in (("invalid", TypeError), ("error", ValueError)):
     compute.mode = mode

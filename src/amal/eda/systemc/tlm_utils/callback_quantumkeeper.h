@@ -2,6 +2,8 @@
 #pragma once
 #include <tlm_utils/tlm_quantumkeeper.h>
 
+#include <stdexcept>
+
 namespace pysystemc_interfaces
 {
 /** @brief Preserve the native protected hook through a pointer-return trampoline.
@@ -20,7 +22,9 @@ class CallbackQuantumKeeper : public tlm_utils::tlm_quantumkeeper
   /** @brief Copy callback time into native synchronization-point computation. */
   sc_core::sc_time compute_local_quantum() override
   {
-    return *local_quantum_pointer();
+    const auto* value = local_quantum_pointer();
+    if (!value) throw std::runtime_error("local quantum callback returned null");
+    return *value;
   }
 };
 }  // namespace pysystemc_interfaces
