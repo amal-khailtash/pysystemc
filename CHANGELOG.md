@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-18
+
+Adds custom quantumkeeper hooks, stricter callback contracts and declaration audit
+metadata. M6A remains incomplete; full API, type, reset and teardown audits are open.
+
 ### Added
 
 - Custom quantumkeeper checks cover reset/kill cleanup, hook exceptions and invalid
@@ -451,7 +456,8 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.6.0...v0.7.0
