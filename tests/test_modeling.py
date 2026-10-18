@@ -747,3 +747,22 @@ def test_structural_tlm_results_and_absent_failed_output(tmp_path):
 def test_multi_socket_result_contracts_and_connection_indices(tmp_path):
     """Verify five multi callback result families with independent native routing."""
     assert "MULTI_RESULT_CONTRACTS_OK" in run_example(tmp_path, "tests/models/multi_result_contracts.py")
+
+
+def test_multi_socket_five_behaviors_match_native_reference(tmp_path):
+    """Compare timing, phases, debug, DMI and invalidation with upstream native sockets."""
+    output = run_example(tmp_path, "tests/models/tlm_multi_to_multi.py")
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/tlm_multi_reference.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    records = sorted(line for line in output.splitlines() if line.startswith("MULTI_REF "))
+    assert len(records) == 12
+    assert records == sorted(line for line in native.stdout.splitlines() if line.startswith("MULTI_REF "))
+    assert [line for line in output.splitlines() if line.startswith("MULTI_REF blocking ")] == [
+        line for line in native.stdout.splitlines() if line.startswith("MULTI_REF blocking ")
+    ]

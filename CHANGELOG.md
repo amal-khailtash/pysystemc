@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Independent upstream C++ multi-socket comparison verifies two-connection blocking
+  timing, forward/backward phases, debug counts, DMI ranges and invalidation routing.
 - Multi socket malformed-result and recovery checks cover blocking transport,
   invalidation, DMI, debug counts and forward/backward synchronization enums,
   including independent native connection routing and borrowed-state preservation.

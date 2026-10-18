@@ -185,6 +185,11 @@ TLM interface families — partial
 Callable sockets — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Independent native multi blocking transport timing and payload/delay comparison.
+* ☑ Independent native multi forward/backward phase and annotation comparison.
+* ☑ Independent native multi debug count routing comparison.
+* ☑ Independent native multi DMI rejection/range comparison.
+* ☑ Independent native multi full-width invalidation connection comparison.
 * ☑ Multi socket blocking callback malformed-result rejection and recovery across connections.
 * ☑ Multi socket invalidation callback result validation with backward connection indices.
 * ☑ Multi socket DMI bool callback malformed-result/recovery matrix.

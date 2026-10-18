@@ -27,6 +27,7 @@ class Target:
         payload.set_address(21 + index)
         delay.__assign__(sc.SC_ZERO_TIME)
         records.append((index, str(sc.sc_time_stamp())))
+        print(f"MULTI_REF blocking {index} {payload.get_address()} {delay} {sc.sc_time_stamp()}")
 
     def forward(self, connection, payload, phase, delay):
         """Preserve connection index and mutable native phase/delay."""
@@ -73,6 +74,7 @@ def response(index, payload, phase, delay):
     phase.__assign__(tlm.END_RESP)
     delay.__assign__(sc.sc_time(index + 1, sc.SC_NS))
     backward_records.append(("response", index))
+    print(f"MULTI_REF backward {index} {phase} {delay}")
     return tlm.TLM_COMPLETED
 
 
@@ -80,6 +82,7 @@ def invalidate(index, first, last):
     """Verify full-width invalidation retains connection ID."""
     assert (int(first), int(last)) == (0, 2**64 - 1)
     backward_records.append(("invalidate", index))
+    print(f"MULTI_REF invalidate {index} {first} {last}")
 
 
 initiator.register_nb_transport_bw(response)
@@ -119,11 +122,15 @@ def run(index):
     phase = tlm.tlm_phase(tlm.BEGIN_REQ)
     assert interface.nb_transport_fw(payload, phase, delay) == tlm.TLM_UPDATED
     assert phase == tlm.BEGIN_RESP and delay == sc.sc_time(index + 1, sc.SC_NS)
-    assert interface.transport_dbg(payload) == index + 7
+    print(f"MULTI_REF forward {index} {phase} {delay}")
+    count = interface.transport_dbg(payload)
+    assert count == index + 7
+    print(f"MULTI_REF debug {index} {count}")
     result = tlm.tlm_dmi()
     assert not interface.get_direct_mem_ptr(payload, result)
     assert (result.get_start_address(), result.get_end_address()) == (17 + index, 31 + index)
     assert result.is_none_allowed()
+    print(f"MULTI_REF dmi {index} {result.get_start_address()} {result.get_end_address()}")
     delay.__assign__(sc.sc_time(2 + index, sc.SC_NS))
     assert interface.b_transport.__release_gil__
     interface.b_transport(payload, delay)
