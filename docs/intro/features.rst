@@ -185,6 +185,11 @@ TLM interface families — partial
 Callable sockets — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ☑ Multi socket blocking callback malformed-result rejection and recovery across connections.
+* ☑ Multi socket invalidation callback result validation with backward connection indices.
+* ☑ Multi socket DMI bool callback malformed-result/recovery matrix.
+* ☑ Multi socket debug count type/boundary/error/recovery matrix.
+* ☑ Multi socket forward/backward sync enum result matrix with independent connection routing.
 * ☑ Convenience socket blocking transport callbacks require None.
 * ☑ Convenience socket DMI invalidation callbacks require None.
 * ☑ Convenience socket DMI permission callbacks require actual bool.

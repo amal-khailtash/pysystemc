@@ -8,6 +8,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Multi socket malformed-result and recovery checks cover blocking transport,
+  invalidation, DMI, debug counts and forward/backward synchronization enums,
+  including independent native connection routing and borrowed-state preservation.
+
 ## [0.10.0] - 2026-10-18
 
 Adds custom quantumkeeper hooks, stricter callback contracts and declaration audit
