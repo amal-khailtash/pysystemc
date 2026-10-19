@@ -766,3 +766,8 @@ def test_multi_socket_five_behaviors_match_native_reference(tmp_path):
     assert [line for line in output.splitlines() if line.startswith("MULTI_REF blocking ")] == [
         line for line in native.stdout.splitlines() if line.startswith("MULTI_REF blocking ")
     ]
+
+
+def test_time_member_operator_python_protocol_mapping(tmp_path):
+    """Verify time comparisons and in-place arithmetic map to native operators."""
+    assert "TIME_OPERATOR_MAPPING_OK" in run_example(tmp_path, "tests/models/time_operator_inventory.py")

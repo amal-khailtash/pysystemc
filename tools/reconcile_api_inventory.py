@@ -8,6 +8,7 @@ Run after generating modeling and compatibility snapshots with inventory_public_
 import argparse
 import hashlib
 import json
+import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -100,14 +101,49 @@ def write_remaining(inventory, output):
         entries = [indexed[identifier] for identifier in identifiers]
         classifications = ", ".join(sorted({entry["classification"] for entry in entries}))
         sources = ", ".join(sorted({entry["source"] for entry in entries}))
-        remaining = (
-            "Confirm exclusion rationale"
-            if all(entry["classification"] == "internal" for entry in entries)
-            else "Review modeling role; map every overload; ownership/GIL/errors; executable evidence"
-        )
+        public = [entry for entry in entries if entry["classification"] == "public"]
+        unresolved = [entry for entry in entries if entry["classification"] not in {"public", "internal"}]
+        missing_mapping = [
+            entry
+            for entry in public
+            if any(
+                not entry.get(field) or entry.get(field) == "unreviewed"
+                for field in ("python", "ownership", "gil", "errors")
+            )
+        ]
+        work = []
+        if unresolved:
+            work.append("Review modeling role")
+        if missing_mapping:
+            work.append("Map Python/ownership/GIL/errors")
+        if any(entry.get("status") != "supported" for entry in public):
+            work.append("Complete semantic evidence for public overload scope")
+        remaining = "; ".join(work) or "Internal source review recorded; confirm any access-only exclusions"
         lines.append(
             f"| `{family.replace('|', '&#124;')}` | {len(entries)} | {classifications} | {sources} | {remaining} |"
         )
+    lines += [
+        "",
+        "## Recorded public contracts",
+        "",
+        "Each row below is a reviewed source contract. Untested status remains open even when selected executable evidence is linked.",
+        "",
+        "| Identity | Python | Ownership | GIL | Errors | Status | Evidence |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for entry in inventory["declarations"]:
+        if entry["classification"] != "public":
+            continue
+        cells = [
+            entry["id"],
+            entry.get("python", "unreviewed"),
+            entry.get("ownership", "unreviewed"),
+            entry.get("gil", "unreviewed"),
+            entry.get("errors", "unreviewed"),
+            entry.get("status", "untested"),
+            ", ".join(entry.get("evidence", [])),
+        ]
+        lines.append("| " + " | ".join(str(cell).replace("|", "&#124;").replace("\n", " ") for cell in cells) + " |")
     lines += [
         "",
         "## Configuration and extraction review",
@@ -133,10 +169,14 @@ def main():
     """Reconcile snapshots and publish the local remaining-work ledger."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("snapshots", nargs="+", type=Path)
+    parser.add_argument("--reviews", type=Path, help="Apply source-reviewed declaration records to the union")
     parser.add_argument("--output", type=Path, default=ROOT / ".ai/PUBLIC_API_UNION.json")
     parser.add_argument("--report", type=Path, default=ROOT / ".ai/PUBLIC_API_REMAINING.md")
     args = parser.parse_args()
     inventory = reconcile([json.loads(path.read_text()) for path in args.snapshots])
+    if args.reviews:
+        reviewer = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))["apply_reviews"]
+        reviewer(inventory["declarations"], json.loads(args.reviews.read_text()))
     args.output.write_text(json.dumps(inventory, indent=2) + "\n")
     write_remaining(inventory, args.report)
     print(f"Wrote union and remaining review ledger: {args.output}, {args.report}")

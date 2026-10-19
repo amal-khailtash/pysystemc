@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- API review tooling applies source classification records to reconciled snapshots,
+  displays recorded semantic contracts, and preserves upstream executable variants
+  and shared-source dependencies. Native time operator Python spellings are verified.
 - Source inventory resolves out-of-class method owners and stream-compressed header
   locations, preserves specialization context and redeclaration occurrences, and
   reconciles modeling/compatibility snapshots into a fixed remaining-family ledger.

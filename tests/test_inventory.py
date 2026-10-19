@@ -326,3 +326,53 @@ def test_reconcile_preserves_configuration_and_source_occurrences():
     assert union["families"] == {"sc_core::Port": ["one", "extra"]}
     with pytest.raises(ValueError, match="revisions"):
         api["reconcile"]([first, {**second, "systemc_revision": "different"}])
+
+
+def test_example_inventory_preserves_fir_variants_and_shared_sources():
+    """Retain separate native FIR targets and TLM common-source dependencies."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_examples.py"))
+    inventory = api["inventory_examples"](
+        {"systemc_revision": "pinned", "families": {"sc_core::sc_module": [], "absent::not_a_native_name": []}}
+    )
+    fir = [row for row in inventory["build_targets"] if row["group"] == "sysc/fir"]
+    assert {row["target"] for row in fir} == {"fir", "fir_rtl"}
+    lt = next(row for row in inventory["build_targets"] if row["target"] == "lt")
+    assert "../common/src/lt_initiator.cpp" in lt["arguments"]
+    assert inventory["family_references"]["sc_core::sc_module"]["candidate_sources"]
+    assert not inventory["family_references"]["absent::not_a_native_name"]["candidate_sources"]
+    assert all(row["native_status"] == "untested" for row in inventory["build_targets"])
+    assert all(not Path(path).is_absolute() for path in inventory["source_files"])
+
+
+def test_remaining_report_distinguishes_mapping_from_semantic_validation(tmp_path):
+    """Keep recorded contracts visible while preserving untested semantic scope."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/reconcile_api_inventory.py"))
+    entry = {
+        "id": "reviewed",
+        "classification": "public",
+        "source": "header.h",
+        "python": "namespace.Type.method",
+        "ownership": "borrowed",
+        "gil": "held",
+        "errors": "native preconditions",
+        "status": "untested",
+        "evidence": ["header.h:3"],
+    }
+    inventory = {
+        "systemc_revision": "pinned",
+        "fingerprint": "scope",
+        "scope": "source review",
+        "declarations": [entry],
+        "families": {"namespace::Type": ["reviewed"]},
+    }
+    output = tmp_path / "remaining.md"
+    api["write_remaining"](inventory, output)
+    report = output.read_text()
+    assert "Complete semantic evidence for public overload scope" in report
+    assert "Map Python/ownership/GIL/errors" not in report
+    assert "namespace.Type.method" in report
+    assert "header.h:3" in report
