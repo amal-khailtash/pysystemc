@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Publish every inventoried public API family in Features and a downloadable
+  per-declaration CSV with all 12,701 signatures, contracts and explicit statuses.
 - Close the pinned source inventory at 15,778 identities (12,701 public, 3,077 internal),
   with explicit Python candidates, ownership, GIL, errors and evidence. Partial
   binding mappings and untested runtime behavior remain visible in Features.
