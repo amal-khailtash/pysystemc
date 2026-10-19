@@ -20,7 +20,7 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     inventory = json.loads(output.read_text())
-    assert inventory["schema_version"] == 3
+    assert inventory["schema_version"] == 4
     assert set(inventory["utility_headers"]) == {
         path.name for path in (ROOT / "submodules/systemc/src/tlm_utils").glob("*.h")
     }
@@ -57,6 +57,9 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
         assert entry["classification"] in {"internal", "public_candidate"}
         assert entry["rationale"]
         assert entry["mapping_status"] == "unreviewed"
+    assert not any(entry["kind"] == "CXXMethodDecl" and len(entry["name"].split("::")) < 3 for entry in entries)
+    assert named("sc_core::sc_in::add_trace")
+    assert not named("sc_core::add_trace")
     extension = named("tlm::tlm_generic_payload::get_extension")
     # Clang versions differ in qualification of types within their own namespace.
     assert any(
@@ -210,3 +213,116 @@ def test_inventory_friend_specialization_and_atomic_reviews():
     for review in ({"evidence": "file.py"}, {"ownership": 7}, {"gil": ""}):
         with pytest.raises(ValueError):
             api["apply_reviews"](entries, {entries[0]["id"]: review})
+
+
+def test_specialized_member_identity_retains_enclosing_arguments():
+    """Separate identical member signatures in different template specializations."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    source = str(ROOT / "submodules/systemc/src/tlm")
+
+    def member(value):
+        """Build an AST specialization with an otherwise identical member."""
+        return {
+            "kind": "ClassTemplateSpecializationDecl",
+            "name": "Box",
+            "loc": {"file": source, "line": 1},
+            "inner": [
+                {"kind": "TemplateArgument", "type": {"qualType": value}},
+                {
+                    "kind": "CXXMethodDecl",
+                    "name": "size",
+                    "loc": {"file": source, "line": 2},
+                    "type": {"qualType": "int () const"},
+                },
+            ],
+        }
+
+    first = list(api["declarations"](member("int")))[1]
+    second = list(api["declarations"](member("double")))[1]
+    assert first["name"] == second["name"]
+    assert api["declaration_id"](first) != api["declaration_id"](second)
+
+
+def test_out_of_class_owner_and_stream_file_locations():
+    """Preserve owner/access and file changes across sibling AST declarations."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    first = str(ROOT / "submodules/systemc/src/sysc/kernel/sc_module.h")
+    second = str(ROOT / "submodules/systemc/src/sysc/communication/sc_signal_ports.h")
+    root = {
+        "kind": "NamespaceDecl",
+        "name": "sc_core",
+        "loc": {"file": first, "line": 1},
+        "inner": [
+            {
+                "kind": "CXXRecordDecl",
+                "id": "owner",
+                "name": "Port",
+                "loc": {"file": second, "line": 2},
+                "inner": [
+                    {"kind": "AccessSpecDecl", "access": "protected"},
+                    {
+                        "kind": "CXXMethodDecl",
+                        "id": "decl",
+                        "name": "hook",
+                        "loc": {"line": 3},
+                        "type": {"qualType": "void ()"},
+                    },
+                ],
+            },
+            {
+                "kind": "CXXMethodDecl",
+                "id": "definition",
+                "previousDecl": "decl",
+                "parentDeclContextId": "owner",
+                "name": "hook",
+                "loc": {"line": 5},
+                "type": {"qualType": "void ()"},
+            },
+        ],
+    }
+    api["restore_source_files"]([root])
+    entries = api["reconcile_declarations"](list(api["declarations"](root)))
+    methods = [entry for entry in entries if entry["kind"] == "CXXMethodDecl"]
+    assert len(methods) == 2
+    assert {entry["name"] for entry in methods} == {"sc_core::Port::hook"}
+    assert {entry["access"] for entry in methods} == {"protected"}
+    assert {entry["source"] for entry in methods} == {Path(second).relative_to(ROOT).as_posix()}
+    assert len({api["declaration_id"](entry) for entry in methods}) == 1
+    assert all("ast_id" not in entry for entry in entries)
+
+
+def test_reconcile_preserves_configuration_and_source_occurrences():
+    """Union redeclarations without losing conditional APIs or source evidence."""
+    import runpy
+
+    import pytest
+
+    api = runpy.run_path(str(ROOT / "tools/reconcile_api_inventory.py"))
+    entry = {
+        "id": "one",
+        "name": "sc_core::Port::hook",
+        "source": "header.h",
+        "line": 2,
+        "access": "protected",
+    }
+    first = {
+        "schema_version": 4,
+        "systemc_revision": "pinned",
+        "configuration": ["modeling"],
+        "headers": [],
+        "macro_declarations": [],
+        "declarations": [entry, {**entry, "line": 5}],
+    }
+    second = {**first, "configuration": ["compatibility"], "declarations": [entry, {**entry, "id": "extra"}]}
+    union = api["reconcile"]([first, second])
+    assert len(union["declarations"]) == 2
+    row = next(row for row in union["declarations"] if row["id"] == "one")
+    assert {item["line"] for item in row["occurrences"]} == {2, 5}
+    assert row["configurations"] == [["modeling"], ["compatibility"]]
+    assert union["families"] == {"sc_core::Port": ["one", "extra"]}
+    with pytest.raises(ValueError, match="revisions"):
+        api["reconcile"]([first, {**second, "systemc_revision": "different"}])

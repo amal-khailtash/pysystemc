@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Source inventory resolves out-of-class method owners and stream-compressed header
+  locations, preserves specialization context and redeclaration occurrences, and
+  reconciles modeling/compatibility snapshots into a fixed remaining-family ledger.
 - Source inventory includes global entry points, compatibility configuration,
   using declarations and per-overload review records. Header distribution is fully
   accounted; public modeling classification and semantic mappings remain under review.

@@ -61,7 +61,33 @@ def source_text(filename):
     return Path(filename).read_bytes()
 
 
-def declarations(node, scope=(), filename=None, access="public", namespace=()):
+def restore_source_files(roots):
+    """Expand Clang's stream-wide omitted file locations before tree traversal.
+
+    Clang compresses consecutive locations across siblings, not just descendants.
+    Keeping a stream cursor prevents attributing inline definitions to an earlier
+    namespace header. Expansion locations take precedence for macro declarations.
+    """
+    current = None
+
+    def visit(node):
+        """Restore declaration locations in AST serialization order."""
+        nonlocal current
+        location = node.get("loc", {})
+        location = location.get("expansionLoc", location.get("spellingLoc", location))
+        if "file" in location:
+            current = location["file"]
+        elif location and current:
+            location["file"] = current
+        for child in node.get("inner", []):
+            visit(child)
+
+    for root in roots:
+        visit(root)
+    return roots
+
+
+def declarations(node, scope=(), filename=None, access="public", namespace=(), template_context=()):
     """Walk declaration contexts, retaining protected/private candidates for review.
 
     Function bodies, implicit declarations and locationless AST cross-references
@@ -73,17 +99,29 @@ def declarations(node, scope=(), filename=None, access="public", namespace=()):
     filename = location.get("file", filename)
     kind = node["kind"]
     name = node.get("name", "")
-    if node.get("isImplicit") or (kind in DECLARATIONS and "loc" not in node):
+    if node.get("isImplicit"):
+        return
+    # Locationless records can own sourced template members. Traverse their
+    # context even though the record itself is not a source declaration row.
+    if (
+        kind in DECLARATIONS
+        and "loc" not in node
+        and kind not in {"CXXRecordDecl", "ClassTemplateSpecializationDecl", "ClassTemplatePartialSpecializationDecl"}
+    ):
         return
     if kind == "UsingDirectiveDecl":
         name = "using namespace " + node.get("nominatedNamespace", {}).get("name", "<anonymous>")
-    if kind in DECLARATIONS and name and filename:
+    if kind in DECLARATIONS and name and filename and location:
         path = (ROOT / filename).resolve()
         if path.is_relative_to(ROOT / "submodules/systemc/src"):
             yield {
+                "ast_id": node.get("id"),
+                "previous_decl": node.get("previousDecl"),
+                "parent_context": node.get("parentDeclContextId"),
                 "name": "::".join((*scope, name)),
                 "kind": kind,
                 "signature": node.get("type", {}).get("qualType"),
+                "template_context": list(template_context),
                 "template_arguments": [
                     {key: deepcopy(value) for key, value in child.items() if key in {"type", "value", "isPack"}}
                     for child in node.get("inner", [])
@@ -142,6 +180,13 @@ def declarations(node, scope=(), filename=None, access="public", namespace=()):
         or (kind == "EnumDecl" and node.get("scopedEnumTag"))
     ):
         nested_scope = (*scope, name)
+    if kind in {"ClassTemplateSpecializationDecl", "ClassTemplatePartialSpecializationDecl"}:
+        arguments = [
+            {key: deepcopy(value) for key, value in child.items() if key in {"type", "value", "isPack"}}
+            for child in node.get("inner", [])
+            if child["kind"] == "TemplateArgument"
+        ]
+        template_context = (*template_context, {"name": "::".join(nested_scope), "arguments": arguments})
     if kind == "NamespaceDecl" and name:
         namespace = (*namespace, name)
     child_access = "private" if kind == "CXXRecordDecl" and node.get("tagUsed") == "class" else "public"
@@ -155,7 +200,31 @@ def declarations(node, scope=(), filename=None, access="public", namespace=()):
                 filename,
                 "public" if kind == "FriendDecl" else child_access,
                 namespace,
+                template_context,
             )
+
+
+def reconcile_declarations(entries):
+    """Resolve semantic owners using Clang redeclaration/context links.
+
+    Out-of-class definitions inherit access and template context from their
+    declaration. AST pointer IDs are used only within one compiler invocation
+    and removed before serialization. Distinct source occurrences are retained.
+    """
+    indexed = {entry["ast_id"]: entry for entry in entries if entry.get("ast_id")}
+    for entry in entries:
+        previous = indexed.get(entry.get("previous_decl"))
+        parent = indexed.get(entry.get("parent_context"))
+        if previous:
+            for field in ("name", "access", "template_context"):
+                entry[field] = deepcopy(previous[field])
+        elif parent:
+            entry["name"] = parent["name"] + "::" + entry["name"].rsplit("::", 1)[-1]
+            entry["template_context"] = deepcopy(parent["template_context"])
+    for entry in entries:
+        for field in ("ast_id", "previous_decl", "parent_context"):
+            entry.pop(field, None)
+    return entries
 
 
 def declaration_id(entry):
@@ -167,6 +236,7 @@ def declaration_id(entry):
     identity = {
         key: entry[key] for key in ("name", "kind", "signature", "template_parameters", "template_arguments", "source")
     }
+    identity["template_context"] = entry.get("template_context", [])
     return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
@@ -467,11 +537,13 @@ def main():
                 check=True,
                 timeout=60,
             )
-            for root in json_roots(result.stdout):
+            namespace_entries = []
+            for root in restore_source_files(list(json_roots(result.stdout))):
                 if root["kind"] == "NamespaceDecl" and root.get("name") in {namespace, "tlm_utils"}:
-                    entries.extend(declarations(root))
+                    namespace_entries.extend(declarations(root))
                 elif namespace in {"sc_main", "sc_elab_and_sim"} and root.get("name") == namespace:
-                    entries.extend(declarations(root))
+                    namespace_entries.extend(declarations(root))
+            entries.extend(reconcile_declarations(namespace_entries))
         result = subprocess.run(
             [*command, "-dM", "-E", str(translation)],
             cwd=ROOT,
@@ -507,7 +579,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     inventory = {
         "systemc_revision": revision,
-        "schema_version": 3,
+        "schema_version": 4,
         "utility_headers": list(HEADERS),
         "macro_declarations": list(macro_declarations(attributed.stdout)),
         "configuration": ["C++17", *defines],
@@ -523,6 +595,11 @@ def main():
         "macros": sorted(macros),
         "headers": list(header_ledger(attributed.stdout, list(unique.values()))),
     }
+    inventory["identity_occurrences"] = {}
+    for entry in inventory["declarations"]:
+        inventory["identity_occurrences"].setdefault(entry["id"], []).append(
+            {"source": entry["source"], "line": entry["line"]}
+        )
     classify_source_entries(inventory)
     apply_reviews(inventory["declarations"], reviews)
     args.output.write_text(json.dumps(inventory, indent=2) + "\n")
