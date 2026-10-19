@@ -115,7 +115,9 @@ def write_remaining(inventory, output):
         if unresolved:
             work.append("Review modeling role")
         if missing_mapping:
-            work.append("Map Python/ownership/GIL/errors")
+            work.append("Fill missing Python/ownership/GIL/error contracts")
+        if any(entry.get("mapping_status") == "partial" for entry in public):
+            work.append("Resolve explicitly partial binding mappings")
         if any(entry.get("status") != "supported" for entry in public):
             work.append("Complete semantic evidence for public overload scope")
         remaining = "; ".join(work) or "Internal source review recorded; confirm any access-only exclusions"
@@ -165,6 +167,27 @@ def write_remaining(inventory, output):
     output.write_text("\n".join(lines))
 
 
+def validate_evidence_locations(reviews, root=ROOT):
+    """Reject missing, nonportable or out-of-range local review evidence.
+
+    This checks source location integrity, not whether evidence proves semantics.
+    Raises ValueError for an invalid path or one-based line number.
+    """
+    for identifier, review in reviews.items():
+        for evidence in review.get("evidence", []):
+            filename, separator, line = evidence.rpartition(":")
+            if not (separator and line.isdigit()):
+                filename, line = evidence, None
+            path = Path(filename)
+            if path.is_absolute() or ".." in path.parts:
+                raise ValueError(f"Nonportable evidence: {identifier}: {evidence}")
+            path = root / path
+            if not path.is_file():
+                raise ValueError(f"Missing evidence: {identifier}: {evidence}")
+            if line and not 1 <= int(line) <= len(path.read_text(errors="replace").splitlines()):
+                raise ValueError(f"Invalid evidence line: {identifier}: {evidence}")
+
+
 def main():
     """Reconcile snapshots and publish the local remaining-work ledger."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -176,7 +199,9 @@ def main():
     inventory = reconcile([json.loads(path.read_text()) for path in args.snapshots])
     if args.reviews:
         reviewer = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))["apply_reviews"]
-        reviewer(inventory["declarations"], json.loads(args.reviews.read_text()))
+        reviews = json.loads(args.reviews.read_text())
+        validate_evidence_locations(reviews)
+        reviewer(inventory["declarations"], reviews)
     args.output.write_text(json.dumps(inventory, indent=2) + "\n")
     write_remaining(inventory, args.report)
     print(f"Wrote union and remaining review ledger: {args.output}, {args.report}")

@@ -10,6 +10,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Close the pinned source inventory at 15,778 identities (12,701 public, 3,077 internal),
+  with explicit Python candidates, ownership, GIL, errors and evidence. Partial
+  binding mappings and untested runtime behavior remain visible in Features.
+- Reconcile all 33 upstream example targets and configuration/input contracts;
+  nine default comparisons pass, while 24 targets remain unported or uncompared.
+- Add scoped datatype, numeric conversion and time-constructor audit regressions,
+  and correct private enum access, static method and conditional macro extraction.
 - API review tooling applies source classification records to reconciled snapshots,
   displays recorded semantic contracts, and preserves upstream executable variants
   and shared-source dependencies. Native time operator Python spellings are verified.

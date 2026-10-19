@@ -6,9 +6,44 @@ import sys
 from .support import ROOT, run_example
 
 
+def test_native_numeric_protocols(tmp_path):
+    """Check scalar numeric protocols without inferring other conversion support."""
+    assert "NATIVE_NUMERIC_PROTOCOLS_OK" in run_example(tmp_path, "tests/models/native_numeric_protocols.py")
+
+
 def test_arbitrary_width_datatypes(tmp_path):
     """Verify runtime template instantiation, wide signals and bit/range access."""
     assert "DATATYPES_OK" in run_example(tmp_path, "tests/models/datatypes.py")
+
+
+def test_native_bit_views_and_concatenation(tmp_path):
+    """Verify width growth, live view mutation, low-digit conversion and aliasing."""
+    assert "NATIVE_BIT_VIEWS_OK" in run_example(tmp_path, "tests/models/native_bit_views.py")
+
+
+def test_native_signed_remainder_audit(tmp_path):
+    """Keep the modulo mapping gap visible while checking native remainder values."""
+    assert "NATIVE_SIGNED_REMAINDER_AUDIT_OK" in run_example(tmp_path, "tests/models/native_signed_remainder.py")
+
+
+def test_native_signed_range_audit(tmp_path):
+    """Check reversed range semantics and native unsigned concat padding anomalies."""
+    assert "NATIVE_SIGNED_RANGES_AUDIT_OK" in run_example(tmp_path, "tests/models/native_signed_ranges.py")
+
+
+def test_native_unsigned_shift_audit(tmp_path):
+    """Record value-shift failures and verify native widths and in-place values."""
+    assert "NATIVE_UNSIGNED_SHIFTS_AUDIT_OK" in run_example(tmp_path, "tests/models/native_unsigned_shifts.py")
+
+
+def test_native_fx_conversions_audit(tmp_path):
+    """Compare truncation, unsigned wrapping and independent fixed-point values."""
+    assert "NATIVE_FX_CONVERSIONS_AUDIT_OK" in run_example(tmp_path, "tests/models/native_fx_conversions.py")
+
+
+def test_native_fx_context_audit(tmp_path):
+    """Record context construction failure and verify native copy/restoration."""
+    assert "NATIVE_FX_CONTEXT_AUDIT_OK" in run_example(tmp_path, "tests/models/native_fx_context.py")
 
 
 def test_native_namespaces_fixed_point_and_tlm(tmp_path):

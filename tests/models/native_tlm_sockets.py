@@ -109,6 +109,16 @@ bw.invalidate_direct_mem_ptr(16, 31)
 assert initiator.invalidations == [(16, 31)]
 fw.b_transport(trans, delay)
 assert target.calls == ["fw", "debug", "dmi", "blocking"]
+assert initiator_socket.get_bus_width() == target_socket.get_bus_width() == 32
+assert initiator_socket.get_socket_category() == tlm.TLM_INITIATOR_SOCKET
+assert target_socket.get_socket_category() == tlm.TLM_TARGET_SOCKET
+assert initiator_socket.get_protocol_types() == target_socket.get_protocol_types()
+assert cppyy.addressof(initiator_socket.get_base_port()) == cppyy.addressof(initiator_socket)
+assert cppyy.addressof(target_socket.get_base_export()) == cppyy.addressof(target_socket)
+assert cppyy.addressof(initiator_socket.get_base_interface()) == cppyy.addressof(initiator)
+assert cppyy.addressof(target_socket.get_base_interface()) == cppyy.addressof(target)
+assert target_socket.size() == initiator_socket.size() == 1
+assert cppyy.addressof(target_socket[0]) == cppyy.addressof(initiator)
 target.debug_result = 2**32 - 1
 assert fw.transport_dbg(trans) == 2**32 - 1
 for invalid in (-1, 2**32):

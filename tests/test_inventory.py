@@ -35,6 +35,11 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     assert all(row["reached"] for row in headers if row["distribution"] == "installed")
     assert not any(row["distribution"] == "unclassified" for row in headers)
     assert any(row["source"].endswith("sc_host_mutex.h") for row in headers)
+    fragments = [row for row in headers if row["source"].endswith(".inc")]
+    assert len(fragments) == 6
+    assert all(row["distribution"] == "implementation" for row in fragments)
+    assert "SC_DT_MIXED_COMMA_OPERATORS" in inventory["effective_defines"]
+    assert any(row["definition"].startswith("#define DECL_TRACE_METHOD_A(") for row in inventory["macro_declarations"])
     entries = inventory["declarations"]
 
     def named(name):
@@ -49,6 +54,13 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     assert len(named("sc_core::sc_module::wait")) == 13
     assert named("tlm::TLM_READ_COMMAND")
     assert not named("tlm::tlm_command::TLM_READ_COMMAND")
+    assert named("sc_core::sc_event::DELTA")[0]["access"] == "private"
+    assert named("sc_core::sc_sensitive::SC_METHOD_")[0]["access"] == "private"
+    assert named("sc_core::sc_process_b::SPAWN_SIM")[0]["access"] == "protected"
+    assert named("sc_core::sc_simcontext::phase_notify")[0]["access"] == "private"
+    assert named("sc_dt::scfx_rep::not_a_number")[0]["access"] == "private"
+    assert named("sc_core::sc_time::from_value")[0]["static"] is True
+    assert named("sc_core::sc_time::value")[0]["static"] is False
     assert any(entry["kind"] == "ClassTemplateSpecializationDecl" for entry in entries)
     for entry in entries:
         assert not Path(entry["source"]).is_absolute()
@@ -340,6 +352,17 @@ def test_example_inventory_preserves_fir_variants_and_shared_sources():
     assert {row["target"] for row in fir} == {"fir", "fir_rtl"}
     lt = next(row for row in inventory["build_targets"] if row["target"] == "lt")
     assert "../common/src/lt_initiator.cpp" in lt["arguments"]
+    assert "submodules/systemc/examples/tlm/common/src/lt_initiator.cpp" in lt["resolved_source_files"]
+    cpu = next(row for row in inventory["build_targets"] if row["target"] == "risc_cpu")
+    assert "submodules/systemc/examples/sysc/risc_cpu/decode.h" in cpu["local_dependency_files"]
+    assert cpu["runtime_review"]["required_input_files"] == ["bios.img", "dcache.img", "icache.img", "register.img"]
+    mixed = next(row for row in inventory["build_targets"] if row["target"] == "lt_mixed_endian")
+    assert mixed["runtime_review"]["configured_stdin"] == "results/input.txt"
+    assert mixed["runtime_review"]["output_filter"] == "::"
+    assert all(row["runtime_review"]["registered_test"] for row in inventory["build_targets"])
+    assert all(not row["runtime_review"]["missing_input_files"] for row in inventory["build_targets"])
+    assert all(not row["missing_source_arguments"] for row in inventory["build_targets"])
+    assert all(not row["unresolved_quoted_includes"] for row in inventory["build_targets"])
     assert inventory["family_references"]["sc_core::sc_module"]["candidate_sources"]
     assert not inventory["family_references"]["absent::not_a_native_name"]["candidate_sources"]
     assert all(row["native_status"] == "untested" for row in inventory["build_targets"])
@@ -376,3 +399,139 @@ def test_remaining_report_distinguishes_mapping_from_semantic_validation(tmp_pat
     assert "Map Python/ownership/GIL/errors" not in report
     assert "namespace.Type.method" in report
     assert "header.h:3" in report
+
+
+def test_partial_mapping_remains_in_remaining_work(tmp_path):
+    """Do not close mapping review merely because placeholder contract fields exist."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/reconcile_api_inventory.py"))
+    entry = {
+        "id": "partial",
+        "classification": "public",
+        "source": "header.h",
+        "python": "operator mapping unverified",
+        "ownership": "borrowed",
+        "gil": "held",
+        "errors": "native preconditions",
+        "status": "untested",
+        "mapping_status": "partial",
+        "evidence": [],
+    }
+    inventory = {
+        "systemc_revision": "pinned",
+        "fingerprint": "scope",
+        "scope": "source review",
+        "declarations": [entry],
+        "families": {"namespace::Type": ["partial"]},
+    }
+    output = tmp_path / "remaining.md"
+    api["write_remaining"](inventory, output)
+    report = output.read_text()
+    assert "Resolve explicitly partial binding mappings" in report
+    assert "Fill missing Python/ownership/GIL/error contracts" not in report
+
+
+def test_reviewed_mapping_rejects_incomplete_or_contradictory_records():
+    """Require semantic fields for reviewed mappings and reject partial support."""
+    import runpy
+
+    import pytest
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    entries = [{"id": "entry"}]
+    for review in (
+        {"classification": "public", "rationale": "source", "mapping_status": "reviewed"},
+        {"classification": "public", "rationale": "source", "mapping_status": "not_applicable"},
+        {"classification": "internal", "rationale": "source", "mapping_status": "reviewed"},
+        {"classification": "public", "status": "supported", "mapping_status": "partial"},
+    ):
+        with pytest.raises(ValueError):
+            api["apply_reviews"](entries, {"entry": review})
+    assert entries == [{"id": "entry"}]
+
+
+def test_evidence_locations_reject_missing_and_nonportable_sources(tmp_path):
+    """Verify source references exist without confusing integrity with support."""
+    import runpy
+
+    import pytest
+
+    api = runpy.run_path(str(ROOT / "tools/reconcile_api_inventory.py"))
+    (tmp_path / "source.h").write_text("first\nsecond\n")
+    api["validate_evidence_locations"]({"one": {"evidence": ["source.h:2"]}}, tmp_path)
+    for evidence in ("missing.h", "source.h:0", "source.h:3", "/absolute.h", "../source.h"):
+        with pytest.raises(ValueError):
+            api["validate_evidence_locations"]({"one": {"evidence": [evidence]}}, tmp_path)
+
+
+def test_macro_inventory_retains_nonprefixed_declaration_generators():
+    """Keep source macros regardless of name while excluding compiler builtins."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    source = str(ROOT / "submodules/systemc/src/sysc/tracing/sc_trace.h")
+    preprocessed = (
+        '# 1 "<built-in>"\n#define INTERNAL_COMPILER 1\n'
+        f'# 10 "{source}"\n#define DECL_TRACE_METHOD_A(tp) virtual void trace(tp);\n'
+        "#define SC_TRACE_TEST 1\n"
+    )
+    macros = list(api["macro_declarations"](preprocessed))
+    assert len(macros) == 2
+    assert macros[0]["definition"].startswith("#define DECL_TRACE_METHOD_A(")
+    assert macros[0]["line"] == 10
+    assert all(row["source"].endswith("sc_trace.h") for row in macros)
+
+
+def test_source_directives_preserve_continued_conditions():
+    """Keep all conditional operands and physical locations across continuations."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    source = "// header\n#if defined(A) || \\\n  defined(B)\n#define VALUE(x) \\\n  ((x) + 1)\n#endif\n"
+    assert list(api["source_directives"](source)) == [
+        (2, "#if defined(A) || defined(B)"),
+        (4, "#define VALUE(x) ((x) + 1)"),
+        (6, "#endif"),
+    ]
+
+
+def test_macro_context_preserves_nested_branch_alternatives():
+    """Keep prior alternatives for elif/else and reject unbalanced source."""
+    import runpy
+
+    import pytest
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    source = "#if A\n#if B\n#define X 1\n#elif C\n#define X 2\n#else\n#define X 3\n#endif\n#endif\n"
+    rows = list(api["conditional_macro_sites"](source))
+    assert rows[0]["conditional_context"] == [["#if A"], ["#if B"]]
+    assert rows[1]["conditional_context"] == [["#if A"], ["#if B", "#elif C"]]
+    assert rows[2]["conditional_context"] == [["#if A"], ["#if B", "#elif C", "#else"]]
+    for invalid in ("#endif", "#else", "#if A\n#define X 1"):
+        with pytest.raises(ValueError):
+            list(api["conditional_macro_sites"](invalid))
+
+
+def test_nested_enum_preserves_private_access():
+    """Exclude private kernel enum constants from public access candidates."""
+    import runpy
+
+    api = runpy.run_path(str(ROOT / "tools/inventory_public_api.py"))
+    source = str(ROOT / "submodules/systemc/src/tlm")
+    node = {
+        "kind": "CXXRecordDecl",
+        "name": "Host",
+        "tagUsed": "class",
+        "loc": {"file": source, "line": 1},
+        "inner": [
+            {
+                "kind": "EnumDecl",
+                "name": "State",
+                "loc": {"file": source, "line": 2},
+                "inner": [{"kind": "EnumConstantDecl", "name": "IDLE", "loc": {"file": source, "line": 2}}],
+            }
+        ],
+    }
+    rows = list(api["declarations"](node))
+    assert next(row for row in rows if row["kind"] == "EnumConstantDecl")["access"] == "private"

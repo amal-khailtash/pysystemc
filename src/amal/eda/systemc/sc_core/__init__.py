@@ -1,7 +1,9 @@
 """Native kernel, channels, processes and Python callback adapters.
 
 Callbacks are retained for their native process lifetime. Blocking scheduler
-operations release the GIL; process reset remains explicitly unsupported.
+operations release the GIL. Guarded Python waits preserve native reset/kill
+unwind in tested cases; direct native waits and arbitrary throw_it require
+further compatibility validation.
 """
 
 import atexit

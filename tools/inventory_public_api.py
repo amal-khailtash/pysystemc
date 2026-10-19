@@ -121,6 +121,7 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
                 "name": "::".join((*scope, name)),
                 "kind": kind,
                 "signature": node.get("type", {}).get("qualType"),
+                "static": node.get("storageClass") == "static",
                 "template_context": list(template_context),
                 "template_arguments": [
                     {key: deepcopy(value) for key, value in child.items() if key in {"type", "value", "isPack"}}
@@ -189,7 +190,13 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
         template_context = (*template_context, {"name": "::".join(nested_scope), "arguments": arguments})
     if kind == "NamespaceDecl" and name:
         namespace = (*namespace, name)
-    child_access = "private" if kind == "CXXRecordDecl" and node.get("tagUsed") == "class" else "public"
+    child_access = (
+        access
+        if kind == "EnumDecl"
+        else "private"
+        if kind == "CXXRecordDecl" and node.get("tagUsed") == "class"
+        else "public"
+    )
     for child in node.get("inner", []):
         if child["kind"] == "AccessSpecDecl":
             child_access = child["access"]
@@ -263,10 +270,31 @@ def apply_reviews(entries, reviews):
             raise ValueError(f"Invalid classification: {identifier}")
         if status not in {"untested", "supported", "failing", "unsupported", "deferred"}:
             raise ValueError(f"Invalid status: {identifier}")
-        allowed = {"classification", "status", "rationale", "python", "ownership", "gil", "errors", "evidence"}
+        if review.get("mapping_status", "unreviewed") not in {"unreviewed", "partial", "reviewed", "not_applicable"}:
+            raise ValueError(f"Invalid mapping status: {identifier}")
+        allowed = {
+            "classification",
+            "status",
+            "rationale",
+            "python",
+            "ownership",
+            "gil",
+            "errors",
+            "evidence",
+            "mapping_status",
+        }
         if set(review) - allowed:
             raise ValueError(f"Unknown review fields: {identifier}")
+        mapping_status = review.get("mapping_status", "unreviewed")
+        if mapping_status == "not_applicable" and classification != "internal":
+            raise ValueError(f"Only internal mappings are not applicable: {identifier}")
+        if mapping_status == "reviewed" and classification != "public":
+            raise ValueError(f"Reviewed mapping must be public: {identifier}")
+        if status == "supported" and mapping_status == "partial":
+            raise ValueError(f"Supported declaration cannot have partial mapping: {identifier}")
         required = set()
+        if mapping_status == "reviewed":
+            required.update({"python", "ownership", "gil", "errors"})
         if classification != "unreviewed":
             required.add("rationale")
         if status != "untested":
@@ -307,11 +335,64 @@ def macro_declarations(preprocessed):
         if marker:
             line_number, filename = int(marker[1]), marker[2]
             continue
-        if filename and line.startswith(("#define SC_", "#define TLM_")):
+        if filename and line.startswith("#define "):
             path = (ROOT / filename).resolve()
             if path.is_relative_to(ROOT / "submodules/systemc/src"):
                 yield {"definition": line, "source": path.relative_to(ROOT).as_posix(), "line": line_number}
         line_number += 1
+
+
+def source_directives(source):
+    """Yield complete preprocessor directives with their first physical line.
+
+    Backslash continuations are joined so configuration review sees every
+    operand. Locations remain one-based physical source lines.
+    """
+    lines = source.splitlines()
+    index = 0
+    while index < len(lines):
+        first = index + 1
+        directive = lines[index].strip()
+        index += 1
+        if not directive.startswith("#"):
+            continue
+        while directive.endswith("\\") and index < len(lines):
+            directive = directive[:-1].rstrip() + " " + lines[index].strip()
+            index += 1
+        yield first, directive
+
+
+def conditional_macro_sites(source):
+    """Associate source macro definitions with their enclosing branch history.
+
+    Conditions are recorded as source text, not evaluated. An else/elif branch
+    retains earlier alternatives so it cannot be mistaken for an independent
+    condition. Raises ValueError for an unbalanced conditional stack.
+    """
+    stack = []
+    for line, directive in source_directives(source):
+        match = re.match(r"#\s*(\w+)\b", directive)
+        if not match:
+            continue
+        operation = match[1]
+        if operation in {"if", "ifdef", "ifndef"}:
+            stack.append([directive])
+        elif operation in {"elif", "else"}:
+            if not stack:
+                raise ValueError(f"Unmatched {operation} at line {line}")
+            stack[-1].append(directive)
+        elif operation == "endif":
+            if not stack:
+                raise ValueError(f"Unmatched endif at line {line}")
+            stack.pop()
+        elif operation == "define":
+            yield {
+                "line": line,
+                "definition_start": directive,
+                "conditional_context": deepcopy(stack),
+            }
+    if stack:
+        raise ValueError("Unclosed source conditional")
 
 
 def header_ledger(preprocessed, entries):
@@ -340,7 +421,7 @@ def header_ledger(preprocessed, entries):
             if section not in {"H_FILES", "NO_H_FILES"}:
                 continue
             for name in re.findall(
-                r"[A-Za-z_0-9/.-]+\.h|(?<![A-Za-z_])systemc(?![A-Za-z_.])|(?<![A-Za-z_])tlm(?![A-Za-z_.])", line
+                r"[A-Za-z_0-9/.-]+\.(?:h|inc)|(?<![A-Za-z_])systemc(?![A-Za-z_.])|(?<![A-Za-z_])tlm(?![A-Za-z_.])", line
             ):
                 base = root / "sysc" if manifest.name == "files.am" else manifest.parent
                 path = base / name
@@ -359,9 +440,10 @@ def header_ledger(preprocessed, entries):
     counts = {}
     for entry in entries:
         counts[entry["source"]] = counts.get(entry["source"], 0) + 1
-    paths = set(root.rglob("*.h")) | {root / "systemc", root / "tlm"}
+    paths = set(root.rglob("*.h")) | set(root.rglob("*.inc")) | {root / "systemc", root / "tlm"}
     for path in sorted(paths):
         source = path.relative_to(ROOT).as_posix()
+        directives = list(source_directives(path.read_text(errors="replace")))
         yield {
             "source": source,
             "distribution": "installed"
@@ -379,14 +461,10 @@ def header_ledger(preprocessed, entries):
             "classification": "unreviewed",
             "conditional_directives": [
                 {"line": index, "directive": line.strip()}
-                for index, line in enumerate(path.read_text(errors="replace").splitlines(), 1)
+                for index, line in directives
                 if re.match(r"\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b", line)
             ],
-            "source_macros": [
-                {"line": index, "definition_start": line.strip()}
-                for index, line in enumerate(path.read_text(errors="replace").splitlines(), 1)
-                if re.match(r"\s*#\s*define\b", line)
-            ],
+            "source_macros": list(conditional_macro_sites(path.read_text(errors="replace"))),
         }
 
 
@@ -497,6 +575,7 @@ def main():
     if args.configuration == "compatibility":
         defines += [
             "SC_DT_DEPRECATED",
+            "SC_DT_MIXED_COMMA_OPERATORS",
             "SC_USE_SC_STRING_OLD",
             "SC_INCLUDE_EXTRA_STD_HEADERS",
             "SC_ENABLE_COVARIANT_VIRTUAL_BASE",
@@ -585,7 +664,16 @@ def main():
         "configuration": ["C++17", *defines],
         "effective_defines": [
             name
-            for name in ("SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX")
+            for name in (
+                "SC_INCLUDE_DYNAMIC_PROCESSES",
+                "SC_INCLUDE_FX",
+                "SC_DT_DEPRECATED",
+                "SC_DT_MIXED_COMMA_OPERATORS",
+                "SC_FX_EXCLUDE_OTHER",
+                "SC_MAX_NBITS",
+                "SC_USE_SC_STRING_OLD",
+                "SC_ENABLE_COVARIANT_VIRTUAL_BASE",
+            )
             if any(line.split()[1] == name for line in macros)
         ],
         "limits": "Declaration scaffold only. Review mappings, access, internals, macros and semantic evidence.",

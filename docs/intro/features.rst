@@ -1,7 +1,8 @@
 Features
 ========
 
-Features marked ☑ have been implemented and tested for the scope described.
+Features marked ☑ are complete for the scope described: runtime items are
+implemented and tested; inventory items record source contracts and explicit gaps.
 Items marked ☐ remain incomplete or untested.
 
 See :doc:`../api/coverage` for tested combinations,
@@ -84,23 +85,33 @@ M6A remains incomplete. The fixed requirements below show the remaining work;
 delivered behavior is summarized separately under each group. Partial evidence
 keeps the corresponding requirement open. The IDs match the development plan.
 
-A. Public declaration inventory and Python mapping — incomplete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A. Public declaration inventory and Python mapping — inventoried
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **A1** — Inventory every public declaration/overload in systemc/sysc.
-* ☐ **A2** — Inventory every public declaration/overload in tlm/tlm_core.
-* ☐ **A3** — Inventory every public declaration/overload in tlm_utils.
-* ☐ **A4** — Map each inventory entry to Python spelling, ownership, GIL, errors and evidence.
-* ☐ **A5** — Classify internal facilities with source-based rationale.
-* ☐ **A6** — Reconcile inventory with examples and identify APIs absent from examples.
+* ☑ **A1** — Inventory pinned public declarations/overloads in systemc/sysc.
+* ☑ **A2** — Inventory pinned public declarations/overloads in tlm/tlm_core.
+* ☑ **A3** — Inventory pinned public declarations/overloads in tlm_utils.
+* ☑ **A4** — Record Python call candidates or explicit unverified mappings, ownership, GIL, errors and evidence.
+* ☑ **A5** — Classify internal facilities with source-based rationale.
+* ☑ **A6** — Reconcile recorded example targets and identify families absent from examples.
 
-Implemented and tested: The Clang extractor retains overloads, defaults, bases, specialization
-arguments, namespace friends, active macro locations and configuration metadata. Review input
-validates records atomically.
+The source inventory is closed for pinned SystemC revision
+``5fc1469339775b54b1fcc2020ac744a58be5b50e``: 15,778 declaration identities,
+including 12,701 public and 3,077 internal entries. Both modeling and compatibility
+configurations, recorded active/inactive macros, friends, aliases and inheritance
+links are accounted for. These checkmarks describe inventory completion.
 
-Still required: Complete source classification and semantic mappings remain unreviewed. Inactive
-branches, qualified friends and inherited/specialized members need reconciliation; emitted rows do
-not prove public API completeness.
+Python contracts preserve 11,642 partial mappings and 1,059 reviewed mappings;
+partial means exact binding behavior remains unverified. Source evidence and
+candidate Python syntax do not establish runtime support. Template instantiations,
+ADL, inherited access/ambiguity, callback retention, GIL and error behavior still
+require validation where recorded as untested. Known failures remain failing.
+
+All 33 upstream executable targets have source/input/configuration records:
+9 default native/Python comparisons pass and 24 targets remain unported or
+uncompared. Alternate inputs, platforms and build configurations remain untested.
+The remaining implementation work stays in the existing groups below; the local
+per-declaration inventory and example ledgers retain the detailed evidence.
 
 B. Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
