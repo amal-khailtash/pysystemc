@@ -28,6 +28,12 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
         row["definition"].startswith("#define SC_METHOD(") and row["source"].endswith("sc_module.h") and row["line"] > 0
         for row in inventory["macro_declarations"]
     )
+    headers = inventory["headers"]
+    assert len({row["source"] for row in headers}) == len(headers)
+    expected_headers = {path.relative_to(ROOT).as_posix() for path in (ROOT / "submodules/systemc/src").rglob("*.h")}
+    assert expected_headers <= {row["source"] for row in headers}
+    assert all(row["reached"] for row in headers if row["distribution"] == "installed")
+    assert any(row["source"].endswith("sc_host_mutex.h") for row in headers)
     entries = inventory["declarations"]
 
     def named(name):

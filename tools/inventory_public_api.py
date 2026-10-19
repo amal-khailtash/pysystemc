@@ -235,6 +235,132 @@ def macro_declarations(preprocessed):
         line_number += 1
 
 
+def header_ledger(preprocessed, entries):
+    """Account for every source header using upstream installation manifests.
+
+    Installation is source evidence for distribution, not public modeling status.
+    Unreached installed headers and headers without declarations remain explicit
+    gaps. Private implementation headers are retained rather than disappearing.
+    """
+    root = ROOT / "submodules/systemc/src"
+    installed = set()
+    private = set()
+    manifests = [
+        root / "Makefile.am",
+        *root.rglob("files.am"),
+        root / "tlm_core/Makefile.am",
+        root / "tlm_utils/Makefile.am",
+    ]
+    for manifest in manifests:
+        section = None
+        for line in manifest.read_text().splitlines():
+            match = re.match(r"^(H_FILES|NO_H_FILES|[A-Z_]+)\s*[+:]?=", line)
+            if match:
+                section = match[1]
+            if section not in {"H_FILES", "NO_H_FILES"}:
+                continue
+            for name in re.findall(
+                r"[A-Za-z_0-9/.-]+\.h|(?<![A-Za-z_])systemc(?![A-Za-z_.])|(?<![A-Za-z_])tlm(?![A-Za-z_.])", line
+            ):
+                base = root / "sysc" if manifest.name == "files.am" else manifest.parent
+                path = base / name
+                if path.is_file():
+                    (installed if section == "H_FILES" else private).add(path.resolve())
+    reached = set()
+    for line in preprocessed.splitlines():
+        marker = re.match(r'^# \d+ "([^"]+)"', line)
+        if marker:
+            path = (ROOT / marker[1]).resolve()
+            if path.is_relative_to(root):
+                reached.add(path)
+    counts = {}
+    for entry in entries:
+        counts[entry["source"]] = counts.get(entry["source"], 0) + 1
+    paths = set(root.rglob("*.h")) | {root / "systemc", root / "tlm"}
+    for path in sorted(paths):
+        source = path.relative_to(ROOT).as_posix()
+        yield {
+            "source": source,
+            "distribution": "installed"
+            if path.resolve() in installed
+            else "implementation"
+            if path.resolve() in private
+            else "unclassified",
+            "manifest_rationale": "Upstream H_FILES"
+            if path.resolve() in installed
+            else "Upstream NO_H_FILES"
+            if path.resolve() in private
+            else "No matched installation entry",
+            "reached": path.resolve() in reached,
+            "declaration_candidates": counts.get(source, 0),
+            "classification": "unreviewed",
+            "conditional_directives": [
+                {"line": index, "directive": line.strip()}
+                for index, line in enumerate(path.read_text(errors="replace").splitlines(), 1)
+                if re.match(r"\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b", line)
+            ],
+            "source_macros": [
+                {"line": index, "definition_start": line.strip()}
+                for index, line in enumerate(path.read_text(errors="replace").splitlines(), 1)
+                if re.match(r"\s*#\s*define\b", line)
+            ],
+        }
+
+
+def write_audit_report(inventory, output):
+    """Write a complete header accounting and declaration-family review ledger.
+
+    Explicitly distinguish extraction coverage from public classification and
+    semantic support. Every family keeps source links and unresolved review state.
+    """
+    headers = inventory["headers"]
+    lines = [
+        "# SystemC source API inventory",
+        "",
+        f"Pinned revision: `{inventory['systemc_revision']}`.",
+        "",
+        "This is source accounting, not a completed public API classification or support claim.",
+        "Every header is listed below. Declaration candidates remain unreviewed until source and semantic review.",
+        "",
+        "## Header coverage",
+        "",
+        "| Header | Distribution | Reached | Candidates | Classification |",
+        "| --- | --- | --- | ---: | --- |",
+    ]
+    for header in headers:
+        lines.append(
+            f"| {header['source']} | {header['distribution']} | {header['reached']} | {header['declaration_candidates']} | unreviewed |"
+        )
+    lines += [
+        "",
+        "## Declaration families",
+        "",
+        "| Family | Overload/declaration candidates | Sources | Classification | Support |",
+        "| --- | ---: | --- | --- | --- |",
+    ]
+    families = {}
+    for entry in inventory["declarations"]:
+        family = entry["name"].split("::")[:2]
+        key = "::".join(family)
+        families.setdefault(key, []).append(entry)
+    for family, entries in sorted(families.items()):
+        sources = ", ".join(sorted({entry["source"] for entry in entries}))
+        lines.append(f"| `{family}` | {len(entries)} | {sources} | unreviewed | untested |")
+    lines += [
+        "",
+        "## Remaining inventory gates",
+        "",
+        "- Resolve installed headers not reached by this configuration and all unclassified headers.",
+        "- Review public modeling versus internal declarations, including protected extension hooks.",
+        "- Reconcile namespace/global declarations, macro expansions, inherited members and specializations.",
+        "- Audit alternate conditional configurations and declarations absent from umbrella headers.",
+        "- Map reviewed public overloads to Python spelling, ownership, GIL, errors and executable evidence.",
+        "",
+    ]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(lines))
+
+
 def main():
     """Compile the public umbrella headers and write a portable audit scaffold."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -242,10 +368,23 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / ".ai/PUBLIC_API_INVENTORY.json")
     parser.add_argument("--configuration", choices=("modeling", "baseline"), default="modeling")
     parser.add_argument("--reviews", type=Path, help="JSON object keyed by declaration ID")
+    parser.add_argument("--report", type=Path, help="Write header/family accounting as Markdown")
     args = parser.parse_args()
     defines = ["SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX"] if args.configuration == "modeling" else []
     source = "".join(f"#define {define}\n" for define in defines) + "#include <tlm>\n"
     source += "".join(f"#include <tlm_utils/{header}>\n" for header in HEADERS)
+    # Installed headers absent from the umbrella are still part of the source audit.
+    for header in (
+        "sysc/communication/sc_host_mutex.h",
+        "sysc/communication/sc_host_semaphore.h",
+        "sysc/kernel/sc_cor.h",
+        "sysc/kernel/sc_runnable.h",
+        "sysc/tracing/sc_tracing_ids.h",
+        "sysc/utils/sc_string.h",
+        "systemc.h",
+        "tlm.h",
+    ):
+        source += f"#include <{header}>\n"
     entries = []
     with tempfile.TemporaryDirectory(prefix="pysystemc-inventory-") as temporary:
         translation = Path(temporary) / "inventory.cpp"
@@ -302,29 +441,27 @@ def main():
         timeout=10,
     ).stdout.strip()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(
-            {
-                "systemc_revision": revision,
-                "schema_version": 3,
-                "utility_headers": list(HEADERS),
-                "macro_declarations": list(macro_declarations(attributed.stdout)),
-                "configuration": ["C++17", *defines],
-                "effective_defines": [
-                    name
-                    for name in ("SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX")
-                    if any(line.split()[1] == name for line in macros)
-                ],
-                "limits": "Declaration scaffold only. Review mappings, access, internals, macros and semantic evidence.",
-                "declarations": sorted(
-                    unique.values(), key=lambda entry: (entry["name"], entry["source"], entry["offset"] or 0)
-                ),
-                "macros": sorted(macros),
-            },
-            indent=2,
-        )
-        + "\n"
-    )
+    inventory = {
+        "systemc_revision": revision,
+        "schema_version": 3,
+        "utility_headers": list(HEADERS),
+        "macro_declarations": list(macro_declarations(attributed.stdout)),
+        "configuration": ["C++17", *defines],
+        "effective_defines": [
+            name
+            for name in ("SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX")
+            if any(line.split()[1] == name for line in macros)
+        ],
+        "limits": "Declaration scaffold only. Review mappings, access, internals, macros and semantic evidence.",
+        "declarations": sorted(
+            unique.values(), key=lambda entry: (entry["name"], entry["source"], entry["offset"] or 0)
+        ),
+        "macros": sorted(macros),
+        "headers": list(header_ledger(attributed.stdout, list(unique.values()))),
+    }
+    args.output.write_text(json.dumps(inventory, indent=2) + "\n")
+    if args.report:
+        write_audit_report(inventory, args.report)
     print(f"Wrote {len(unique)} declaration candidates and {len(macros)} macro candidates to {args.output}")
 
 

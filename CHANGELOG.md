@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Source API inventory accounts for every pinned header against upstream installation
+  manifests and reports extraction gaps and declaration families. Eight installed
+  headers absent from umbrella includes are now scanned; public classification remains open.
 - Independent upstream C++ multi-socket comparison verifies two-connection blocking
   timing, forward/backward phases, debug counts, DMI ranges and invalidation routing.
 - Multi socket malformed-result and recovery checks cover blocking transport,
