@@ -36,6 +36,9 @@ DECLARATIONS = {
     "TypeAliasTemplateDecl",
     "VarDecl",
     "FieldDecl",
+    "UsingDecl",
+    "UsingDirectiveDecl",
+    "NamespaceAliasDecl",
 }
 
 
@@ -72,6 +75,8 @@ def declarations(node, scope=(), filename=None, access="public", namespace=()):
     name = node.get("name", "")
     if node.get("isImplicit") or (kind in DECLARATIONS and "loc" not in node):
         return
+    if kind == "UsingDirectiveDecl":
+        name = "using namespace " + node.get("nominatedNamespace", {}).get("name", "<anonymous>")
     if kind in DECLARATIONS and name and filename:
         path = (ROOT / filename).resolve()
         if path.is_relative_to(ROOT / "submodules/systemc/src"):
@@ -94,6 +99,8 @@ def declarations(node, scope=(), filename=None, access="public", namespace=()):
                 or (source_text(path).count(b"\n", 0, location["offset"]) + 1 if "offset" in location else None),
                 "offset": location.get("offset"),
                 "access": access,
+                "virtual": node.get("virtual", False),
+                "pure": node.get("pure", False),
                 "bases": node.get("bases", []),
                 "parameters": [
                     {
@@ -119,6 +126,8 @@ def declarations(node, scope=(), filename=None, access="public", namespace=()):
         "FriendDecl",
         "FunctionTemplateDecl",
         "TypeAliasTemplateDecl",
+        "LinkageSpecDecl",
+        "TranslationUnitDecl",
     }:
         return
     nested_scope = scope
@@ -250,6 +259,7 @@ def header_ledger(preprocessed, entries):
         *root.rglob("files.am"),
         root / "tlm_core/Makefile.am",
         root / "tlm_utils/Makefile.am",
+        root / "sysc/packages/qt/Makefile.am",
     ]
     for manifest in manifests:
         section = None
@@ -266,6 +276,9 @@ def header_ledger(preprocessed, entries):
                 path = base / name
                 if path.is_file():
                     (installed if section == "H_FILES" else private).add(path.resolve())
+    # These headers belong to QuickThreads demonstration/benchmark programs,
+    # not the installed SystemC modeling contract (see their b_/stp_ declarations).
+    private.update({root / "sysc/packages/qt/b.h", root / "sysc/packages/qt/stp.h"})
     reached = set()
     for line in preprocessed.splitlines():
         marker = re.match(r'^# \d+ "([^"]+)"', line)
@@ -307,6 +320,32 @@ def header_ledger(preprocessed, entries):
         }
 
 
+def classify_source_entries(inventory):
+    """Apply conservative source-boundary classification without support claims.
+
+    Private members and implementation headers are internal by accessibility and
+    build-manifest evidence. Installed public/protected entries remain candidates,
+    because access alone cannot establish a public modeling contract. Each row
+    includes the reason and an explicit unresolved semantic mapping.
+    """
+    headers = {row["source"]: row for row in inventory["headers"]}
+    for entry in inventory["declarations"]:
+        header = headers[entry["source"]]
+        if entry["access"] == "private":
+            entry["classification"] = "internal"
+            entry["rationale"] = "Private C++ declaration; unavailable to public modeling callers."
+        elif header["distribution"] == "implementation":
+            entry["classification"] = "internal"
+            entry["rationale"] = "Noninstalled implementation header: " + header["manifest_rationale"]
+        else:
+            entry["classification"] = "public_candidate"
+            entry["rationale"] = "Installed header; public or protected access requires modeling-role review."
+        entry["mapping_status"] = "unreviewed"
+        entry["ownership"] = "unreviewed"
+        entry["gil"] = "unreviewed"
+        entry["errors"] = "unreviewed"
+
+
 def write_audit_report(inventory, output):
     """Write a complete header accounting and declaration-family review ledger.
 
@@ -345,7 +384,21 @@ def write_audit_report(inventory, output):
         families.setdefault(key, []).append(entry)
     for family, entries in sorted(families.items()):
         sources = ", ".join(sorted({entry["source"] for entry in entries}))
-        lines.append(f"| `{family}` | {len(entries)} | {sources} | unreviewed | untested |")
+        classifications = ", ".join(sorted({entry["classification"] for entry in entries}))
+        lines.append(f"| `{family}` | {len(entries)} | {sources} | {classifications} | untested |")
+    lines += [
+        "",
+        "## Declaration and overload ledger",
+        "",
+        "| ID | Declaration | Signature | Source | Access | Classification | Mapping |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for entry in inventory["declarations"]:
+        signature = (entry["signature"] or entry["kind"]).replace("|", "&#124;")
+        name = entry["name"].replace("|", "&#124;")
+        lines.append(
+            f"| `{entry['id']}` | `{name}` | `{signature}` | {entry['source']}:{entry['line']} | {entry['access']} | {entry['classification']} | {entry['mapping_status']} |"
+        )
     lines += [
         "",
         "## Remaining inventory gates",
@@ -366,11 +419,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compiler", default="clang++")
     parser.add_argument("--output", type=Path, default=ROOT / ".ai/PUBLIC_API_INVENTORY.json")
-    parser.add_argument("--configuration", choices=("modeling", "baseline"), default="modeling")
+    parser.add_argument("--configuration", choices=("modeling", "baseline", "compatibility"), default="modeling")
     parser.add_argument("--reviews", type=Path, help="JSON object keyed by declaration ID")
     parser.add_argument("--report", type=Path, help="Write header/family accounting as Markdown")
     args = parser.parse_args()
-    defines = ["SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX"] if args.configuration == "modeling" else []
+    defines = ["SC_INCLUDE_DYNAMIC_PROCESSES", "SC_INCLUDE_FX"] if args.configuration != "baseline" else []
+    if args.configuration == "compatibility":
+        defines += [
+            "SC_DT_DEPRECATED",
+            "SC_USE_SC_STRING_OLD",
+            "SC_INCLUDE_EXTRA_STD_HEADERS",
+            "SC_ENABLE_COVARIANT_VIRTUAL_BASE",
+        ]
     source = "".join(f"#define {define}\n" for define in defines) + "#include <tlm>\n"
     source += "".join(f"#include <tlm_utils/{header}>\n" for header in HEADERS)
     # Installed headers absent from the umbrella are still part of the source audit.
@@ -390,7 +450,7 @@ def main():
         translation = Path(temporary) / "inventory.cpp"
         translation.write_text(source)
         command = [args.compiler, "-std=c++17", "-I", "submodules/systemc/src"]
-        for namespace in ("tlm", "sc_core", "sc_dt"):
+        for namespace in ("tlm", "sc_core", "sc_dt", "sc_main", "sc_elab_and_sim"):
             result = subprocess.run(
                 [
                     *command,
@@ -409,6 +469,8 @@ def main():
             )
             for root in json_roots(result.stdout):
                 if root["kind"] == "NamespaceDecl" and root.get("name") in {namespace, "tlm_utils"}:
+                    entries.extend(declarations(root))
+                elif namespace in {"sc_main", "sc_elab_and_sim"} and root.get("name") == namespace:
                     entries.extend(declarations(root))
         result = subprocess.run(
             [*command, "-dM", "-E", str(translation)],
@@ -431,7 +493,9 @@ def main():
     for entry in unique.values():
         entry["id"] = declaration_id(entry)
     if args.reviews:
-        apply_reviews(list(unique.values()), json.loads(args.reviews.read_text()))
+        reviews = json.loads(args.reviews.read_text())
+    else:
+        reviews = {}
     revision = subprocess.run(
         ["git", "-C", "submodules/systemc", "rev-parse", "HEAD"],
         cwd=ROOT,
@@ -459,6 +523,8 @@ def main():
         "macros": sorted(macros),
         "headers": list(header_ledger(attributed.stdout, list(unique.values()))),
     }
+    classify_source_entries(inventory)
+    apply_reviews(inventory["declarations"], reviews)
     args.output.write_text(json.dumps(inventory, indent=2) + "\n")
     if args.report:
         write_audit_report(inventory, args.report)

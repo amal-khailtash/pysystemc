@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Source inventory includes global entry points, compatibility configuration,
+  using declarations and per-overload review records. Header distribution is fully
+  accounted; public modeling classification and semantic mappings remain under review.
 - Source API inventory accounts for every pinned header against upstream installation
   manifests and reports extraction gaps and declaration families. Eight installed
   headers absent from umbrella includes are now scanned; public classification remains open.

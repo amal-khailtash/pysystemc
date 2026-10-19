@@ -33,6 +33,7 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     expected_headers = {path.relative_to(ROOT).as_posix() for path in (ROOT / "submodules/systemc/src").rglob("*.h")}
     assert expected_headers <= {row["source"] for row in headers}
     assert all(row["reached"] for row in headers if row["distribution"] == "installed")
+    assert not any(row["distribution"] == "unclassified" for row in headers)
     assert any(row["source"].endswith("sc_host_mutex.h") for row in headers)
     entries = inventory["declarations"]
 
@@ -52,7 +53,10 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     for entry in entries:
         assert not Path(entry["source"]).is_absolute()
         assert entry["line"] and entry["line"] > 0
-        assert entry["status"] == "untested" and entry["classification"] == "unreviewed"
+        assert entry["status"] == "untested"
+        assert entry["classification"] in {"internal", "public_candidate"}
+        assert entry["rationale"]
+        assert entry["mapping_status"] == "unreviewed"
     extension = named("tlm::tlm_generic_payload::get_extension")
     # Clang versions differ in qualification of types within their own namespace.
     assert any(
