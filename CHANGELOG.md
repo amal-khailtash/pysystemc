@@ -35,6 +35,8 @@ Inventory completion does not imply complete Python API support.
 
 ### Changed
 
+- Document the hand-coded project origins, cppyy selection for templates and
+  runtime features, and subsequent use of AI-assisted vibe coding.
 - Keep existing M6A requirements stable and publish explicit untested/failing statuses;
   11,642 partial mappings remain unresolved binding verification work.
 

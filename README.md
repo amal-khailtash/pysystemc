@@ -18,6 +18,14 @@ using the native C++ simulation kernel and on-demand template instantiation.
 The PyPI distribution is `pysystemc`; the Python import namespace is
 `amal.eda.systemc`.
 
+## Project origins
+
+The original idea and initial implementation were hand coded. cppyy was chosen
+for its support for C++ templates and runtime features: SystemC types and widths
+can be instantiated on demand, and C++ bridge code can be compiled within the
+running Python environment. Development later also began using vibe coding
+with AI assistance to extend the implementation, tests, and documentation.
+
 ## Why Python and cppyy?
 
 SystemC provides a C++ simulation kernel, typed channels, and a rich modeling
