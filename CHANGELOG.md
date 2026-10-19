@@ -8,6 +8,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Changed
+
+- Complete the baseline executable-variant audits for dpipe, forkjoin,
+  reset_signal_is, sc_export and sc_report; document inputs, native comparisons,
+  Python adaptations and the separate untested platform/build alternatives.
+- Strengthen fork/join comparisons to include function invocations and completion,
+  reset checks to count reset entries, and report checks to compare scenario headings.
+
 ## [0.11.0] - 2026-10-19
 
 Publishes the fixed SystemC public API inventory and remaining binding work.

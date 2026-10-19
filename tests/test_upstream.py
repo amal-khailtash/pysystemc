@@ -25,9 +25,12 @@ def test_upstream_forkjoin_matches_native(tmp_path):
         timeout=60,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    pattern = r"^(Round robin thread .*|Thread \d+ ending\.|Returned int is \d+)"
-    assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
-    assert len(re.findall(pattern, output, re.M)) == 25
+    pattern = r"^(Round robin thread .*|Thread \d+ ending\.|Returned int is \d+|(?:Test_function|test_function|void_function|ref_function) sees .*|Done\.)"
+    records = re.findall(pattern, output, re.M)
+    native_records = re.findall(pattern, result.stdout, re.M)
+    assert [record.lower() for record in records] == [record.lower() for record in native_records]
+    assert len(records) == 29
+    assert records[:12] == [f"Round robin thread {index % 4 + 1} at time {100 + index * 10} ns" for index in range(12)]
 
 
 def test_upstream_report_rules_match_native(tmp_path):
@@ -51,6 +54,9 @@ def test_upstream_report_rules_match_native(tmp_path):
     pattern = r"^report: ID[1-4].*\n msg=.*"
     assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
     assert len(re.findall(pattern, output, re.M)) == 40
+    sections = r"^(?:We got .*|Default settings.*|Specific settings.*|temporarily .*)$"
+    assert re.findall(sections, output, re.M) == re.findall(sections, result.stdout, re.M)
+    assert len(re.findall(sections, output, re.M)) == 6
 
 
 def test_upstream_reset_matches_native(tmp_path):
@@ -74,6 +80,9 @@ def test_upstream_reset_matches_native(tmp_path):
     records = re.findall(pattern, output, re.M)
     assert len(records) == 101
     assert records == re.findall(pattern, native.stdout, re.M)
+    assert records[0] == "0 s: reset"
+    assert sum(record.endswith(": reset") for record in records) == 6
+    assert "Done" in output and "Done" in native.stdout
 
 
 def test_upstream_barrier_matches_native(tmp_path):

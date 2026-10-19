@@ -205,14 +205,16 @@ Examples and C++ interoperability
 * ☐ Complete Python ports of all upstream sysc and tlm groups with native equivalence.
 * ☐ Per-variant documentation, licensing, regression and installed-artifact checks.
 
-The following upstream example groups still need a complete variant audit and
-Python/native comparison:
+The following list records completion of the executable-variant audit and
+Python/native comparison for the selected Linux/Python 3.14/pthread baseline.
+Common compiler/platform build alternatives remain outside this baseline; see
+:doc:`examples` for audited inputs and semantic checks.
 
-* ☐ ``sysc/2.1/dpipe``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.1/forkjoin``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.1/reset_signal_is``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.1/sc_export``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.1/sc_report``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``sysc/2.1/dpipe``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.1/forkjoin``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.1/reset_signal_is``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.1/sc_export``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.1/sc_report``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☐ ``sysc/2.1/scx_barrier``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/2.1/scx_mutex_w_policy``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/2.1/specialized_signals``: complete executable-variant audit and Python/native equivalence.
