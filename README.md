@@ -20,11 +20,9 @@ The PyPI distribution is `pysystemc`; the Python import namespace is
 
 ## Project origins
 
-The original idea and initial implementation were hand coded. cppyy was chosen
-for its support for C++ templates and runtime features: SystemC types and widths
-can be instantiated on demand, and C++ bridge code can be compiled within the
-running Python environment. Development later also began using vibe coding
-with AI assistance to extend the implementation, tests, and documentation.
+The original idea and initial implementation were hand coded. Development later
+also began using vibe coding with AI assistance to extend the implementation,
+tests, and documentation.
 
 ## Why Python and cppyy?
 
@@ -34,7 +32,9 @@ them. You can change stimulus, testbench logic, logging, waveform selection, and
 model connections in Python, then rerun the simulation without rebuilding the
 existing C++ model libraries.
 
-cppyy makes native C++ classes and templates accessible from Python. For example,
+cppyy was chosen for its support for C++ templates and runtime features. It makes
+native C++ classes and templates accessible from Python and allows C++ bridge
+code to be compiled within the running Python environment. For example,
 `sc_uint[17]`, `sc_biguint[137]`, and `sc_signal[sc_uint[17]]` can be requested
 when a script runs, rather than requiring a binding library with a predefined
 list of types and widths. Its Cling interpreter compiles the necessary template
