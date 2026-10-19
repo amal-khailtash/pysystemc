@@ -8,40 +8,35 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-19
+
+Publishes the fixed SystemC public API inventory and remaining binding work.
+Inventory completion does not imply complete Python API support.
+
 ### Added
 
-- Publish every inventoried public API family in Features and a downloadable
-  per-declaration CSV with all 12,701 signatures, contracts and explicit statuses.
-- Close the pinned source inventory at 15,778 identities (12,701 public, 3,077 internal),
-  with explicit Python candidates, ownership, GIL, errors and evidence. Partial
-  binding mappings and untested runtime behavior remain visible in Features.
-- Reconcile all 33 upstream example targets and configuration/input contracts;
-  nine default comparisons pass, while 24 targets remain unported or uncompared.
-- Add scoped datatype, numeric conversion and time-constructor audit regressions,
-  and correct private enum access, static method and conditional macro extraction.
-- API review tooling applies source classification records to reconciled snapshots,
-  displays recorded semantic contracts, and preserves upstream executable variants
-  and shared-source dependencies. Native time operator Python spellings are verified.
-- Source inventory resolves out-of-class method owners and stream-compressed header
-  locations, preserves specialization context and redeclaration occurrences, and
-  reconciles modeling/compatibility snapshots into a fixed remaining-family ledger.
-- Source inventory includes global entry points, compatibility configuration,
-  using declarations and per-overload review records. Header distribution is fully
-  accounted; public modeling classification and semantic mappings remain under review.
-- Source API inventory accounts for every pinned header against upstream installation
-  manifests and reports extraction gaps and declaration families. Eight installed
-  headers absent from umbrella includes are now scanned; public classification remains open.
-- Independent upstream C++ multi-socket comparison verifies two-connection blocking
-  timing, forward/backward phases, debug counts, DMI ranges and invalidation routing.
-- Multi socket malformed-result and recovery checks cover blocking transport,
-  invalidation, DMI, debug counts and forward/backward synchronization enums,
-  including independent native connection routing and borrowed-state preservation.
+- Features lists all 794 public API families and links to 12,701 declaration
+  contracts with native signatures, Python mappings, ownership, GIL, errors and statuses.
+- Source inventory accounts for 15,778 identities across modeling and compatibility
+  configurations, including 3,077 internal declarations and recorded macro/friend/alias sites.
+- All 33 upstream executable targets have source, dependency and input/configuration
+  records; nine default native/Python comparisons pass and 24 remain unported or uncompared.
+- Independent native multi-socket comparisons check two-connection timing, phases,
+  debug counts, DMI ranges, invalidation routing and callback error recovery.
+- Scoped datatype, numeric protocol and time-constructor audit regressions distinguish
+  native semantics from known Python binding failures.
+
+### Fixed
+
+- Preserve private enum access, static method metadata, out-of-class owners,
+  specialization context and continued conditional macro directives in extraction.
+- Preserve explicit review contracts and distinguish partial mappings from missing fields.
+- Correct sc_core reset documentation to describe tested guarded reset/kill behavior.
 
 ### Changed
 
-- Public binding checklist now retains fixed existing M6A requirements with stable
-  IDs, concise delivered evidence and explicit remaining gaps instead of accumulating
-  checked implementation increments. No additional API completeness is claimed.
+- Keep existing M6A requirements stable and publish explicit untested/failing statuses;
+  11,642 partial mappings remain unresolved binding verification work.
 
 ## [0.10.0] - 2026-10-18
 
@@ -491,7 +486,8 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.7.0...v0.8.0
