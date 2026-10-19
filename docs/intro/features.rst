@@ -80,183 +80,107 @@ than a supported-width registry. Trace storage must survive native use.
 Public binding implementation and audit
 ---------------------------------------
 
-The following sections cover custom interfaces, TLM and the remaining API
-coverage and lifetime requirements.
+M6A remains incomplete. The fixed requirements below show the remaining work;
+delivered behavior is summarized separately under each group. Partial evidence
+keeps the corresponding requirement open. The IDs match the development plan.
 
-Public declaration inventory and Python mapping — incomplete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A. Public declaration inventory and Python mapping — incomplete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☑ Reproducible compiler-derived declaration scaffold across core/datatypes/TLM/utilities.
-* ☑ Discover and compile every checked-out TLM utility header.
-* ☑ Attribute active macro definitions to portable source paths and line numbers.
-* ☑ Qualify unqualified friend declarations in their enclosing namespace.
-* ☑ Include template argument metadata in specialization declaration IDs.
-* ☑ Validate all supplied review fields and apply review batches atomically.
-* ☑ Real-header regression checks overloads/templates/access, source locations and enum spelling.
-* ☑ Selectable baseline/modeling conditional-header inventories with recorded configuration.
-* ☑ Native inheritance metadata retained for inherited API reconciliation.
-* ☑ Overload parameter names, types and default-argument presence retained.
-* ☑ Portable declaration IDs independent of source line movement.
-* ☑ Validated declaration review input for classification, Python mapping, ownership, GIL, errors and evidence.
-* ☐ Inventory every public declaration/overload in systemc/sysc.
-* ☐ Inventory every public declaration/overload in tlm/tlm_core.
-* ☐ Inventory every public declaration/overload in tlm_utils.
-* ☐ Map each inventory entry to Python spelling, ownership, GIL, errors and evidence.
-* ☐ Classify internal facilities with source-based rationale.
-* ☐ Reconcile inventory with examples and identify APIs absent from examples.
+* ☐ **A1** — Inventory every public declaration/overload in systemc/sysc.
+* ☐ **A2** — Inventory every public declaration/overload in tlm/tlm_core.
+* ☐ **A3** — Inventory every public declaration/overload in tlm_utils.
+* ☐ **A4** — Map each inventory entry to Python spelling, ownership, GIL, errors and evidence.
+* ☐ **A5** — Classify internal facilities with source-based rationale.
+* ☐ **A6** — Reconcile inventory with examples and identify APIs absent from examples.
 
-Custom interfaces and channels — partially implemented
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Implemented and tested: The Clang extractor retains overloads, defaults, bases, specialization
+arguments, namespace friends, active macro locations and configuration metadata. Review input
+validates records atomically.
 
-* ☑ Event queue notify callbacks require None across both native overloads.
-* ☑ Event queue cancellation callbacks require None with recovery.
-* ☑ Native FIFO num_available callbacks validate signed integer range and recovery.
-* ☑ Native FIFO num_free callbacks validate signed integer range and recovery.
-* ☑ Structural bool signal reads require actual bool through read/trace accessors.
-* ☑ Structural signed integer signal reads enforce native widths and reject implicit conversion.
-* ☑ Structural unsigned integer signal reads enforce native widths and reject negative/overflow results.
-* ☑ Signal inout write callbacks require None with invalid-result recovery.
-* ☑ Write-only signal callbacks require None with invalid-result recovery.
-* ☑ Blocking FIFO write callbacks require None across partial/combined interfaces.
-* ☑ Write-only signal and combined/partial FIFO callback values retain independent native storage.
-* ☑ Structural signal inout writes copy callback arguments; retained storage and mutation isolation verified.
-* ☑ Structural signal inout writer-policy forwarding, native default and invalid-policy recovery.
-* ☑ Mutex callback integer result validation and boundary/recovery checks.
-* ☑ Semaphore callback integer result validation and boundary/recovery checks.
-* ☑ Signal event/edge callback bool result validation.
-* ☑ Signal-write callback writer-policy result validation.
-* ☑ Borrowed event callback native type/liveness validation.
-* ☑ Structural native mutex interface callbacks with timed contention/wakeup.
-* ☑ Structural native semaphore interface callbacks with timed wait/post.
-* ☑ Structural event queue interface callbacks, both notify overloads and cancellation.
-* ☑ Structural native signal-write interface callbacks with copied arbitrary-width values.
-* ☑ Structural signal-write writer-policy callback forwarding.
-* ☑ Structural port/export binding and native-style call syntax delivered.
-* ☑ Annotated Protocol declaration and explicit native signature support delivered.
-* ☑ Ordinary Python callback spelling adaptation delivered for tested TLM families.
-* ☑ Retain structural callback owners through native process lifetime.
-* ☑ Explicit custom lvalue-reference result trampolines preserving const/mutable native identity.
-* ☑ Retain distinct returned storage through shutdown; replacement survival and invalid-result rejection verified.
-* ☑ Shared event result identity and sensitivity within an explicit custom adapter verified against native reference.
-* ☑ Native structural signal input/inout reference adapters; 137-bit read/trace address identity verified.
-* ☑ Bool/logic signal edge callbacks and borrowed edge-event identity verified.
-* ☑ Fundamental scalar signal read/trace slots; signed/floating/unsigned64-bit conversion and recovery verified.
-* ☑ Native structural FIFO input/output adapters; both blocking reads, writes and failed-output preservation verified.
-* ☑ Separate blocking/nonblocking FIFO input/output adapters with minimal callback contracts delivered.
-* ☑ Native FIFO callback result validation, malformed-output preservation and blocking exception recovery verified.
-* ☑ Shared owner event identity across native signal input/inout adapter specializations verified.
-* ☐ Complete native signal/FIFO scalar/type/partial-interface/reset/error/reference matrices.
-* ☐ Shared interface/event identity across different adapter specializations.
-* ☐ Adapter teardown and release of retained callback owners before shutdown.
-* ☐ Complete custom-channel error/reset/GIL/access-path matrix.
+Still required: Complete source classification and semantic mappings remain unreviewed. Inactive
+branches, qualified friends and inherited/specialized members need reconciliation; emitted rows do
+not prove public API completeness.
 
-TLM interface families — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+B. Custom interfaces and channels — partially implemented
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☑ TLM blocking transport callbacks require None across standalone/combined interfaces.
-* ☑ TLM DMI invalidation callbacks require None and preserve native address arguments.
-* ☑ TLM FIFO debug callbacks require None with rejection and recovery.
-* ☑ Structural TLM forward nonblocking callbacks validate native synchronization enums.
-* ☑ Structural TLM backward nonblocking callbacks validate native synchronization enums.
-* ☑ Structural TLM debug callbacks validate unsigned count types and bounds.
-* ☑ Failed structural TLM nb_get accepts absent values and preserves native output.
-* ☑ Failed structural TLM nb_peek accepts absent values and preserves native output.
-* ☑ TLM analysis write callbacks require None with copied-value preservation.
-* ☑ TLM blocking put callbacks require None across standalone/combined interfaces.
-* ☑ TLM FIFO debug used/size signed-int validation, boundary values and recovery.
-* ☑ TLM analysis/put/debug-poke callback values retain independent native storage.
-* ☑ TLM FIFO expansion callback None-result validation and recovery.
-* ☑ TLM FIFO unbound callback None-result validation and recovery.
-* ☑ TLM FIFO reduction callback bool-result validation and recovery.
-* ☑ TLM FIFO bound callback bool-result validation and recovery.
-* ☑ TLM FIFO debug poke callback bool-result validation and recovery.
-* ☑ TLM nonblocking put callback bool validation and recovery.
-* ☑ TLM put-readiness callback bool validation and recovery.
-* ☑ TLM get-readiness callback bool validation and recovery.
-* ☑ TLM peek-readiness callback bool validation and recovery.
-* ☑ TLM DMI permission callback bool validation and recovery.
-* ☑ Structural TLM1 blocking put/get/peek/transport/analysis adapters.
-* ☑ Structural TLM1 nonblocking put/get/peek and combined get/put/peek/get-peek adapters.
-* ☑ Structural TLM1 master/slave families and FIFO debug/config/compound adapters.
-* ☑ Structural TLM2 fw/bw, blocking/nonblocking, debug and DMI callback adapters.
-* ☑ Selected wide native payload/value identity and failed-output preservation checks.
-* ☐ Full public overload/type/event/lifetime and independent native reference matrices.
+* ☐ **B1** — Complete native signal/FIFO scalar/type/partial-interface/reset/error/reference matrices.
+* ☐ **B2** — Shared interface/event identity across different adapter specializations.
+* ☐ **B3** — Adapter teardown and release of retained callback owners before shutdown.
+* ☐ **B4** — Complete custom-channel error/reset/GIL/access-path matrix.
 
-Callable sockets — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
+adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
+cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
 
-* ☑ Independent native multi blocking transport timing and payload/delay comparison.
-* ☑ Independent native multi forward/backward phase and annotation comparison.
-* ☑ Independent native multi debug count routing comparison.
-* ☑ Independent native multi DMI rejection/range comparison.
-* ☑ Independent native multi full-width invalidation connection comparison.
-* ☑ Multi socket blocking callback malformed-result rejection and recovery across connections.
-* ☑ Multi socket invalidation callback result validation with backward connection indices.
-* ☑ Multi socket DMI bool callback malformed-result/recovery matrix.
-* ☑ Multi socket debug count type/boundary/error/recovery matrix.
-* ☑ Multi socket forward/backward sync enum result matrix with independent connection routing.
-* ☑ Convenience socket blocking transport callbacks require None.
-* ☑ Convenience socket DMI invalidation callbacks require None.
-* ☑ Convenience socket DMI permission callbacks require actual bool.
-* ☑ Convenience socket debug callbacks validate unsigned native count type and range.
-* ☑ Convenience socket forward/backward nonblocking callbacks require valid native sync enums.
-* ☑ Simple target: all four forward registrations; simple initiator: both backward registrations.
-* ☑ Tagged target/initiator registrations with independent user IDs.
-* ☑ Multi target/initiator registrations with native connection IDs.
-* ☑ Ordinary/tagged passthrough target registrations.
-* ☑ Direct multi-to-multi connection mapping.
-* ☑ Simple parent initiator/target hierarchy resolution probes.
-* ☑ Automatic blocking GIL configuration on tested get_interface/indexed access paths.
-* ☑ Selected simple/multi/passthrough blocking exception and reset/kill cleanup checks.
-* ☑ Custom 137-bit payload probes for simple/multi/passthrough sockets.
-* ☑ Independent simple/passthrough custom native references.
-* ☑ Multi/passthrough duplicate semantics, debug bounds and registration input checks.
-* ☑ Optional policy elaboration and required binding rejection.
-* ☐ Independent native multi socket reference matrices.
-* ☐ Complete multi/passthrough hierarchy, conversion and all native access paths.
-* ☐ Complete tagged custom protocol, callback error, reset and lifetime matrices.
-* ☐ Complete socket public overload/template inventory and owner teardown contract.
+Still required: Complete type/conversion/tracing/reset/error coverage remains open, including plain
+char/floating policies. Shared owner events work, but cross-specialization interface identity and
+pre-shutdown owner/result release are incomplete.
 
-TLM timing, payloads, extensions and endian utilities — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C. TLM interface families — partial
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☑ Quantumkeeper guarded sync/set_and_sync and reset/kill probes.
-* ☑ Custom quantumkeeper reset/kill cleanup through both guarded wait APIs.
-* ☑ Custom local-quantum callback exception recovery after sync suspension.
-* ☑ Custom local-quantum invalid-result recovery after set_and_sync suspension.
-* ☑ Custom quantumkeeper remaining-global-quantum boundary computation.
-* ☑ Cached custom quantumkeeper dispatcher with independent callback ownership.
-* ☑ Custom quantumkeeper protected local-quantum callback dispatch.
-* ☑ Custom quantumkeeper native sc_time result validation and copied storage.
-* ☑ Custom quantumkeeper callback exception propagation and reset recovery.
-* ☑ Custom quantumkeeper guarded sync/set_and_sync with independent native timing.
-* ☑ Custom quantumkeeper callback retention and release when its owner is deleted.
-* ☑ Native PEQ/get and callable PEQ delivery, cancellation and selected custom protocol checks.
-* ☑ Independent quantumkeeper/PEQ timing reference.
-* ☑ Instance-private accessor isolation/replacement/carrier release/deep-copy omission.
-* ☑ Independent instance-private extension lifecycle reference.
-* ☑ Generic/word/aligned/single endian request and explicit response probes.
-* ☑ Generic streaming/repeating enables, unaligned and 72-case type/offset probes.
-* ☑ Word 72-case type/offset native comparison.
-* ☑ Generic combined streaming native reference; single 27-case native reference.
-* ☐ Complete generic/aligned native type and byte-enable reference matrices.
-* ☐ Complete extension clone/copy/free/mm and payload memory-manager ownership matrices.
-* ☐ Complete timing/extension/endian public declarations and context/lifetime audit.
+* ☐ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
 
-Core API coverage
-~~~~~~~~~~~~~~~~~
+Implemented and tested: TLM1 put/get/peek/transport/analysis, combined/master/slave/FIFO families
+and TLM2 transport/debug/DMI adapters have selected semantic tests. Callback types/bounds, copied
+write values and failed get/peek output preservation are checked.
 
-* ☐ Full datatype/proxy/concat/implicit-conversion/overload audit.
-* ☐ Full writer/port/fixed-point policy audit.
-* ☐ Full tracing type/format and vector assembly audit.
-* ☐ Full report/process-control/lifecycle error audit.
-* ☐ Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
-* ☐ Verify host/kernel lifetime and adapter ownership release.
-* ☑ Public socket, instance-extension and endian guides added with precise limits.
-* ☑ Strict Sphinx validation of the published API guides.
-* ☐ Reconciled full regression and coverage for the complete public API.
-* ☐ Review first-party adapters and verify latest installed wheel and sdist.
-* ☐ Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
+Still required: Reconcile every public overload, type, readiness event, lifetime and
+native-reference case. Adapter-owned readiness events and complete owner/type/reset matrices still
+require review.
+
+D. Callable sockets — partial
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ☐ **D1** — Independent native multi socket reference matrices.
+* ☐ **D2** — Complete multi/passthrough hierarchy, conversion and all native access paths.
+* ☐ **D3** — Complete tagged custom protocol, callback error, reset and lifetime matrices.
+* ☐ **D4** — Complete socket public overload/template inventory and owner teardown contract.
+
+Implemented and tested: Simple/tagged/multi/passthrough registrations, selected
+hierarchy/access/policy/custom payload cases and callback contracts are tested. An independent
+width-73 native multi reference now matches 12 records across two connections.
+
+Still required: The native multi reference is representative: custom protocols, topology/access
+variants and lifetime breadth remain open. Complete multi/passthrough hierarchy, tagged
+custom/reset/error matrices, overload inventory and teardown remain required.
+
+E. TLM timing, payloads, extensions and endian utilities — partial
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ☐ **E1** — Complete generic/aligned native type and byte-enable reference matrices.
+* ☐ **E2** — Complete extension clone/copy/free/mm and payload memory-manager ownership matrices.
+* ☐ **E3** — Complete timing/extension/endian public declarations and context/lifetime audit.
+
+Implemented and tested: Guarded and custom quantumkeeper hooks, queues, selected extension lifecycle
+checks and endian conversion families have executable evidence. Word and selected generic/single
+cases have independent native references.
+
+Still required: Generic/aligned native type/byte-enable matrices, extension clone/copy/free/mm
+ownership and full utility declaration/context/lifetime review remain incomplete.
+
+F. Core semantics and final gates — incomplete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ☐ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
+* ☐ **F2** — Full writer/port/fixed-point policy audit.
+* ☐ **F3** — Full tracing type/format and vector assembly audit.
+* ☐ **F4** — Full report/process-control/lifecycle error audit.
+* ☐ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
+* ☐ **F6** — Verify host/kernel lifetime and adapter ownership release.
+* ☐ **F7** — Reconciled full regression and coverage for the complete public API.
+* ☐ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
+* ☐ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
+
+Implemented and tested: Core modeling, selected guarded process control and API guides are
+implemented. Release 0.10.0 passed 156 tests, wheel/sdist build and installed
+runtime/pthread/console checks; later multi groups passed targeted checks.
+
+Still required: Release validation does not close the final M6A gate. Full source-derived
+datatype/policy/tracing/vector/report/process/lifetime audits and final reconciled coverage/artifact
+validation remain required.
 
 Examples and C++ interoperability
 ---------------------------------

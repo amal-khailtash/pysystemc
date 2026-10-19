@@ -16,6 +16,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   invalidation, DMI, debug counts and forward/backward synchronization enums,
   including independent native connection routing and borrowed-state preservation.
 
+### Changed
+
+- Public binding checklist now retains fixed existing M6A requirements with stable
+  IDs, concise delivered evidence and explicit remaining gaps instead of accumulating
+  checked implementation increments. No additional API completeness is claimed.
+
 ## [0.10.0] - 2026-10-18
 
 Adds custom quantumkeeper hooks, stricter callback contracts and declaration audit
