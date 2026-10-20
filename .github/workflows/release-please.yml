@@ -26,10 +26,11 @@ jobs:
   publish:
     needs: release
     if: needs.release.outputs.created == 'true'
-    uses: ./.github/workflows/publish.yml
-    with:
-      tag: ${{ needs.release.outputs.tag }}
-    secrets: inherit
-    permissions:
-      contents: read
-      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch publication with its trusted publisher identity
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.release.outputs.tag }}
+        run: gh workflow run publish.yml --ref main -f repository=pypi -f tag="$RELEASE_TAG"
