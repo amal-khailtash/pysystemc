@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Tests
+- Extend the independent multiword TLM FIFO comparison to nonblocking copies, empty outputs, and readiness before and after consumption.
 - Compare standalone multiword/wide TLM get/peek value and caller-output overloads against independent native tlm_fifo references.
 
 

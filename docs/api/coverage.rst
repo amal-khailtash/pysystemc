@@ -247,3 +247,9 @@ Standalone TLM get/peek value and caller-output completion for long long, unsign
 long long, long double, and sc_biguint<137> is compared with independent native
 ``tlm_fifo`` runs. Native checks also verify an empty nonblocking get preserves
 caller output. The wide sample retains bit 136 through both blocking overloads.
+
+For the same four types, native FIFO and structural standalone get/peek tests
+check unavailable and available readiness, successful nonblocking copies, and
+unchanged outputs on failed calls. Native FIFO readiness returns to unavailable
+after consumption. These comparisons contribute to C1 and B1/B4 evidence;
+they do not complete the broader matrices.

@@ -706,8 +706,8 @@ def test_partial_multiword_tlm_completion(tmp_path):
             timeout=60,
         )
         assert native.returncode == 0, native.stdout + native.stderr
-        reference.extend(line for line in native.stdout.splitlines() if line.startswith("TLM_VALUE"))
-    assert [line for line in output.splitlines() if line.startswith("TLM_VALUE")] == reference
+        reference.extend(line for line in native.stdout.splitlines() if line.startswith(("TLM_VALUE", "TLM_NB")))
+    assert sorted(line for line in output.splitlines() if line.startswith(("TLM_VALUE", "TLM_NB"))) == sorted(reference)
 
 
 def test_multiword_tlm_blocking_completion(tmp_path):

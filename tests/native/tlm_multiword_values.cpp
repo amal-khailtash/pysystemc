@@ -19,6 +19,19 @@ void check(const char* name)
   tlm::tlm_peek_if<T>& peek = fifo;
   T output = 71;
   if (get.nb_get(output) || output != T(71)) throw std::runtime_error("empty get modified output");
+  output = 73;
+  if (peek.nb_can_peek() || get.nb_can_get() || peek.nb_peek(output) || output != T(73))
+    throw std::runtime_error("empty readiness or peek output mismatch");
+  fifo.put(expected);
+  sc_core::sc_start(sc_core::SC_ZERO_TIME);
+  if (!get.nb_can_get() || !peek.nb_can_peek()) throw std::runtime_error("ready sample not reported");
+  if (!peek.nb_peek(output) || output != expected) throw std::runtime_error("nonblocking peek mismatch");
+  output = 71;
+  if (!get.nb_get(output) || output != expected) throw std::runtime_error("nonblocking get mismatch");
+  sc_core::sc_start(sc_core::SC_ZERO_TIME);
+  output = 73;
+  if (get.nb_can_get() || peek.nb_can_peek() || peek.nb_peek(output) || output != T(73))
+    throw std::runtime_error("consumed sample remains ready");
   fifo.put(expected);
   fifo.put(expected);
   sc_core::sc_start(sc_core::SC_ZERO_TIME);
@@ -30,6 +43,8 @@ void check(const char* name)
   if (output != expected) throw std::runtime_error("get output mismatch");
   std::cout << "TLM_VALUE " << name << " get 1 1\n";
   std::cout << "TLM_VALUE " << name << " peek 1 1\n";
+  std::cout << "TLM_NB " << name << " get 0 1 1\n";
+  std::cout << "TLM_NB " << name << " peek 0 1 1\n";
 }
 
 /** @brief Select one specialization per independent native kernel process. */
