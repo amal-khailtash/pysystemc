@@ -146,3 +146,122 @@ process basename, ``sc_event::none`` sensitivity and initialized signal
 construction without a value-change event. The modulo operator uses a small
 native adapter because cppyy does not discover the free operator for Python
 ``%``. Other release-note corner cases listed above remain explicitly untested.
+
+Evidence for existing B1-B4 and C1 requirements
+-----------------------------------------------
+
+These results are partial validation evidence for the existing requirements in
+:doc:`../intro/features`. They introduce no new feature items and do not close
+B1-B4 or C1. Callback release remains partial because native adapters are retained.
+
+Floating FIFO callback samples
+------------------------------
+
+Structural float, double, and long double FIFO reads preserve infinities, NaN,
+and signed zero through value-returning reads, caller-output blocking reads,
+and successful nonblocking reads. Finite
+recovery is checked in the same simulation and compared with independent native
+SystemC FIFO runs for each type. Complete conversion, tracing, reset,
+and native-reference matrices remain open.
+
+Rejected scalar FIFO reads preserve caller-owned output in both blocking and
+nonblocking paths for tested integer widths, bool, and floating types. Callback
+errors, including raised owner exceptions, are cleared under the GIL before
+checking subsequent recovery.
+
+Additional partial-first TLM get/peek binding orders share the combined native
+interface and matching get/peek readiness events while retaining queue state.
+Both readiness observers execute exactly once at the scheduled 1 ns notification.
+The complete cross-specialization identity matrix remains open.
+
+Stopped callback release counts one shared get/peek adapter across partial and
+combined views, retains owners before stop, permits owner collection, and rejects
+later get/peek callbacks. Rejected nonblocking peeks preserve caller output.
+Native adapter objects remain borrowed by ports; full native teardown is open.
+
+Rejected cleanup during simulation leaves shared TLM callbacks usable, including
+final get/peek accesses from end-of-simulation hooks before explicit release.
+
+Blocking TLM get/peek bridges use internal value-pair callbacks to support
+multiword native return types while preserving public native signatures. Reset
+and kill ordering is checked across int, long long, unsigned long long, float,
+double, long double, and sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
+and combined TLM blocking get/peek. Complete channel and TLM matrices remain open.
+
+Multiword standalone and combined TLM blocking get/peek completion checks both returned values
+and caller-output overloads for long long, unsigned long long, long double, and sc_biguint<137> with bit136
+set.
+Each service waits 1 ns; callback counts and total 48 ns completion are asserted.
+
+Multiword standalone/combined blocking TLM outputs remain unchanged when owners
+raise or return nonconvertible objects, followed by normal timed completion.
+
+The full blocking/nonblocking get/peek family shares the multiword-safe blocking
+callback path, including automatic selection from partial interface bindings.
+
+Full multiword/wide get/peek adapters report false immediate readiness and
+preserve distinct caller outputs on failed nonblocking get and peek, including
+when selected automatically for partial blocking interfaces.
+
+Successful nonblocking multiword/wide get and peek copy exact samples, including
+bit136, with true readiness and no advancement of simulation time.
+
+Nonblocking multiword/wide get/peek failures preserve caller outputs for raised
+exceptions, non-bool success flags, and nonconvertible successful values. Normal
+nonblocking copies recover after each tested failure matrix.
+
+Standalone combined blocking/nonblocking get and peek owners also use the
+multiword-safe bridge. Partial-only owners cover long long, unsigned long long,
+long double, and sc_biguint<137>. Native checks reject accidental full get/peek
+adapter selection and verify both blocking overloads, readiness, copied outputs,
+exception preservation and recovery, and two 1 ns services per owner.
+
+Reset and kill cleanup also cover standalone combined TLM get and peek owners
+that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
+The structural matrix checks 693 combinations across seven value types, nine
+wait forms, and eleven access paths,
+asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
+
+Standalone multiword/wide TLM get and peek value-returning overloads reject
+raised owner exceptions and nonconvertible samples. Caller-output overloads
+retain their previous value on the same conversion failures, and subsequent
+services complete with exact values, callback counts, and simulation time.
+
+Standalone combined get and peek readiness events retain native address identity
+through their inherited nonblocking interfaces. Across four multiword/wide types,
+observers run once at 1 ns after delayed notification and never at initialization.
+
+Standalone get/peek nonblocking callbacks reject malformed tuple lengths,
+non-bool success flags, and nonconvertible successful values. Borrowed caller
+outputs remain unchanged and valid copied samples recover after each failure
+for all four tested multiword/wide types.
+
+Standalone combined get and peek callback owners remain alive after external
+references are dropped and remain callable through end-of-simulation. Explicit
+stopped-kernel release collects both owners, including self-bound callback
+cycles; repeated release is idempotent. Released callbacks reject access and
+nonblocking peek preserves caller output. Native adapters remain retained while
+ports borrow their addresses; safe native adapter teardown remains open.
+
+Standalone TLM get/peek value and caller-output completion for long long, unsigned
+long long, long double, and sc_biguint<137> is compared with independent native
+``tlm_fifo`` runs. Native checks also verify an empty nonblocking get preserves
+caller output. The wide sample retains bit 136 through both blocking overloads.
+
+For the same four types, native FIFO and structural standalone get/peek tests
+check unavailable and available readiness, successful nonblocking copies, and
+unchanged outputs on failed calls. Native FIFO readiness returns to unavailable
+after consumption. These comparisons contribute to C1 and B1/B4 evidence;
+they do not complete the broader matrices.
+
+B2/C1 native-reference checks also compare inherited nonblocking get/peek
+readiness-event identity in native ``tlm_fifo`` and structural standalone adapters
+for these four types. Each base view borrows the same event as its combined view.
+Cross-specialization and binding-order completeness remain unproven.
+
+The B1/C1 standalone TLM matrix additionally covers ``sc_bigint<128>`` and
+``sc_biguint<128>`` with bit 127 set, exercising a negative signed sample and
+a large unsigned sample. Blocking and nonblocking copies, errors, inherited
+event identity, and native FIFO comparisons use all six types. Twelve owners
+complete two blocking services each in 24 ns. These are tested instances, not
+a fixed specialization list or a completeness claim.

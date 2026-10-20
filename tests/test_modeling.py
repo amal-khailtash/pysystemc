@@ -688,7 +688,30 @@ def test_scalar_fifo_callback_contracts(tmp_path):
 
 def test_partial_multiword_tlm_completion(tmp_path):
     """Verify standalone get/peek overloads, nonblocking outputs and recovery."""
-    assert "PARTIAL_MULTIWORD_TLM_OK" in run_example(tmp_path, "tests/models/partial_multiword_tlm.py")
+    output = run_example(tmp_path, "tests/models/partial_multiword_tlm.py")
+    assert "PARTIAL_MULTIWORD_TLM_OK" in output
+    reference = []
+    for scalar in ("long_long", "unsigned_long_long", "long_double", "biguint137", "bigint128", "biguint128"):
+        native = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "examples/run_sysc_cpp.py"),
+                str(ROOT / "tests/native/tlm_multiword_values.cpp"),
+                "--",
+                scalar,
+            ],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert native.returncode == 0, native.stdout + native.stderr
+        reference.extend(
+            line for line in native.stdout.splitlines() if line.startswith(("TLM_VALUE", "TLM_NB", "TLM_EVENT"))
+        )
+    assert sorted(
+        line for line in output.splitlines() if line.startswith(("TLM_VALUE", "TLM_NB", "TLM_EVENT"))
+    ) == sorted(reference)
 
 
 def test_multiword_tlm_blocking_completion(tmp_path):
