@@ -23,8 +23,13 @@ class Owner:
         """Return a scalar or a sample with bit 136 set."""
         if not self.wide:
             return 17
-        result = sc_dt.sc_biguint[137](17)
-        result[136] = True
+        if self.wide == "sc_dt::sc_bigint<128>":
+            result = sc_dt.sc_bigint[128](17)
+            result[127] = True
+            return result
+        width = 128 if self.wide == "sc_dt::sc_biguint<128>" else 137
+        result = sc_dt.sc_biguint[width](17)
+        result[width - 1] = True
         return result
 
     def sample(self):
@@ -54,9 +59,16 @@ name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 cases = []
 ready_seen = []
-for scalar in ("long long", "unsigned long long", "long double", "sc_dt::sc_biguint<137>"):
+for scalar in (
+    "long long",
+    "unsigned long long",
+    "long double",
+    "sc_dt::sc_biguint<137>",
+    "sc_dt::sc_bigint<128>",
+    "sc_dt::sc_biguint<128>",
+):
     for operation in ("get", "peek"):
-        owner = Owner(operation, scalar.startswith("sc_dt"))
+        owner = Owner(operation, scalar if scalar.startswith("sc_dt") else None)
         interface = getattr(tlm, "tlm_" + operation + "_if")[scalar]
         port = sc.sc_port[interface]()
         port(owner)
@@ -64,7 +76,8 @@ for scalar in ("long long", "unsigned long long", "long double", "sc_dt::sc_bigu
         index = len(cases)
         expected = "T(17)"
         if owner.wide:
-            expected = "([] { T value = 17; value[136] = true; return value; }())"
+            bit = 136 if scalar == "sc_dt::sc_biguint<137>" else 127
+            expected = f"([] {{ T value = 17; value[{bit}] = true; return value; }}())"
         cppyy.cppdef(f"""
 /** Borrow partial interface; blocking callers release GIL and callbacks reacquire it.
  * Errors leave caller output intact. No references to output survive this call.
@@ -121,7 +134,7 @@ bool partial_reject_{index}(tlm::tlm_{operation}_if<{scalar}>& channel, bool blo
         owner.available = False
         assert nb(native, False)
         owner.available = True
-        label = ("long_long", "unsigned_long_long", "long_double", "biguint137")[index // 2]
+        label = ("long_long", "unsigned_long_long", "long_double", "biguint137", "bigint128", "biguint128")[index // 2]
         print(f"TLM_NB {label} {operation} 0 1 1")
         print(f"TLM_EVENT {label} {operation} 1")
         owner.failure = True
@@ -150,15 +163,15 @@ def consume():
     for index, (owner, port, helper) in enumerate(cases):
         assert helper(port.get_interface())
         assert owner.calls == 2
-        label = ("long_long", "unsigned_long_long", "long_double", "biguint137")[index // 2]
+        label = ("long_long", "unsigned_long_long", "long_double", "biguint137", "bigint128", "biguint128")[index // 2]
         operation = "get" if index % 2 == 0 else "peek"
         print(f"TLM_VALUE {label} {operation} 1 1")
     completed.append(str(sc.sc_time_stamp()))
 
 
 handle = sc.sc_spawn(consume, "consumer")
-sc.sc_start(17, sc.SC_NS)
-assert completed == ["16 ns"], completed
+sc.sc_start(25, sc.SC_NS)
+assert completed == ["24 ns"], completed
 assert sorted(ready_seen) == [(index, "1 ns") for index in range(len(cases))], ready_seen
 assert handle.terminated()
 sc.sc_stop()

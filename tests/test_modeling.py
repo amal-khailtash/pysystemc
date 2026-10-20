@@ -691,7 +691,7 @@ def test_partial_multiword_tlm_completion(tmp_path):
     output = run_example(tmp_path, "tests/models/partial_multiword_tlm.py")
     assert "PARTIAL_MULTIWORD_TLM_OK" in output
     reference = []
-    for scalar in ("long_long", "unsigned_long_long", "long_double", "biguint137"):
+    for scalar in ("long_long", "unsigned_long_long", "long_double", "biguint137", "bigint128", "biguint128"):
         native = subprocess.run(
             [
                 sys.executable,

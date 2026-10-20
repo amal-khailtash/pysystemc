@@ -15,6 +15,8 @@ void check(const char* name)
   tlm::tlm_fifo<T> fifo("fifo", 2);
   T expected = 17;
   if constexpr (std::is_same_v<T, sc_dt::sc_biguint<137>>) expected[136] = true;
+  if constexpr (std::is_same_v<T, sc_dt::sc_bigint<128>> || std::is_same_v<T, sc_dt::sc_biguint<128>>)
+    expected[127] = true;
   tlm::tlm_get_if<T>& get = fifo;
   tlm::tlm_peek_if<T>& peek = fifo;
   tlm::tlm_nonblocking_get_if<T>& get_base = get;
@@ -66,6 +68,10 @@ int sc_main(int argc, char** argv)
     check<long double>(argv[1]);
   else if (type == "biguint137")
     check<sc_dt::sc_biguint<137>>(argv[1]);
+  else if (type == "bigint128")
+    check<sc_dt::sc_bigint<128>>(argv[1]);
+  else if (type == "biguint128")
+    check<sc_dt::sc_biguint<128>>(argv[1]);
   else
     return 2;
   return 0;

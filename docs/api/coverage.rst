@@ -258,3 +258,10 @@ B2/C1 native-reference checks also compare inherited nonblocking get/peek
 readiness-event identity in native ``tlm_fifo`` and structural standalone adapters
 for these four types. Each base view borrows the same event as its combined view.
 Cross-specialization and binding-order completeness remain unproven.
+
+The B1/C1 standalone TLM matrix additionally covers ``sc_bigint<128>`` and
+``sc_biguint<128>`` with bit 127 set, exercising a negative signed sample and
+a large unsigned sample. Blocking and nonblocking copies, errors, inherited
+event identity, and native FIFO comparisons use all six types. Twelve owners
+complete two blocking services each in 24 ns. These are tested instances, not
+a fixed specialization list or a completeness claim.
