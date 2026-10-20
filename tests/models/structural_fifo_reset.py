@@ -7,7 +7,7 @@ clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.S
 first = sc.sc_event("first")
 second = sc.sc_event("second")
 wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
-value_types = (int, "float", "double", "long double", sc_dt.sc_biguint[137])
+value_types = (int, "long long", "unsigned long long", "float", "double", "long double", sc_dt.sc_biguint[137])
 paths_per_type = 9
 cases_per_type = paths_per_type * len(wait_kinds)
 

@@ -1147,9 +1147,9 @@ final get/peek accesses from end-of-simulation hooks before explicit release.
 
 Blocking TLM get/peek bridges use internal value-pair callbacks to support
 multiword native return types while preserving public native signatures. Reset
-and kill ordering is checked across int, float, double, long double, and
-sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
-and combined TLM blocking get/peek (315 combinations). Complete channel and TLM matrices remain open.
+and kill ordering is checked across int, long long, unsigned long long, float,
+double, long double, and sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
+and combined TLM blocking get/peek. Complete channel and TLM matrices remain open.
 
 Multiword standalone and combined TLM blocking get/peek completion checks both returned values
 and caller-output overloads for long long, unsigned long long, long double, and sc_biguint<137> with bit136
@@ -1180,6 +1180,6 @@ adapter selection and verify both blocking overloads, readiness, copied outputs,
 exception preservation and recovery, and two 1 ns services per owner.
 
 Reset and kill cleanup also cover standalone combined TLM get and peek owners
-that expose only their requested operation. The structural matrix checks 405
-combinations across five value types, nine wait forms, and nine access paths,
+that expose only their requested operation. The structural matrix checks 567
+combinations across seven value types, nine wait forms, and nine access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
