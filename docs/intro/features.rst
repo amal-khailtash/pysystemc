@@ -1138,5 +1138,6 @@ Both readiness observers execute exactly once at the scheduled 1 ns notification
 The complete cross-specialization identity matrix remains open.
 
 Stopped callback release counts one shared get/peek adapter across partial and
-combined views, permits owner collection, and rejects later get/peek callbacks.
+combined views, retains owners before stop, permits owner collection, and rejects
+later get/peek callbacks. Rejected nonblocking peeks preserve caller output.
 Native adapter objects remain borrowed by ports; full native teardown is open.

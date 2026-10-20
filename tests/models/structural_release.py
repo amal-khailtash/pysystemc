@@ -3,6 +3,7 @@
 from amal.eda.systemc import sc_core as sc, sc_dt, tlm
 import gc
 import weakref
+import cppyy
 
 
 class Owner:
@@ -127,6 +128,8 @@ del queue_owner
 del name, owner, wide_owner, tlm_owner
 gc.collect()
 assert reference() is not None
+assert queue_reference() is not None
+assert queue_ports[1].get_interface().get() == 43
 assert port.get_interface().read() == 17
 try:
     sc.release_interface_callbacks()
@@ -158,6 +161,24 @@ assert wide_reference() is None
 assert result_reference() is None
 assert tlm_reference() is None
 assert queue_reference() is None
+cppyy.cppdef("""
+/** Verify a released shared adapter rejects nonblocking callbacks.
+ * Interface and output are borrowed for this call. Exceptions are inspected
+ * with the GIL held while clearing Python error state; no references survive.
+ */
+bool released_peek_output(tlm::tlm_nonblocking_peek_if<int>& channel) {
+  int value = 71;
+  try { channel.nb_peek(value); }
+  catch (...) {
+    auto gil = PyGILState_Ensure();
+    PyErr_Clear();
+    PyGILState_Release(gil);
+    return value == 71;
+  }
+  return false;
+}
+""")
+assert cppyy.gbl.released_peek_output(queue_ports[0].get_interface())
 for queue_port, method in ((queue_ports[1], "get"), (queue_ports[-1], "peek")):
     try:
         getattr(queue_port.get_interface(), method)()
