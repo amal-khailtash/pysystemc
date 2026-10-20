@@ -726,7 +726,10 @@ def test_stopped_structural_callback_release(tmp_path):
 
 def test_structural_fifo_reset_cleanup(tmp_path):
     """Verify reset/kill ordering through native structural FIFO callback frames."""
-    assert "STRUCTURAL_FIFO_RESET_OK" in run_example(tmp_path, "tests/models/structural_fifo_reset.py")
+    for start, stop in (("0", "7"), ("7", "14")):
+        assert "STRUCTURAL_FIFO_RESET_OK" in run_example(
+            tmp_path, "tests/models/structural_fifo_reset.py", (start, stop)
+        )
 
 
 def test_native_structural_fifo(tmp_path):

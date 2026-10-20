@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Tests
+- Broaden existing scalar interface reset coverage to short/unsigned short/unsigned int/long/unsigned long across 1,386 combinations.
 - Assert released standalone/full TLM blocking caller-output overloads preserve output and full readiness callbacks reject access.
 - Verify standalone and full TLM readiness events remain distinct and preserve native addresses after callback-owner cleanup.
 - Check released standalone get/peek readiness callbacks reject access and native nonblocking get preserves caller output after owner cleanup.

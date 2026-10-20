@@ -122,7 +122,7 @@ B. Custom interfaces and channels — partially implemented
 
 Recent validation contributes to B1-B4; it does not add or complete requirements.
 See :doc:`../api/coverage` for the tested matrices and their remaining limits.
-The reset/kill matrix currently checks 891 combinations across nine types,
+The reset/kill matrix currently checks 1,386 combinations across fourteen types,
 nine wait forms, and eleven access paths. Selected inherited TLM readiness-event
 identity is independently compared with native FIFO specializations.
 

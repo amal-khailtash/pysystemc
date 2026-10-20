@@ -1,6 +1,7 @@
 """Verify reset/kill unwind through structural FIFO native callback boundaries."""
 
 from amal.eda.systemc import sc_core as sc, sc_dt, tlm
+import sys
 
 records = []
 clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.SC_NS), True)
@@ -9,6 +10,11 @@ second = sc.sc_event("second")
 wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
 value_types = (
     int,
+    "short",
+    "unsigned short",
+    "unsigned int",
+    "long",
+    "unsigned long",
     "long long",
     "unsigned long long",
     "float",
@@ -18,6 +24,8 @@ value_types = (
     sc_dt.sc_biguint[128],
     sc_dt.sc_biguint[137],
 )
+if len(sys.argv) == 3:
+    value_types = value_types[int(sys.argv[1]) : int(sys.argv[2])]
 paths_per_type = 11
 cases_per_type = paths_per_type * len(wait_kinds)
 
@@ -41,13 +49,13 @@ class Owner:
 
     def check_argument(self, value):
         """Assert native copied writes retain arbitrary-width high bits."""
-        type_index = self.index // cases_per_type
-        if type_index < 6:
+        value_type = value_types[self.index // cases_per_type]
+        if isinstance(value_type, str) or value_type is int:
             assert value == 17
         else:
-            bit = 136 if type_index == 8 else 127
+            bit = 136 if value_type == sc_dt.sc_biguint[137] else 127
             assert value[bit] and value.to_uint64() == 17
-            if type_index == 6:
+            if value_type == sc_dt.sc_bigint[128]:
                 assert value < 0
 
     def peek(self):
@@ -158,11 +166,11 @@ def worker(index):
     try:
         native = ports[index].get_interface()
         path = index % paths_per_type
-        type_index = index // cases_per_type
-        wide = type_index >= 6
-        value = value_types[type_index](17) if wide else 17
+        value_type = value_types[index // cases_per_type]
+        wide = not (isinstance(value_type, str) or value_type is int)
+        value = value_type(17) if wide else 17
         if wide:
-            value[136 if type_index == 8 else 127] = True
+            value[136 if value_type == sc_dt.sc_biguint[137] else 127] = True
         if path == 0:
             native.read()
         elif path in (1, 5, 7, 9):
