@@ -179,13 +179,26 @@ print("IDENTITY_REFERENCE 41 1 41 43", sc.sc_time_stamp())
 
 for scalar_owner, scalar_port, values in scalar_cases:
     assert [scalar_port.get_interface().read(), scalar_port.get_interface().read()] == values
+ready_seen = []
+combined_tlm = reverse_tlm_ports[2].get_interface()
+get_event = reverse_tlm_ports[1].get_interface().ok_to_get()
+peek_event = reverse_tlm_ports[0].get_interface().ok_to_peek()
+assert cppyy.addressof(get_event) == cppyy.addressof(combined_tlm.ok_to_get())
+assert cppyy.addressof(peek_event) == cppyy.addressof(combined_tlm.ok_to_peek())
+assert cppyy.addressof(get_event) != cppyy.addressof(peek_event)
+top.sc_method("observe_ready", lambda: ready_seen.append(str(sc.sc_time_stamp())))
+top.sensitive(peek_event)
+top.dont_initialize()
+combined_tlm.notify_ready(sc.sc_time(1, sc.SC_NS))
 seen = []
 top.sc_method("observe", lambda: seen.append((reader.get_interface().read().to_uint64(), str(sc.sc_time_stamp()))))
 top.sensitive(reader.get_interface().value_changed_event())
 top.dont_initialize()
 write_only.get_interface().write(value_type(29))
-sc.sc_start(1, sc.SC_NS)
+sc.sc_start(2, sc.SC_NS)
 assert seen == [(29, "0 s")], seen
+assert ready_seen == ["1 ns"], ready_seen
+print("IDENTITY_READY", ready_seen[0])
 assert writer.get_interface().read().to_uint64() == 29
 sc.sc_stop()
 print("STRUCTURAL_BASE_IDENTITY_OK")

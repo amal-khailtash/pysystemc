@@ -3,6 +3,7 @@
  * @details Channels own their values and virtual interface bases. No Python
  * callbacks, GIL operations or borrowed storage outlive this simulation.
  */
+#define SC_INCLUDE_DYNAMIC_PROCESSES
 #include <deque>
 #include <iostream>
 #include <stdexcept>
@@ -134,7 +135,21 @@ int sc_main(int, char**)
   if (!peek.nb_peek(next)) throw std::runtime_error("peek failed");
   std::cout << "IDENTITY_REFERENCE " << fv << " " << fifo.num_available() << " " << tv << " " << next << " "
             << sc_core::sc_time_stamp() << "\n";
-  sc_core::sc_start(1, sc_core::SC_NS);
+  int notifications = 0;
+  sc_core::sc_spawn_options options;
+  options.spawn_method();
+  options.dont_initialize();
+  options.set_sensitivity(&peek.ok_to_peek());
+  sc_core::sc_spawn(
+    [&]()
+    {
+      ++notifications;
+      std::cout << "IDENTITY_READY " << sc_core::sc_time_stamp() << "\n";
+    },
+    "observe_ready", &options);
+  tlm_channel.ready.notify(sc_core::sc_time(1, sc_core::SC_NS));
+  sc_core::sc_start(2, sc_core::SC_NS);
+  if (notifications != 1) throw std::runtime_error("readiness notification");
   sc_core::sc_stop();
   return 0;
 }

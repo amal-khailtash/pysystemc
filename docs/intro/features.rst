@@ -153,6 +153,8 @@ C. TLM interface families — partial
 Implemented and tested: TLM1 put/get/peek/transport/analysis, combined/master/slave/FIFO families
 and TLM2 transport/debug/DMI adapters have selected semantic tests. Callback types/bounds, copied
 write values and failed get/peek output preservation are checked.
+Inherited get/peek views share their corresponding combined readiness events;
+delayed notification count/time matches an independent native reference.
 
 Still required: Reconcile every public overload, type, readiness event, lifetime and
 native-reference case. Adapter-owned readiness events and complete owner/type/reset matrices still

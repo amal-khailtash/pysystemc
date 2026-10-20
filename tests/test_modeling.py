@@ -657,8 +657,8 @@ def test_structural_inherited_interface_identity(tmp_path):
         timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
-    assert [line for line in output.splitlines() if line.startswith("IDENTITY_REFERENCE")] == [
-        line for line in native.stdout.splitlines() if line.startswith("IDENTITY_REFERENCE")
+    assert [line for line in output.splitlines() if line.startswith(("IDENTITY_REFERENCE", "IDENTITY_READY"))] == [
+        line for line in native.stdout.splitlines() if line.startswith(("IDENTITY_REFERENCE", "IDENTITY_READY"))
     ]
 
 

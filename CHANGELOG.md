@@ -14,6 +14,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   checks and verified native-wheel publication through a reusable workflow.
 - Structural interface identity checks across signal, FIFO and TLM inherited
   views, plus scalar FIFO callback validation and recovery tests.
+  Inherited get/peek readiness notifications match an independent native model.
 - Explicit stopped-kernel structural callback cleanup releases Python owners
   while retaining native adapters borrowed by ports.
 - Structural FIFO read/write and TLM get/put/peek reset/kill tests verify nested
