@@ -16,6 +16,33 @@ _classes = {}
 _protocol_interfaces = {}
 
 
+def release_interface_callbacks():
+    """Release structural callback owners after the kernel has stopped.
+
+    Returns:
+        Number of adapters whose Python owners were released.
+
+    Raises:
+        RuntimeError: If simulation has not completed a native stop.
+
+    Native adapters remain retained because ports borrow their addresses. Call
+    this after all end-of-simulation hooks and final interface/trace reads have
+    completed. Subsequent structural callbacks raise RuntimeError. This does
+    not delete native channels, reset the kernel or release process callbacks.
+    Call from Python while holding the GIL, outside a running simulation.
+    """
+    if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_STOPPED:
+        raise RuntimeError("interface callbacks can only be released after simulation stop")
+    released = 0
+    for index, (interface, owner, adapter) in enumerate(_owners):
+        if owner is not None:
+            adapter._implementation = None
+            adapter._reference_results.clear()
+            _owners[index] = (interface, None, adapter)
+            released += 1
+    return released
+
+
 def _fifo_integer(value, native_type, method):
     """Validate fundamental callbacks before conversion to native FIFO storage.
 
@@ -318,6 +345,8 @@ def _adapt(interface, implementation, factory):
 
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
+                if self._implementation is None:
+                    raise RuntimeError("structural interface callbacks have been released")
                 if (
                     family == "sc_core::sc_signal_inout_if"
                     and _method == "get_writer_policy"

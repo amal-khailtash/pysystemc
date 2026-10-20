@@ -123,6 +123,11 @@ B. Custom interfaces and channels — partially implemented
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
 adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
 cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
+``release_interface_callbacks()`` releases structural owners and retained results
+after native stop; adapters remain alive and later callbacks reject access.
+Scalar/wide and TLM analysis owner collection, plus replaced-reference
+collection, are checked after final
+end-of-simulation reads; cleanup during a running process is rejected.
 Existing combined adapters are reused for compatible inherited signal/FIFO/TLM
 views. Scalar FIFO reads use native pair callbacks, including signed/unsigned
 64-bit results; integral range/type failures preserve native outputs and recover.

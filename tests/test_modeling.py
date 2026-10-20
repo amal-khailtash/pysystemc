@@ -667,6 +667,11 @@ def test_scalar_fifo_callback_contracts(tmp_path):
     assert "SCALAR_FIFO_CONTRACTS_OK" in run_example(tmp_path, "tests/models/scalar_fifo_contracts.py")
 
 
+def test_stopped_structural_callback_release(tmp_path):
+    """Verify owner collection, idempotence and post-release callback rejection."""
+    assert "STRUCTURAL_RELEASE_OK" in run_example(tmp_path, "tests/models/structural_release.py")
+
+
 def test_native_structural_fifo(tmp_path):
     """Verify FIFO event identity, failed output preservation and timed blocking reads."""
     output = run_example(tmp_path, "tests/models/native_structural_fifo.py")
