@@ -395,3 +395,124 @@ def _compile_upstream(tmp_path, directory, stems):
     result = subprocess.run(command, capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stdout + result.stderr
     return executable
+
+
+def test_upstream_custom_fifo_matches_native(tmp_path):
+    """Compare every byte and immediate occupancy marker against upstream FIFO."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/simple_fifo/simple_fifo.py")
+    native = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "amal.eda.systemc._runner",
+            str(ROOT / "submodules/systemc/examples/sysc/simple_fifo/simple_fifo.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"V(?:<9>)?isit.*today!"
+    records = re.findall(pattern, output)
+    assert len(records) == 1
+    assert records == re.findall(pattern, native.stdout)
+    assert "<1>" in records[0] and "<9>" in records[0]
+
+
+def test_upstream_rsa_seed_matches_native(tmp_path):
+    """Compare all keys/messages for deterministic Linux source random streams."""
+    import re
+
+    executable = _compile_upstream(tmp_path, ROOT / "submodules/systemc/examples/sysc/rsa", ("rsa",))
+    for seed in (1, 7):
+        python = subprocess.run(
+            [sys.executable, str(ROOT / "examples/sysc/rsa/rsa.py"), str(seed)],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert python.returncode == 0, python.stdout + python.stderr
+        native = subprocess.run([str(executable), str(seed)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+        assert native.returncode == 0, native.stdout + native.stderr
+        pattern = r"^(?:Random number.*|RSA .*|[end] = .*|\d+|Message.*|Ciphered.*|Deciphered.*|Note that.*|showing.*)$"
+        records = re.findall(pattern, python.stdout, re.M)
+        assert records == re.findall(pattern, native.stdout, re.M)
+        assert len(records) == 15
+
+
+def test_upstream_packet_switch_seed_matches_native(tmp_path):
+    """Compare all sent/received packets and drop counters with fixed source time."""
+    import re
+    import shutil
+
+    directory = ROOT / "submodules/systemc/examples/sysc/pkt_switch"
+    source = tmp_path / "source"
+    shutil.copytree(directory, source)
+    sender = source / "sender.cpp"
+    # Change only the test copy's wall-time seed, preserving native routing/stimulus.
+    sender.write_text(sender.read_text().replace("srand((unsigned)time(NULL));", "srand(7);"))
+    executable = _compile_upstream(tmp_path, source, ("fifo", "sender", "receiver", "switch_clk", "switch", "main"))
+    python = subprocess.run(
+        [sys.executable, str(ROOT / "examples/sysc/pkt_switch/main.py")],
+        cwd=tmp_path,
+        env=dict(os.environ, PYSYSTEMC_PACKET_SEED="7"),
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert python.returncode == 0, python.stdout + python.stderr
+    native = subprocess.run([str(executable)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"^ *(?:New Packet.*|Destination Addresses:.*|Packet Value:.*|Sender ID:.*|Receiver ID:.*|Total number.*|Percentage packets.*)$"
+    records = [line.strip() for line in re.findall(pattern, python.stdout, re.M)]
+    assert len(records) > 1000
+    assert records == [line.strip() for line in re.findall(pattern, native.stdout, re.M)]
+
+
+def test_upstream_simple_bus_matches_native(tmp_path):
+    """Compare one hundred direct monitor records across competing bus masters."""
+    import re
+
+    directory = ROOT / "submodules/systemc/examples/sysc/simple_bus"
+    stems = (
+        "simple_bus",
+        "simple_bus_arbiter",
+        "simple_bus_master_blocking",
+        "simple_bus_master_non_blocking",
+        "simple_bus_master_direct",
+        "simple_bus_tools",
+        "simple_bus_types",
+        "simple_bus_main",
+    )
+    executable = _compile_upstream(tmp_path, directory, stems)
+    output = run_example(tmp_path, "examples/sysc/simple_bus/simple_bus_main.py")
+    native = subprocess.run([str(executable)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"^.*top.master_d : mem.*$"
+    records = re.findall(pattern, output, re.M)
+    assert len(records) == 100
+    assert records == re.findall(pattern, native.stdout, re.M)
+
+
+def test_upstream_risc_python_top_matches_native(tmp_path):
+    """Compare all Python CPU components against the independent native CPU."""
+    import re
+    import shutil
+
+    directory = ROOT / "submodules/systemc/examples/sysc/risc_cpu"
+    for image in directory.glob("*.img"):
+        shutil.copyfile(image, tmp_path / image.name)
+    stems = ("bios", "paging", "icache", "fetch", "decode", "exec", "mmxu", "floating", "dcache", "pic", "main")
+    executable = _compile_upstream(tmp_path, directory, stems)
+    output = run_example(tmp_path, "examples/sysc/risc_cpu/main.py")
+    native = subprocess.run([str(executable)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"^.*(?:IFU :|ID:|ALU :|FPU ?:|MMX :|R\s*\d+\().*$"
+    records = re.findall(pattern, output, re.M)
+    assert len(records) > 150
+    assert records == re.findall(pattern, native.stdout, re.M)
+    assert "SHUTDOWN - at CSIM 274 ns" in output

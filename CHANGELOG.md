@@ -10,10 +10,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Python packet-switch, seeded RSA, custom immediate-event FIFO and simple-bus
+  stimulus ports with independent native record comparisons.
+- Python implementations of all ten upstream RISC CPU components, preserving
+  decoder opcodes, register writeback and clocked memory/processor timing, with
+  an independent native default-image comparison.
 - Python ports of both upstream FFT numeric models, behavioral/RTL FIR and the
   double pipeline. FFT compares all five supplied input pairs per numeric model;
   FIR compares both executables, including value/time and completion records.
-
 - Python ports of the upstream ready/valid and toggle/toggle examples preserve
   native clocked handshake/reset semantics; all 131/132 value/time records match
   independent C++ references, including forty consumed values.
@@ -23,7 +27,6 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Complete the next five baseline example items: simple_async, fft_flpt,
   fft_fxpt, fir and pipe. Compile unmodified FFT/FIR reference sources in separate
   translation units to accommodate upstream headers without include guards.
-
 - Complete five further baseline example audits: barrier, FIFO mutex policy,
   specialized signals, ready/valid and toggle/toggle. Document unused helpers and
   compiler alternatives separately; restore the mutex port's full permission notice.

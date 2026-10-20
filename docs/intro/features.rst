@@ -108,7 +108,7 @@ ADL, inherited access/ambiguity, callback retention, GIL and error behavior stil
 require validation where recorded as untested. Known failures remain failing.
 
 All 33 upstream executable targets have source/input/configuration records:
-16 default native/Python comparisons pass and 17 targets remain unported or
+21 default native/Python comparisons pass, and 12 targets remain unported or
 uncompared. Alternate inputs, platforms and build configurations remain untested.
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
@@ -225,11 +225,11 @@ Common compiler/platform build alternatives remain outside this baseline; see
 * ☑ ``sysc/fft/fft_fxpt``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/fir``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/pipe``: executable-variant audit and Python/native equivalence on the selected baseline.
-* ☐ ``sysc/pkt_switch``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/risc_cpu``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/rsa``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/simple_bus``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/simple_fifo``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``sysc/pkt_switch``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/risc_cpu``: All ten Python CPU components match native default instruction/register records and shutdown timing; alternate images remain untested.
+* ☑ ``sysc/rsa``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/simple_bus``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/simple_fifo``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☐ ``sysc/simple_perf``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``tlm/at_1_phase``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``tlm/at_2_phase``: complete executable-variant audit and Python/native equivalence.

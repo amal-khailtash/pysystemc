@@ -191,3 +191,47 @@ Run this five-item batch with::
 
 Each simulation and native compilation has a 60-second timeout. The tests inspect
 nonempty output records and files; success is not inferred from exit status alone.
+
+Packet traffic, RSA, bus and FIFO
+---------------------------------
+
+The packet switch port uses native packet signals and ports with Python sender,
+receiver, ring-routing and control processes. ``PYSYSTEMC_PACKET_SEED`` selects
+reproducible native ``rand`` traffic; absent that variable the source wall-time
+seed is preserved. The comparison fixes only the seed in a temporary native source
+copy and checks every sent/received record and final drop counts. The upstream
+packet datatype is loaded from its header; unused packet tracing remains untested.
+
+The RSA port preserves the Linux ``drand48`` stream and native 250-bit assignment
+boundaries. Seed 1 and seed 7 compare all fifteen key/message/round-trip records.
+Nonpositive seeds use wall time, and alternate Windows random behavior remains
+untested. No cryptographic product guarantees follow from this example.
+
+The custom FIFO port preserves immediate ring-buffer updates and availability
+markers through structural native interfaces and guarded Python waits. Character
+codes use explicit native int adapter signatures; read returns the character code
+instead of a C++ reference output. Every printed byte and occupancy marker matches
+native C++. Both workers run to starvation at zero simulation time.
+
+The simple-bus port reproduces the fixed unlocked blocking, nonblocking and direct
+master stimulus and slow-memory timing. All one hundred memory observations match
+native C++ over 10000 ns. Unused lock/error/verbose variants and a general reusable
+bus-interface binding remain outside this example's evidence.
+
+The RISC CPU port is ``examples/sysc/risc_cpu/main.py`` with all ten component
+bodies implemented in Python. Native SystemC signals, clocks and port bindings
+preserve the source process timing and register writeback. Required images are
+checked before construction: ``bios.img``, ``icache.img``, ``dcache.img`` and
+``register.img``. Default instruction/register records match native C++; shutdown
+is printed at 274 ns and stop occurs at 275 ns. All decoder cases are retained,
+including source placeholder jump-and-link/jump-return behavior. Alternative
+image programs and tracing/debug configurations remain untested. The source FPU
+uses integer bit operations with platform-dependent shifts; the port preserves
+the verified Linux/x86 baseline rather than claiming IEEE arithmetic equivalence.
+
+Run these comparisons with::
+
+   uv run pytest tests/test_upstream.py -k 'packet_switch_seed or rsa_seed or custom_fifo or simple_bus_matches or risc_python_top'
+
+Ports retain upstream Apache-2.0 LICENSE/NOTICE attribution. Each simulation and
+reference compilation uses a fresh process and a sixty-second timeout.
