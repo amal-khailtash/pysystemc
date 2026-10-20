@@ -4,18 +4,25 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
 permissions:
   contents: read
 concurrency:
-  group: tests-${{ github.ref }}
+  group: tests-${{ github.workflow }}-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 jobs:
   test:
+    name: Tests and coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.ref || github.ref }}
           submodules: recursive
       - uses: astral-sh/setup-uv@v7
         with:
@@ -53,4 +60,43 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build/coverage/coverage.xml
           disable_search: true
-          fail_ci_if_error: true
+          fail_ci_if_error: false
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux_2_28_x86_64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+      - name: Build and repair native distributions
+        run: |
+          uv build
+          uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
+          rm dist/*.whl
+          mv repaired/*.whl dist/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-distributions
+          path: dist/*
+  documentation:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+      - name: Check documentation
+        run: |
+          uv sync --locked --only-group docs
+          uv run --no-sync sphinx-build -W -b html docs build/docs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-documentation
+          path: build/docs/

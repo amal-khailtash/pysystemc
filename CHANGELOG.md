@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Release-please automation with reviewed release PRs, Conventional Commit title
+  checks and verified native-wheel publication through a reusable workflow.
+
 ## [0.12.0] - 2026-10-19
 
 Adds Python ports and native baseline comparisons for all 33 upstream example targets.

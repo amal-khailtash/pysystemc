@@ -7,6 +7,7 @@
    intro/examples
    intro/features
    intro/development
+   development/releases
    intro/contributing
    intro/architecture
    intro/roadmap
