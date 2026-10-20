@@ -44,8 +44,8 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          git show-ref --verify "refs/tags/$RELEASE_TAG"
-          git merge-base --is-ancestor HEAD origin/main
+          git -c safe.directory="$PWD" show-ref --verify "refs/tags/$RELEASE_TAG"
+          git -c safe.directory="$PWD" merge-base --is-ancestor HEAD origin/main
           uv run --no-project python -c 'import os, tomllib; from pathlib import Path; version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]; assert os.environ["RELEASE_TAG"] == "v" + version, "Release tag must match pyproject.toml version"'
       - name: Build native dependencies and distributions
         run: |
