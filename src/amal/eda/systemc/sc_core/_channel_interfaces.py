@@ -307,11 +307,12 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "copies; Python owns sample state. Exceptions propagate through guarded waits. */ "
                     "namespace pysystemc_interfaces { template<class T> "
                     "class BlockingGetPeekAdapter : public tlm::tlm_blocking_get_peek_if<T> { public: "
-                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
-                    "void get(T& value) override { value = get_value(); } "
-                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
-                    "void peek(T& value) const override { value = peek_value(); } "
-                    "virtual T get_value() = 0; virtual T peek_value() const = 0; }; }"
+                    "using blocking_value_pair = std::pair<T, bool>; "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value().first; } "
+                    "void get(T& value) override { value = get_value().first; } "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value().first; } "
+                    "void peek(T& value) const override { value = peek_value().first; } "
+                    "virtual blocking_value_pair get_value() = 0; virtual blocking_value_pair peek_value() const = 0; }; }"
                 )
             argument = name.removeprefix("tlm::tlm_blocking_get_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::BlockingGetPeekAdapter<{argument}>"
@@ -590,7 +591,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             else:
                 methods += "virtual void invalidate_direct_mem_ptr(sc_dt::uint64, sc_dt::uint64) override = 0; "
-        if fifo_family in ("tlm::tlm_blocking_get_if", "tlm::tlm_blocking_peek_if"):
+        if fifo_family in ("tlm::tlm_blocking_get_if", "tlm::tlm_blocking_peek_if", "tlm::tlm_blocking_get_peek_if"):
             value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
             methods += f"using blocking_value_pair = std::pair<{value}, bool>; "
         cppyy.cppdef(

@@ -26,7 +26,7 @@ name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 cases = []
 for scalar in ("long long", "unsigned long long", "long double"):
-    for contract in (tlm.tlm_blocking_get_if, tlm.tlm_blocking_peek_if):
+    for contract in (tlm.tlm_blocking_get_if, tlm.tlm_blocking_peek_if, tlm.tlm_blocking_get_peek_if):
         owner = Owner()
         port = sc.sc_port[contract[scalar]]()
         port(owner)
@@ -54,11 +54,13 @@ namespace multiword_completion {
 """)
 helpers = {}
 for index, (scalar, contract, owner, port) in enumerate(cases):
-    method = "get" if contract == tlm.tlm_blocking_get_if else "peek"
+    method = "peek" if contract == tlm.tlm_blocking_peek_if else "get"
     cppyy.cppdef(
         f"/** Borrow interface during blocking service; caller releases GIL, adapter reacquires it. */ "
         f"bool multiword_helper_{index}(tlm::{contract.__cpp_name__.split('::')[-1]}<{scalar}>& channel) "
-        f"{{ return multiword_completion::{method}<{scalar}>(channel); }}"
+        f"{{ return multiword_completion::{method}<{scalar}>(channel)"
+        + (f" && multiword_completion::peek<{scalar}>(channel)" if contract == tlm.tlm_blocking_get_peek_if else "")
+        + "; }"
     )
     helper = getattr(cppyy.gbl, f"multiword_helper_{index}")
     helper.__release_gil__ = True
@@ -70,13 +72,13 @@ def consumer():
     """Check callback count and elapsed service time for every native type."""
     for scalar, contract, owner, port in cases:
         assert helpers[id(port)](port.get_interface())
-        assert owner.calls == 2
+        assert owner.calls == (4 if contract == tlm.tlm_blocking_get_peek_if else 2)
     records.append(str(sc.sc_time_stamp()))
 
 
 handle = sc.sc_spawn(consumer, "consumer")
-sc.sc_start(13, sc.SC_NS)
-assert records == ["12 ns"], records
+sc.sc_start(25, sc.SC_NS)
+assert records == ["24 ns"], records
 assert handle.terminated()
 sc.sc_stop()
 print("MULTIWORD_TLM_COMPLETION_OK")
