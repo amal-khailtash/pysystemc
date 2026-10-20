@@ -30,6 +30,13 @@ GitHub Pages and the separate TestPyPI workflow are removed.
 Contributor and release flow
 ----------------------------
 
+Use ``<type>/<short-description>`` for contributor branches in both repositories:
+``feat/...``, ``fix/...``, ``ci/...``, ``docs/...``, or ``test/...``. Use lowercase
+words separated by hyphens, for example ``ci/consolidate-workflows``. Target
+``main`` and use the same branch name when one change spans both repositories.
+Release Please owns its generated ``release-please--branches--main--components--<package>``
+branch; let it manage that name rather than creating manual release branches.
+
 Work on a branch, open a PR, and wait for title, Tests and coverage, Build
 distributions, and Build documentation checks to pass. Squash-merge with the
 Conventional Commit PR title and enable automatic deletion of merged branches.
