@@ -26,6 +26,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Validate floating FIFO value-returning, caller-output blocking, and nonblocking callback outputs for infinities, NaN, signed zero, and finite recovery against independent native SystemC FIFOs.
 
 ### CI
+- Match the verified pyipxact-de uv trusted-publishing and attestation flow while retaining native wheel validation.
 - Consolidate numbered PR, CI, release, and publication workflows; reuse validated distributions and trigger release docs after PyPI.
 
 
