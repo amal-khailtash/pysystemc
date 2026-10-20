@@ -16,6 +16,61 @@ _classes = {}
 _protocol_interfaces = {}
 
 
+def release_interface_callbacks():
+    """Release structural callback owners after the kernel has stopped.
+
+    Returns:
+        Number of adapters whose Python owners were released.
+
+    Raises:
+        RuntimeError: If simulation has not completed a native stop.
+
+    Native adapters remain retained because ports borrow their addresses. Call
+    this after all end-of-simulation hooks and final interface/trace reads have
+    completed. Subsequent structural callbacks raise RuntimeError. This does
+    not delete native channels, reset the kernel or release process callbacks.
+    Call from Python while holding the GIL, outside a running simulation.
+    """
+    if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_STOPPED:
+        raise RuntimeError("interface callbacks can only be released after simulation stop")
+    released = 0
+    for index, (interface, owner, adapter) in enumerate(_owners):
+        if owner is not None:
+            adapter._implementation = None
+            adapter._reference_results.clear()
+            _owners[index] = (interface, None, adapter)
+            released += 1
+    return released
+
+
+def _fifo_integer(value, native_type, method):
+    """Validate fundamental callbacks before conversion to native FIFO storage.
+
+    Args:
+        value: Python callback result.
+        native_type: Exact fundamental C++ type spelling.
+        method: Callback name used in error diagnostics.
+
+    Returns:
+        The unchanged value for valid native-width integers or other datatypes.
+
+    Raises:
+        TypeError: For invalid bool/numeric types or out-of-range integral results.
+    """
+    if native_type == "bool" and not isinstance(value, bool):
+        raise TypeError(f"{method} must return bool for a bool FIFO")
+    if native_type in ("float", "double", "long double") and (
+        isinstance(value, bool) or not isinstance(value, (int, float))
+    ):
+        raise TypeError(f"{method} must return a numeric value for a {native_type} FIFO")
+    if native_type in _SCALAR_TYPES and native_type not in ("bool", "char", "float", "double", "long double"):
+        bits = cppyy.sizeof(native_type) * 8
+        lower, upper = (0, 2**bits) if native_type.startswith("unsigned") else (-(2 ** (bits - 1)), 2 ** (bits - 1))
+        if isinstance(value, bool) or not isinstance(value, int) or not lower <= value < upper:
+            raise TypeError(f"{method} must return a native {native_type} integer in range")
+    return value
+
+
 def _annotation_type(annotation, *, result=False):
     """Translate unambiguous annotations, rejecting implicit integer widths/references."""
     if annotation in (None, type(None)) and result:
@@ -221,6 +276,45 @@ def _adapt(interface, implementation, factory):
     methods = _METHODS.get(family)
     if methods is None:
         raise TypeError(f"automatic Python binding is not supported for {interface.__cpp_name__}")
+    for native_interface, owner, adapter in _owners:
+        if owner is implementation and (native_interface == interface or isinstance(adapter, interface)):
+            return adapter
+    candidates = {
+        "sc_core::sc_signal_in_if": "sc_signal_inout_if",
+        "sc_core::sc_signal_write_if": "sc_signal_inout_if",
+        "sc_core::sc_fifo_blocking_in_if": "sc_fifo_in_if",
+        "sc_core::sc_fifo_nonblocking_in_if": "sc_fifo_in_if",
+        "sc_core::sc_fifo_blocking_out_if": "sc_fifo_out_if",
+        "sc_core::sc_fifo_nonblocking_out_if": "sc_fifo_out_if",
+    }
+    combined = candidates.get(family)
+    if combined:
+        value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+        required = set(_METHODS["sc_core::" + combined].values())
+        if combined == "sc_signal_inout_if":
+            required.discard("get_writer_policy")
+            if value in _SCALAR_TYPES:
+                required.discard("get_data_ref")
+            if value in ("bool", "sc_dt::sc_logic"):
+                required.update(("posedge", "negedge", "posedge_event", "negedge_event"))
+        if all(callable(getattr(implementation, method, None)) for method in required):
+            return _adapt(getattr(cppyy.gbl.sc_core, combined)[value], implementation, factory)
+    tlm_candidates = {
+        "tlm::tlm_blocking_get_if": "tlm_get_peek_if",
+        "tlm::tlm_nonblocking_get_if": "tlm_get_peek_if",
+        "tlm::tlm_blocking_peek_if": "tlm_get_peek_if",
+        "tlm::tlm_nonblocking_peek_if": "tlm_get_peek_if",
+        "tlm::tlm_get_if": "tlm_get_peek_if",
+        "tlm::tlm_peek_if": "tlm_get_peek_if",
+        "tlm::tlm_blocking_get_peek_if": "tlm_get_peek_if",
+        "tlm::tlm_nonblocking_get_peek_if": "tlm_get_peek_if",
+    }
+    combined = tlm_candidates.get(family)
+    if combined and all(
+        callable(getattr(implementation, method, None)) for method in _METHODS["tlm::" + combined].values()
+    ):
+        value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+        return _adapt(getattr(cppyy.gbl.tlm, combined)[value], implementation, factory)
     if family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
         methods = dict(methods)
         value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
@@ -241,18 +335,18 @@ def _adapt(interface, implementation, factory):
             continue
         if not callable(getattr(implementation, method, None)):
             raise TypeError(f"{family} requires callable {method}")
-    for native_interface, owner, adapter in _owners:
-        if native_interface == interface and owner is implementation:
-            return adapter
     if interface not in _classes:
         base = factory(interface, _copy_put=True) if family == "tlm::tlm_blocking_put_if" else factory(interface)
         output_pair = getattr(base, "output_pair", None)
         scalar_pair = getattr(base, "scalar_pair", None)
+        fifo_scalar_pair = getattr(base, "fifo_scalar_pair", None)
         callbacks = {}
         for native_name, python_name in methods.items():
 
             def forward(self, *args, _method=python_name):
                 """Forward a native callback to the retained ordinary Python method."""
+                if self._implementation is None:
+                    raise RuntimeError("structural interface callbacks have been released")
                 if (
                     family == "sc_core::sc_signal_inout_if"
                     and _method == "get_writer_policy"
@@ -272,6 +366,9 @@ def _adapt(interface, implementation, factory):
                     copy.__assign__(args[0])
                     args = (copy, *args[1:])
                 result = getattr(self._implementation, _method)(*args)
+                if fifo_scalar_pair is not None and _method == "read":
+                    result = _fifo_integer(result, interface.__cpp_name__.split("<", 1)[1].removesuffix(">"), _method)
+                    return fifo_scalar_pair(result, True)
                 if (
                     (
                         _method == "write"
@@ -357,6 +454,9 @@ def _adapt(interface, implementation, factory):
                     if scalar == "bool":
                         if not isinstance(result, bool):
                             raise TypeError("read must return bool for a bool signal")
+                    elif scalar in ("float", "double", "long double"):
+                        if isinstance(result, bool) or not isinstance(result, (int, float)):
+                            raise TypeError(f"read must return a numeric value for a {scalar} signal")
                     elif scalar not in ("float", "double", "long double", "char"):
                         bits = cppyy.sizeof(scalar) * 8
                         unsigned = scalar.startswith("unsigned")
@@ -373,6 +473,9 @@ def _adapt(interface, implementation, factory):
                 if _method in ("nb_get", "nb_peek", "nb_read"):
                     if not isinstance(result, tuple) or len(result) != 2 or not isinstance(result[0], bool):
                         raise TypeError(f"{_method} must return a (bool, value) tuple")
+                    if _method == "nb_read":
+                        value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+                        result = (result[0], _fifo_integer(result[1], value_type, _method))
                     if output_pair is not None:
                         if _method in ("nb_get", "nb_peek") and not result[0] and result[1] is None:
                             return output_pair()
@@ -428,6 +531,8 @@ class PortTemplate:
                 Raises TypeError for unsupported interfaces or missing callbacks.
                 Native binding diagnostics and policies remain SystemC's own.
                 """
+                if isinstance(implementation, cppyy.gbl.sc_core.sc_export_base):
+                    return native_bind(port, implementation.get_interface())
                 if isinstance(implementation, cppyy.gbl.sc_core.sc_interface) or isinstance(
                     implementation, cppyy.gbl.sc_core.sc_port_base
                 ):

@@ -27,6 +27,7 @@ from ._channel_interfaces import channel_interface as channel_interface
 from ._channel_interfaces import declare_interface as declare_interface
 from ._interfaces import PortTemplate as _PortTemplate
 from ._interfaces import interface as interface
+from ._interfaces import release_interface_callbacks as release_interface_callbacks
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
 
@@ -365,6 +366,7 @@ __all__ = sorted(
         "sc_stop",
         "vcd_trace",
         "interface",
+        "release_interface_callbacks",
         "declare_interface",
         "channel_interface",
         "read_interface",
