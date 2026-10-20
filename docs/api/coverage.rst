@@ -280,3 +280,8 @@ B3/C1 lifetime checks capture distinct readiness-event addresses for standalone
 get, standalone peek, and both full get/peek operations. All four addresses
 remain unchanged after callback owners are collected. This proves retained
 event storage for these views, not safe deletion of the native adapters.
+
+B3/C1 post-release checks include both blocking caller-output get/peek overloads
+through standalone and full adapters. Rejected callbacks preserve distinct
+output sentinels. Full-adapter readiness callbacks reject access as standalone
+callbacks do; these checks do not delete native adapter storage.

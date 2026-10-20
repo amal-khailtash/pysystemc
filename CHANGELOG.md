@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Tests
+- Assert released standalone/full TLM blocking caller-output overloads preserve output and full readiness callbacks reject access.
 - Verify standalone and full TLM readiness events remain distinct and preserve native addresses after callback-owner cleanup.
 - Check released standalone get/peek readiness callbacks reject access and native nonblocking get preserves caller output after owner cleanup.
 - Extend existing interface reset/kill coverage to signed/unsigned 128-bit values, preserving high bits and signed copied arguments across 891 combinations.

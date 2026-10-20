@@ -134,7 +134,8 @@ sampled storage on rejection and recover for float/double/long double.
 ``release_interface_callbacks()`` releases structural owners and retained results
 after native stop; adapters remain alive and later callbacks reject access.
 Standalone get/peek readiness rejects post-release access, while failed native
-nonblocking get/peek calls preserve caller outputs. Adapter-owned readiness events
+blocking and nonblocking get/peek calls preserve caller outputs. Full and
+standalone readiness callbacks reject access after cleanup. Adapter-owned readiness events
 retain their native addresses after owner cleanup. Native teardown remains open.
 Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
 reset/kill cleanup ordering in timed native-process tests.
