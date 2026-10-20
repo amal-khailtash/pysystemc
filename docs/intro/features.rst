@@ -1193,3 +1193,8 @@ services complete with exact values, callback counts, and simulation time.
 Standalone combined get and peek readiness events retain native address identity
 through their inherited nonblocking interfaces. Across four multiword/wide types,
 observers run once at 1 ns after delayed notification and never at initialization.
+
+Standalone get/peek nonblocking callbacks reject malformed tuple lengths,
+non-bool success flags, and nonconvertible successful values. Borrowed caller
+outputs remain unchanged and valid copied samples recover after each failure
+for all four tested multiword/wide types.

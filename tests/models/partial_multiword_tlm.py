@@ -13,6 +13,7 @@ class Owner:
         self.failure = False
         self.invalid = False
         self.available = False
+        self.nb_failure = None
         self.wide = wide
         setattr(self, operation, self.sample)
         setattr(self, "nb_" + operation, self.try_sample)
@@ -40,6 +41,12 @@ class Owner:
         """Copy a ready value without waiting."""
         if self.failure:
             raise RuntimeError("partial nonblocking failure")
+        if self.nb_failure == "flag":
+            return 1, self.value()
+        if self.nb_failure == "value":
+            return True, object()
+        if self.nb_failure == "shape":
+            return (True,)
         return (True, self.value()) if self.available else (False, None)
 
 
@@ -117,6 +124,11 @@ bool partial_reject_{index}(tlm::tlm_{operation}_if<{scalar}>& channel, bool blo
         value_reject = getattr(cppyy.gbl, f"partial_value_reject_{index}")
         assert value_reject(native)
         owner.failure = False
+        for failure in ("flag", "value", "shape"):
+            owner.nb_failure = failure
+            assert reject(native, False)
+            owner.nb_failure = None
+            assert nb(native, True)
         owner.invalid = True
         assert value_reject(native) and reject(native, True)
         owner.invalid = False
