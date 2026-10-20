@@ -40,6 +40,7 @@ name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 cases = []
 for scalar in (
+    "char",
     "signed char",
     "unsigned char",
     "short",
@@ -123,7 +124,11 @@ for scalar, owner, port in cases + additional:
 for scalar, owner, port in cases:
     native = port.get_interface()
     bits = cppyy.sizeof(scalar) * 8
-    low, high = (0, 2**bits - 1) if scalar.startswith("unsigned") else (-(2 ** (bits - 1)), 2 ** (bits - 1) - 1)
+    low, high = (
+        (0, 2**bits - 1)
+        if scalar.startswith("unsigned") or (scalar == "char" and not cppyy.gbl.std.numeric_limits["char"].is_signed)
+        else (-(2 ** (bits - 1)), 2 ** (bits - 1) - 1)
+    )
     # char proxies can expose a one-character Python string; native checks below
     # establish numeric output behavior for those specializations.
     for invalid in (True, 1.5, object(), low - 1, high + 1):
@@ -144,7 +149,7 @@ for scalar, owner, port in cases:
         owner.value = value
         result = native.read()
         numeric = ord(result) if isinstance(result, str) else result
-        if scalar == "signed char" and numeric >= 128:
+        if scalar in ("char", "signed char") and low < 0 and numeric >= 128:
             numeric -= 256
         assert numeric == value, (scalar, result, value)
 for scalar, owner, port in additional:

@@ -1156,3 +1156,10 @@ tlm_utils public families
 * ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
+
+Plain ``char`` signal/FIFO callbacks now require integer results within the
+native compiler range (including native signedness). Selected endpoint checks
+compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
+with an independent native reference. Invalid signal samples preserve sampled
+storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
+policy and reset matrices remain open.

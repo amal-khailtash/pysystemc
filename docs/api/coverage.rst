@@ -384,3 +384,10 @@ event-wait get/peek output consumers across the same types/families, asserting
 unwind kind, output preservation, times and counts before mandatory rethrow.
 Native reference records match the corresponding Python output-event subset.
 The native reference does not reproduce all nine callback wait forms.
+
+Plain ``char`` signal/FIFO callbacks now require integer results within the
+native compiler range (including native signedness). Selected endpoint checks
+compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
+with an independent native reference. Invalid signal samples preserve sampled
+storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
+policy and reset matrices remain open.

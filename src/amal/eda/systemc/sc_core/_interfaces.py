@@ -63,9 +63,12 @@ def _fifo_integer(value, native_type, method):
         isinstance(value, bool) or not isinstance(value, (int, float))
     ):
         raise TypeError(f"{method} must return a numeric value for a {native_type} FIFO")
-    if native_type in _SCALAR_TYPES and native_type not in ("bool", "char", "float", "double", "long double"):
+    if native_type in _SCALAR_TYPES and native_type not in ("bool", "float", "double", "long double"):
         bits = cppyy.sizeof(native_type) * 8
-        lower, upper = (0, 2**bits) if native_type.startswith("unsigned") else (-(2 ** (bits - 1)), 2 ** (bits - 1))
+        unsigned = native_type.startswith("unsigned") or (
+            native_type == "char" and not cppyy.gbl.std.numeric_limits["char"].is_signed
+        )
+        lower, upper = (0, 2**bits) if unsigned else (-(2 ** (bits - 1)), 2 ** (bits - 1))
         if isinstance(value, bool) or not isinstance(value, int) or not lower <= value < upper:
             raise TypeError(f"{method} must return a native {native_type} integer in range")
     return value
@@ -464,9 +467,11 @@ def _adapt(interface, implementation, factory):
                     elif scalar in ("float", "double", "long double"):
                         if isinstance(result, bool) or not isinstance(result, (int, float)):
                             raise TypeError(f"read must return a numeric value for a {scalar} signal")
-                    elif scalar not in ("float", "double", "long double", "char"):
+                    else:
                         bits = cppyy.sizeof(scalar) * 8
-                        unsigned = scalar.startswith("unsigned")
+                        unsigned = scalar.startswith("unsigned") or (
+                            scalar == "char" and not cppyy.gbl.std.numeric_limits["char"].is_signed
+                        )
                         lower, upper = (0, 2**bits) if unsigned else (-(2 ** (bits - 1)), 2 ** (bits - 1))
                         if isinstance(result, bool) or not isinstance(result, int) or not lower <= result < upper:
                             raise TypeError(f"read must return a native {scalar} integer in range")

@@ -9,11 +9,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Fixed
+- Validate plain char signal/FIFO callback integers using native signedness before conversion.
 - Preserve master/slave multiword blocking get/peek signatures through native pair-return callbacks.
 - Validate compound TLM FIFO integral blocking/nonblocking callback values before native conversion, preserving caller outputs on rejected results.
 - Use native pair-return callbacks for compound TLM FIFO blocking get/peek so multiword scalar dispatch preserves public value/output overloads.
 
 ### Tests
+- Compare plain char signal references and FIFO output overloads with native endpoints; reject invalid samples and preserve prior storage.
 - Exercise 720 master/slave reset/kill combinations with a 32-consumer native output-unwind reference.
 - Verify compound FIFO/master/slave callback-owner retention, stopped-kernel release and post-release output preservation.
 - Compare scalar signal endpoint and floating special-value semantics with native signals, including callback rejection and recovery.
