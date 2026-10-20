@@ -270,3 +270,8 @@ The B1/B4/C1 reset matrix includes signed and unsigned 128-bit SystemC values
 with bit 127 set. FIFO write and TLM put callback arguments preserve the high
 bit and the negative signed sample before guarded waits unwind. All eleven
 access paths retain the same reset-at-2-ns and kill-at-3-ns ordering assertions.
+
+B3/C1 callback-release evidence covers native nonblocking get and peek output
+preservation after owner cleanup, for standalone and combined views. Standalone
+get/peek readiness callbacks also reject post-release access. Adapter storage
+remains retained because ports borrow it; native teardown is still incomplete.

@@ -133,6 +133,8 @@ Floating signal read/get_data_ref callbacks reject nonnumeric values, preserve
 sampled storage on rejection and recover for float/double/long double.
 ``release_interface_callbacks()`` releases structural owners and retained results
 after native stop; adapters remain alive and later callbacks reject access.
+Standalone get/peek readiness rejects post-release access, while failed native
+nonblocking get/peek calls preserve caller outputs. Native teardown remains open.
 Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
 reset/kill cleanup ordering in timed native-process tests.
 Each path covers timed, event, OR/AND, timed-event/list, cycle and counted-cycle
