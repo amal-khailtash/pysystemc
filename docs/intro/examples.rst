@@ -264,3 +264,35 @@ variants remain untested. The models produce no waveform traces.
 Run the batch comparisons with::
 
    uv run pytest tests/test_upstream.py -k 'performance_fifo or at_one_phase or at_two_phase or at_four_phase or at_optional_extension'
+
+Mixed, delayed and loosely timed TLM
+------------------------------------
+
+The next TLM ports preserve the upstream ``src`` hierarchy under
+``examples/tlm/at_mixed_targets``, ``at_ooo``, ``lt``, ``lt_dmi`` and
+``lt_extension_mandatory``. Shared Python models retain native sockets, payloads,
+byte buffers and DMI pointers for their process lifetime. Mixed targets route to
+three phase styles and stop at 10000 ns. The delayed target adds 700 ns to
+alternating requests. The supplied ``at_ooo`` traffic checks every request before
+sending the next; its comparison verifies delayed responses without claiming a
+new concurrent out-of-order traffic test.
+
+LT preserves blocking delay annotations and zero-offset traffic. LT DMI checks
+native pointer reads/writes, per-initiator value/time sequences, target toggles
+at 0, 100 and 1100 ns, traffic completion and the 1000000 ns limiter. Simultaneous
+independent direct accesses may run in different order; each initiator's full
+ordered timestamps are compared. The source DMI region ends at 4096 for a
+4096-byte memory, and its unsigned invalidation-range calculation can retain a
+cached pointer after target disable. The port preserves those source behaviors;
+the supplied traffic stays within allocated memory.
+
+The mandatory-extension port checks the native initiator-ID extension on
+transport and DMI grant, five word readbacks, all report times and 25 ns pointer
+invalidation. It detaches the retained extension before payload teardown. The
+source run completes at 550 ns. Alternative traffic, debug/error paths, DMI
+boundary accesses, missing-extension failures, clone/copy and platform/build
+variants remain untested. These examples produce no VCD output.
+
+Run these comparisons with::
+
+   uv run pytest tests/test_upstream.py -k 'at_mixed_targets or at_out_of_order or loose_timing or loose_dmi or mandatory_extension'

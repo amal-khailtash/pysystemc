@@ -547,7 +547,7 @@ def test_upstream_performance_fifo_matches_native(tmp_path):
         assert "Total characters transferred: 100000" in python.stdout
 
 
-def _compare_upstream_at(tmp_path, group, target_stems, optional=False):
+def _compare_upstream_at(tmp_path, group, target_stems, optional=False, shared_initiator="select_initiator"):
     """Compare every timed memory operation and protocol report to native C++."""
     import json
     import re
@@ -574,7 +574,7 @@ def _compare_upstream_at(tmp_path, group, target_stems, optional=False):
             "traffic_generator",
             "memory",
             "report",
-            "select_initiator",
+            shared_initiator,
             *target_stems,
             *(("extension_initiator_id",) if optional else ()),
         )
@@ -607,7 +607,8 @@ def _compare_upstream_at(tmp_path, group, target_stems, optional=False):
         r"Info: memory.cpp: (.*?) - print\n      ID: (\d+) COMMAND: (\w+) Length: (\d+)\n      Addr: (\S+) Data: (\S+)"
     )
     records = re.findall(pattern, output)
-    assert len(records) == 128
+    assert len(records) == (len(re.findall(pattern, native.stdout)) if group == "lt_dmi" else 128)
+    assert records
     assert records == re.findall(pattern, native.stdout)
     completion = r"Info: traffic_generator.cpp: (.*?) - traffic_generator_thread\n      Traffic Generator : (\d+)"
     assert re.findall(completion, output) == re.findall(completion, native.stdout)
@@ -617,6 +618,8 @@ def _compare_upstream_at(tmp_path, group, target_stems, optional=False):
         extensions = re.findall(extension, output)
         assert len(extensions) == 128
         assert extensions == re.findall(extension, native.stdout)
+
+    return output, native.stdout
 
 
 def test_upstream_at_one_phase_matches_native(tmp_path):
@@ -637,3 +640,90 @@ def test_upstream_at_four_phase_matches_native(tmp_path):
 def test_upstream_at_optional_extension_matches_native(tmp_path):
     """Compare native optional-ID extensions and mixed target timing."""
     _compare_upstream_at(tmp_path, "at_extension_optional", ("at_target_4_phase", "at_target_2_phase"), True)
+
+
+def test_upstream_at_mixed_targets_matches_native(tmp_path):
+    """Compare all three destination timings and mixed traffic completion."""
+    _compare_upstream_at(tmp_path, "at_mixed_targets", ("at_target_1_phase", "at_target_2_phase", "at_target_4_phase"))
+
+
+def test_upstream_at_out_of_order_matches_native(tmp_path):
+    """Compare slow alternating target responses against native source."""
+    _compare_upstream_at(tmp_path, "at_ooo", ("at_target_2_phase",))
+
+
+def test_upstream_loose_timing_matches_native(tmp_path):
+    """Compare blocking LT target memory and completed traffic timestamps."""
+    _compare_upstream_at(tmp_path, "lt", ("at_target_1_phase", "lt_target"), shared_initiator="lt_initiator")
+
+
+def test_upstream_loose_dmi_matches_native(tmp_path):
+    """Compare native pointer accesses, toggles and final traffic times."""
+    import re
+
+    output, native = _compare_upstream_at(
+        tmp_path, "lt_dmi", ("lt_dmi_target", "dmi_memory"), shared_initiator="lt_dmi_initiator"
+    )
+    pattern = r"Info: dmi_memory.cpp: (.*?) - print\n      ID: (\d+) COMMAND: (\w+) Length: (\d+)\n      Addr: (\S+) Data: (\S+)"
+    records = re.findall(pattern, output)
+    native_records = re.findall(pattern, native)
+    assert records
+    for identifier in ("101", "102"):
+        assert [r for r in records if r[1] == identifier] == [r for r in native_records if r[1] == identifier]
+    toggles = r"Info: lt_dmi_target.cpp: (.*?) - toggle_dmi_method\n      (.*)"
+    assert len(re.findall(toggles, output)) == 6
+    assert re.findall(toggles, output) == re.findall(toggles, native)
+
+
+def test_upstream_mandatory_extension_matches_native(tmp_path):
+    """Compare all mandatory-extension transport, DMI and invalidation reports."""
+    import json
+    import re
+    import shlex
+    from pathlib import Path
+
+    directory = ROOT / "submodules/systemc/examples/tlm/lt_extension_mandatory"
+    common = directory.parent / "common"
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import json; from amal.eda.systemc import _runtime as r; print(json.dumps([str(r._headers), str(r._library)]))",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert probe.returncode == 0, probe.stderr
+    headers, library = json.loads(probe.stdout.splitlines()[-1])
+    executable = tmp_path / "native_mandatory"
+    sources = list((directory / "src").glob("*.cpp")) + [
+        common / "src/extension_initiator_id.cpp",
+        common / "src/report.cpp",
+    ]
+    command = [
+        *shlex.split(os.environ.get("CXX", "c++")),
+        "-std=c++17",
+        "-I",
+        headers,
+        "-I",
+        str(directory / "include"),
+        "-I",
+        str(common / "include"),
+        *map(str, sources),
+        library,
+        f"-Wl,-rpath,{Path(library).parent}",
+        "-pthread",
+        "-o",
+        str(executable),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stderr
+    native = subprocess.run([str(executable)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert native.returncode == 0, native.stderr
+    output = run_example(tmp_path, "examples/tlm/lt_extension_mandatory/src/lt_extension_mandatory.py")
+    pattern = r"Info: (lt_(?:initiator|target)_extension_mandatory.cpp): (.*?) - (\w+)\n      ([^\n]+)"
+    records = re.findall(pattern, output)
+    assert len(records) > 30
+    assert records == re.findall(pattern, native.stdout)
+    assert sum("Received TLM_OK_RESPONSE, Data:" in record[-1] for record in records) == 5

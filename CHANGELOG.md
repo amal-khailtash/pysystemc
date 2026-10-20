@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Python ports of mixed/delayed AT targets, LT, LT DMI and mandatory extensions
+  with native memory/timing and extension lifecycle comparisons. Preserve source
+  DMI range/invalidation behavior and retain pointer buffers through callbacks.
 - Python ports of the performance FIFO and four approximately timed TLM examples
   (one/two/four-phase and optional extension), with native value/time comparisons,
   retained payload buffers and checked traffic completion.

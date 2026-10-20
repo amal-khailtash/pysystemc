@@ -108,7 +108,7 @@ ADL, inherited access/ambiguity, callback retention, GIL and error behavior stil
 require validation where recorded as untested. Known failures remain failing.
 
 All 33 upstream executable targets have source/input/configuration records:
-26 native/Python baseline comparisons pass (performance FIFO uses a fixed seed), and 7 targets remain unported or
+31 native/Python baseline comparisons pass (performance FIFO uses a fixed seed), and 2 targets remain unported or
 uncompared. Alternate inputs, platforms and build configurations remain untested.
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
@@ -235,11 +235,11 @@ Common compiler/platform build alternatives remain outside this baseline; see
 * ☑ ``tlm/at_2_phase``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 * ☑ ``tlm/at_4_phase``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 * ☑ ``tlm/at_extension_optional``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
-* ☐ ``tlm/at_mixed_targets``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/at_ooo``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/lt``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/lt_dmi``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/lt_extension_mandatory``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``tlm/at_mixed_targets``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/at_ooo``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/lt``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/lt_dmi``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/lt_extension_mandatory``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 * ☐ ``tlm/lt_mixed_endian``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``tlm/lt_temporal_decouple``: complete executable-variant audit and Python/native equivalence.
 

@@ -31,8 +31,8 @@ def status_name(status):
 class Bus(sc.sc_module):
     """Route native payloads through source request/response exclusion rules."""
 
-    def __init__(self, name):
-        """Create two upstream/downstream sockets and retained pending maps."""
+    def __init__(self, name, target_count=2):
+        """Create upstream/downstream sockets and retained pending maps."""
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
         self.requests = Queue("requests")
@@ -46,6 +46,7 @@ class Bus(sc.sc_module):
             target = tlm_utils.callback_target_socket(f"target_{index}")
             target.register_nb_transport_fw(lambda gp, phase, delay, i=index: self.forward(i, gp, phase, delay))
             self.targets.append(target)
+        for index in range(target_count):
             initiator = tlm_utils.callback_initiator_socket(f"initiator_{index}")
             initiator.register_nb_transport_bw(self.backward)
             self.initiators.append(initiator)
@@ -82,7 +83,7 @@ class Bus(sc.sc_module):
             sc.wait(self.requests.event)
             while (gp := self.requests.pop()) is not None:
                 destination = int(gp.get_address()) >> 28
-                assert destination < 2
+                assert destination < len(self.initiators)
                 gp.set_address(int(gp.get_address()) & 0xFFFFFFF)
                 info = self.pending[self.key(gp)]
                 info[1] = destination
@@ -141,6 +142,11 @@ class Target(sc.sc_module):
         self.identifier, self.style, self.optional = identifier, style, optional
         self.memory = bytearray(4096)
         self.count = 1
+        self.accept_delay = 10
+        self.component_file = f"at_target_{style}_phase.cpp"
+        self.read_delay = 50
+        self.write_delay = 30
+        self.out_of_order = False
         self.requests = Queue("end_requests")
         self.responses = Queue("responses")
         self.end_response = sc.sc_event("end_response")
@@ -155,11 +161,11 @@ class Target(sc.sc_module):
 
     def log(self, function, message):
         """Print source component reports at the current native time."""
-        report(f"at_target_{self.style}_phase.cpp", function, f"Target: {self.identifier} {message}")
+        report(self.component_file, function, f"Target: {self.identifier} {message}")
 
     def latency(self, gp):
         """Return the source read/write memory latency."""
-        return ns(30 if gp.get_command() == tlm.TLM_WRITE_COMMAND else 50)
+        return ns(self.write_delay if gp.get_command() == tlm.TLM_WRITE_COMMAND else self.read_delay)
 
     def operation(self, gp):
         """Copy native payload bytes, validate attributes and print memory records."""
@@ -195,7 +201,7 @@ class Target(sc.sc_module):
         assert phase == tlm.BEGIN_REQ
         before = f"nb_transport_fw (GP, {phase_name(phase)}, {delay})"
         if self.style == 4:
-            self.requests.notify(gp, delay + ns(10))
+            self.requests.notify(gp, delay + ns(self.accept_delay))
             self.log(
                 "nb_transport_fw",
                 before + f"\n      Target: {self.identifier} ACCEPTED (GP, {phase_name(phase)}, {delay})",
@@ -205,12 +211,13 @@ class Target(sc.sc_module):
             self.count += 1
             self.log("nb_transport_fw", before)
             self.operation(gp)
-            delay.__assign__(delay + self.latency(gp) + ns(10))
+            delay.__assign__(delay + self.latency(gp) + ns(self.accept_delay))
             self.log("nb_transport_fw", f"COMPLETED (GP, {phase_name(phase)}, {delay})")
             return tlm.TLM_COMPLETED
+        extra = ns(700) if self.out_of_order and self.count % 2 else ns(0)
         self.count += 1
-        self.responses.notify(gp, self.latency(gp) + ns(10))
-        delay.__assign__(ns(10))
+        self.responses.notify(gp, self.latency(gp) + ns(self.accept_delay) + extra)
+        delay.__assign__(ns(self.accept_delay))
         phase.__assign__(tlm.END_REQ)
         detail = f"\n      Target: {self.identifier} transaction moved to send-response PEQ " if self.style == 2 else ""
         self.log(
@@ -253,6 +260,8 @@ class Initiator(sc.sc_module):
         module_name = sc.sc_module_name(name)
         super().__init__(module_name)
         self.identifier = identifier
+        self.base_windows = (0, 1)
+        self.base_offset = (identifier - 100) << 8
         self.optional = optional
         self.extensions = []
         if optional:
@@ -301,7 +310,7 @@ class Initiator(sc.sc_module):
                 for offset in range(16):
                     gp, data = self.payloads[serial % 2], self.buffers[serial % 2]
                     serial += 1
-                    address = ((self.identifier - 100) << 8) + offset * 4 + (window << 28)
+                    address = self.base_offset + offset * 4 + (self.base_windows[window] << 28)
                     value = address if window == 0 else (~address & 0xFFFFFFFF)
                     for i, byte in enumerate(value.to_bytes(4, "little")):
                         data[i] = byte
