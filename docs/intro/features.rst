@@ -1180,6 +1180,7 @@ adapter selection and verify both blocking overloads, readiness, copied outputs,
 exception preservation and recovery, and two 1 ns services per owner.
 
 Reset and kill cleanup also cover standalone combined TLM get and peek owners
-that expose only their requested operation. The structural matrix checks 567
-combinations across seven value types, nine wait forms, and nine access paths,
+that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
+The structural matrix checks 693 combinations across seven value types, nine
+wait forms, and eleven access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
