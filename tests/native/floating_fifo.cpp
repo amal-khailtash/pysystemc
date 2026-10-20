@@ -28,7 +28,13 @@ void check(const char* name)
     bool success = fifo.nb_read(result);
     bool nonblocking = success && (std::isnan(value) ? std::isnan(result)
                                                      : result == value && std::signbit(result) == std::signbit(value));
-    if (!blocking || !nonblocking) throw std::runtime_error("floating FIFO mismatch");
+    sc_core::sc_start(sc_core::SC_ZERO_TIME);
+    fifo.write(value);
+    sc_core::sc_start(sc_core::SC_ZERO_TIME);
+    fifo.read(result);
+    bool assigned =
+      std::isnan(value) ? std::isnan(result) : result == value && std::signbit(result) == std::signbit(value);
+    if (!blocking || !nonblocking || !assigned) throw std::runtime_error("floating FIFO mismatch");
     std::cout << "FLOAT_FIFO " << name << " " << blocking << " " << nonblocking << "\n";
     sc_core::sc_start(sc_core::SC_ZERO_TIME);
   }

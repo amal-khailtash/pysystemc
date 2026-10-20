@@ -64,6 +64,16 @@ cppyy.cppdef("""
  * is released after clearing the Python callback error.
  */
 namespace scalar_fifo_check {
+ /** Compare blocking assignment into caller-owned floating storage.
+  * Storage lives only for this call. The adapter manages callback GIL state;
+  * no reference is retained and the configured owner does not wait.
+  */
+ template<class T> bool floating_blocking_output(sc_core::sc_fifo_in_if<T>& channel, double expected) {
+   T output = 7;
+   channel.read(output);
+   if (std::isnan(expected)) return std::isnan(output);
+   return output == T(expected) && std::signbit(output) == std::signbit(expected);
+ }
  /** Compare successful floating outputs, including NaN and signed zero.
   * The interface and output are borrowed for this call. Python callbacks hold
   * the GIL through the adapter; this helper neither retains storage nor waits.
@@ -138,10 +148,12 @@ for scalar, owner, port in additional:
                 assert result == value, (scalar, result, value)
                 assert math.copysign(1.0, result) == math.copysign(1.0, value)
             assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, value), scalar
+            assert cppyy.gbl.scalar_fifo_check.floating_blocking_output[scalar](native, value), scalar
             print("FLOAT_FIFO", scalar.replace(" ", "_"), 1, 1)
         owner.value = 1.25
         assert native.read() == 1.25, scalar
         assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, 1.25), scalar
+        assert cppyy.gbl.scalar_fifo_check.floating_blocking_output[scalar](native, 1.25), scalar
         print("FLOAT_FIFO", scalar.replace(" ", "_"), 1, 1)
     owner.success = False
     assert cppyy.gbl.scalar_fifo_check.failed_output[scalar](native), scalar

@@ -1121,7 +1121,8 @@ Floating FIFO callback samples
 -----------------------------
 
 Structural float, double, and long double FIFO reads preserve infinities, NaN,
-and signed zero through blocking and successful nonblocking reads. Finite
+and signed zero through value-returning reads, caller-output blocking reads,
+and successful nonblocking reads. Finite
 recovery is checked in the same simulation and compared with independent native
 SystemC FIFO runs for each type. Complete conversion, tracing, reset,
 and native-reference matrices remain open.
