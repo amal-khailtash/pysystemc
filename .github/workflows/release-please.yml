@@ -1,0 +1,35 @@
+name: Release automation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: release-please-main
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # A personal/App token makes the release PR trigger normal PR CI.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+  publish:
+    needs: release
+    if: needs.release.outputs.created == 'true'
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write

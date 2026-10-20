@@ -1,31 +1,51 @@
 name: Publish Python distributions
 on:
-  push:
-    tags: ['v*']
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
   workflow_dispatch:
     inputs:
       repository:
         description: Publication destination
         type: choice
         options: [testpypi, pypi]
-        default: testpypi
+        default: pypi
+        required: true
+      tag:
+        description: Existing release tag to publish (for example v0.12.0)
+        type: string
         required: true
 permissions:
   contents: read
+concurrency:
+  group: publish-${{ inputs.tag }}
+  cancel-in-progress: false
 jobs:
+  tests:
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ inputs.tag }}
+    secrets: inherit
   build:
+    needs: tests
     runs-on: ubuntu-latest
     container: quay.io/pypa/manylinux_2_28_x86_64
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
       - name: Check release tag matches package version
-        if: github.event_name == 'push'
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
+          git show-ref --verify "refs/tags/$RELEASE_TAG"
+          git merge-base --is-ancestor HEAD origin/main
           uv run --no-project python -c 'import os, tomllib; from pathlib import Path; version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]; assert os.environ["RELEASE_TAG"] == "v" + version, "Release tag must match pyproject.toml version"'
       - name: Build native dependencies and distributions
         run: |
@@ -43,6 +63,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
@@ -63,7 +85,7 @@ jobs:
   publish:
     needs: verify
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'push' && 'pypi' || inputs.repository }}
+    environment: ${{ inputs.repository || 'pypi' }}
     permissions:
       id-token: write
     steps:
@@ -77,14 +99,14 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
       - name: Publish to PyPI
-        if: github.event_name == 'push' || inputs.repository == 'pypi'
+        if: inputs.repository != 'testpypi'
         uses: pypa/gh-action-pypi-publish@release/v1
   documentation:
     needs: publish
-    if: github.event_name == 'push' || inputs.repository == 'pypi'
+    if: inputs.repository != 'testpypi'
     uses: ./.github/workflows/readthedocs.yml
     with:
-      ref: ${{ github.ref }}
-      version: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
+      ref: ${{ inputs.tag }}
+      version: ${{ inputs.tag }}
     secrets:
       READTHEDOCS_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}

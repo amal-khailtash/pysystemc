@@ -11,8 +11,8 @@ assert values, times and lifecycle ordering, and inspect waveform transitions.
 Run targeted tests while implementing a change, then ``make coverage``. Python
 statement coverage measures the binding code, not native SystemC API completeness.
 Compare Python models with native reference models. Build release artifacts with
-``uv build --out-dir dist/0.5.0`` and run
-``make test-wheel PACKAGE_VERSION=0.5.0`` outside dependency overrides. The wheel
+``uv build`` and run
+``make test-wheel`` outside dependency overrides. The wheel
 check covers native startup, console arguments/status and installed tutorials.
 
 Native library ownership
@@ -64,3 +64,7 @@ license and notices, transitive/solver dependencies, redistribution obligations
 and compatibility. Do not infer a dependency's license from its organization.
 Complete that concrete review before distribution; no blanket license approval
 is implied by listing an integration on the roadmap.
+
+Work on a feature branch and submit a PR with a Conventional Commit title.
+Contributors do not edit versions or create release tags. See
+:doc:`../development/releases` for release PRs and maintainer service setup.
