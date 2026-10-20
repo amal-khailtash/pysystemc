@@ -8,7 +8,7 @@ first = sc.sc_event("first")
 second = sc.sc_event("second")
 wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
 value_types = (int, "float", "double", "long double", sc_dt.sc_biguint[137])
-paths_per_type = 7
+paths_per_type = 9
 cases_per_type = paths_per_type * len(wait_kinds)
 
 
@@ -72,6 +72,17 @@ class Owner:
             records.append((self.index, "callback-cleanup", str(sc.sc_time_stamp())))
 
 
+class PartialOwner:
+    """Expose only one combined TLM operation to prevent full-interface selection."""
+
+    def __init__(self, index, operation):
+        """Retain guarded callback state and install the requested family."""
+        self.owner = Owner(index)
+        setattr(self, operation, getattr(self.owner, operation))
+        setattr(self, "nb_" + operation, lambda: (False, None))
+        setattr(self, "nb_can_" + operation, lambda: False)
+
+
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 ports = []
@@ -86,12 +97,15 @@ for value_type in value_types:
             tlm.tlm_blocking_peek_if[value_type],
             tlm.tlm_blocking_get_peek_if[value_type],
             tlm.tlm_blocking_get_peek_if[value_type],
+            tlm.tlm_get_if[value_type],
+            tlm.tlm_peek_if[value_type],
         )
         * len(wait_kinds)
     )
 for index, interface in enumerate(interfaces):
     port = sc.sc_port[interface]()
-    port(Owner(index))
+    path = index % paths_per_type
+    port(PartialOwner(index, "get" if path == 7 else "peek") if path >= 7 else Owner(index))
     ports.append(port)
 del name
 
@@ -108,7 +122,7 @@ def worker(index):
             value[136] = True
         if path == 0:
             native.read()
-        elif path in (1, 5):
+        elif path in (1, 5, 7):
             native.get()
         elif path == 2:
             native.write(value)

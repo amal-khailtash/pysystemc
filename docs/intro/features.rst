@@ -1178,3 +1178,8 @@ multiword-safe bridge. Partial-only owners cover long long, unsigned long long,
 long double, and sc_biguint<137>. Native checks reject accidental full get/peek
 adapter selection and verify both blocking overloads, readiness, copied outputs,
 exception preservation and recovery, and two 1 ns services per owner.
+
+Reset and kill cleanup also cover standalone combined TLM get and peek owners
+that expose only their requested operation. The structural matrix checks 405
+combinations across five value types, nine wait forms, and nine access paths,
+asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
