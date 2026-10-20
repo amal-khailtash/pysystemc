@@ -296,3 +296,28 @@ variants remain untested. These examples produce no VCD output.
 Run these comparisons with::
 
    uv run pytest tests/test_upstream.py -k 'at_mixed_targets or at_out_of_order or loose_timing or loose_dmi or mandatory_extension'
+
+Mixed endian and temporal decoupling
+------------------------------------
+
+``examples/tlm/lt_mixed_endian/src/lt.py`` accepts the source stdin command
+language for 8/16/32-bit loads and stores, CPU switching, memory map, help and
+quit. Native word converters retain the source 32-bit bus lane mapping. The
+comparison checks every command/result from the supplied ``results/input.txt``
+and an added shared-word access through the second target. Native completion
+times also match. Source memory copies ignore converted byte enables; this
+behavior is preserved for the supplied script. Invalid input, oversized stores
+and platform alternatives remain outside the comparison evidence.
+
+``examples/tlm/lt_temporal_decouple/src/lt_temporal_decouple.py`` uses the native
+500 ns quantum keeper alongside the source target that consumes annotations with
+``wait``. Both traffic streams check readbacks; the comparison checks all 128
+memory values/timestamps, both completion times and all 148 ordered quantum-keeper
+report records. Simultaneous memory records compare as a multiset because native
+and Python process scheduling can order ties differently. Alternative quantums,
+traffic, boundary/error paths and build/platform variants remain untested.
+Neither source example writes a waveform.
+
+Run these comparisons with::
+
+   uv run pytest tests/test_upstream.py -k 'mixed_endian or temporal_decoupling'

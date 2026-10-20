@@ -108,8 +108,7 @@ ADL, inherited access/ambiguity, callback retention, GIL and error behavior stil
 require validation where recorded as untested. Known failures remain failing.
 
 All 33 upstream executable targets have source/input/configuration records:
-31 native/Python baseline comparisons pass (performance FIFO uses a fixed seed), and 2 targets remain unported or
-uncompared. Alternate inputs, platforms and build configurations remain untested.
+All 33 native/Python baseline comparisons pass (performance FIFO uses a fixed seed). Alternate inputs, platforms and build configurations remain untested.
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
 
@@ -240,8 +239,8 @@ Common compiler/platform build alternatives remain outside this baseline; see
 * ☑ ``tlm/lt``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 * ☑ ``tlm/lt_dmi``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 * ☑ ``tlm/lt_extension_mandatory``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
-* ☐ ``tlm/lt_mixed_endian``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/lt_temporal_decouple``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``tlm/lt_mixed_endian``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/lt_temporal_decouple``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 
 Packaging, documentation and quality
 ------------------------------------
