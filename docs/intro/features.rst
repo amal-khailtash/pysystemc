@@ -127,6 +127,9 @@ nine wait forms, and fourteen access paths. Interrupted caller-output overloads
 assert unchanged native output before propagating reset/kill unwind.
 An independent native FIFO/TLM reference checks these three output overloads
 across all fourteen types with matching reset/kill times and termination.
+Compound TLM FIFO blocking get/peek adapters use native pair-return callbacks
+for multiword scalar dispatch; selected compound overloads are checked across
+int, long long, unsigned long long and long double.
 Selected inherited TLM readiness-event
 identity is independently compared with native FIFO specializations.
 

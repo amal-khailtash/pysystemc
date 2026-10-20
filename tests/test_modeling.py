@@ -232,7 +232,10 @@ def test_structural_tlm_fifo_debug_and_configuration(tmp_path):
 
 def test_structural_tlm_fifo_compound_interfaces(tmp_path):
     """Verify compound FIFO indexed/ordinary peek and shared blocking queue state."""
-    assert "STRUCTURAL_TLM_FIFO_COMPOUND_OK" in run_example(tmp_path, "tests/models/python_tlm_fifo_compound.py")
+    for scalar in ("int", "long_long", "unsigned_long_long", "long_double"):
+        assert "STRUCTURAL_TLM_FIFO_COMPOUND_OK" in run_example(
+            tmp_path, "tests/models/python_tlm_fifo_compound.py", (scalar,)
+        )
 
 
 def test_native_tlm_quantumkeeper_and_payload_queue(tmp_path):

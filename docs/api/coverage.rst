@@ -311,3 +311,11 @@ starts, two unwinds, terminated consumers, empty channels and final time 4 ns.
 This supplies independent native output/lifecycle evidence for these three
 paths; the native channels wait on their own data events, rather than reproducing
 all nine structural callback wait forms. Safe adapter teardown remains open.
+
+C1 compound ``tlm_fifo_get_if`` blocking callbacks now return an internal native
+pair, preserving public value/output ``get`` and ``peek`` signatures while
+avoiding invalid cppyy multiword scalar dispatcher returns. Compound FIFO
+simulations cover int, long long, unsigned long long and long double, including
+indexed/ordinary peeks, blocking overloads, failed nonblocking output retention,
+shared queue state, configuration defaults and a completed worker at 1 ns.
+The full compound type/error/reset/native-reference matrix remains open.

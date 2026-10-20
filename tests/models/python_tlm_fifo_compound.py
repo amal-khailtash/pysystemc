@@ -3,6 +3,14 @@
 from amal.eda.systemc import sc_core as sc, tlm
 import ctypes
 import cppyy
+import sys
+
+value_type, output_type = {
+    "int": (int, ctypes.c_int),
+    "long_long": ("long long", ctypes.c_longlong),
+    "unsigned_long_long": ("unsigned long long", ctypes.c_ulonglong),
+    "long_double": ("long double", ctypes.c_longdouble),
+}[sys.argv[1] if len(sys.argv) > 1 else "int"]
 
 cppyy.cppdef("""
 /** @brief Inspect FIFO overloads through borrowed native base interfaces.
@@ -118,12 +126,12 @@ class Config:
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 debug, config = Debug(), Config()
-debug_port = sc.sc_port[tlm.tlm_fifo_debug_if[int]]("debug")
+debug_port = sc.sc_port[tlm.tlm_fifo_debug_if[value_type]]("debug")
 config_port = sc.sc_port[tlm.tlm_fifo_config_size_if]("config")
 debug_port(debug)
 config_port(config)
-put_port = sc.sc_port[tlm.tlm_fifo_put_if[int]]("put")
-get_port = sc.sc_port[tlm.tlm_fifo_get_if[int]]("get")
+put_port = sc.sc_port[tlm.tlm_fifo_put_if[value_type]]("put")
+get_port = sc.sc_port[tlm.tlm_fifo_get_if[value_type]]("get")
 put_port(debug)
 get_port(debug)
 del name
@@ -131,7 +139,7 @@ interface = debug_port.get_interface()
 assert interface.used() == 2 and interface.size() == 4
 interface.debug()
 assert debug.calls == 1
-value = ctypes.c_int(-1)
+value = output_type(71)
 assert interface.nb_peek(value, 0) and value.value == 41
 assert interface.nb_peek(value, 1) and value.value == 23
 assert not interface.nb_peek(value, 2) and value.value == 23
@@ -155,10 +163,11 @@ def exercise():
     put.put(19)
     assert put.nb_can_put() and put.nb_put(29)
     assert debug.values == [29, 19, 17, 23]
-    assert cppyy.gbl.fifo_base_reference(get, get)
+    if value_type is int:
+        assert cppyy.gbl.fifo_base_reference(get, get)
     assert not put.nb_put(99)
     assert get.peek() == 23
-    value = ctypes.c_int(-1)
+    value = output_type(71)
     get.peek(value)
     assert value.value == 23
     assert get.nb_peek(value, 0) and value.value == 29

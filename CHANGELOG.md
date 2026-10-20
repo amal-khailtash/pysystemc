@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+- Use native pair-return callbacks for compound TLM FIFO blocking get/peek so multiword scalar dispatch preserves public value/output overloads.
+
 ### Tests
 - Assert interrupted FIFO/TLM blocking caller-output storage stays unchanged before reset/kill unwind is rethrown.
 - Compare caller-output reset/kill semantics with an independent native FIFO/TLM reference across fourteen types.

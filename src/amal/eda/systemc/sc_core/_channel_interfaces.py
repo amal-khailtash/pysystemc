@@ -212,11 +212,12 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             if fifo_family == "tlm::tlm_fifo_get_if":
                 methods += (
+                    f"using blocking_value_pair = std::pair<{value}, bool>; "
                     "private: sc_core::sc_event get_ready, peek_ready; public: "
-                    f"{value} get(tlm::tlm_tag<{value}>* = nullptr) override {{ return get_value(); }} "
-                    f"void get({value}& value) override {{ value = get_value(); }} "
-                    f"{value} peek(tlm::tlm_tag<{value}>* = nullptr) const override {{ return peek_value(); }} "
-                    f"void peek({value}& value) const override {{ value = peek_value(); }} "
+                    f"{value} get(tlm::tlm_tag<{value}>* = nullptr) override {{ return get_value().first; }} "
+                    f"void get({value}& value) override {{ value = get_value().first; }} "
+                    f"{value} peek(tlm::tlm_tag<{value}>* = nullptr) const override {{ return peek_value().first; }} "
+                    f"void peek({value}& value) const override {{ value = peek_value().first; }} "
                     f"bool nb_get({value}& value) override {{ auto result = try_get_value(); "
                     "if (!result.first) return false; value = result.second; return true; } "
                     f"bool nb_peek({value}& value) const override {{ auto result = try_peek_value(); "
@@ -229,7 +230,8 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "{ return peek_ready; } "
                     "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) "
                     "{ get_ready.notify(delay); peek_ready.notify(delay); } "
-                    f"virtual {value} get_value() = 0; virtual {value} peek_value() const = 0; "
+                    "virtual blocking_value_pair get_value() = 0; "
+                    "virtual blocking_value_pair peek_value() const = 0; "
                     f"virtual std::pair<bool, {value}> try_get_value() = 0; "
                     f"virtual std::pair<bool, {value}> try_peek_value() const = 0; "
                     "virtual bool can_get() const = 0; virtual bool can_peek() const = 0; "
