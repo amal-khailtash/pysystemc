@@ -218,7 +218,7 @@ exception preservation and recovery, and two 1 ns services per owner.
 
 Reset and kill cleanup also cover standalone combined TLM get and peek owners
 that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
-The structural matrix checks 693 combinations across seven value types, nine
+The structural matrix checks 891 combinations across nine value types, nine
 wait forms, and eleven access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
 
@@ -265,3 +265,8 @@ a large unsigned sample. Blocking and nonblocking copies, errors, inherited
 event identity, and native FIFO comparisons use all six types. Twelve owners
 complete two blocking services each in 24 ns. These are tested instances, not
 a fixed specialization list or a completeness claim.
+
+The B1/B4/C1 reset matrix includes signed and unsigned 128-bit SystemC values
+with bit 127 set. FIFO write and TLM put callback arguments preserve the high
+bit and the negative signed sample before guarded waits unwind. All eleven
+access paths retain the same reset-at-2-ns and kill-at-3-ns ordering assertions.

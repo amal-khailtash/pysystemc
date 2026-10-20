@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Tests
+- Extend existing interface reset/kill coverage to signed/unsigned 128-bit values, preserving high bits and signed copied arguments across 891 combinations.
 - Extend existing standalone TLM native-reference, overload, error, and readiness checks to signed/unsigned 128-bit SystemC values with bit 127 set.
 - Compare inherited TLM get/peek readiness-event identity with independent native FIFO specializations across the four multiword/wide types.
 - Extend the independent multiword TLM FIFO comparison to nonblocking copies, empty outputs, and readiness before and after consumption.
