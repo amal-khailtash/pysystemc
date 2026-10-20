@@ -1172,3 +1172,9 @@ bit136, with true readiness and no advancement of simulation time.
 Nonblocking multiword/wide get/peek failures preserve caller outputs for raised
 exceptions, non-bool success flags, and nonconvertible successful values. Normal
 nonblocking copies recover after each tested failure matrix.
+
+Standalone combined blocking/nonblocking get and peek owners also use the
+multiword-safe bridge. Partial-only owners cover long long, unsigned long long,
+long double, and sc_biguint<137>. Native checks reject accidental full get/peek
+adapter selection and verify both blocking overloads, readiness, copied outputs,
+exception preservation and recovery, and two 1 ns services per owner.

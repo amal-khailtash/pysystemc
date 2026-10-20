@@ -9,36 +9,26 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Fixed
-
 - Preserve standalone, blocking-combined, and full TLM get/peek signatures while avoiding cppyy multiword return dispatcher failures, including long double, and expose concrete adapter result aliases for successful completion.
 
 ### Tests
-
+- Exercise standalone multiword/wide TLM get and peek owners without full-interface auto-upgrade, checking both blocking overloads, readiness, output preservation, exception recovery, and exact service time.
 - Verify malformed nonblocking TLM result tuples, nonconvertible values, and raised exceptions preserve outputs and recover.
-
 - Verify full multiword TLM get/peek both readiness states and successful/failed nonblocking output behavior through partial bindings.
-
 - Extend reset/kill cleanup checks to combined blocking TLM get/peek across scalar and arbitrary-width types and nine wait forms.
-
 - Check multiword and arbitrary-width TLM blocking output preservation after invalid results and owner exceptions, followed by timed recovery.
-
 - Verify stopped callback cleanup releases a shared TLM get/peek owner once across partial and combined interfaces, preserving native nonblocking output after release and callbacks through end-of-simulation.
-
 - Check additional partial-first TLM get/peek binding orders preserve native interface and readiness-event identity with timed get/peek observers.
-
 - Verify rejected scalar FIFO blocking reads preserve caller output and recover after invalid results or raised owner exceptions.
-
 - Validate floating FIFO value-returning, caller-output blocking, and nonblocking callback outputs for infinities, NaN, signed zero, and finite recovery against independent native SystemC FIFOs.
 
 ### CI
-
 - Consolidate numbered PR, CI, release, and publication workflows; reuse validated distributions and trigger release docs after PyPI.
 
 
 ## [0.13.0] - 2026-10-20
 
 ### Added
-
 - Release-please automation with reviewed release PRs, Conventional Commit title
   checks and verified native-wheel publication through a reusable workflow.
 - Structural interface identity checks across signal, FIFO and TLM inherited
@@ -53,7 +43,6 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   137-bit values and high-bit-preserving write/put callback arguments.
 
 ### Fixed
-
 - Forward native export bindings to their underlying interface, preserving
   structural identity through export chains.
 - Reject nonnumeric floating signal callback results before native sampled
@@ -69,7 +58,6 @@ Adds Python ports and native baseline comparisons for all 33 upstream example ta
 Alternate configurations and complete public API validation remain open.
 
 ### Added
-
 - Python mixed-endian and temporal-decoupling example ports using native word
   converters and the quantum keeper, with scripted data, memory timestamps and
   synchronization comparisons against independent native executables.
@@ -92,7 +80,6 @@ Alternate configurations and complete public API validation remain open.
   independent C++ references, including forty consumed values.
 
 ### Changed
-
 - Complete the next five baseline example items: simple_async, fft_flpt,
   fft_fxpt, fir and pipe. Compile unmodified FFT/FIR reference sources in separate
   translation units to accommodate upstream headers without include guards.
@@ -111,7 +98,6 @@ Publishes the fixed SystemC public API inventory and remaining binding work.
 Inventory completion does not imply complete Python API support.
 
 ### Added
-
 - Features lists all 794 public API families and links to 12,701 declaration
   contracts with native signatures, Python mappings, ownership, GIL, errors and statuses.
 - Source inventory accounts for 15,778 identities across modeling and compatibility
@@ -124,14 +110,12 @@ Inventory completion does not imply complete Python API support.
   native semantics from known Python binding failures.
 
 ### Fixed
-
 - Preserve private enum access, static method metadata, out-of-class owners,
   specialization context and continued conditional macro directives in extraction.
 - Preserve explicit review contracts and distinguish partial mappings from missing fields.
 - Correct sc_core reset documentation to describe tested guarded reset/kill behavior.
 
 ### Changed
-
 - Document the hand-coded project origins, cppyy selection for templates and
   runtime features, and subsequent use of AI-assisted vibe coding.
 - Keep existing M6A requirements stable and publish explicit untested/failing statuses;
@@ -143,7 +127,6 @@ Adds custom quantumkeeper hooks, stricter callback contracts and declaration aud
 metadata. M6A remains incomplete; full API, type, reset and teardown audits are open.
 
 ### Added
-
 - Custom quantumkeeper checks cover reset/kill cleanup, hook exceptions and invalid
   results after guarded waits, and remaining-global-quantum boundary timing.
 - Custom quantumkeeper factory dispatches the protected local-quantum hook to a
@@ -158,7 +141,6 @@ metadata. M6A remains incomplete; full API, type, reset and teardown audits are 
   Full public declaration classification and semantic coverage remain incomplete.
 
 ### Fixed
-
 - Structural TLM callbacks validate forward/backward synchronization enums and
   unsigned debug counts before conversion; failed nonblocking get/peek accepts
   an absent value while preserving caller output.
@@ -188,7 +170,6 @@ Expands structural synchronization interfaces and callback ownership/validation.
 M6A remains incomplete; full API, reset/error and teardown audits are open.
 
 ### Fixed
-
 - TLM FIFO debug count callbacks reject invalid integer conversions while
   preserving native signed bounds and negative sentinel values.
 - TLM analysis, put and debug-poke callbacks receive independent native value
@@ -203,7 +184,6 @@ M6A remains incomplete; full API, reset/error and teardown audits are open.
 - Upload generated coverage reports when tests fail while retaining CI failure.
 
 ### Added
-
 - TLM FIFO expansion/unbound callbacks require None; reduction, bound and debug
   poke callbacks require bool, with native defaults and recovery checks.
 - Structural TLM nonblocking put, readiness and DMI callbacks require bool
@@ -221,7 +201,6 @@ Adds structural native reference, signal and FIFO adapters. Full public API
 coverage, reset/error matrices and adapter teardown remain incomplete.
 
 ### Added
-
 - Comprehensive Features checklist covering implemented capabilities, open binding
   requirements and upstream example audits.
 - Structural scalar signal interfaces use stable native read/trace storage for
@@ -254,7 +233,6 @@ M6A remains incomplete: the full public declaration audit, general custom-channe
 reference returns, adapter teardown and remaining type/lifetime matrices are open.
 
 ### Added
-
 - Tagged simple target and initiator sockets with independent callback IDs.
 - Multi target and initiator sockets with connection-indexed callbacks, direct
   multi-to-multi binding and automatic GIL release for indexed blocking calls.
@@ -272,7 +250,6 @@ reference returns, adapter teardown and remaining type/lifetime matrices are ope
   conversion preconditions, ownership and verification limits.
 
 ### Fixed
-
 - Preserve original multi and passthrough callbacks after native duplicate
   registration warnings, including native tagged passthrough ID updates.
 - Check custom PEQ high-bit values through native bit-proxy `to_bool()`.
@@ -285,7 +262,6 @@ This release expands TLM bindings. M6A remains incomplete; full public API,
 custom-type and lifecycle verification continues.
 
 ### Added
-
 - Convenience initiator sockets register retained backward transport and DMI
   invalidation Python callbacks with native phase/delay and 64-bit range semantics.
 - Convenience target sockets register nonblocking transport, debug transport and
@@ -308,7 +284,6 @@ custom-type and lifecycle verification continues.
   shared queue state and blocking process suspension.
 
 ### Fixed
-
 - Indexed convenience initiator socket access configures blocking GIL release
   while preserving native interface identity and forward/backward callbacks.
 - Convenience initiator forward-interface access configures blocking GIL release;
@@ -325,7 +300,6 @@ custom-type and lifecycle verification continues.
 ## [0.5.0] - 2026-10-15
 
 ### Added
-
 - Structural TLM-2 blocking transport supports ordinary b_transport callbacks,
   borrowed payload/delay mutation and automatic GIL release for process waits.
 - Structural TLM regression verifies 73-bit native value copies across blocking
@@ -392,7 +366,6 @@ custom-type and lifecycle verification continues.
   configuration, including the C++17/pthreads ABI settings.
 
 ### Changed
-
 - Improve namespace declaration ordering and spacing in binding helpers.
 - Break up long conditions in core interface adapters for readability.
 - Split core interface declarations, structural binding and waveform helpers
@@ -412,7 +385,6 @@ custom-type and lifecycle verification continues.
 ## [0.4.0] - 2026-10-15
 
 ### Fixed
-
 - Store the bundled SystemC shared library once in wheels, omitting duplicate
   versioned aliases that wheel installers cannot portably restore as symlinks.
 - Expose native writer-policy enum template arguments and resolved signal reads
@@ -429,7 +401,6 @@ custom-type and lifecycle verification continues.
   entry references and GIL state through scoped native ownership.
 
 ### Added
-
 - Packaged `pysystemc-cpp` console runner with source/include handling, native
   arguments and exit status, compilation diagnostics and installed tutorial checks.
 - Queued/resolved channels, FIFO ports, writer contention, vector/attribute,
@@ -451,7 +422,6 @@ custom-type and lifecycle verification continues.
 ## [0.3.0] - 2026-10-14
 
 ### Added
-
 - Native fixed-point templates and policy enums, TLM namespace types, grouped
   help and enum inventories without restricting native template parameters.
 - Context-managed VCD cleanup, hierarchical export port, and finite event and
@@ -467,7 +437,6 @@ custom-type and lifecycle verification continues.
   invalid callbacks and idempotent cleanup.
 
 ### Changed
-
 - Centralize native discovery/loading in a private runtime module and package
   the licensed SystemC entry adapter to remove startup's external source dependency.
 - Format first-party Python with Ruff and retain native object lifetimes in examples.
@@ -475,19 +444,16 @@ custom-type and lifecycle verification continues.
 - Support CMake 4 when configuring the pinned SystemC 2.3.4 developer build.
 
 ### Fixed
-
 - Avoid cppyy empty-vector iteration and native range shadowing in hierarchy inspection.
 
 ## [0.2.3] - 2026-10-14
 
 ### Fixed
-
 - Simplify the documentation landing page to show the project introduction once,
   keeping the contents in sidebar navigation and the version in the page title.
 
 
 ### Added
-
 - Publish to production PyPI on release-tag pushes after checking the tag matches
   the package version; retain manual TestPyPI and PyPI publishing.
 - HTML coverage report under `build/coverage/html` alongside the terminal summary
@@ -496,14 +462,12 @@ custom-type and lifecycle verification continues.
 ## [0.2.2] - 2026-10-14
 
 ### Fixed
-
 - Install documentation dependencies into the Read the Docs virtual environment
   so hosted Sphinx builds can import MyST and the theme.
 - Replace the README badge table's empty header with Category and Status labels
   and refresh the production PyPI version badge.
 
 ### Added
-
 - Makefile checks for installed TestPyPI and PyPI releases with selectable package
   versions, isolated from checkout native dependency paths. Checks refresh package
   metadata and run main, verifying callback execution and simulation time.
@@ -511,20 +475,17 @@ custom-type and lifecycle verification continues.
 ## [0.2.1] - 2026-10-14
 
 ### Fixed
-
 - Discover CPyCppyy API headers in the active environment before importing cppyy,
   preventing API-discovery warnings with uv cached installations.
 - Exclude ZIP directory entries from wheel RECORD so auditwheel can inspect and
   repair bundled native libraries.
 
 ### Changed
-
 - Update GitHub Actions to Node.js 24 releases for publishing and documentation.
 
 ## [0.2.0] - 2026-10-14
 
 ### Added
-
 - Read the Docs workflow with documentation checks and hosted build requests for
   main, version tags, and manual runs.
 - A circuit-chip logo with a compact Python emblem, SystemC™ name, logic gates,
@@ -532,7 +493,6 @@ custom-type and lifecycle verification continues.
 - README status badges for publishing, documentation, package metadata and standards.
 
 ### Changed
-
 - Build fmt, spdlog and pthreads SystemC during distribution builds and bundle
   their native resources in platform wheels, staging builds outside the source tree.
 - Validate installed wheels with runtime C++ compilation and pthread waits; build
@@ -545,7 +505,6 @@ custom-type and lifecycle verification continues.
 ## [0.1.0] - 2026-10-14
 
 ### Added
-
 - spdlog 1.15.3 with external fmt for colored C++ runner information notes.
 - Manual PyPI/TestPyPI trusted publishing workflow and Read the Docs configuration.
 - Separate documentation dependency group for native-free hosted documentation builds.
@@ -563,14 +522,12 @@ custom-type and lifecycle verification continues.
 - Loguru and Rich runtime dependencies; Sphinx, theme and pytest-cov development tools.
 
 ### Changed
-
 - Require Python 3.14 and use uv for dependency management and distribution builds.
 - Pin both native build paths to SystemC 2.3.4 with pthreads and a shared install prefix.
 - Discover checkout native libraries automatically; run FIFO tests without location skips.
 - Organize documentation into introduction, release notes, references and API pages.
 
 ### Fixed
-
 - C++ runner enters native kernel startup, including its banner, and returns the simulation exit status.
 - Explicit `PYSYSTEMC_COLOR=always` enables colors even when `NO_COLOR` is set.
 - CPyCppyy header discovery and compatibility alias; suppress its case-path diagnostic.
@@ -580,7 +537,6 @@ custom-type and lifecycle verification continues.
 - Status queries, hierarchy traversal and generated hierarchical port policy resolution.
 
 ### Known limitations
-
 - Python reset configuration is rejected: cppyy consumes native SystemC unwind
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.

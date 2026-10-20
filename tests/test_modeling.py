@@ -686,6 +686,11 @@ def test_scalar_fifo_callback_contracts(tmp_path):
     assert [line for line in output.splitlines() if line.startswith("FLOAT_FIFO")] == reference
 
 
+def test_partial_multiword_tlm_completion(tmp_path):
+    """Verify standalone get/peek overloads, nonblocking outputs and recovery."""
+    assert "PARTIAL_MULTIWORD_TLM_OK" in run_example(tmp_path, "tests/models/partial_multiword_tlm.py")
+
+
 def test_multiword_tlm_blocking_completion(tmp_path):
     """Check multiword value/output overloads, callback counts and service time."""
     assert "MULTIWORD_TLM_COMPLETION_OK" in run_example(tmp_path, "tests/models/multiword_tlm_completion.py")

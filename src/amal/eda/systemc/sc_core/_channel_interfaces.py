@@ -357,14 +357,15 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "release it. Nonblocking callbacks must not wait. Errors propagate; outputs are copies. */ "
                     "namespace pysystemc_interfaces { template<class T> "
                     "class CombinedPeekAdapter : public tlm::tlm_peek_if<T> { sc_core::sc_event ready; public: "
-                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
-                    "void peek(T& value) const override { value = peek_value(); } "
+                    "using blocking_value_pair = std::pair<T, bool>; "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value().first; } "
+                    "void peek(T& value) const override { value = peek_value().first; } "
                     "bool nb_peek(T& value) const override { auto result = try_peek_value(); "
                     "if (!result.first) return false; value = result.second; return true; } "
                     "bool nb_can_peek(tlm::tlm_tag<T>* = nullptr) const override { return can_peek(); } "
                     "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
                     "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
-                    "virtual T peek_value() const = 0; virtual std::pair<bool, T> try_peek_value() const = 0; "
+                    "virtual blocking_value_pair peek_value() const = 0; virtual std::pair<bool, T> try_peek_value() const = 0; "
                     "virtual bool can_peek() const = 0; }; }"
                 )
             argument = name.removeprefix("tlm::tlm_peek_if<").removesuffix(">")
@@ -397,14 +398,15 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "callers release it. Nonblocking callbacks must not wait. Exceptions propagate. */ "
                     "namespace pysystemc_interfaces { template<class T> "
                     "class CombinedGetAdapter : public tlm::tlm_get_if<T> { sc_core::sc_event ready; public: "
-                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
-                    "void get(T& value) override { value = get_value(); } "
+                    "using blocking_value_pair = std::pair<T, bool>; "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value().first; } "
+                    "void get(T& value) override { value = get_value().first; } "
                     "bool nb_get(T& value) override { auto result = try_get_value(); "
                     "if (!result.first) return false; value = result.second; return true; } "
                     "bool nb_can_get(tlm::tlm_tag<T>* = nullptr) const override { return can_get(); } "
                     "const sc_core::sc_event& ok_to_get(tlm::tlm_tag<T>* = nullptr) const override { return ready; } "
                     "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
-                    "virtual T get_value() = 0; virtual std::pair<bool, T> try_get_value() = 0; "
+                    "virtual blocking_value_pair get_value() = 0; virtual std::pair<bool, T> try_get_value() = 0; "
                     "virtual bool can_get() const = 0; }; }"
                 )
             argument = name.removeprefix("tlm::tlm_get_if<").removesuffix(">")
@@ -593,6 +595,8 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             else:
                 methods += "virtual void invalidate_direct_mem_ptr(sc_dt::uint64, sc_dt::uint64) override = 0; "
         if fifo_family in (
+            "tlm::tlm_get_if",
+            "tlm::tlm_peek_if",
             "tlm::tlm_blocking_get_if",
             "tlm::tlm_blocking_peek_if",
             "tlm::tlm_blocking_get_peek_if",
