@@ -130,6 +130,8 @@ across all fourteen types with matching reset/kill times and termination.
 Compound TLM FIFO blocking get/peek adapters use native pair-return callbacks
 for multiword scalar dispatch; selected compound overloads are checked across
 int, long long, unsigned long long and long double.
+Compound FIFO checks additionally cover 128/137-bit high-bit preservation and
+integral callback rejection with unchanged outputs and endpoint recovery.
 Selected inherited TLM readiness-event
 identity is independently compared with native FIFO specializations.
 

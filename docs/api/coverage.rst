@@ -319,3 +319,12 @@ simulations cover int, long long, unsigned long long and long double, including
 indexed/ordinary peeks, blocking overloads, failed nonblocking output retention,
 shared queue state, configuration defaults and a completed worker at 1 ns.
 The full compound type/error/reset/native-reference matrix remains open.
+
+The compound FIFO matrix also includes signed/unsigned 128-bit and unsigned
+137-bit types. High-bit samples pass through put, blocking peek/get output,
+indexed nonblocking peek/poke and failed get output retention; exact native
+representations avoid cppyy equality coercion. Compound integral callback
+validation rejects bool, float, objects and both overflow endpoints before
+conversion. Int, long long and unsigned long long tests check unchanged output
+for all four blocking/nonblocking get/peek callbacks and recovery at both native
+endpoints. These checks contribute to existing B1/B4/C1 requirements.

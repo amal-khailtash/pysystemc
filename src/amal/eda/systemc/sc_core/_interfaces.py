@@ -451,6 +451,10 @@ def _adapt(interface, implementation, factory):
                     if not isinstance(result, cppyy.gbl.sc_core.sc_event) or not cppyy.addressof(result):
                         raise TypeError(f"{_method} must return a live native sc_event")
                 if blocking_value_pair is not None and _method in ("get", "peek"):
+                    if family == "tlm::tlm_fifo_get_if":
+                        result = _fifo_integer(
+                            result, interface.__cpp_name__.split("<", 1)[1].removesuffix(">"), _method
+                        )
                     return blocking_value_pair(result, True)
                 if scalar_pair is not None and _method == "read":
                     scalar = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
@@ -479,6 +483,13 @@ def _adapt(interface, implementation, factory):
                     if _method == "nb_read":
                         value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
                         result = (result[0], _fifo_integer(result[1], value_type, _method))
+                    if family == "tlm::tlm_fifo_get_if" and result[0]:
+                        result = (
+                            True,
+                            _fifo_integer(
+                                result[1], interface.__cpp_name__.split("<", 1)[1].removesuffix(">"), _method
+                            ),
+                        )
                     if output_pair is not None:
                         if _method in ("nb_get", "nb_peek") and not result[0] and result[1] is None:
                             return output_pair()

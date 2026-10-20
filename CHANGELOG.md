@@ -9,9 +9,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Fixed
+- Validate compound TLM FIFO integral blocking/nonblocking callback values before native conversion, preserving caller outputs on rejected results.
 - Use native pair-return callbacks for compound TLM FIFO blocking get/peek so multiword scalar dispatch preserves public value/output overloads.
 
 ### Tests
+- Extend compound FIFO overload checks to signed/unsigned 128-bit and unsigned 137-bit values, plus integral callback rejection and endpoint recovery.
 - Assert interrupted FIFO/TLM blocking caller-output storage stays unchanged before reset/kill unwind is rethrown.
 - Compare caller-output reset/kill semantics with an independent native FIFO/TLM reference across fourteen types.
 - Cover caller-output FIFO read and TLM get/peek reset unwind across 1,764 existing type/wait/access combinations.

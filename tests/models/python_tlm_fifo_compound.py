@@ -1,6 +1,6 @@
 """Check FIFO debug indexing, output retention and native configuration defaults."""
 
-from amal.eda.systemc import sc_core as sc, tlm
+from amal.eda.systemc import sc_core as sc, sc_dt, tlm
 import ctypes
 import cppyy
 import sys
@@ -10,7 +10,30 @@ value_type, output_type = {
     "long_long": ("long long", ctypes.c_longlong),
     "unsigned_long_long": ("unsigned long long", ctypes.c_ulonglong),
     "long_double": ("long double", ctypes.c_longdouble),
+    "bigint128": (sc_dt.sc_bigint[128], sc_dt.sc_bigint[128]),
+    "biguint128": (sc_dt.sc_biguint[128], sc_dt.sc_biguint[128]),
+    "biguint137": (sc_dt.sc_biguint[137], sc_dt.sc_biguint[137]),
 }[sys.argv[1] if len(sys.argv) > 1 else "int"]
+
+
+def sample(value):
+    """Copy callback arguments without truncating arbitrary-width native values."""
+    if not isinstance(value_type, str) and value_type is not int:
+        result = value_type()
+        result.__assign__(value)
+        return result
+    return value
+
+
+def output_value(value):
+    """Read either borrowed scalar output or native arbitrary-width storage."""
+    return value.value if isinstance(value, ctypes._SimpleCData) else value
+
+
+def same_wide(actual, expected):
+    """Compare exact native wide representations without cppyy equality coercion."""
+    return actual.to_string() == expected.to_string()
+
 
 cppyy.cppdef("""
 /** @brief Inspect FIFO overloads through borrowed native base interfaces.
@@ -56,13 +79,13 @@ class Debug:
     def put(self, value):
         """Append after one native wait, sharing state with debug access."""
         sc.wait(1, sc.SC_NS)
-        self.values.insert(0, int(value))
+        self.values.insert(0, sample(value))
 
     def nb_put(self, value):
         """Append without waiting if capacity allows."""
         if len(self.values) == 4:
             return False
-        self.values.insert(0, int(value))
+        self.values.insert(0, sample(value))
         return True
 
     def nb_can_put(self):
@@ -93,7 +116,7 @@ class Debug:
         """Replace an indexed entry, rejecting out-of-range writes."""
         if not 0 <= index < len(self.values):
             return False
-        self.values[index] = int(value)
+        self.values[index] = sample(value)
         return True
 
 
@@ -140,9 +163,9 @@ assert interface.used() == 2 and interface.size() == 4
 interface.debug()
 assert debug.calls == 1
 value = output_type(71)
-assert interface.nb_peek(value, 0) and value.value == 41
-assert interface.nb_peek(value, 1) and value.value == 23
-assert not interface.nb_peek(value, 2) and value.value == 23
+assert interface.nb_peek(value, 0) and output_value(value) == 41
+assert interface.nb_peek(value, 1) and output_value(value) == 23
+assert not interface.nb_peek(value, 2) and output_value(value) == 23
 assert interface.nb_poke(17)
 assert debug.values == [17, 23]
 assert not interface.nb_poke(99, 2) and debug.values == [17, 23]
@@ -154,6 +177,39 @@ assert not interface.nb_bound(3)
 assert config.calls == [("expand", 1), ("unbound", 16), ("reduce", 1), ("bound", 3)]
 assert sc.sc_time_stamp() == sc.SC_ZERO_TIME
 records = []
+
+if value_type in (int, "long long", "unsigned long long"):
+    bits = ctypes.sizeof(output_type) * 8
+    lower, upper = (0, 2**bits - 1) if value_type == "unsigned long long" else (-(2 ** (bits - 1)), 2 ** (bits - 1) - 1)
+    native = get_port.get_interface()
+    for method in ("get", "peek", "nb_get", "nb_peek"):
+        original = getattr(debug, method)
+        for invalid in (True, 1.5, object(), lower - 1, upper + 1):
+            setattr(
+                debug,
+                method,
+                lambda invalid=invalid, method=method: (True, invalid) if method.startswith("nb_") else invalid,
+            )
+            output = output_type(71)
+            try:
+                getattr(native, method)(output)
+            except TypeError, ValueError, OverflowError:
+                pass
+            else:
+                raise AssertionError(f"invalid {method} callback accepted")
+            assert output_value(output) == 71
+        for endpoint in (lower, upper):
+            setattr(
+                debug,
+                method,
+                lambda endpoint=endpoint, method=method: (True, endpoint) if method.startswith("nb_") else endpoint,
+            )
+            output = output_type(71)
+            result = getattr(native, method)(output)
+            assert output_value(output) == endpoint
+            if method.startswith("nb_"):
+                assert result
+        setattr(debug, method, original)
 
 
 def exercise():
@@ -169,15 +225,28 @@ def exercise():
     assert get.peek() == 23
     value = output_type(71)
     get.peek(value)
-    assert value.value == 23
-    assert get.nb_peek(value, 0) and value.value == 29
-    assert get.nb_peek(value) and value.value == 23
+    assert output_value(value) == 23
+    assert get.nb_peek(value, 0) and output_value(value) == 29
+    assert get.nb_peek(value) and output_value(value) == 23
     assert get.get() == 23
     get.get(value)
-    assert value.value == 17
-    assert get.nb_get(value) and value.value == 19
-    assert get.nb_get(value) and value.value == 29
-    assert not get.nb_get(value) and value.value == 29
+    assert output_value(value) == 17
+    assert get.nb_get(value) and output_value(value) == 19
+    assert get.nb_get(value) and output_value(value) == 29
+    assert not get.nb_get(value) and output_value(value) == 29
+    if value_type in (sc_dt.sc_bigint[128], sc_dt.sc_biguint[128], sc_dt.sc_biguint[137]):
+        expected = value_type(17)
+        expected[136 if value_type == sc_dt.sc_biguint[137] else 127] = True
+        assert put.nb_put(expected)
+        actual = get.peek()
+        assert same_wide(actual, expected)
+        get.peek(value)
+        assert same_wide(output_value(value), expected)
+        assert get.nb_peek(value, 0) and same_wide(output_value(value), expected)
+        assert get.nb_poke(expected, 0)
+        get.get(value)
+        assert same_wide(output_value(value), expected)
+        assert not get.nb_get(value) and same_wide(output_value(value), expected)
     records.append(str(sc.sc_time_stamp()))
 
 
