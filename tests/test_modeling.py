@@ -686,6 +686,11 @@ def test_scalar_fifo_callback_contracts(tmp_path):
     assert [line for line in output.splitlines() if line.startswith("FLOAT_FIFO")] == reference
 
 
+def test_multiword_tlm_blocking_completion(tmp_path):
+    """Check multiword value/output overloads, callback counts and service time."""
+    assert "MULTIWORD_TLM_COMPLETION_OK" in run_example(tmp_path, "tests/models/multiword_tlm_completion.py")
+
+
 def test_stopped_structural_callback_release(tmp_path):
     """Verify owner collection, idempotence and post-release callback rejection."""
     assert "STRUCTURAL_RELEASE_OK" in run_example(tmp_path, "tests/models/structural_release.py")

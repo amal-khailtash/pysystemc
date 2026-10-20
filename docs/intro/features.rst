@@ -1150,3 +1150,7 @@ multiword native return types while preserving public native signatures. Reset
 and kill ordering is checked across int, float, double, long double, and
 sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
 (225 combinations). Complete channel and TLM matrices remain open.
+
+Multiword standalone TLM blocking get/peek completion checks both returned values
+and caller-output overloads for long long, unsigned long long, and long double.
+Each service waits 1 ns; callback counts and total 12 ns completion are asserted.

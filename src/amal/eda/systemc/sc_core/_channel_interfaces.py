@@ -590,6 +590,9 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             else:
                 methods += "virtual void invalidate_direct_mem_ptr(sc_dt::uint64, sc_dt::uint64) override = 0; "
+        if fifo_family in ("tlm::tlm_blocking_get_if", "tlm::tlm_blocking_peek_if"):
+            value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+            methods += f"using blocking_value_pair = std::pair<{value}, bool>; "
         cppyy.cppdef(
             "/** @brief Combined Python channel interface. "
             "@details Ports borrow the owner through simulation. cppyy acquires the GIL for overrides; "
