@@ -1168,3 +1168,7 @@ when selected automatically for partial blocking interfaces.
 
 Successful nonblocking multiword/wide get and peek copy exact samples, including
 bit136, with true readiness and no advancement of simulation time.
+
+Nonblocking multiword/wide get/peek failures preserve caller outputs for raised
+exceptions, non-bool success flags, and nonconvertible successful values. Normal
+nonblocking copies recover after each tested failure matrix.

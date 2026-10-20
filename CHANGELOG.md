@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Tests
 
+- Verify malformed nonblocking TLM result tuples, nonconvertible values, and raised exceptions preserve outputs and recover.
+
 - Verify full multiword TLM get/peek both readiness states and successful/failed nonblocking output behavior through partial bindings.
 
 - Extend reset/kill cleanup checks to combined blocking TLM get/peek across scalar and arbitrary-width types and nine wait forms.

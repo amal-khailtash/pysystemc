@@ -9,6 +9,7 @@ class Owner:
 
     def __init__(self, wide=False):
         """Initialize callback execution count."""
+        self.nb_failure = None
         self.available = False
         self.wide = wide
         self.calls = 0
@@ -35,6 +36,12 @@ class Owner:
 
     def nb_get(self):
         """Return the configured availability and a copied sample."""
+        if self.nb_failure == "raise":
+            raise RuntimeError("configured nonblocking failure")
+        if self.nb_failure == "tuple":
+            return 1, 17
+        if self.nb_failure == "value":
+            return True, object()
         if self.available:
             value = sc_dt.sc_biguint[137](17) if self.wide else 17
             if self.wide:
@@ -100,6 +107,18 @@ namespace multiword_completion {
      && !channel.nb_get(get_output) && !channel.nb_peek(peek_output)
      && get_output == T(71) && peek_output == T(73);
  }
+ /** Preserve both borrowed outputs when nonblocking callbacks reject. */
+ template<class T> bool rejected_nonblocking(tlm::tlm_get_peek_if<T>& channel) {
+   T get_output = 71, peek_output = 73;
+   bool get_failed = false, peek_failed = false;
+   try { channel.nb_get(get_output); } catch (...) {
+     auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil); get_failed = true;
+   }
+   try { channel.nb_peek(peek_output); } catch (...) {
+     auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil); peek_failed = true;
+   }
+   return get_failed && peek_failed && get_output == T(71) && peek_output == T(73);
+ }
  template<class T> T expected() { return T(17); }
  template<> sc_dt::sc_biguint<137> expected<sc_dt::sc_biguint<137>>() {
    sc_dt::sc_biguint<137> value = 17; value[136] = true; return value;
@@ -161,6 +180,15 @@ for index, (scalar, contract, owner, port) in enumerate(cases):
         f"bool multiword_available_{index}(tlm::tlm_get_peek_if<{scalar}>& channel) "
         f"{{ return multiword_completion::available<{scalar}>(channel); }}"
     )
+    cppyy.cppdef(
+        f"/** Inspect nonblocking errors under GIL without retaining caller outputs. */ "
+        f"bool multiword_nb_reject_{index}(tlm::tlm_get_peek_if<{scalar}>& channel) "
+        f"{{ return multiword_completion::rejected_nonblocking<{scalar}>(channel); }}"
+    )
+    for failure in ("raise", "tuple", "value"):
+        owner.nb_failure = failure
+        assert getattr(cppyy.gbl, f"multiword_nb_reject_{index}")(port.get_interface())
+    owner.nb_failure = None
     owner.available = True
     before = sc.sc_time_stamp().value()
     assert getattr(cppyy.gbl, f"multiword_available_{index}")(port.get_interface())
