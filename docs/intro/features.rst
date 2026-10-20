@@ -1129,4 +1129,5 @@ and native-reference matrices remain open.
 
 Rejected scalar FIFO reads preserve caller-owned output in both blocking and
 nonblocking paths for tested integer widths, bool, and floating types. Callback
-errors are cleared under the GIL before checking subsequent recovery.
+errors, including raised owner exceptions, are cleared under the GIL before
+checking subsequent recovery.

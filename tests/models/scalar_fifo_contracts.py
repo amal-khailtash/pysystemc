@@ -12,14 +12,19 @@ class Owner:
         """Allocate stable reader event and initial sample."""
         self.value = 0
         self.success = True
+        self.error = False
         self.changed = sc.sc_event()
 
     def read(self):
         """Return the selected scalar sample."""
+        if self.error:
+            raise RuntimeError("configured FIFO read failure")
         return self.value
 
     def nb_read(self):
         """Return the selected success flag and sample."""
+        if self.error:
+            raise RuntimeError("configured FIFO nonblocking failure")
         return self.success, self.value
 
     def num_available(self):
@@ -106,6 +111,15 @@ namespace scalar_fifo_check {
  }
 }
 """)
+for scalar, owner, port in cases + additional:
+    native = port.get_interface()
+    owner.error = True
+    assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
+    assert cppyy.gbl.scalar_fifo_check.rejected_blocking_output[scalar](native), scalar
+    owner.error = False
+    owner.value = False if scalar == "bool" else 0
+    result = native.read()
+    assert (ord(result) if isinstance(result, str) else result) == owner.value, scalar
 for scalar, owner, port in cases:
     native = port.get_interface()
     bits = cppyy.sizeof(scalar) * 8
