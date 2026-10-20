@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Tests
+- Compare standalone multiword/wide TLM get/peek value and caller-output overloads against independent native tlm_fifo references.
+
+
 ## [0.13.1](https://github.com/amal-khailtash/pysystemc/compare/v0.13.0...v0.13.1) (2026-10-20)
 
 ### Bug Fixes

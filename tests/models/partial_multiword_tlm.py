@@ -141,9 +141,12 @@ completed = []
 
 def consume():
     """Assert both native overloads complete and each callback runs twice."""
-    for owner, port, helper in cases:
+    for index, (owner, port, helper) in enumerate(cases):
         assert helper(port.get_interface())
         assert owner.calls == 2
+        label = ("long_long", "unsigned_long_long", "long_double", "biguint137")[index // 2]
+        operation = "get" if index % 2 == 0 else "peek"
+        print(f"TLM_VALUE {label} {operation} 1 1")
     completed.append(str(sc.sc_time_stamp()))
 
 

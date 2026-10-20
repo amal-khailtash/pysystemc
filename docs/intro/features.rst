@@ -1205,3 +1205,8 @@ stopped-kernel release collects both owners, including self-bound callback
 cycles; repeated release is idempotent. Released callbacks reject access and
 nonblocking peek preserves caller output. Native adapters remain retained while
 ports borrow their addresses; safe native adapter teardown remains open.
+
+Standalone TLM get/peek value and caller-output completion for long long, unsigned
+long long, long double, and sc_biguint<137> is compared with independent native
+``tlm_fifo`` runs. Native checks also verify an empty nonblocking get preserves
+caller output. The wide sample retains bit 136 through both blocking overloads.
