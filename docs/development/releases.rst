@@ -1,5 +1,5 @@
 Pull requests and releases
-=========================
+==========================
 
 Workflow order
 --------------
