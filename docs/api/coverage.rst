@@ -275,3 +275,8 @@ B3/C1 callback-release evidence covers native nonblocking get and peek output
 preservation after owner cleanup, for standalone and combined views. Standalone
 get/peek readiness callbacks also reject post-release access. Adapter storage
 remains retained because ports borrow it; native teardown is still incomplete.
+
+B3/C1 lifetime checks capture distinct readiness-event addresses for standalone
+get, standalone peek, and both full get/peek operations. All four addresses
+remain unchanged after callback owners are collected. This proves retained
+event storage for these views, not safe deletion of the native adapters.

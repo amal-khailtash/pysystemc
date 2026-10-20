@@ -150,6 +150,13 @@ for operation in ("get", "peek"):
     partial_port = sc.sc_port[getattr(tlm, "tlm_" + operation + "_if")[int]]()
     partial_port(partial_owner)
     partial_ports.append((partial_port, operation))
+event_views = [(partial_port, operation) for partial_port, operation in partial_ports]
+event_views.extend((queue_ports[-1], operation) for operation in ("get", "peek"))
+event_addresses = [
+    cppyy.addressof(getattr(event_port.get_interface(), "ok_to_" + operation)())
+    for event_port, operation in event_views
+]
+assert len(set(event_addresses)) == 4
 del partial_owner
 gc.collect()
 assert all(reference() is not None for reference in partial_references)
@@ -192,6 +199,10 @@ assert result_reference() is None
 assert tlm_reference() is None
 assert queue_reference() is None
 assert all(reference() is None for reference in partial_references)
+assert [
+    cppyy.addressof(getattr(event_port.get_interface(), "ok_to_" + operation)())
+    for event_port, operation in event_views
+] == event_addresses
 cppyy.cppdef("""
 /** Verify a released shared adapter rejects nonblocking callbacks.
  * Interface and output are borrowed for this call. Exceptions are inspected

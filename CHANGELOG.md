@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Tests
+- Verify standalone and full TLM readiness events remain distinct and preserve native addresses after callback-owner cleanup.
 - Check released standalone get/peek readiness callbacks reject access and native nonblocking get preserves caller output after owner cleanup.
 - Extend existing interface reset/kill coverage to signed/unsigned 128-bit values, preserving high bits and signed copied arguments across 891 combinations.
 - Extend existing standalone TLM native-reference, overload, error, and readiness checks to signed/unsigned 128-bit SystemC values with bit 127 set.
