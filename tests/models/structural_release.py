@@ -54,6 +54,34 @@ class TlmOwner:
         self.values.append(value)
 
 
+class QueueOwner:
+    """Provide combined get/peek callbacks retained through several views."""
+
+    def get(self):
+        """Return one scalar sample without waiting."""
+        return 43
+
+    def peek(self):
+        """Return the same sample without consuming it."""
+        return 43
+
+    def nb_get(self):
+        """Return a successful nonblocking sample."""
+        return True, 43
+
+    def nb_peek(self):
+        """Return a successful nonblocking peek."""
+        return True, 43
+
+    def nb_can_get(self):
+        """Report a sample available."""
+        return True
+
+    def nb_can_peek(self):
+        """Report a sample available for peeking."""
+        return True
+
+
 class Top(sc.sc_module):
     """Verify callback owners remain usable through native lifecycle hooks."""
 
@@ -87,6 +115,15 @@ tlm_port = sc.sc_port[tlm.tlm_analysis_if[int]]()
 tlm_port(tlm_owner)
 tlm_port.get_interface().write(31)
 assert tlm_owner.values == [31]
+queue_owner = QueueOwner()
+queue_reference = weakref.ref(queue_owner)
+queue_ports = []
+for contract in (tlm.tlm_nonblocking_peek_if, tlm.tlm_blocking_get_if, tlm.tlm_get_peek_if):
+    queue_port = sc.sc_port[contract[int]]()
+    queue_port(queue_owner)
+    queue_ports.append(queue_port)
+assert queue_ports[-1].get_interface().peek() == 43
+del queue_owner
 del name, owner, wide_owner, tlm_owner
 gc.collect()
 assert reference() is not None
@@ -113,13 +150,21 @@ top.sc_thread("check_running_cleanup", check_running_cleanup)
 sc.sc_start(1, sc.SC_NS)
 sc.sc_stop()
 assert ordering == ["running-rejected", "end"]
-assert sc.release_interface_callbacks() == 3
+assert sc.release_interface_callbacks() == 4
 assert sc.release_interface_callbacks() == 0
 gc.collect()
 assert reference() is None
 assert wide_reference() is None
 assert result_reference() is None
 assert tlm_reference() is None
+assert queue_reference() is None
+for queue_port, method in ((queue_ports[1], "get"), (queue_ports[-1], "peek")):
+    try:
+        getattr(queue_port.get_interface(), method)()
+    except RuntimeError as error:
+        assert "released" in str(error)
+    else:
+        raise AssertionError("shared TLM callback executed after release")
 try:
     port.get_interface().read()
 except RuntimeError as error:

@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Tests
 
+- Verify stopped callback cleanup releases a shared TLM get/peek owner once across partial and combined interfaces.
+
 - Check additional partial-first TLM get/peek binding orders preserve native interface and readiness-event identity with timed get/peek observers.
 
 - Verify rejected scalar FIFO blocking reads preserve caller output and recover after invalid results or raised owner exceptions.

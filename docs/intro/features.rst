@@ -1136,3 +1136,7 @@ Additional partial-first TLM get/peek binding orders share the combined native
 interface and matching get/peek readiness events while retaining queue state.
 Both readiness observers execute exactly once at the scheduled 1 ns notification.
 The complete cross-specialization identity matrix remains open.
+
+Stopped callback release counts one shared get/peek adapter across partial and
+combined views, permits owner collection, and rejects later get/peek callbacks.
+Native adapter objects remain borrowed by ports; full native teardown is open.
