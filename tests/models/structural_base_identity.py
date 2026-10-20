@@ -214,6 +214,7 @@ permuted_ready_seen = []
 for index, (queue, ports) in enumerate(permuted_tlm_groups):
     combined = ports[-1].get_interface()
     for method in ("ok_to_get", "ok_to_peek"):
+
         def record_ready(index=index, method=method):
             """Record readiness through each borrowed partial-family event."""
             permuted_ready_seen.append((index, method, str(sc.sc_time_stamp())))
@@ -241,9 +242,7 @@ sc.sc_start(2, sc.SC_NS)
 assert seen == [(29, "0 s")], seen
 assert ready_seen == ["1 ns"], ready_seen
 assert sorted(permuted_ready_seen) == [
-    (index, method, "1 ns")
-    for index in range(len(permuted_tlm_groups))
-    for method in ("ok_to_get", "ok_to_peek")
+    (index, method, "1 ns") for index in range(len(permuted_tlm_groups)) for method in ("ok_to_get", "ok_to_peek")
 ], permuted_ready_seen
 print("IDENTITY_READY", ready_seen[0])
 assert writer.get_interface().read().to_uint64() == 29
