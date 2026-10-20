@@ -6,14 +6,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [Unreleased]
+
 ## [0.13.2](https://github.com/amal-khailtash/pysystemc/compare/v0.13.1...v0.13.2) (2026-10-20)
 
 
 ### Bug Fixes
 
 * preserve compound interface callbacks and validate plain char values ([#12](https://github.com/amal-khailtash/pysystemc/issues/12)) ([29f3874](https://github.com/amal-khailtash/pysystemc/commit/29f38748185a3e8afdaf76bd1716db2b71de65b0))
-
-## [Unreleased]
 
 ### Fixed
 - Validate plain char signal/FIFO callback integers using native signedness before conversion.
