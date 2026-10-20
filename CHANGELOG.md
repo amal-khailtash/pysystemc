@@ -6,6 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [0.13.0](https://github.com/amal-khailtash/pysystemc/compare/v0.12.0...v0.13.0) (2026-10-20)
+
+
+### Features
+
+* strengthen structural interface identity and lifecycle behavior ([#3](https://github.com/amal-khailtash/pysystemc/issues/3)) ([32e6bb2](https://github.com/amal-khailtash/pysystemc/commit/32e6bb2b6021919efddbe7d294cb9afbf09c3dbe))
+
 ## [Unreleased]
 
 ### Added
