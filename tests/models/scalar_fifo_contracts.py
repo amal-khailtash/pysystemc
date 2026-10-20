@@ -2,6 +2,7 @@
 
 from amal.eda.systemc import sc_core as sc
 import cppyy
+import math
 
 
 class Owner:
@@ -63,6 +64,16 @@ cppyy.cppdef("""
  * is released after clearing the Python callback error.
  */
 namespace scalar_fifo_check {
+ /** Compare successful floating outputs, including NaN and signed zero.
+  * The interface and output are borrowed for this call. Python callbacks hold
+  * the GIL through the adapter; this helper neither retains storage nor waits.
+  */
+ template<class T> bool floating_output(sc_core::sc_fifo_in_if<T>& channel, double expected) {
+   T output = 7;
+   if (!channel.nb_read(output)) return false;
+   if (std::isnan(expected)) return std::isnan(output);
+   return output == T(expected) && std::signbit(output) == std::signbit(expected);
+ }
  template<class T> bool rejected_output(sc_core::sc_fifo_in_if<T>& channel) {
    T output = 7;
    try { channel.nb_read(output); } catch (...) { auto gil = PyGILState_Ensure(); PyErr_Clear();
@@ -115,6 +126,20 @@ for scalar, owner, port in additional:
         assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
     owner.value = False if scalar == "bool" else 1.25
     assert native.read() == owner.value
+    if scalar != "bool":
+        # IEEE non-finite samples must survive the native callback conversion.
+        # Check blocking and successful nonblocking reads, then finite recovery.
+        for value in (float("inf"), float("-inf"), float("nan"), -0.0):
+            owner.value = value
+            result = native.read()
+            if math.isnan(value):
+                assert math.isnan(result), (scalar, result)
+            else:
+                assert result == value, (scalar, result, value)
+                assert math.copysign(1.0, result) == math.copysign(1.0, value)
+            assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, value), scalar
+        owner.value = 1.25
+        assert native.read() == 1.25, scalar
     owner.success = False
     assert cppyy.gbl.scalar_fifo_check.failed_output[scalar](native), scalar
 sc.sc_start(1, sc.SC_NS)

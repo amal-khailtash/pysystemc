@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Tests
+
+- Validate floating FIFO blocking and nonblocking callback outputs for infinities, NaN, signed zero, and finite recovery.
+
 ### CI
 
 - Consolidate numbered PR, CI, release, and publication workflows; reuse validated distributions and trigger release docs after PyPI.

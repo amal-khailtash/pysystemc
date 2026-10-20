@@ -1116,3 +1116,11 @@ tlm_utils public families
 * ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
+
+Floating FIFO callback samples
+-----------------------------
+
+Structural float, double, and long double FIFO reads preserve infinities, NaN,
+and signed zero through blocking and successful nonblocking reads. Finite
+recovery is checked in the same simulation. Complete conversion, tracing, reset,
+and native-reference matrices remain open.
