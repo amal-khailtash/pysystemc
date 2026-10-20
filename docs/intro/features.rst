@@ -1144,3 +1144,9 @@ Native adapter objects remain borrowed by ports; full native teardown is open.
 
 Rejected cleanup during simulation leaves shared TLM callbacks usable, including
 final get/peek accesses from end-of-simulation hooks before explicit release.
+
+Blocking TLM get/peek bridges use internal value-pair callbacks to support
+multiword native return types while preserving public native signatures. Reset
+and kill ordering is checked across int, float, double, long double, and
+sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
+(225 combinations). Complete channel and TLM matrices remain open.

@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve TLM blocking get/peek signatures while avoiding cppyy multiword return dispatcher failures, including long double.
+
 ### Tests
 
 - Verify stopped callback cleanup releases a shared TLM get/peek owner once across partial and combined interfaces, preserving native nonblocking output after release and callbacks through end-of-simulation.

@@ -528,9 +528,10 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "cppyy acquires GIL for callbacks. Blocking callers release GIL. Errors propagate. */ "
                     "namespace pysystemc_interfaces { template<class T> "
                     "class GetAdapter : public tlm::tlm_blocking_get_if<T> { public: "
-                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
-                    "void get(T& value) override { value = get_value(); } "
-                    "virtual T get_value() = 0; }; }"
+                    "using blocking_value_pair = std::pair<T, bool>; "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value().first; } "
+                    "void get(T& value) override { value = get_value().first; } "
+                    "virtual blocking_value_pair get_value() = 0; }; }"
                 )
             argument = name.removeprefix("tlm::tlm_blocking_get_if<").removesuffix(">")
             name = f"pysystemc_interfaces::GetAdapter<{argument}>"
@@ -542,9 +543,10 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "cppyy acquires GIL for callbacks. Errors propagate; retain owner through simulation. */ "
                     "namespace pysystemc_interfaces { template<class T> "
                     "class PeekAdapter : public tlm::tlm_blocking_peek_if<T> { public: "
-                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
-                    "void peek(T& value) const override { value = peek_value(); } "
-                    "virtual T peek_value() const = 0; }; }"
+                    "using blocking_value_pair = std::pair<T, bool>; "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value().first; } "
+                    "void peek(T& value) const override { value = peek_value().first; } "
+                    "virtual blocking_value_pair peek_value() const = 0; }; }"
                 )
             argument = name.removeprefix("tlm::tlm_blocking_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::PeekAdapter<{argument}>"
