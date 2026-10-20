@@ -83,6 +83,20 @@ class QueueOwner:
         return True
 
 
+class PartialQueueOwner:
+    """Expose one operation while retaining self-bound callbacks until release."""
+
+    def __init__(self, operation):
+        """Install blocking, nonblocking, and readiness callbacks for one family."""
+        setattr(self, operation, self.sample)
+        setattr(self, "nb_" + operation, lambda: (True, 47))
+        setattr(self, "nb_can_" + operation, lambda: True)
+
+    def sample(self):
+        """Return a deterministic value without advancing the stopped kernel."""
+        return 47
+
+
 class Top(sc.sc_module):
     """Verify callback owners remain usable through native lifecycle hooks."""
 
@@ -92,6 +106,8 @@ class Top(sc.sc_module):
         assert wide_port.get_interface().read().to_uint64() == 29
         assert queue_ports[1].get_interface().get() == 43
         assert queue_ports[-1].get_interface().peek() == 43
+        for partial_port, operation in partial_ports:
+            assert getattr(partial_port.get_interface(), operation)() == 47
         ordering.append("end")
 
 
@@ -126,6 +142,17 @@ for contract in (tlm.tlm_nonblocking_peek_if, tlm.tlm_blocking_get_if, tlm.tlm_g
     queue_port(queue_owner)
     queue_ports.append(queue_port)
 assert queue_ports[-1].get_interface().peek() == 43
+partial_ports = []
+partial_references = []
+for operation in ("get", "peek"):
+    partial_owner = PartialQueueOwner(operation)
+    partial_references.append(weakref.ref(partial_owner))
+    partial_port = sc.sc_port[getattr(tlm, "tlm_" + operation + "_if")[int]]()
+    partial_port(partial_owner)
+    partial_ports.append((partial_port, operation))
+del partial_owner
+gc.collect()
+assert all(reference() is not None for reference in partial_references)
 del queue_owner
 del name, owner, wide_owner, tlm_owner
 gc.collect()
@@ -156,7 +183,7 @@ top.sc_thread("check_running_cleanup", check_running_cleanup)
 sc.sc_start(1, sc.SC_NS)
 sc.sc_stop()
 assert ordering == ["running-rejected", "end"]
-assert sc.release_interface_callbacks() == 4
+assert sc.release_interface_callbacks() == 6
 assert sc.release_interface_callbacks() == 0
 gc.collect()
 assert reference() is None
@@ -164,6 +191,7 @@ assert wide_reference() is None
 assert result_reference() is None
 assert tlm_reference() is None
 assert queue_reference() is None
+assert all(reference() is None for reference in partial_references)
 cppyy.cppdef("""
 /** Verify a released shared adapter rejects nonblocking callbacks.
  * Interface and output are borrowed for this call. Exceptions are inspected
@@ -182,6 +210,14 @@ bool released_peek_output(tlm::tlm_nonblocking_peek_if<int>& channel) {
 }
 """)
 assert cppyy.gbl.released_peek_output(queue_ports[0].get_interface())
+assert cppyy.gbl.released_peek_output(partial_ports[1][0].get_interface())
+for partial_port, operation in partial_ports:
+    try:
+        getattr(partial_port.get_interface(), operation)()
+    except (RuntimeError, TypeError) as error:
+        assert "released" in str(error)
+    else:
+        raise AssertionError("partial callback executed after release")
 for queue_port, method in ((queue_ports[1], "get"), (queue_ports[-1], "peek")):
     try:
         getattr(queue_port.get_interface(), method)()

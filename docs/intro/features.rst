@@ -1198,3 +1198,10 @@ Standalone get/peek nonblocking callbacks reject malformed tuple lengths,
 non-bool success flags, and nonconvertible successful values. Borrowed caller
 outputs remain unchanged and valid copied samples recover after each failure
 for all four tested multiword/wide types.
+
+Standalone combined get and peek callback owners remain alive after external
+references are dropped and remain callable through end-of-simulation. Explicit
+stopped-kernel release collects both owners, including self-bound callback
+cycles; repeated release is idempotent. Released callbacks reject access and
+nonblocking peek preserves caller output. Native adapters remain retained while
+ports borrow their addresses; safe native adapter teardown remains open.
