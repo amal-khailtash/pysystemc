@@ -25,6 +25,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Forward native export bindings to their underlying interface, preserving
+  structural identity through export chains.
 - Reject nonnumeric floating signal callback results before native sampled
   reference storage changes, with recovery through read and trace-reference access.
 - Reuse existing compatible structural adapters before validating a narrower

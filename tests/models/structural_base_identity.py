@@ -46,6 +46,12 @@ write_only = sc.sc_port[sc.sc_signal_write_if[value_type]]("write_only")
 write_only(owner)
 repeat = sc.sc_port[sc.sc_signal_in_if[value_type]]("repeat")
 repeat(owner)
+exported = sc.sc_export[sc.sc_signal_in_if[value_type]]("exported")
+exported(owner)
+export_chain = sc.sc_export[sc.sc_signal_in_if[value_type]]("export_chain")
+export_chain(exported)
+export_reader = sc.sc_port[sc.sc_signal_in_if[value_type]]("export_reader")
+export_reader(export_chain)
 
 
 class Queue:
@@ -154,9 +160,10 @@ std::uintptr_t structural_interface_address(sc_core::sc_interface* value) {
     return reinterpret_cast<std::uintptr_t>(value);
 }
 """)
-interfaces = [port.get_interface() for port in (writer, reader, write_only, repeat)]
+interfaces = [port.get_interface() for port in (writer, reader, write_only, repeat, exported, export_chain)]
 addresses = [cppyy.gbl.structural_interface_address(interface) for interface in interfaces]
 assert len(set(addresses)) == 1, addresses
+signal_address = addresses[0]
 assert all(cppyy.addressof(interface.default_event()) == cppyy.addressof(owner.changed) for interface in interfaces)
 for group in (fifo_ports, tlm_ports, reverse_signal_ports, reverse_fifo_ports, reverse_tlm_ports):
     addresses = [cppyy.gbl.structural_interface_address(port.get_interface()) for port in group]
@@ -200,5 +207,7 @@ assert seen == [(29, "0 s")], seen
 assert ready_seen == ["1 ns"], ready_seen
 print("IDENTITY_READY", ready_seen[0])
 assert writer.get_interface().read().to_uint64() == 29
+assert export_reader.get_interface().read().to_uint64() == 29
+assert cppyy.gbl.structural_interface_address(export_reader.get_interface()) == signal_address
 sc.sc_stop()
 print("STRUCTURAL_BASE_IDENTITY_OK")

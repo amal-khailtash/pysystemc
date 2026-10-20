@@ -531,6 +531,8 @@ class PortTemplate:
                 Raises TypeError for unsupported interfaces or missing callbacks.
                 Native binding diagnostics and policies remain SystemC's own.
                 """
+                if isinstance(implementation, cppyy.gbl.sc_core.sc_export_base):
+                    return native_bind(port, implementation.get_interface())
                 if isinstance(implementation, cppyy.gbl.sc_core.sc_interface) or isinstance(
                     implementation, cppyy.gbl.sc_core.sc_port_base
                 ):
