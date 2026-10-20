@@ -1131,3 +1131,7 @@ Rejected scalar FIFO reads preserve caller-owned output in both blocking and
 nonblocking paths for tested integer widths, bool, and floating types. Callback
 errors, including raised owner exceptions, are cleared under the GIL before
 checking subsequent recovery.
+
+Additional partial-first TLM get/peek binding orders share the combined native
+interface and matching get/peek readiness events while retaining queue state.
+The complete cross-specialization identity matrix remains open.

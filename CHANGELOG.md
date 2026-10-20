@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Tests
 
+- Check additional partial-first TLM get/peek binding orders preserve native interface and readiness-event identity.
+
 - Verify rejected scalar FIFO blocking reads preserve caller output and recover after invalid results or raised owner exceptions.
 
 - Validate floating FIFO value-returning, caller-output blocking, and nonblocking callback outputs for infinities, NaN, signed zero, and finite recovery against independent native SystemC FIFOs.

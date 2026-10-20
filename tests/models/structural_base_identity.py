@@ -128,6 +128,18 @@ for contract in (tlm.tlm_nonblocking_peek_if, tlm.tlm_blocking_get_if, tlm.tlm_g
     port = sc.sc_port[contract[int]]()
     port(reverse_tlm_owner)
     reverse_tlm_ports.append(port)
+permuted_tlm_groups = []
+for contracts in (
+    (tlm.tlm_blocking_peek_if, tlm.tlm_nonblocking_get_if, tlm.tlm_get_peek_if),
+    (tlm.tlm_nonblocking_get_if, tlm.tlm_nonblocking_peek_if, tlm.tlm_get_peek_if),
+):
+    queue = Queue()
+    ports = []
+    for contract in contracts:
+        port = sc.sc_port[contract[int]]()
+        port(queue)
+        ports.append(port)
+    permuted_tlm_groups.append((queue, ports))
 tlm_owner = Queue()
 tlm_ports = []
 for contract in (
@@ -168,6 +180,17 @@ assert all(cppyy.addressof(interface.default_event()) == cppyy.addressof(owner.c
 for group in (fifo_ports, tlm_ports, reverse_signal_ports, reverse_fifo_ports, reverse_tlm_ports):
     addresses = [cppyy.gbl.structural_interface_address(port.get_interface()) for port in group]
     assert len(set(addresses)) == 1, addresses
+for queue, ports in permuted_tlm_groups:
+    interfaces = [port.get_interface() for port in ports]
+    assert len({cppyy.gbl.structural_interface_address(interface) for interface in interfaces}) == 1
+    combined = interfaces[-1]
+    for interface in interfaces:
+        for method in ("ok_to_get", "ok_to_peek"):
+            if hasattr(interface, method):
+                assert cppyy.addressof(getattr(interface, method)()) == cppyy.addressof(getattr(combined, method)())
+    assert combined.peek() == 41
+    assert combined.get() == 41
+    assert combined.peek() == 43
 assert cppyy.gbl.structural_interface_address(other_type.get_interface()) != cppyy.gbl.structural_interface_address(
     fifo_ports[0].get_interface()
 )
