@@ -558,7 +558,8 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.9.0...v0.10.0
