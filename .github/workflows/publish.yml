@@ -54,6 +54,7 @@ jobs:
       # Test as a wheel consumer, without the manylinux compiler toolset's
       # headers and runtime paths affecting Cling's runtime C++ compilation.
       - name: Install and test bundled wheel
+        if: github.event.repository.name == 'pysystemc'
         run: |
           wheel=$(realpath dist/*.whl)
           check=$(realpath tools/check_wheel.py)
@@ -90,7 +91,7 @@ jobs:
       - name: Synchronize, activate, and build released documentation
         env:
           RTD_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}
-          RTD_PROJECT: pysystemc
+          RTD_PROJECT: ${{ github.event.repository.name }}
           RTD_VERSION: ${{ inputs.tag }}
         run: |
           python - <<'PYTHON'
