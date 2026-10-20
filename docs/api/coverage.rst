@@ -218,8 +218,8 @@ exception preservation and recovery, and two 1 ns services per owner.
 
 Reset and kill cleanup also cover standalone combined TLM get and peek owners
 that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
-The structural matrix checks 1,386 combinations across fourteen value types, nine
-wait forms, and eleven access paths,
+The structural matrix checks 1,764 combinations across fourteen value types, nine
+wait forms, and fourteen access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
 
 Standalone multiword/wide TLM get and peek value-returning overloads reject
@@ -289,4 +289,10 @@ callbacks do; these checks do not delete native adapter storage.
 B1/B4 reset coverage includes short, unsigned short, unsigned int, long, and
 unsigned long in addition to the previously tested types. Type-based wide-sample
 checks preserve signed/high-bit assertions independently of matrix ordering.
-The fourteen types cover the same nine waits and eleven access paths.
+The fourteen types cover the same nine waits and fourteen access paths.
+
+B1/B4/C1 reset coverage includes native FIFO ``read(T&)`` and TLM ``get(T&)``/
+``peek(T&)`` overloads, using local C++ output storage and explicit GIL release
+around blocking calls. Scheduler unwind crosses the output-wrapper frame with
+the same callback/worker ordering. The full matrix runs in three independent
+processes, each retaining the 60-second timeout.

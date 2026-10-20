@@ -2,6 +2,7 @@
 
 from amal.eda.systemc import sc_core as sc, sc_dt, tlm
 import sys
+import cppyy
 
 records = []
 clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.SC_NS), True)
@@ -26,7 +27,7 @@ value_types = (
 )
 if len(sys.argv) == 3:
     value_types = value_types[int(sys.argv[1]) : int(sys.argv[2])]
-paths_per_type = 11
+paths_per_type = 14
 cases_per_type = paths_per_type * len(wait_kinds)
 
 
@@ -143,21 +144,44 @@ for value_type in value_types:
             tlm.tlm_peek_if[value_type],
             tlm.tlm_get_peek_if[value_type],
             tlm.tlm_get_peek_if[value_type],
+            sc.sc_fifo_blocking_in_if[value_type],
+            tlm.tlm_blocking_get_if[value_type],
+            tlm.tlm_blocking_peek_if[value_type],
         )
         * len(wait_kinds)
     )
 for index, interface in enumerate(interfaces):
     port = sc.sc_port[interface]()
     path = index % paths_per_type
-    if path >= 9:
+    if path in (9, 10):
         owner = FullOwner(index)
-    elif path >= 7:
+    elif path in (7, 8):
         owner = PartialOwner(index, "get" if path == 7 else "peek")
     else:
         owner = Owner(index)
     port(owner)
     ports.append(port)
 del name
+
+
+output_helpers = {}
+for index, interface in enumerate(interfaces):
+    path = index % paths_per_type
+    if path < 11:
+        continue
+    operation = ("read", "get", "peek")[path - 11]
+    native_name = interface.__cpp_name__
+    value_name = native_name.split("<", 1)[1].removesuffix(">")
+    helper_name = f"reset_output_{index}"
+    cppyy.cppdef(
+        f"/** Borrow local output during a blocking callback; caller releases GIL, "
+        f"adapter reacquires it; scheduler unwind propagates through this frame. */ "
+        f"void {helper_name}({native_name}& channel) {{ "
+        f"{value_name} output = 71; channel.{operation}(output); }}"
+    )
+    helper = getattr(cppyy.gbl, helper_name)
+    helper.__release_gil__ = True
+    output_helpers[index] = helper
 
 
 def worker(index):
@@ -171,7 +195,9 @@ def worker(index):
         value = value_type(17) if wide else 17
         if wide:
             value[136 if value_type == sc_dt.sc_biguint[137] else 127] = True
-        if path == 0:
+        if path >= 11:
+            output_helpers[index](native)
+        elif path == 0:
             native.read()
         elif path in (1, 5, 7, 9):
             native.get()

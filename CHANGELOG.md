@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Tests
+- Cover caller-output FIFO read and TLM get/peek reset unwind across 1,764 existing type/wait/access combinations.
 - Broaden existing scalar interface reset coverage to short/unsigned short/unsigned int/long/unsigned long across 1,386 combinations.
 - Assert released standalone/full TLM blocking caller-output overloads preserve output and full readiness callbacks reject access.
 - Verify standalone and full TLM readiness events remain distinct and preserve native addresses after callback-owner cleanup.
