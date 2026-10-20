@@ -1,4 +1,4 @@
-name: Publish Python distributions
+name: 04. Publish
 on:
   workflow_call:
     inputs:
@@ -28,10 +28,10 @@ jobs:
     with:
       ref: ${{ inputs.tag }}
     secrets: inherit
-  build:
+  verify:
     needs: tests
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux_2_28_x86_64
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
         with:
@@ -47,30 +47,9 @@ jobs:
           git -c safe.directory="$PWD" show-ref --verify "refs/tags/$RELEASE_TAG"
           git -c safe.directory="$PWD" merge-base --is-ancestor HEAD origin/main
           uv run --no-project python -c 'import os, tomllib; from pathlib import Path; version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]; assert os.environ["RELEASE_TAG"] == "v" + version, "Release tag must match pyproject.toml version"'
-      - name: Build native dependencies and distributions
-        run: |
-          uv build
-          uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
-          rm dist/*.whl
-          mv repaired/*.whl dist/
-      - uses: actions/upload-artifact@v7
-        with:
-          name: distributions
-          path: dist/*
-  verify:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.tag }}
-      - uses: astral-sh/setup-uv@v7
-        with:
-          python-version: '3.14'
       - uses: actions/download-artifact@v7
         with:
-          name: distributions
+          name: ci-distributions
           path: dist/
       # Test as a wheel consumer, without the manylinux compiler toolset's
       # headers and runtime paths affecting Cling's runtime C++ compilation.
@@ -91,7 +70,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v7
         with:
-          name: distributions
+          name: ci-distributions
           path: dist/
       - name: Publish to TestPyPI
         if: github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi'
@@ -104,9 +83,18 @@ jobs:
   documentation:
     needs: publish
     if: inputs.repository != 'testpypi'
-    uses: ./.github/workflows/readthedocs.yml
-    with:
-      ref: ${{ inputs.tag }}
-      version: ${{ inputs.tag }}
-    secrets:
-      READTHEDOCS_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger released documentation after PyPI publication
+        env:
+          RTD_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}
+          RTD_PROJECT: pysystemc
+          RTD_VERSION: ${{ inputs.tag }}
+        run: |
+          test -n "$RTD_TOKEN"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Token $RTD_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            "https://readthedocs.org/api/v3/projects/$RTD_PROJECT/versions/$RTD_VERSION/builds/"

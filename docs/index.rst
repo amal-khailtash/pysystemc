@@ -1,22 +1,24 @@
 .. toctree::
    :hidden:
-   :caption: Introduction
+   :caption: User guide
    :maxdepth: 2
 
    intro/setup
    intro/examples
    intro/features
-   intro/development
-   development/releases
-   intro/contributing
-   intro/architecture
-   intro/roadmap
    intro/release_notes
    intro/references
 
 .. toctree::
    :hidden:
-   :caption: API Reference
+   :caption: Development
+   :maxdepth: 2
+
+   development/index
+
+.. toctree::
+   :hidden:
+   :caption: API reference
    :maxdepth: 2
 
    api/bindings
