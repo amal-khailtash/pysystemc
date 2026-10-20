@@ -336,3 +336,51 @@ eighteen paths produce 2,268 combinations. Compound callbacks must unwind at
 output helpers check unchanged storage before rethrowing. The independent
 native reference additionally checks get/peek output through compound interface
 views with the same times, unwind kinds, counts and final empty state.
+
+B2 specialization identity checks cover int, long long and sc_biguint137 for
+signal, FIFO and TLM inherited views in combined-first and partial-first order.
+Native virtual interface addresses and corresponding events match across views;
+one FIFO owner bound to three types has distinct native adapters and shared
+Python sample state. Event observers use dont_initialize and fire once at 1 ns.
+The new matrix and existing identity regression pass together; this does not
+establish identity across all compound or transport specializations.
+
+C1 master/slave blocking callbacks use native pair returns for the response
+type, preserving public value/output overloads with multiword types. Twelve
+blocking/full master/slave specializations cover asymmetric int/long long,
+unsigned long long/long double and sc_biguint137/sc_bigint128 request/response
+pairs. Exact endpoints/high bits, copied puts, blocking get/peek value/output,
+full-interface nonblocking success/failure, caller-output retention, callback
+counts and simulation times agree with an independent native reference.
+The new matrix and existing master/slave regression pass together. Complete
+type/error/reset/lifetime matrices remain open.
+
+B1 scalar signal reference checks compare eight normalized records for bool,
+signed/unsigned int and long long, and float/double/long double. Integral
+endpoints, finite floating values, signed zero, infinity, NaN, value-change
+callbacks and delta updates agree with native sc_signal specializations.
+Structural reads reject bool/type/range mismatches, preserve sampled storage
+and recover through read/get_data_ref after valid results are restored. All
+objects are constructed before simulation and each reference runs in a fresh
+subprocess. Wider scalar/tracing/policy matrices remain open.
+
+B3 compound callback lifetime checks cover four int owners: FIFO put/get and
+full master/slave. External references are dropped before simulation; weakrefs
+remain live through worker callbacks and end_of_simulation at 1 ns. Release
+during simulation rejects without changing owner state. Stopped-kernel cleanup
+releases exactly four adapters' callback owners, permits collection and returns
+zero on repetition. Borrowed readiness events retain addresses; subsequent
+callbacks reject and native get/peek/nonblocking output probes preserve their
+sentinels. Native adapters still remain retained while ports borrow addresses;
+safe native teardown is not established.
+
+B4/C1 master/slave unwind checks cover blocking/full master/slave interfaces,
+int, long long, long double and sc_biguint137, five blocking paths (put,
+get/peek value and get/peek caller-output), and nine waits: 720 combinations.
+Three fresh-process slices retain the 60-second timeout. Callback/worker cleanup
+at 2 ns, immediate restart, kill cleanup at 3 ns, exact callback counts and
+terminated handles are asserted. An independent native reference supplies 32
+event-wait get/peek output consumers across the same types/families, asserting
+unwind kind, output preservation, times and counts before mandatory rethrow.
+Native reference records match the corresponding Python output-event subset.
+The native reference does not reproduce all nine callback wait forms.

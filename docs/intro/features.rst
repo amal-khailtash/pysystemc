@@ -134,6 +134,11 @@ Compound FIFO checks additionally cover 128/137-bit high-bit preservation and
 integral callback rejection with unchanged outputs and endpoint recovery.
 Selected inherited TLM readiness-event
 identity is independently compared with native FIFO specializations.
+Signal/FIFO/TLM specialization identity now covers int, long long and
+sc_biguint137 in both combined-first and partial-first orders, with delayed
+event observers and shared state checks.
+Scalar signal endpoint and floating special-value checks now have independent
+native equivalence records, with callback rejection and sampled-value recovery.
 
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
 adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
@@ -146,6 +151,9 @@ Standalone get/peek readiness rejects post-release access, while failed native
 blocking and nonblocking get/peek calls preserve caller outputs. Full and
 standalone readiness callbacks reject access after cleanup. Adapter-owned readiness events
 retain their native addresses after owner cleanup. Native teardown remains open.
+Compound FIFO put/get and full master/slave owners are retained through final
+simulation hooks and collect after explicit stopped-kernel callback release;
+post-release output retention and event addresses are checked.
 Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
 reset/kill cleanup ordering in timed native-process tests.
 Each path covers timed, event, OR/AND, timed-event/list, cycle and counted-cycle
@@ -172,6 +180,11 @@ C. TLM interface families — partial
 * ☐ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
 
 Multiword get/peek validation contributes to C1; the full requirement remains open.
+Master/slave multiword blocking callbacks use native pair returns; twelve
+asymmetric blocking/full specializations have independent native value/output,
+copy, callback-count and timing checks.
+Master/slave reset/kill validation covers 720 type/family/wait/access combinations
+and an independent native output-unwind reference for 32 event-wait consumers.
 See :doc:`../api/coverage` for overload, event, lifetime, and native-reference evidence.
 
 Implemented and tested: TLM1 put/get/peek/transport/analysis, combined/master/slave/FIFO families

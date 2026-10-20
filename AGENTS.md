@@ -51,6 +51,17 @@ Do not restrict template widths or types to a precompiled list.
 
 ## Planning
 
+- Delegate simple execution and validation tasks to `gpt-6-luna` sub-agents
+  when an agent slot is available. Give each worker a bounded specification,
+  explicit file ownership, commands and acceptance criteria. Keep detailed
+  execution logs and routine debugging in the worker context; return concise
+  results with evidence, failures and remaining limitations.
+- The main agent orchestrates independent, non-overlapping groups and owns
+  integration and updates to the plan, feature status, coverage and changelog.
+  Evaluate worker results through the main validation harness before accepting
+  them; worker completion alone does not establish correctness or feature
+  completion. Queue tasks when the session's concurrency limit is reached.
+
 Maintain local `.ai/DEVELOPMENT_PLAN.md` and `.ai/EXAMPLE_COVERAGE.md`.
 These records are ignored and are not part of published documentation.
 Record supported, failing, untested, and deferred features distinctly. Port all

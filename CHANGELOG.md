@@ -9,10 +9,15 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Fixed
+- Preserve master/slave multiword blocking get/peek signatures through native pair-return callbacks.
 - Validate compound TLM FIFO integral blocking/nonblocking callback values before native conversion, preserving caller outputs on rejected results.
 - Use native pair-return callbacks for compound TLM FIFO blocking get/peek so multiword scalar dispatch preserves public value/output overloads.
 
 ### Tests
+- Exercise 720 master/slave reset/kill combinations with a 32-consumer native output-unwind reference.
+- Verify compound FIFO/master/slave callback-owner retention, stopped-kernel release and post-release output preservation.
+- Compare scalar signal endpoint and floating special-value semantics with native signals, including callback rejection and recovery.
+- Compare twelve asymmetric master/slave overload specializations with independent native references and expand signal/FIFO/TLM specialization identity matrices.
 - Extend the planned reset matrix to compound FIFO get/peek value/output overloads across 2,268 combinations and native compound output references.
 - Extend compound FIFO overload checks to signed/unsigned 128-bit and unsigned 137-bit values, plus integral callback rejection and endpoint recovery.
 - Assert interrupted FIFO/TLM blocking caller-output storage stays unchanged before reset/kill unwind is rethrown.

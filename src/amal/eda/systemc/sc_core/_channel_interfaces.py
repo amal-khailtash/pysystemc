@@ -267,13 +267,18 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             get = f"typename {traits}<{name}>::Get"
             if mode != "nonblocking_":
                 methods += (
+                    "/** @brief Copy blocking response values through a native pair. "
+                    "@details The adapter borrows its Python owner through simulation; callbacks acquire "
+                    "the GIL and blocking native callers release it. Exceptions and scheduler unwind "
+                    "propagate before caller output assignment. The pair owns its response copy. */ "
+                    f"using blocking_value_pair = std::pair<{get}, bool>; "
                     f"void put(const {put}& value) override {{ put_value(value); }} "
-                    f"{get} get(tlm::tlm_tag<{get}>* = nullptr) override {{ return get_value(); }} "
-                    f"void get({get}& value) override {{ value = get_value(); }} "
-                    f"{get} peek(tlm::tlm_tag<{get}>* = nullptr) const override {{ return peek_value(); }} "
-                    f"void peek({get}& value) const override {{ value = peek_value(); }} "
-                    f"virtual void put_value({put}) = 0; virtual {get} get_value() = 0; "
-                    f"virtual {get} peek_value() const = 0; "
+                    f"{get} get(tlm::tlm_tag<{get}>* = nullptr) override {{ return get_value().first; }} "
+                    f"void get({get}& value) override {{ value = get_value().first; }} "
+                    f"{get} peek(tlm::tlm_tag<{get}>* = nullptr) const override {{ return peek_value().first; }} "
+                    f"void peek({get}& value) const override {{ value = peek_value().first; }} "
+                    f"virtual void put_value({put}) = 0; virtual blocking_value_pair get_value() = 0; "
+                    "virtual blocking_value_pair peek_value() const = 0; "
                 )
             if mode != "blocking_":
                 methods += (
