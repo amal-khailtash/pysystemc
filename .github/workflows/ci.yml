@@ -1,4 +1,4 @@
-name: Tests and coverage
+name: 02. CI
 on:
   push:
     branches: [main]

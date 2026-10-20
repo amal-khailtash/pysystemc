@@ -1,4 +1,4 @@
-name: Release automation
+name: 03. Release Please
 on:
   push:
     branches: [main]
