@@ -8,8 +8,17 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Python ports of the upstream ready/valid and toggle/toggle examples preserve
+  native clocked handshake/reset semantics; all 131/132 value/time records match
+  independent C++ references, including forty consumed values.
+
 ### Changed
 
+- Complete five further baseline example audits: barrier, FIFO mutex policy,
+  specialized signals, ready/valid and toggle/toggle. Document unused helpers and
+  compiler alternatives separately; restore the mutex port's full permission notice.
 - Complete the baseline executable-variant audits for dpipe, forkjoin,
   reset_signal_is, sc_export and sc_report; document inputs, native comparisons,
   Python adaptations and the separate untested platform/build alternatives.

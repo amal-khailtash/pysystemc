@@ -108,7 +108,7 @@ ADL, inherited access/ambiguity, callback retention, GIL and error behavior stil
 require validation where recorded as untested. Known failures remain failing.
 
 All 33 upstream executable targets have source/input/configuration records:
-9 default native/Python comparisons pass and 24 targets remain unported or
+11 default native/Python comparisons pass and 22 targets remain unported or
 uncompared. Alternate inputs, platforms and build configurations remain untested.
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
@@ -215,11 +215,11 @@ Common compiler/platform build alternatives remain outside this baseline; see
 * ☑ ``sysc/2.1/reset_signal_is``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/2.1/sc_export``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/2.1/sc_report``: executable-variant audit and Python/native equivalence on the selected baseline.
-* ☐ ``sysc/2.1/scx_barrier``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.1/scx_mutex_w_policy``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.1/specialized_signals``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.3/sc_rvd``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/2.3/sc_ttd``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``sysc/2.1/scx_barrier``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.1/scx_mutex_w_policy``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.1/specialized_signals``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.3/sc_rvd``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/2.3/sc_ttd``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☐ ``sysc/2.3/simple_async``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/fft/fft_flpt``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/fft/fft_fxpt``: complete executable-variant audit and Python/native equivalence.

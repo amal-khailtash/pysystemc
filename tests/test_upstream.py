@@ -106,6 +106,7 @@ def test_upstream_barrier_matches_native(tmp_path):
     pattern = r"^\d+\.\d+ - [abc]$"
     assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
     assert len(re.findall(pattern, output, re.M)) == 3
+    assert "Program completed" in output and "Program completed" in result.stdout
 
 
 def test_upstream_exports_match_native(tmp_path):
@@ -224,3 +225,43 @@ def test_upstream_specialized_signals_matches_native(tmp_path):
     assert re.findall(pattern, output, re.M) == re.findall(pattern, result.stdout, re.M)
     assert len(re.findall(pattern, output, re.M)) == 13
     assert " != " not in result.stdout
+
+
+def test_upstream_ready_valid_matches_native(tmp_path):
+    """Compare every ready/valid producer, DUT and consumer value/time record."""
+    _compare_handshake(tmp_path, "sc_rvd")
+
+
+def test_upstream_toggle_toggle_matches_native(tmp_path):
+    """Compare every toggle handshake producer, DUT and consumer value/time record."""
+    _compare_handshake(tmp_path, "sc_ttd")
+
+
+def _compare_handshake(tmp_path, group):
+    """Run independent kernels and assert role, value, time, order and completion."""
+    import re
+
+    output = run_example(tmp_path, f"examples/sysc/2.3/{group}/main.py")
+    native = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "amal.eda.systemc._runner",
+            "-I",
+            str(ROOT / "submodules/systemc/examples/sysc/2.3/include"),
+            str(ROOT / f"submodules/systemc/examples/sysc/2.3/{group}/main.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"^( +)(\d+) +(\d+ (?:s|ns|ps))$"
+    records = re.findall(pattern, output, re.M)
+    assert records == re.findall(pattern, native.stdout, re.M)
+    consumers = [(int(value), time) for indent, value, time in records if len(indent) >= 15]
+    assert [value for value, _ in consumers] == list(range(40))
+    assert len(records) == (131 if group == "sc_rvd" else 132)
+    assert consumers[-1][1] == ("254 ns" if group == "sc_rvd" else "298 ns")
+    assert "Program completed" in output and "Program completed" in native.stdout

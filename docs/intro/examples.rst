@@ -111,3 +111,39 @@ The common CMake alternatives (``DEBUG_SYSTEMC``, ``SC_ENABLE_ASSERTIONS``,
 Windows console definitions and other compiler options) have been reviewed as
 build configurations. Their runtime matrices remain untested. No Windows or
 alternate-kernel compatibility is claimed by the completed example items.
+
+Handshake and synchronization variants
+--------------------------------------
+
+Five further groups have completed baseline executable audits. Each CMake target
+has one executable, no configured stdin, no runtime argument selection and no
+waveform output in its stimulus. The ready/valid and toggle/toggle targets include
+``sysc/2.3/include`` and their matching channel header. Their Python ports live at
+``examples/sysc/2.3/sc_rvd/main.py`` and ``examples/sysc/2.3/sc_ttd/main.py``.
+
+Both ports use native parameterized signals and directional ports. Python protocol
+methods reproduce each do/while cycle wait with guarded ``sc.wait()`` and copy
+read data before retaining batches. They preserve active-low synchronous reset,
+producer pauses, batching and stop after forty consumer transfers. Every role,
+value, timestamp and record order matches the native reference: 131 ready/valid
+records ending at 254 ns and 132 toggle/toggle records ending at 298 ns.
+These are ports of the executable stimuli; unused export and nonblocking channel
+helpers remain outside their evidence.
+
+The barrier comparison checks all three releases at 11 ns and completion.
+The mutex comparison checks FIFO ownership at 1, 11 and 21 ns and empty ownership
+and waiter state afterward. RANDOM is a source-level alternative, not a declared
+executable variant; its runtime equivalence remains untested. The mutex port
+retains the book example's complete copyright and permission notice. The other
+four ports retain Accellera Apache-2.0 LICENSE/NOTICE attribution.
+
+Specialized signals compares all 13 concatenation displays and asserts all 26
+arithmetic checks. Its source headers contain compiler-dependent template syntax,
+GNU overload paths, warning pragmas and disabled implementation blocks; none
+selects an additional stimulus executable. Legacy MSVC and alternate compiler
+paths remain untested, as do unused tracing helpers. The Python port uses explicit
+reads and native concatenation adapters while preserving deferred signal updates.
+
+Run all five comparisons in fresh subprocesses with 60-second timeouts::
+
+   uv run pytest tests/test_upstream.py -k 'barrier or mutex_policy or specialized_signals or ready_valid or toggle_toggle'
