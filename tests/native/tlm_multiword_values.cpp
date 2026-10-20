@@ -17,6 +17,10 @@ void check(const char* name)
   if constexpr (std::is_same_v<T, sc_dt::sc_biguint<137>>) expected[136] = true;
   tlm::tlm_get_if<T>& get = fifo;
   tlm::tlm_peek_if<T>& peek = fifo;
+  tlm::tlm_nonblocking_get_if<T>& get_base = get;
+  tlm::tlm_nonblocking_peek_if<T>& peek_base = peek;
+  if (&get.ok_to_get() != &get_base.ok_to_get() || &peek.ok_to_peek() != &peek_base.ok_to_peek())
+    throw std::runtime_error("inherited readiness event identity mismatch");
   T output = 71;
   if (get.nb_get(output) || output != T(71)) throw std::runtime_error("empty get modified output");
   output = 73;
@@ -45,6 +49,8 @@ void check(const char* name)
   std::cout << "TLM_VALUE " << name << " peek 1 1\n";
   std::cout << "TLM_NB " << name << " get 0 1 1\n";
   std::cout << "TLM_NB " << name << " peek 0 1 1\n";
+  std::cout << "TLM_EVENT " << name << " get 1\n";
+  std::cout << "TLM_EVENT " << name << " peek 1\n";
 }
 
 /** @brief Select one specialization per independent native kernel process. */

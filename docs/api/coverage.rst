@@ -253,3 +253,8 @@ check unavailable and available readiness, successful nonblocking copies, and
 unchanged outputs on failed calls. Native FIFO readiness returns to unavailable
 after consumption. These comparisons contribute to C1 and B1/B4 evidence;
 they do not complete the broader matrices.
+
+B2/C1 native-reference checks also compare inherited nonblocking get/peek
+readiness-event identity in native ``tlm_fifo`` and structural standalone adapters
+for these four types. Each base view borrows the same event as its combined view.
+Cross-specialization and binding-order completeness remain unproven.

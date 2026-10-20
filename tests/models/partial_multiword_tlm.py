@@ -123,6 +123,7 @@ bool partial_reject_{index}(tlm::tlm_{operation}_if<{scalar}>& channel, bool blo
         owner.available = True
         label = ("long_long", "unsigned_long_long", "long_double", "biguint137")[index // 2]
         print(f"TLM_NB {label} {operation} 0 1 1")
+        print(f"TLM_EVENT {label} {operation} 1")
         owner.failure = True
         reject = getattr(cppyy.gbl, f"partial_reject_{index}")
         assert reject(native, True) and reject(native, False)
