@@ -90,6 +90,16 @@ namespace scalar_fifo_check {
      PyGILState_Release(gil); return output == T(7); }
    return false;
  }
+ /** Verify rejected blocking reads preserve caller-owned output.
+  * The callback adapter releases acquired GIL state on failure. This helper
+  * clears the Python error while holding the GIL and retains no references.
+  */
+ template<class T> bool rejected_blocking_output(sc_core::sc_fifo_in_if<T>& channel) {
+   T output = 7;
+   try { channel.read(output); } catch (...) { auto gil = PyGILState_Ensure(); PyErr_Clear();
+     PyGILState_Release(gil); return output == T(7); }
+   return false;
+ }
  template<class T> bool failed_output(sc_core::sc_fifo_in_if<T>& channel) {
    T output = 7;
    return !channel.nb_read(output) && output == T(7);
@@ -111,6 +121,7 @@ for scalar, owner, port in cases:
         else:
             raise AssertionError((scalar, invalid))
         assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
+        assert cppyy.gbl.scalar_fifo_check.rejected_blocking_output[scalar](native), scalar
     owner.value = 0
     owner.success = False
     assert cppyy.gbl.scalar_fifo_check.failed_output[scalar](native), scalar
@@ -134,6 +145,7 @@ for scalar, owner, port in additional:
         else:
             raise AssertionError((scalar, invalid))
         assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
+        assert cppyy.gbl.scalar_fifo_check.rejected_blocking_output[scalar](native), scalar
     owner.value = False if scalar == "bool" else 1.25
     assert native.read() == owner.value
     if scalar != "bool":

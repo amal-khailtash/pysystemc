@@ -1126,3 +1126,7 @@ and successful nonblocking reads. Finite
 recovery is checked in the same simulation and compared with independent native
 SystemC FIFO runs for each type. Complete conversion, tracing, reset,
 and native-reference matrices remain open.
+
+Rejected scalar FIFO reads preserve caller-owned output in both blocking and
+nonblocking paths for tested integer widths, bool, and floating types. Callback
+errors are cleared under the GIL before checking subsequent recovery.

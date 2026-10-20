@@ -10,6 +10,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Tests
 
+- Verify rejected scalar FIFO blocking reads preserve caller output and recover after callback errors.
+
 - Validate floating FIFO value-returning, caller-output blocking, and nonblocking callback outputs for infinities, NaN, signed zero, and finite recovery against independent native SystemC FIFOs.
 
 ### CI
