@@ -1149,7 +1149,7 @@ Blocking TLM get/peek bridges use internal value-pair callbacks to support
 multiword native return types while preserving public native signatures. Reset
 and kill ordering is checked across int, float, double, long double, and
 sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
-(225 combinations). Complete channel and TLM matrices remain open.
+and combined TLM blocking get/peek (315 combinations). Complete channel and TLM matrices remain open.
 
 Multiword standalone and combined TLM blocking get/peek completion checks both returned values
 and caller-output overloads for long long, unsigned long long, and long double.
