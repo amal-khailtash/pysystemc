@@ -1184,3 +1184,8 @@ that expose only their requested operation. Full blocking/nonblocking get/peek o
 The structural matrix checks 693 combinations across seven value types, nine
 wait forms, and eleven access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
+
+Standalone multiword/wide TLM get and peek value-returning overloads reject
+raised owner exceptions and nonconvertible samples. Caller-output overloads
+retain their previous value on the same conversion failures, and subsequent
+services complete with exact values, callback counts, and simulation time.

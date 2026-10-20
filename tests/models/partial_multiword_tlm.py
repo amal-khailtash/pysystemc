@@ -11,6 +11,7 @@ class Owner:
         """Install one blocking/nonblocking callback family."""
         self.calls = 0
         self.failure = False
+        self.invalid = False
         self.available = False
         self.wide = wide
         setattr(self, operation, self.sample)
@@ -29,6 +30,8 @@ class Owner:
         """Wait one nanosecond for a sample, or reject before touching output."""
         if self.failure:
             raise RuntimeError("partial callback failure")
+        if self.invalid:
+            return object()
         sc.wait(1, sc.SC_NS)
         self.calls += 1
         return self.value()
@@ -64,6 +67,13 @@ bool partial_complete_{index}(tlm::tlm_{operation}_if<{scalar}>& channel) {{
  if (channel.{operation}() != expected) return false;
  channel.{operation}(output); return output == expected;
 }}
+/** Reject value-returning callbacks; clear Python errors with GIL held. */
+bool partial_value_reject_{index}(tlm::tlm_{operation}_if<{scalar}>& channel) {{
+ try {{ channel.{operation}(); }}
+ catch (...) {{ auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil);
+   return true; }}
+ return false;
+}}
 /** Check readiness and copied output without scheduler activity. */
 bool partial_nb_{index}(tlm::tlm_{operation}_if<{scalar}>& channel, bool ready) {{
  using T = {scalar}; T output = 71; T expected = {expected};
@@ -87,7 +97,12 @@ bool partial_reject_{index}(tlm::tlm_{operation}_if<{scalar}>& channel, bool blo
         owner.failure = True
         reject = getattr(cppyy.gbl, f"partial_reject_{index}")
         assert reject(native, True) and reject(native, False)
+        value_reject = getattr(cppyy.gbl, f"partial_value_reject_{index}")
+        assert value_reject(native)
         owner.failure = False
+        owner.invalid = True
+        assert value_reject(native) and reject(native, True)
+        owner.invalid = False
         helper = getattr(cppyy.gbl, f"partial_complete_{index}")
         helper.__release_gil__ = True
         cases.append((owner, port, helper))
