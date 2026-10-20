@@ -175,9 +175,11 @@ for index, interface in enumerate(interfaces):
     helper_name = f"reset_output_{index}"
     cppyy.cppdef(
         f"/** Borrow local output during a blocking callback; caller releases GIL, "
-        f"adapter reacquires it; scheduler unwind propagates through this frame. */ "
+        f"adapter reacquires it; verify output before rethrowing scheduler unwind. */ "
         f"void {helper_name}({native_name}& channel) {{ "
-        f"{value_name} output = 71; channel.{operation}(output); }}"
+        f"{value_name} output = 71; try {{ channel.{operation}(output); }} "
+        f"catch (...) {{ if (output != static_cast<{value_name}>(71)) "
+        "std::abort(); throw; } }"
     )
     helper = getattr(cppyy.gbl, helper_name)
     helper.__release_gil__ = True

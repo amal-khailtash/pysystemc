@@ -730,6 +730,15 @@ def test_structural_fifo_reset_cleanup(tmp_path):
         assert "STRUCTURAL_FIFO_RESET_OK" in run_example(
             tmp_path, "tests/models/structural_fifo_reset.py", (start, stop)
         )
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/fifo_output_reset.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert "FIFO_OUTPUT_RESET_REFERENCE 14 3 2 3 4 ns" in native.stdout
 
 
 def test_native_structural_fifo(tmp_path):

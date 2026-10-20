@@ -296,3 +296,18 @@ B1/B4/C1 reset coverage includes native FIFO ``read(T&)`` and TLM ``get(T&)``/
 around blocking calls. Scheduler unwind crosses the output-wrapper frame with
 the same callback/worker ordering. The full matrix runs in three independent
 processes, each retaining the 60-second timeout.
+
+B1/B4/C1 caller-output reset helpers inspect native output storage in the catch
+path before rethrowing scheduler unwind. FIFO read and TLM get/peek outputs
+retain their sentinel during both reset and kill. A changed output terminates
+the subprocess, so cleanup ordering alone cannot mask an output mutation.
+
+The independent native ``tests/native/fifo_output_reset.cpp`` reference checks
+all fourteen types through empty ``sc_fifo::read(T&)``, ``tlm_get_if::get(T&)``
+and ``tlm_peek_if::peek(T&)`` calls. Each consumer starts at 0 ns, resets and
+restarts at 2 ns, and is killed at 3 ns. The native unwind frame asserts its
+reset/kill kind and unchanged output before rethrowing; final checks require two
+starts, two unwinds, terminated consumers, empty channels and final time 4 ns.
+This supplies independent native output/lifecycle evidence for these three
+paths; the native channels wait on their own data events, rather than reproducing
+all nine structural callback wait forms. Safe adapter teardown remains open.

@@ -123,7 +123,11 @@ B. Custom interfaces and channels — partially implemented
 Recent validation contributes to B1-B4; it does not add or complete requirements.
 See :doc:`../api/coverage` for the tested matrices and their remaining limits.
 The reset/kill matrix currently checks 1,764 combinations across fourteen types,
-nine wait forms, and fourteen access paths. Selected inherited TLM readiness-event
+nine wait forms, and fourteen access paths. Interrupted caller-output overloads
+assert unchanged native output before propagating reset/kill unwind.
+An independent native FIFO/TLM reference checks these three output overloads
+across all fourteen types with matching reset/kill times and termination.
+Selected inherited TLM readiness-event
 identity is independently compared with native FIFO specializations.
 
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
