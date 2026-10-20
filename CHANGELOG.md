@@ -16,6 +16,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   views, plus scalar FIFO callback validation and recovery tests.
 - Explicit stopped-kernel structural callback cleanup releases Python owners
   while retaining native adapters borrowed by ports.
+- Structural FIFO read/write and TLM get/put/peek reset/kill tests verify nested
+  callback cleanup, process restart and simulation times through guarded waits.
 
 ### Fixed
 

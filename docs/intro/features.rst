@@ -125,6 +125,8 @@ adapters, mutex/semaphore/event queues and callback result/copy contracts are im
 cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
 ``release_interface_callbacks()`` releases structural owners and retained results
 after native stop; adapters remain alive and later callbacks reject access.
+Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
+reset/kill cleanup ordering in timed native-process tests.
 Scalar/wide and TLM analysis owner collection, plus replaced-reference
 collection, are checked after final
 end-of-simulation reads; cleanup during a running process is rejected.
