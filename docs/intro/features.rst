@@ -1152,8 +1152,9 @@ sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
 and combined TLM blocking get/peek (315 combinations). Complete channel and TLM matrices remain open.
 
 Multiword standalone and combined TLM blocking get/peek completion checks both returned values
-and caller-output overloads for long long, unsigned long long, and long double.
-Each service waits 1 ns; callback counts and total 24 ns completion are asserted.
+and caller-output overloads for long long, unsigned long long, long double, and sc_biguint<137> with bit136
+set.
+Each service waits 1 ns; callback counts and total 32 ns completion are asserted.
 
 Multiword standalone/combined blocking TLM outputs remain unchanged when owners
 raise or return nonconvertible objects, followed by normal timed completion.

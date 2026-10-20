@@ -1,14 +1,15 @@
 """Verify multiword blocking TLM returns and caller-output overload completion."""
 
-from amal.eda.systemc import sc_core as sc, tlm
+from amal.eda.systemc import sc_core as sc, sc_dt, tlm
 import cppyy
 
 
 class Owner:
     """Return deterministic values after a native service wait."""
 
-    def __init__(self):
+    def __init__(self, wide=False):
         """Initialize callback execution count."""
+        self.wide = wide
         self.calls = 0
         self.invalid = False
         self.raise_error = False
@@ -21,6 +22,10 @@ class Owner:
             return object()
         sc.wait(1, sc.SC_NS)
         self.calls += 1
+        if self.wide:
+            value = sc_dt.sc_biguint[137](17)
+            value[136] = True
+            return value
         return 17
 
     def peek(self):
@@ -31,9 +36,9 @@ class Owner:
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 cases = []
-for scalar in ("long long", "unsigned long long", "long double"):
+for scalar in ("long long", "unsigned long long", "long double", "sc_dt::sc_biguint<137>"):
     for contract in (tlm.tlm_blocking_get_if, tlm.tlm_blocking_peek_if, tlm.tlm_blocking_get_peek_if):
-        owner = Owner()
+        owner = Owner(scalar == "sc_dt::sc_biguint<137>")
         port = sc.sc_port[contract[scalar]]()
         port(owner)
         cases.append((scalar, contract, owner, port))
@@ -61,17 +66,21 @@ namespace multiword_completion {
    }
    return false;
  }
+ template<class T> T expected() { return T(17); }
+ template<> sc_dt::sc_biguint<137> expected<sc_dt::sc_biguint<137>>() {
+   sc_dt::sc_biguint<137> value = 17; value[136] = true; return value;
+ }
  template<class T> bool get(tlm::tlm_blocking_get_if<T>& channel) {
    T output = 0;
-   if (channel.get() != T(17)) return false;
+   if (channel.get() != expected<T>()) return false;
    channel.get(output);
-   return output == T(17);
+   return output == expected<T>();
  }
  template<class T> bool peek(tlm::tlm_blocking_peek_if<T>& channel) {
    T output = 0;
-   if (channel.peek() != T(17)) return false;
+   if (channel.peek() != expected<T>()) return false;
    channel.peek(output);
-   return output == T(17);
+   return output == expected<T>();
  }
 }
 """)
@@ -115,8 +124,8 @@ def consumer():
 
 
 handle = sc.sc_spawn(consumer, "consumer")
-sc.sc_start(25, sc.SC_NS)
-assert records == ["24 ns"], records
+sc.sc_start(33, sc.SC_NS)
+assert records == ["32 ns"], records
 assert handle.terminated()
 sc.sc_stop()
 print("MULTIWORD_TLM_COMPLETION_OK")

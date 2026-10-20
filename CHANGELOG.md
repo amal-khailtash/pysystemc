@@ -16,7 +16,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 - Extend reset/kill cleanup checks to combined blocking TLM get/peek across scalar and arbitrary-width types and nine wait forms.
 
-- Check multiword TLM blocking output preservation after invalid results and owner exceptions, followed by timed recovery.
+- Check multiword and arbitrary-width TLM blocking output preservation after invalid results and owner exceptions, followed by timed recovery.
 
 - Verify stopped callback cleanup releases a shared TLM get/peek owner once across partial and combined interfaces, preserving native nonblocking output after release and callbacks through end-of-simulation.
 
