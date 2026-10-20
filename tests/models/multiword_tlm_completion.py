@@ -9,6 +9,7 @@ class Owner:
 
     def __init__(self, wide=False):
         """Initialize callback execution count."""
+        self.available = False
         self.wide = wide
         self.calls = 0
         self.invalid = False
@@ -33,20 +34,25 @@ class Owner:
         return self.get()
 
     def nb_get(self):
-        """Report no sample through the nonblocking path."""
+        """Return the configured availability and a copied sample."""
+        if self.available:
+            value = sc_dt.sc_biguint[137](17) if self.wide else 17
+            if self.wide:
+                value[136] = True
+            return True, value
         return False, None
 
     def nb_peek(self):
-        """Report no peek sample through the nonblocking path."""
-        return False, None
+        """Return the configured nonblocking peek sample."""
+        return self.nb_get()
 
     def nb_can_get(self):
-        """Report no immediate get readiness."""
-        return False
+        """Report configured immediate get readiness."""
+        return self.available
 
     def nb_can_peek(self):
-        """Report no immediate peek readiness."""
-        return False
+        """Report configured immediate peek readiness."""
+        return self.available
 
 
 name = sc.sc_module_name("top")
@@ -98,6 +104,13 @@ namespace multiword_completion {
  template<> sc_dt::sc_biguint<137> expected<sc_dt::sc_biguint<137>>() {
    sc_dt::sc_biguint<137> value = 17; value[136] = true; return value;
  }
+ /** Check successful nonblocking copies without scheduler waits. */
+ template<class T> bool available(tlm::tlm_get_peek_if<T>& channel) {
+   T get_output = 71, peek_output = 73;
+   return channel.nb_can_get() && channel.nb_can_peek()
+     && channel.nb_get(get_output) && channel.nb_peek(peek_output)
+     && get_output == expected<T>() && peek_output == expected<T>();
+ }
  template<class T> bool get(tlm::tlm_blocking_get_if<T>& channel) {
    T output = 0;
    if (channel.get() != expected<T>()) return false;
@@ -143,6 +156,16 @@ for index, (scalar, contract, owner, port) in enumerate(cases):
         f"{{ return multiword_completion::unavailable<{scalar}>(channel); }}"
     )
     assert getattr(cppyy.gbl, f"multiword_unavailable_{index}")(port.get_interface())
+    cppyy.cppdef(
+        f"/** Check nonblocking output copies while owners remain retained. */ "
+        f"bool multiword_available_{index}(tlm::tlm_get_peek_if<{scalar}>& channel) "
+        f"{{ return multiword_completion::available<{scalar}>(channel); }}"
+    )
+    owner.available = True
+    before = sc.sc_time_stamp().value()
+    assert getattr(cppyy.gbl, f"multiword_available_{index}")(port.get_interface())
+    assert sc.sc_time_stamp().value() == before
+    owner.available = False
     for failure in ("invalid", "raise_error"):
         setattr(owner, failure, True)
         assert getattr(cppyy.gbl, f"multiword_reject_{index}")(port.get_interface())

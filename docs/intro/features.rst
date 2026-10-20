@@ -1165,3 +1165,6 @@ callback path, including automatic selection from partial interface bindings.
 Full multiword/wide get/peek adapters report false immediate readiness and
 preserve distinct caller outputs on failed nonblocking get and peek, including
 when selected automatically for partial blocking interfaces.
+
+Successful nonblocking multiword/wide get and peek copy exact samples, including
+bit136, with true readiness and no advancement of simulation time.
