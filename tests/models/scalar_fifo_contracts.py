@@ -138,8 +138,11 @@ for scalar, owner, port in additional:
                 assert result == value, (scalar, result, value)
                 assert math.copysign(1.0, result) == math.copysign(1.0, value)
             assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, value), scalar
+            print("FLOAT_FIFO", scalar.replace(" ", "_"), 1, 1)
         owner.value = 1.25
         assert native.read() == 1.25, scalar
+        assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, 1.25), scalar
+        print("FLOAT_FIFO", scalar.replace(" ", "_"), 1, 1)
     owner.success = False
     assert cppyy.gbl.scalar_fifo_check.failed_output[scalar](native), scalar
 sc.sc_start(1, sc.SC_NS)
