@@ -10,9 +10,15 @@ class Owner:
     def __init__(self):
         """Initialize callback execution count."""
         self.calls = 0
+        self.invalid = False
+        self.raise_error = False
 
     def get(self):
         """Wait one nanosecond and return one sample."""
+        if self.raise_error:
+            raise RuntimeError("configured TLM failure")
+        if self.invalid:
+            return object()
         sc.wait(1, sc.SC_NS)
         self.calls += 1
         return 17
@@ -38,6 +44,23 @@ cppyy.cppdef("""
  * adapters reacquire it. Exceptions propagate and no output reference escapes.
  */
 namespace multiword_completion {
+ /** Preserve borrowed output on conversion or owner exceptions; clear errors under GIL. */
+ template<class T> bool rejected_get(tlm::tlm_blocking_get_if<T>& channel) {
+   T output = 71;
+   try { channel.get(output); } catch (...) {
+     auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil);
+     return output == T(71);
+   }
+   return false;
+ }
+ template<class T> bool rejected_peek(tlm::tlm_blocking_peek_if<T>& channel) {
+   T output = 71;
+   try { channel.peek(output); } catch (...) {
+     auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil);
+     return output == T(71);
+   }
+   return false;
+ }
  template<class T> bool get(tlm::tlm_blocking_get_if<T>& channel) {
    T output = 0;
    if (channel.get() != T(17)) return false;
@@ -62,6 +85,21 @@ for index, (scalar, contract, owner, port) in enumerate(cases):
         + (f" && multiword_completion::peek<{scalar}>(channel)" if contract == tlm.tlm_blocking_get_peek_if else "")
         + "; }"
     )
+    cppyy.cppdef(
+        f"/** Inspect callback failure with borrowed output; clear Python error under GIL. */ "
+        f"bool multiword_reject_{index}(tlm::{contract.__cpp_name__.split('::')[-1]}<{scalar}>& channel) "
+        f"{{ return multiword_completion::rejected_{method}<{scalar}>(channel)"
+        + (
+            f" && multiword_completion::rejected_peek<{scalar}>(channel)"
+            if contract == tlm.tlm_blocking_get_peek_if
+            else ""
+        )
+        + "; }"
+    )
+    for failure in ("invalid", "raise_error"):
+        setattr(owner, failure, True)
+        assert getattr(cppyy.gbl, f"multiword_reject_{index}")(port.get_interface())
+        setattr(owner, failure, False)
     helper = getattr(cppyy.gbl, f"multiword_helper_{index}")
     helper.__release_gil__ = True
     helpers[id(port)] = helper
