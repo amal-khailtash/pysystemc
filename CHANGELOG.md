@@ -6,15 +6,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
-## [0.13.1](https://github.com/amal-khailtash/pysystemc/compare/v0.13.0...v0.13.1) (2026-10-20)
+## [Unreleased]
 
+## [0.13.1](https://github.com/amal-khailtash/pysystemc/compare/v0.13.0...v0.13.1) (2026-10-20)
 
 ### Bug Fixes
 
 * preserve multiword TLM callbacks and expand interface validation ([#7](https://github.com/amal-khailtash/pysystemc/issues/7)) ([58f4c4f](https://github.com/amal-khailtash/pysystemc/commit/58f4c4f19f5c052e18a648189e1e4a6409a3617c))
 * synchronize release documentation and dispatch publishing directly ([#9](https://github.com/amal-khailtash/pysystemc/issues/9)) ([83ece5a](https://github.com/amal-khailtash/pysystemc/commit/83ece5ace12c1da5aa3dab295da3beebd41676fe))
-
-## [Unreleased]
 
 ### Fixed
 
@@ -36,7 +35,6 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ### CI
 - Match the verified pyipxact-de uv trusted-publishing and attestation flow while retaining native wheel validation.
 - Consolidate numbered PR, CI, release, and publication workflows; reuse validated distributions and trigger release docs after PyPI.
-
 
 ## [0.13.0] - 2026-10-20
 
@@ -553,7 +551,7 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.13.1...HEAD
 [0.13.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.10.0...v0.11.0
