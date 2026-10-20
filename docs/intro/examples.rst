@@ -235,3 +235,32 @@ Run these comparisons with::
 
 Ports retain upstream Apache-2.0 LICENSE/NOTICE attribution. Each simulation and
 reference compilation uses a fresh process and a sixty-second timeout.
+
+Performance FIFO and approximately timed TLM
+--------------------------------------------
+
+``examples/sysc/simple_perf/simple_perf.py`` preserves the immediate-event FIFO,
+random producer bursts, 100 ns consumer interval and source occupancy statistics.
+Capacity is clamped to 1..100000. ``PYSYSTEMC_PERF_SEED`` makes Linux ``rand``
+traffic reproducible; without it, the source global RNG remains affected by
+startup. Native comparisons fix seed 7 only in a temporary source copy and check
+all six statistics at capacities 1, 10, 20 and 100001. The Python consumer also
+checks every byte of the 100000-character stream.
+
+The TLM ports live under ``examples/tlm/at_1_phase/src``, ``at_2_phase/src``,
+``at_4_phase/src`` and ``at_extension_optional/src``. Shared Python bus, initiator,
+traffic, memory and target processes use native generic payloads and callback
+sockets. Each executable checks 128 transactions, native readback values, timed
+memory records and both traffic-generator completion times. The optional
+extension port retains the native upstream initiator-ID datatype and compares
+all 128 four-phase target extension observations. Native payload extension arrays
+are resized after registering the extension type; Python retains extension and
+buffer storage until simulation finishes.
+
+These comparisons cover the supplied traffic and phase configurations. Alternate
+traffic, DMI/debug/error paths, extension clone/copy behavior and build/platform
+variants remain untested. The models produce no waveform traces.
+
+Run the batch comparisons with::
+
+   uv run pytest tests/test_upstream.py -k 'performance_fifo or at_one_phase or at_two_phase or at_four_phase or at_optional_extension'

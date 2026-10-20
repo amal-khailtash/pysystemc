@@ -10,6 +10,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Python ports of the performance FIFO and four approximately timed TLM examples
+  (one/two/four-phase and optional extension), with native value/time comparisons,
+  retained payload buffers and checked traffic completion.
 - Python packet-switch, seeded RSA, custom immediate-event FIFO and simple-bus
   stimulus ports with independent native record comparisons.
 - Python implementations of all ten upstream RISC CPU components, preserving

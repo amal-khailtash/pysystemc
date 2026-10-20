@@ -108,7 +108,7 @@ ADL, inherited access/ambiguity, callback retention, GIL and error behavior stil
 require validation where recorded as untested. Known failures remain failing.
 
 All 33 upstream executable targets have source/input/configuration records:
-21 default native/Python comparisons pass, and 12 targets remain unported or
+26 native/Python baseline comparisons pass (performance FIFO uses a fixed seed), and 7 targets remain unported or
 uncompared. Alternate inputs, platforms and build configurations remain untested.
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
@@ -230,11 +230,11 @@ Common compiler/platform build alternatives remain outside this baseline; see
 * ☑ ``sysc/rsa``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/simple_bus``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/simple_fifo``: executable-variant audit and Python/native equivalence on the selected baseline.
-* ☐ ``sysc/simple_perf``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/at_1_phase``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/at_2_phase``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/at_4_phase``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``tlm/at_extension_optional``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``sysc/simple_perf``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/at_1_phase``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/at_2_phase``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/at_4_phase``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
+* ☑ ``tlm/at_extension_optional``: supplied stimulus native/Python value/time comparison passed; alternate configurations remain untested.
 * ☐ ``tlm/at_mixed_targets``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``tlm/at_ooo``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``tlm/lt``: complete executable-variant audit and Python/native equivalence.

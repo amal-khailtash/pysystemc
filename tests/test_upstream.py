@@ -516,3 +516,124 @@ def test_upstream_risc_python_top_matches_native(tmp_path):
     assert len(records) > 150
     assert records == re.findall(pattern, native.stdout, re.M)
     assert "SHUTDOWN - at CSIM 274 ns" in output
+
+
+def test_upstream_performance_fifo_matches_native(tmp_path):
+    """Compare FIFO statistics for default, small, large and clamped capacities."""
+    import re
+
+    directory = ROOT / "submodules/systemc/examples/sysc/simple_perf"
+    source = (directory / "simple_perf.cpp").read_text()
+    source = source.replace("const char *p = str;", "const char *p = str; srand(7);")
+    (tmp_path / "simple_perf.cpp").write_text(source)
+    executable = _compile_upstream(tmp_path, tmp_path, ("simple_perf",))
+    pattern = r"^(?:Fifo size is:|Average fifo fill depth:|Maximum fifo fill depth:|Average transfer time per character:|Total characters transferred:|Total time:).*$"
+    for capacity in (10, 1, 20, 100001):
+        native = subprocess.run(
+            [str(executable), str(capacity)], cwd=tmp_path, capture_output=True, text=True, timeout=60
+        )
+        python = subprocess.run(
+            [sys.executable, str(ROOT / "examples/sysc/simple_perf/simple_perf.py"), str(capacity)],
+            cwd=tmp_path,
+            env=dict(os.environ, PYSYSTEMC_PERF_SEED="7"),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert native.returncode == python.returncode == 0, native.stderr + python.stdout + python.stderr
+        records = re.findall(pattern, python.stdout, re.M)
+        assert len(records) == 6
+        assert records == re.findall(pattern, native.stdout, re.M)
+        assert "Total characters transferred: 100000" in python.stdout
+
+
+def _compare_upstream_at(tmp_path, group, target_stems, optional=False):
+    """Compare every timed memory operation and protocol report to native C++."""
+    import json
+    import re
+    import shlex
+    from pathlib import Path
+
+    directory = ROOT / "submodules/systemc/examples/tlm" / group
+    common = directory.parent / "common"
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import json; from amal.eda.systemc import _runtime as r; print(json.dumps([str(r._headers), str(r._library)]))",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert probe.returncode == 0, probe.stderr
+    headers, library = json.loads(probe.stdout.splitlines()[-1])
+    sources = list((directory / "src").glob("*.cpp")) + [
+        common / "src" / f"{stem}.cpp"
+        for stem in (
+            "traffic_generator",
+            "memory",
+            "report",
+            "select_initiator",
+            *target_stems,
+            *(("extension_initiator_id",) if optional else ()),
+        )
+    ]
+    executable = tmp_path / "native_at"
+    command = [
+        *shlex.split(os.environ.get("CXX", "c++")),
+        "-std=c++17",
+        "-I",
+        headers,
+        "-I",
+        str(directory / "include"),
+        "-I",
+        str(common / "include"),
+        *map(str, sources),
+        library,
+        f"-Wl,-rpath,{Path(library).parent}",
+        "-pthread",
+        "-o",
+        str(executable),
+    ]
+    if optional:
+        command.insert(1, "-DUSING_EXTENSION_OPTIONAL")
+    result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stdout + result.stderr
+    native = subprocess.run([str(executable)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert native.returncode == 0, native.stderr
+    output = run_example(tmp_path, f"examples/tlm/{group}/src/{group}.py")
+    pattern = (
+        r"Info: memory.cpp: (.*?) - print\n      ID: (\d+) COMMAND: (\w+) Length: (\d+)\n      Addr: (\S+) Data: (\S+)"
+    )
+    records = re.findall(pattern, output)
+    assert len(records) == 128
+    assert records == re.findall(pattern, native.stdout)
+    completion = r"Info: traffic_generator.cpp: (.*?) - traffic_generator_thread\n      Traffic Generator : (\d+)"
+    assert re.findall(completion, output) == re.findall(completion, native.stdout)
+    assert len(re.findall(completion, output)) == 2
+    if optional:
+        extension = r"Info: at_target_4_phase.cpp: (.*?) - nb_transport_fw\n      Target: (\d+) extension data: ('Initiator ID: \d+')"
+        extensions = re.findall(extension, output)
+        assert len(extensions) == 128
+        assert extensions == re.findall(extension, native.stdout)
+
+
+def test_upstream_at_one_phase_matches_native(tmp_path):
+    """Compare one-phase accesses and forced synchronization to native C++."""
+    _compare_upstream_at(tmp_path, "at_1_phase", ("at_target_1_phase",))
+
+
+def test_upstream_at_two_phase_matches_native(tmp_path):
+    """Compare two-phase timed native memory operations."""
+    _compare_upstream_at(tmp_path, "at_2_phase", ("at_target_2_phase",))
+
+
+def test_upstream_at_four_phase_matches_native(tmp_path):
+    """Compare four-phase timed native memory operations."""
+    _compare_upstream_at(tmp_path, "at_4_phase", ("at_target_4_phase",))
+
+
+def test_upstream_at_optional_extension_matches_native(tmp_path):
+    """Compare native optional-ID extensions and mixed target timing."""
+    _compare_upstream_at(tmp_path, "at_extension_optional", ("at_target_4_phase", "at_target_2_phase"), True)
