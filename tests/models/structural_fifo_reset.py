@@ -3,6 +3,10 @@
 from amal.eda.systemc import sc_core as sc, tlm
 
 records = []
+clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.SC_NS), True)
+first = sc.sc_event("first")
+second = sc.sc_event("second")
+wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
 
 
 class Owner:
@@ -32,7 +36,25 @@ class Owner:
         """Record callback lifetime and propagate scheduler unwind through cleanup."""
         records.append((self.index, "callback-start", str(sc.sc_time_stamp())))
         try:
-            sc.wait(100, sc.SC_NS)
+            kind = wait_kinds[self.index // 5]
+            if kind == "time":
+                sc.wait(100, sc.SC_NS)
+            elif kind == "event":
+                sc.wait(first)
+            elif kind == "or":
+                sc.wait(first | second)
+            elif kind == "and":
+                sc.wait(first & second)
+            elif kind == "timed-event":
+                sc.wait(100, sc.SC_NS, first)
+            elif kind == "timed-or":
+                sc.wait(100, sc.SC_NS, first | second)
+            elif kind == "timed-and":
+                sc.wait(100, sc.SC_NS, first & second)
+            elif kind == "cycle":
+                sc.wait()
+            else:
+                sc.wait(2)
             raise AssertionError("interrupted read returned")
         finally:
             records.append((self.index, "callback-cleanup", str(sc.sc_time_stamp())))
@@ -48,6 +70,7 @@ interfaces = (
     tlm.tlm_blocking_put_if[int],
     tlm.tlm_blocking_peek_if[int],
 )
+interfaces = interfaces * len(wait_kinds)
 for index, interface in enumerate(interfaces):
     port = sc.sc_port[interface]()
     port(Owner(index))
@@ -60,13 +83,14 @@ def worker(index):
     records.append((index, "worker-start", str(sc.sc_time_stamp())))
     try:
         native = ports[index].get_interface()
-        if index == 0:
+        path = index % 5
+        if path == 0:
             native.read()
-        elif index == 1:
+        elif path == 1:
             native.get()
-        elif index == 2:
+        elif path == 2:
             native.write(17)
-        elif index == 3:
+        elif path == 3:
             native.put(17)
         else:
             native.peek()
@@ -75,7 +99,11 @@ def worker(index):
         records.append((index, "worker-cleanup", str(sc.sc_time_stamp())))
 
 
-handles = [sc.sc_spawn(lambda index=index: worker(index), f"worker_{index}") for index in range(len(interfaces))]
+handles = []
+for index in range(len(interfaces)):
+    options = sc.sc_spawn_options()
+    options.set_sensitivity(clock.posedge_event())
+    handles.append(sc.sc_spawn(lambda index=index: worker(index), f"worker_{index}", options))
 
 
 def controller():

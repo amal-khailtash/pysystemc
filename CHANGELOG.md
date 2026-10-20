@@ -18,6 +18,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   while retaining native adapters borrowed by ports.
 - Structural FIFO read/write and TLM get/put/peek reset/kill tests verify nested
   callback cleanup, process restart and simulation times through guarded waits.
+  Timed, event, OR/AND, timed-event/list, cycle and counted-cycle waits are
+  covered for each path with explicit static clock sensitivity.
 
 ### Fixed
 
