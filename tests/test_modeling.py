@@ -741,7 +741,7 @@ def test_structural_fifo_reset_cleanup(tmp_path):
         timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
-    assert "FIFO_OUTPUT_RESET_REFERENCE 14 3 2 3 4 ns" in native.stdout
+    assert "FIFO_OUTPUT_RESET_REFERENCE 14 5 2 3 4 ns" in native.stdout
 
 
 def test_native_structural_fifo(tmp_path):

@@ -122,10 +122,10 @@ B. Custom interfaces and channels — partially implemented
 
 Recent validation contributes to B1-B4; it does not add or complete requirements.
 See :doc:`../api/coverage` for the tested matrices and their remaining limits.
-The reset/kill matrix currently checks 1,764 combinations across fourteen types,
-nine wait forms, and fourteen access paths. Interrupted caller-output overloads
+The reset/kill matrix currently checks 2,268 combinations across fourteen types,
+nine wait forms, and eighteen access paths. Interrupted caller-output overloads
 assert unchanged native output before propagating reset/kill unwind.
-An independent native FIFO/TLM reference checks these three output overloads
+An independent native FIFO/TLM reference checks these output overloads
 across all fourteen types with matching reset/kill times and termination.
 Compound TLM FIFO blocking get/peek adapters use native pair-return callbacks
 for multiword scalar dispatch; selected compound overloads are checked across

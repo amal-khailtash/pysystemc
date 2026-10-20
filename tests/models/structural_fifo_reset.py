@@ -27,7 +27,7 @@ value_types = (
 )
 if len(sys.argv) == 3:
     value_types = value_types[int(sys.argv[1]) : int(sys.argv[2])]
-paths_per_type = 14
+paths_per_type = 18
 cases_per_type = paths_per_type * len(wait_kinds)
 
 
@@ -126,6 +126,29 @@ class PartialOwner:
         setattr(self, "nb_can_" + operation, lambda: False)
 
 
+class CompoundOwner(FullOwner):
+    """Supply FIFO debug callbacks while blocking get/peek wait in the owner."""
+
+    def used(self):
+        """Report empty FIFO storage."""
+        return 0
+
+    def size(self):
+        """Report one available storage slot."""
+        return 1
+
+    def debug(self):
+        """Inspect without changing storage or waiting."""
+
+    def nb_peek(self, index=None):
+        """Reject both ordinary and indexed reads of the empty FIFO."""
+        return False, None
+
+    def nb_poke(self, value, index):
+        """Reject writes to nonexistent occupied entries."""
+        return False
+
+
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 ports = []
@@ -147,13 +170,19 @@ for value_type in value_types:
             sc.sc_fifo_blocking_in_if[value_type],
             tlm.tlm_blocking_get_if[value_type],
             tlm.tlm_blocking_peek_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
         )
         * len(wait_kinds)
     )
 for index, interface in enumerate(interfaces):
     port = sc.sc_port[interface]()
     path = index % paths_per_type
-    if path in (9, 10):
+    if path >= 14:
+        owner = CompoundOwner(index)
+    elif path in (9, 10):
         owner = FullOwner(index)
     elif path in (7, 8):
         owner = PartialOwner(index, "get" if path == 7 else "peek")
@@ -167,9 +196,9 @@ del name
 output_helpers = {}
 for index, interface in enumerate(interfaces):
     path = index % paths_per_type
-    if path < 11:
+    if path not in (11, 12, 13, 16, 17):
         continue
-    operation = ("read", "get", "peek")[path - 11]
+    operation = {11: "read", 12: "get", 13: "peek", 16: "get", 17: "peek"}[path]
     native_name = interface.__cpp_name__
     value_name = native_name.split("<", 1)[1].removesuffix(">")
     helper_name = f"reset_output_{index}"
@@ -197,11 +226,11 @@ def worker(index):
         value = value_type(17) if wide else 17
         if wide:
             value[136 if value_type == sc_dt.sc_biguint[137] else 127] = True
-        if path >= 11:
+        if index in output_helpers:
             output_helpers[index](native)
         elif path == 0:
             native.read()
-        elif path in (1, 5, 7, 9):
+        elif path in (1, 5, 7, 9, 14):
             native.get()
         elif path == 2:
             native.write(value)

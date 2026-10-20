@@ -16,16 +16,16 @@ struct reset_model : sc_core::sc_module
   sc_core::sc_fifo<T> fifo;
   tlm::tlm_fifo<T> get_fifo;
   tlm::tlm_fifo<T> peek_fifo;
-  std::array<sc_core::sc_process_handle, 3> handles;
-  std::array<int, 3> starts{};
-  std::array<int, 3> unwinds{};
+  std::array<sc_core::sc_process_handle, 5> handles;
+  std::array<int, 5> starts{};
+  std::array<int, 5> unwinds{};
   SC_HAS_PROCESS(reset_model);
 
   /** @brief Register consumers; native storage outlives every borrowed interface. */
   explicit reset_model(sc_core::sc_module_name name)
     : sc_module(name), fifo("fifo"), get_fifo("get_fifo"), peek_fifo("peek_fifo")
   {
-    for (int path = 0; path < 3; ++path) handles[path] = sc_core::sc_spawn([this, path] { consume(path); });
+    for (int path = 0; path < 5; ++path) handles[path] = sc_core::sc_spawn([this, path] { consume(path); });
     SC_THREAD(control);
   }
 
@@ -42,8 +42,12 @@ struct reset_model : sc_core::sc_module
         fifo.read(output);
       else if (path == 1)
         static_cast<tlm::tlm_get_if<T>&>(get_fifo).get(output);
-      else
+      else if (path == 2)
         static_cast<tlm::tlm_peek_if<T>&>(peek_fifo).peek(output);
+      else if (path == 3)
+        static_cast<tlm::tlm_fifo_get_if<T>&>(get_fifo).get(output);
+      else
+        static_cast<tlm::tlm_fifo_get_if<T>&>(peek_fifo).peek(output);
     }
     catch (const sc_core::sc_unwind_exception& unwind)
     {
@@ -69,7 +73,7 @@ struct reset_model : sc_core::sc_module
   /** @brief Verify exact restart/unwind counts and final channel state. */
   void verify() const
   {
-    for (int path = 0; path < 3; ++path)
+    for (int path = 0; path < 5; ++path)
       if (starts[path] != 2 || unwinds[path] != 2 || !handles[path].terminated())
         throw std::runtime_error("process lifecycle mismatch");
     if (fifo.num_available() || get_fifo.used() || peek_fifo.used()) throw std::runtime_error("empty channel changed");
@@ -109,6 +113,6 @@ int sc_main(int, char**)
   m.verify();
   n.verify();
   if (sc_core::sc_time_stamp() != sc_core::sc_time(4, sc_core::SC_NS)) throw std::runtime_error("final time mismatch");
-  std::cout << "FIFO_OUTPUT_RESET_REFERENCE 14 3 2 3 4 ns\n";
+  std::cout << "FIFO_OUTPUT_RESET_REFERENCE 14 5 2 3 4 ns\n";
   return 0;
 }

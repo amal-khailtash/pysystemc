@@ -218,8 +218,8 @@ exception preservation and recovery, and two 1 ns services per owner.
 
 Reset and kill cleanup also cover standalone combined TLM get and peek owners
 that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
-The structural matrix checks 1,764 combinations across fourteen value types, nine
-wait forms, and fourteen access paths,
+The structural matrix checks 2,268 combinations across fourteen value types, nine
+wait forms, and eighteen access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
 
 Standalone multiword/wide TLM get and peek value-returning overloads reject
@@ -289,7 +289,7 @@ callbacks do; these checks do not delete native adapter storage.
 B1/B4 reset coverage includes short, unsigned short, unsigned int, long, and
 unsigned long in addition to the previously tested types. Type-based wide-sample
 checks preserve signed/high-bit assertions independently of matrix ordering.
-The fourteen types cover the same nine waits and fourteen access paths.
+The fourteen types cover the same nine waits and eighteen access paths.
 
 B1/B4/C1 reset coverage includes native FIFO ``read(T&)`` and TLM ``get(T&)``/
 ``peek(T&)`` overloads, using local C++ output storage and explicit GIL release
@@ -328,3 +328,11 @@ validation rejects bool, float, objects and both overflow endpoints before
 conversion. Int, long long and unsigned long long tests check unchanged output
 for all four blocking/nonblocking get/peek callbacks and recovery at both native
 endpoints. These checks contribute to existing B1/B4/C1 requirements.
+
+The reset matrix includes four compound ``tlm_fifo_get_if`` paths: get/peek
+value and caller-output overloads. Fourteen types, nine callback waits and
+eighteen paths produce 2,268 combinations. Compound callbacks must unwind at
+2 ns, restart immediately, unwind again on kill at 3 ns, and terminate; native
+output helpers check unchanged storage before rethrowing. The independent
+native reference additionally checks get/peek output through compound interface
+views with the same times, unwind kinds, counts and final empty state.
