@@ -1141,3 +1141,6 @@ Stopped callback release counts one shared get/peek adapter across partial and
 combined views, retains owners before stop, permits owner collection, and rejects
 later get/peek callbacks. Rejected nonblocking peeks preserve caller output.
 Native adapter objects remain borrowed by ports; full native teardown is open.
+
+Rejected cleanup during simulation leaves shared TLM callbacks usable, including
+final get/peek accesses from end-of-simulation hooks before explicit release.

@@ -10,7 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Tests
 
-- Verify stopped callback cleanup releases a shared TLM get/peek owner once across partial and combined interfaces, preserving native nonblocking output after release.
+- Verify stopped callback cleanup releases a shared TLM get/peek owner once across partial and combined interfaces, preserving native nonblocking output after release and callbacks through end-of-simulation.
 
 - Check additional partial-first TLM get/peek binding orders preserve native interface and readiness-event identity with timed get/peek observers.
 

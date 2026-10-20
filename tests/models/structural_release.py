@@ -90,6 +90,8 @@ class Top(sc.sc_module):
         """Read both interfaces before explicit callback cleanup."""
         assert port.get_interface().read() == 17
         assert wide_port.get_interface().read().to_uint64() == 29
+        assert queue_ports[1].get_interface().get() == 43
+        assert queue_ports[-1].get_interface().peek() == 43
         ordering.append("end")
 
 
@@ -147,6 +149,7 @@ def check_running_cleanup():
         ordering.append("running-rejected")
     else:
         raise AssertionError("cleanup allowed during simulation")
+    assert queue_ports[-1].get_interface().peek() == 43
 
 
 top.sc_thread("check_running_cleanup", check_running_cleanup)
