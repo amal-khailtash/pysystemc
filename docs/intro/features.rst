@@ -108,7 +108,7 @@ ADL, inherited access/ambiguity, callback retention, GIL and error behavior stil
 require validation where recorded as untested. Known failures remain failing.
 
 All 33 upstream executable targets have source/input/configuration records:
-11 default native/Python comparisons pass and 22 targets remain unported or
+16 default native/Python comparisons pass and 17 targets remain unported or
 uncompared. Alternate inputs, platforms and build configurations remain untested.
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
@@ -220,11 +220,11 @@ Common compiler/platform build alternatives remain outside this baseline; see
 * ☑ ``sysc/2.1/specialized_signals``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/2.3/sc_rvd``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☑ ``sysc/2.3/sc_ttd``: executable-variant audit and Python/native equivalence on the selected baseline.
-* ☐ ``sysc/2.3/simple_async``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/fft/fft_flpt``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/fft/fft_fxpt``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/fir``: complete executable-variant audit and Python/native equivalence.
-* ☐ ``sysc/pipe``: complete executable-variant audit and Python/native equivalence.
+* ☑ ``sysc/2.3/simple_async``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/fft/fft_flpt``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/fft/fft_fxpt``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/fir``: executable-variant audit and Python/native equivalence on the selected baseline.
+* ☑ ``sysc/pipe``: executable-variant audit and Python/native equivalence on the selected baseline.
 * ☐ ``sysc/pkt_switch``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/risc_cpu``: complete executable-variant audit and Python/native equivalence.
 * ☐ ``sysc/rsa``: complete executable-variant audit and Python/native equivalence.

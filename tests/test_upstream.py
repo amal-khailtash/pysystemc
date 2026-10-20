@@ -265,3 +265,133 @@ def _compare_handshake(tmp_path, group):
     assert len(records) == (131 if group == "sc_rvd" else 132)
     assert consumers[-1][1] == ("254 ns" if group == "sc_rvd" else "298 ns")
     assert "Program completed" in output and "Program completed" in native.stdout
+
+
+def test_upstream_pipe_matches_native(tmp_path):
+    """Compare all fifty double pipeline results with the native multistage model."""
+    import re
+
+    output = run_example(tmp_path, "examples/sysc/pipe/main.py")
+    directory = ROOT / "submodules/systemc/examples/sysc/pipe"
+    native = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "amal.eda.systemc._runner",
+            *[str(directory / f"{stem}.cpp") for stem in ("numgen", "stage1", "stage2", "stage3", "display", "main")],
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    pattern = r"^Result = (.*)$"
+    records = re.findall(pattern, output, re.M)
+    assert len(records) == 50
+    assert records == re.findall(pattern, native.stdout, re.M)
+
+
+def test_upstream_fir_variants_match_native(tmp_path):
+    """Compare behavioral and RTL FIR stimulus/results/times independently."""
+    import re
+
+    directory = ROOT / "submodules/systemc/examples/sysc/fir"
+    for rtl in (False, True):
+        stem = "main_rtl" if rtl else "main"
+        output = run_example(tmp_path, f"examples/sysc/fir/{stem}.py")
+        sources = ("fir_fsm", "fir_data") if rtl else ("fir",)
+        native = subprocess.run(
+            [str(_compile_upstream(tmp_path, directory, (*sources, "stimulus", "display", stem)))],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert native.returncode == 0, native.stdout + native.stderr
+        pattern = r"^(?:Stimuli : .*|Display : .*|Information : Reset state|Simulation of .*finished.*)$"
+        records = re.findall(pattern, output, re.M)
+        assert records == re.findall(pattern, native.stdout, re.M)
+        assert sum(record.startswith("Display") for record in records) == 24
+
+
+def test_upstream_fft_float_variants_match_native(tmp_path):
+    """Compare output files for default and all four upstream float input pairs."""
+    _compare_fft(tmp_path, "fft_flpt")
+
+
+def test_upstream_fft_fixed_variants_match_native(tmp_path):
+    """Compare exact fixed-point outputs for all five upstream input pairs."""
+    _compare_fft(tmp_path, "fft_fxpt")
+
+
+def _compare_fft(tmp_path, group):
+    """Copy inputs into isolated runs and compare every output and stage heading."""
+    import re
+    import shutil
+
+    directory = ROOT / f"submodules/systemc/examples/sysc/fft/{group}"
+    executable = _compile_upstream(tmp_path, directory, ("fft", "source", "sink", "main"))
+    for suffix in ("", ".1", ".2", ".3", ".4"):
+        work = tmp_path / ("default" if not suffix else suffix[1:])
+        work.mkdir()
+        for component in ("real", "imag"):
+            shutil.copyfile(directory / f"in_{component}{suffix}", work / f"in_{component}")
+        output = run_example(work, f"examples/sysc/fft/{group}/main.py")
+        python_files = [(work / name).read_text() for name in ("out_real", "out_imag")]
+        native = subprocess.run(
+            [str(executable)],
+            cwd=work,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert native.returncode == 0, native.stdout + native.stderr
+        pattern = r"^(?:Reading in the samples.*|Computing.*|Writing the transform.*|Done.*|End of Input Stream.*)$"
+        assert re.findall(pattern, output, re.M) == re.findall(pattern, native.stdout, re.M)
+        for name, expected in zip(("out_real", "out_imag"), python_files):
+            actual = (work / name).read_text()
+            assert len(expected.split()) >= 16
+            assert expected == actual, (group, suffix, name, expected, actual)
+
+
+def _compile_upstream(tmp_path, directory, stems):
+    """Compile unmodified sources as separate translation units with native SystemC.
+
+    Unguarded upstream headers require normal separate C++ translation units.
+    Discovery follows the active binding runtime in a separate interpreter.
+    """
+    import json
+    import shlex
+
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import json; from amal.eda.systemc import _runtime as r; "
+            "print(json.dumps([str(r._headers), str(r._library)]))",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert probe.returncode == 0, probe.stdout + probe.stderr
+    headers, library = json.loads(probe.stdout.splitlines()[-1])
+    from pathlib import Path
+
+    executable = tmp_path / "native_example"
+    command = [
+        *shlex.split(os.environ.get("CXX", "c++")),
+        "-std=c++17",
+        "-I",
+        headers,
+        *[str(directory / f"{stem}.cpp") for stem in stems],
+        library,
+        f"-Wl,-rpath,{Path(library).parent}",
+        "-pthread",
+        "-o",
+        str(executable),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return executable

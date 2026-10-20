@@ -2,6 +2,7 @@
 
 Original sources: examples/sysc/2.3/simple_async/main.cpp and async_event.h.
 Copyright (C) 2017, GreenSocs Ltd.; developed by Mark Burton.
+Apache-2.0; see the upstream LICENSE and NOTICE.
 """
 
 import threading

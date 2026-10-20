@@ -147,3 +147,47 @@ reads and native concatenation adapters while preserving deferred signal updates
 Run all five comparisons in fresh subprocesses with 60-second timeouts::
 
    uv run pytest tests/test_upstream.py -k 'barrier or mutex_policy or specialized_signals or ready_valid or toggle_toggle'
+
+FFT, FIR and arithmetic pipeline variants
+-----------------------------------------
+
+The asynchronous example has one no-input executable. Its comparison checks
+initial activity, host notification at 10 ns, end-of-simulation ordering and
+completion; the Python worker is joined before exit. Its port retains GreenSocs
+attribution and the upstream Apache-2.0 LICENSE/NOTICE references.
+
+The FFT ports are ``examples/sysc/fft/fft_flpt/main.py`` and
+``examples/sysc/fft/fft_fxpt/main.py``. Run each in a working directory containing
+``in_real`` and ``in_imag``. The default pair and all four numbered pairs supplied
+by upstream are compared separately, copying each numbered pair to these input
+names. Output files ``out_real`` and ``out_imag`` and all computation/protocol
+headings match native C++. Floating operations round at the source's single
+precision boundaries. Fixed-point assignments retain native signed widths and
+copy the source sign/payload bit slices. Explicit integer arithmetic between
+native assignments avoids cppyy mixed-width operator dispatch failures.
+The floating model preserves the source wait condition even where it differs
+from the README description. No additional FFT correctness claim is inferred
+from native equivalence. Output files close on normal and exceptional exits.
+
+FIR includes both ``examples/sysc/fir/main.py`` and ``main_rtl.py``. The former
+uses a guarded resettable clocked thread; the latter retains separate FSM and
+sensitive datapath callbacks. Both preserve signed sample/coefficient/accumulator
+widths and compare all stimulus and output records, including 24 displayed values,
+reset diagnostics and final stop time. ``DEBUG`` diagnostic builds remain untested.
+The pipe port, ``examples/sysc/pipe/main.py``, uses five native-port method stages,
+fifty manually driven clock cycles and deferred updates. All fifty displayed
+double results match C++; Python assertions also verify edge times and 1000 ns
+completion. Neither FIR nor pipe reads external inputs or produces traces.
+
+FFT and FIR native reference tests compile unmodified sources as separate C++
+translation units because their headers lack include guards. The active binding's
+discovered SystemC headers/library and the selected C++ compiler are used.
+Common alternate platform/compiler/debug configurations remain untested. All
+new ports retain Accellera Apache-2.0 LICENSE/NOTICE attribution.
+
+Run this five-item batch with::
+
+   uv run pytest tests/test_upstream.py -k 'async_host or fft_float or fft_fixed or fir_variants or pipe_matches'
+
+Each simulation and native compilation has a 60-second timeout. The tests inspect
+nonempty output records and files; success is not inferred from exit status alone.
