@@ -25,6 +25,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Reject nonnumeric floating signal callback results before native sampled
+  reference storage changes, with recovery through read and trace-reference access.
 - Reuse existing compatible structural adapters before validating a narrower
   interface, preserving the shared native interface and event identity.
 - Adapt fundamental FIFO read results through native pairs so cppyy can compile

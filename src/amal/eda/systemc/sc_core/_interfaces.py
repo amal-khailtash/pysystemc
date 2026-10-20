@@ -454,6 +454,9 @@ def _adapt(interface, implementation, factory):
                     if scalar == "bool":
                         if not isinstance(result, bool):
                             raise TypeError("read must return bool for a bool signal")
+                    elif scalar in ("float", "double", "long double"):
+                        if isinstance(result, bool) or not isinstance(result, (int, float)):
+                            raise TypeError(f"read must return a numeric value for a {scalar} signal")
                     elif scalar not in ("float", "double", "long double", "char"):
                         bits = cppyy.sizeof(scalar) * 8
                         unsigned = scalar.startswith("unsigned")

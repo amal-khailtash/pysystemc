@@ -123,6 +123,8 @@ B. Custom interfaces and channels — partially implemented
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
 adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
 cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
+Floating signal read/get_data_ref callbacks reject nonnumeric values, preserve
+sampled storage on rejection and recover for float/double/long double.
 ``release_interface_callbacks()`` releases structural owners and retained results
 after native stop; adapters remain alive and later callbacks reject access.
 Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
