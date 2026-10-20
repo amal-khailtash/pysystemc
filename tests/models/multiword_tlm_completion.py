@@ -32,12 +32,33 @@ class Owner:
         """Wait one nanosecond and return a peek sample."""
         return self.get()
 
+    def nb_get(self):
+        """Report no sample through the nonblocking path."""
+        return False, None
+
+    def nb_peek(self):
+        """Report no peek sample through the nonblocking path."""
+        return False, None
+
+    def nb_can_get(self):
+        """Report no immediate get readiness."""
+        return False
+
+    def nb_can_peek(self):
+        """Report no immediate peek readiness."""
+        return False
+
 
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 cases = []
 for scalar in ("long long", "unsigned long long", "long double", "sc_dt::sc_biguint<137>"):
-    for contract in (tlm.tlm_blocking_get_if, tlm.tlm_blocking_peek_if, tlm.tlm_blocking_get_peek_if):
+    for contract in (
+        tlm.tlm_blocking_get_if,
+        tlm.tlm_blocking_peek_if,
+        tlm.tlm_blocking_get_peek_if,
+        tlm.tlm_get_peek_if,
+    ):
         owner = Owner(scalar == "sc_dt::sc_biguint<137>")
         port = sc.sc_port[contract[scalar]]()
         port(owner)
@@ -91,7 +112,11 @@ for index, (scalar, contract, owner, port) in enumerate(cases):
         f"/** Borrow interface during blocking service; caller releases GIL, adapter reacquires it. */ "
         f"bool multiword_helper_{index}(tlm::{contract.__cpp_name__.split('::')[-1]}<{scalar}>& channel) "
         f"{{ return multiword_completion::{method}<{scalar}>(channel)"
-        + (f" && multiword_completion::peek<{scalar}>(channel)" if contract == tlm.tlm_blocking_get_peek_if else "")
+        + (
+            f" && multiword_completion::peek<{scalar}>(channel)"
+            if contract in (tlm.tlm_blocking_get_peek_if, tlm.tlm_get_peek_if)
+            else ""
+        )
         + "; }"
     )
     cppyy.cppdef(
@@ -100,7 +125,7 @@ for index, (scalar, contract, owner, port) in enumerate(cases):
         f"{{ return multiword_completion::rejected_{method}<{scalar}>(channel)"
         + (
             f" && multiword_completion::rejected_peek<{scalar}>(channel)"
-            if contract == tlm.tlm_blocking_get_peek_if
+            if contract in (tlm.tlm_blocking_get_peek_if, tlm.tlm_get_peek_if)
             else ""
         )
         + "; }"
@@ -119,13 +144,13 @@ def consumer():
     """Check callback count and elapsed service time for every native type."""
     for scalar, contract, owner, port in cases:
         assert helpers[id(port)](port.get_interface())
-        assert owner.calls == (4 if contract == tlm.tlm_blocking_get_peek_if else 2)
+        assert owner.calls == (4 if contract in (tlm.tlm_blocking_get_peek_if, tlm.tlm_get_peek_if) else 2)
     records.append(str(sc.sc_time_stamp()))
 
 
 handle = sc.sc_spawn(consumer, "consumer")
-sc.sc_start(33, sc.SC_NS)
-assert records == ["32 ns"], records
+sc.sc_start(49, sc.SC_NS)
+assert records == ["48 ns"], records
 assert handle.terminated()
 sc.sc_stop()
 print("MULTIWORD_TLM_COMPLETION_OK")

@@ -1118,7 +1118,7 @@ tlm_utils public families
 * ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
 
 Floating FIFO callback samples
------------------------------
+------------------------------
 
 Structural float, double, and long double FIFO reads preserve infinities, NaN,
 and signed zero through value-returning reads, caller-output blocking reads,
@@ -1154,7 +1154,10 @@ and combined TLM blocking get/peek (315 combinations). Complete channel and TLM 
 Multiword standalone and combined TLM blocking get/peek completion checks both returned values
 and caller-output overloads for long long, unsigned long long, long double, and sc_biguint<137> with bit136
 set.
-Each service waits 1 ns; callback counts and total 32 ns completion are asserted.
+Each service waits 1 ns; callback counts and total 48 ns completion are asserted.
 
 Multiword standalone/combined blocking TLM outputs remain unchanged when owners
 raise or return nonconvertible objects, followed by normal timed completion.
+
+The full blocking/nonblocking get/peek family shares the multiword-safe blocking
+callback path, including automatic selection from partial interface bindings.

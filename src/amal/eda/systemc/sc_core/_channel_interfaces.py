@@ -326,10 +326,11 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "namespace pysystemc_interfaces { template<class T> "
                     "class CombinedGetPeekAdapter : public tlm::tlm_get_peek_if<T> { "
                     "sc_core::sc_event get_ready, peek_ready; public: "
-                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value(); } "
-                    "void get(T& value) override { value = get_value(); } "
-                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value(); } "
-                    "void peek(T& value) const override { value = peek_value(); } "
+                    "using blocking_value_pair = std::pair<T, bool>; "
+                    "T get(tlm::tlm_tag<T>* = nullptr) override { return get_value().first; } "
+                    "void get(T& value) override { value = get_value().first; } "
+                    "T peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_value().first; } "
+                    "void peek(T& value) const override { value = peek_value().first; } "
                     "bool nb_get(T& value) override { auto result = try_get_value(); "
                     "if (!result.first) return false; value = result.second; return true; } "
                     "bool nb_peek(T& value) const override { auto result = try_peek_value(); "
@@ -340,7 +341,7 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<T>* = nullptr) const override { return peek_ready; } "
                     "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { "
                     "get_ready.notify(delay); peek_ready.notify(delay); } "
-                    "virtual T get_value() = 0; virtual T peek_value() const = 0; "
+                    "virtual blocking_value_pair get_value() = 0; virtual blocking_value_pair peek_value() const = 0; "
                     "virtual std::pair<bool, T> try_get_value() = 0; "
                     "virtual std::pair<bool, T> try_peek_value() const = 0; "
                     "virtual bool can_get() const = 0; virtual bool can_peek() const = 0; }; }"
@@ -591,7 +592,12 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 )
             else:
                 methods += "virtual void invalidate_direct_mem_ptr(sc_dt::uint64, sc_dt::uint64) override = 0; "
-        if fifo_family in ("tlm::tlm_blocking_get_if", "tlm::tlm_blocking_peek_if", "tlm::tlm_blocking_get_peek_if"):
+        if fifo_family in (
+            "tlm::tlm_blocking_get_if",
+            "tlm::tlm_blocking_peek_if",
+            "tlm::tlm_blocking_get_peek_if",
+            "tlm::tlm_get_peek_if",
+        ):
             value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
             methods += f"using blocking_value_pair = std::pair<{value}, bool>; "
         cppyy.cppdef(
