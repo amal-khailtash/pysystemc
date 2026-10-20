@@ -123,10 +123,17 @@ B. Custom interfaces and channels — partially implemented
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
 adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
 cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
+Existing combined adapters are reused for compatible inherited signal/FIFO/TLM
+views. Scalar FIFO reads use native pair callbacks, including signed/unsigned
+64-bit results; integral range/type failures preserve native outputs and recover.
 
 Still required: Complete type/conversion/tracing/reset/error coverage remains open, including plain
 char/floating policies. Shared owner events work, but cross-specialization interface identity and
 pre-shutdown owner/result release are incomplete.
+Complete signal/FIFO owners select combined adapters even when first bound
+through a partial interface. Complete TLM get/peek owners likewise select a
+combined adapter through partial-first bindings. Transport protocol mapping and
+complete cross-specialization/lifetime matrices remain open.
 
 C. TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -12,6 +12,15 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 - Release-please automation with reviewed release PRs, Conventional Commit title
   checks and verified native-wheel publication through a reusable workflow.
+- Structural interface identity checks across signal, FIFO and TLM inherited
+  views, plus scalar FIFO callback validation and recovery tests.
+
+### Fixed
+
+- Reuse existing compatible structural adapters before validating a narrower
+  interface, preserving the shared native interface and event identity.
+- Adapt fundamental FIFO read results through native pairs so cppyy can compile
+  callbacks returning multiword scalar types such as `long long`.
 
 ## [0.12.0] - 2026-10-19
 

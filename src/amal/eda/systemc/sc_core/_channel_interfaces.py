@@ -163,11 +163,19 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     )
             if blocking:
                 if incoming:
-                    methods += (
-                        f"virtual {value} read_value() = 0; "
-                        f"void read({value}& value) override {{ value = read_value(); }} "
-                        f"{value} read() override {{ return read_value(); }} "
-                    )
+                    if value in _SCALAR_TYPES:
+                        methods += (
+                            f"using fifo_scalar_pair = std::pair<{value}, bool>; "
+                            "virtual fifo_scalar_pair read_value() = 0; "
+                            f"void read({value}& value) final {{ value = read_value().first; }} "
+                            f"{value} read() final {{ return read_value().first; }} "
+                        )
+                    else:
+                        methods += (
+                            f"virtual {value} read_value() = 0; "
+                            f"void read({value}& value) override {{ value = read_value(); }} "
+                            f"{value} read() override {{ return read_value(); }} "
+                        )
                 else:
                     methods += (
                         f"virtual void write_value({value}) = 0; "

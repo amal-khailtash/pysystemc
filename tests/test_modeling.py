@@ -645,6 +645,28 @@ def test_native_structural_signal(tmp_path):
     assert "NATIVE_STRUCTURAL_SIGNAL_OK" in run_example(tmp_path, "tests/models/native_structural_signal.py")
 
 
+def test_structural_inherited_interface_identity(tmp_path):
+    """Check inherited signal interfaces share a native base, event and timed state."""
+    output = run_example(tmp_path, "tests/models/structural_base_identity.py")
+    assert "STRUCTURAL_BASE_IDENTITY_OK" in output
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/structural_identity.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert [line for line in output.splitlines() if line.startswith("IDENTITY_REFERENCE")] == [
+        line for line in native.stdout.splitlines() if line.startswith("IDENTITY_REFERENCE")
+    ]
+
+
+def test_scalar_fifo_callback_contracts(tmp_path):
+    """Check native integral widths, rejected outputs and callback recovery."""
+    assert "SCALAR_FIFO_CONTRACTS_OK" in run_example(tmp_path, "tests/models/scalar_fifo_contracts.py")
+
+
 def test_native_structural_fifo(tmp_path):
     """Verify FIFO event identity, failed output preservation and timed blocking reads."""
     output = run_example(tmp_path, "tests/models/native_structural_fifo.py")
