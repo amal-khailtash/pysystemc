@@ -87,6 +87,13 @@ namespace multiword_completion {
    }
    return false;
  }
+ /** Check false readiness and unchanged caller output without waiting. */
+ template<class T> bool unavailable(tlm::tlm_get_peek_if<T>& channel) {
+   T get_output = 71, peek_output = 73;
+   return !channel.nb_can_get() && !channel.nb_can_peek()
+     && !channel.nb_get(get_output) && !channel.nb_peek(peek_output)
+     && get_output == T(71) && peek_output == T(73);
+ }
  template<class T> T expected() { return T(17); }
  template<> sc_dt::sc_biguint<137> expected<sc_dt::sc_biguint<137>>() {
    sc_dt::sc_biguint<137> value = 17; value[136] = true; return value;
@@ -130,6 +137,12 @@ for index, (scalar, contract, owner, port) in enumerate(cases):
         )
         + "; }"
     )
+    cppyy.cppdef(
+        f"/** Check borrowed nonblocking outputs; callbacks do not wait. */ "
+        f"bool multiword_unavailable_{index}(tlm::tlm_get_peek_if<{scalar}>& channel) "
+        f"{{ return multiword_completion::unavailable<{scalar}>(channel); }}"
+    )
+    assert getattr(cppyy.gbl, f"multiword_unavailable_{index}")(port.get_interface())
     for failure in ("invalid", "raise_error"):
         setattr(owner, failure, True)
         assert getattr(cppyy.gbl, f"multiword_reject_{index}")(port.get_interface())

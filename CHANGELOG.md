@@ -14,6 +14,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Tests
 
+- Verify full multiword TLM get/peek false readiness and failed nonblocking output preservation through partial bindings.
+
 - Extend reset/kill cleanup checks to combined blocking TLM get/peek across scalar and arbitrary-width types and nine wait forms.
 
 - Check multiword and arbitrary-width TLM blocking output preservation after invalid results and owner exceptions, followed by timed recovery.

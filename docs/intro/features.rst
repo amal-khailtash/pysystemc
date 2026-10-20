@@ -1161,3 +1161,7 @@ raise or return nonconvertible objects, followed by normal timed completion.
 
 The full blocking/nonblocking get/peek family shares the multiword-safe blocking
 callback path, including automatic selection from partial interface bindings.
+
+Full multiword/wide get/peek adapters report false immediate readiness and
+preserve distinct caller outputs on failed nonblocking get and peek, including
+when selected automatically for partial blocking interfaces.
