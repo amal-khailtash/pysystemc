@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-19
+
+Adds Python ports and native baseline comparisons for all 33 upstream example targets.
+Alternate configurations and complete public API validation remain open.
+
 ### Added
 
 - Python mixed-endian and temporal-decoupling example ports using native word
@@ -525,7 +530,8 @@ custom-type and lifecycle verification continues.
   exceptions. The upstream reset port remains a failing draft.
 - Broad feature/example coverage and TLM support remain incomplete.
 
-[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/amal-khailtash/pysystemc/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/amal-khailtash/pysystemc/compare/v0.8.0...v0.9.0
