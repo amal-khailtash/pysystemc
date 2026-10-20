@@ -7,8 +7,8 @@ clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.S
 first = sc.sc_event("first")
 second = sc.sc_event("second")
 wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
-value_types = (int, "float", "double", "long double", sc_dt.sc_biguint[137])
-paths_per_type = 7
+value_types = (int, "long long", "unsigned long long", "float", "double", "long double", sc_dt.sc_biguint[137])
+paths_per_type = 11
 cases_per_type = paths_per_type * len(wait_kinds)
 
 
@@ -72,6 +72,37 @@ class Owner:
             records.append((self.index, "callback-cleanup", str(sc.sc_time_stamp())))
 
 
+class FullOwner(Owner):
+    """Expose both blocking and nonblocking get/peek callback families."""
+
+    def nb_get(self):
+        """Report no immediately available sample without waiting."""
+        return False, None
+
+    def nb_peek(self):
+        """Report no immediately peekable sample without waiting."""
+        return False, None
+
+    def nb_can_get(self):
+        """Report immediate get readiness."""
+        return False
+
+    def nb_can_peek(self):
+        """Report immediate peek readiness."""
+        return False
+
+
+class PartialOwner:
+    """Expose only one combined TLM operation to prevent full-interface selection."""
+
+    def __init__(self, index, operation):
+        """Retain guarded callback state and install the requested family."""
+        self.owner = Owner(index)
+        setattr(self, operation, getattr(self.owner, operation))
+        setattr(self, "nb_" + operation, lambda: (False, None))
+        setattr(self, "nb_can_" + operation, lambda: False)
+
+
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 ports = []
@@ -86,12 +117,23 @@ for value_type in value_types:
             tlm.tlm_blocking_peek_if[value_type],
             tlm.tlm_blocking_get_peek_if[value_type],
             tlm.tlm_blocking_get_peek_if[value_type],
+            tlm.tlm_get_if[value_type],
+            tlm.tlm_peek_if[value_type],
+            tlm.tlm_get_peek_if[value_type],
+            tlm.tlm_get_peek_if[value_type],
         )
         * len(wait_kinds)
     )
 for index, interface in enumerate(interfaces):
     port = sc.sc_port[interface]()
-    port(Owner(index))
+    path = index % paths_per_type
+    if path >= 9:
+        owner = FullOwner(index)
+    elif path >= 7:
+        owner = PartialOwner(index, "get" if path == 7 else "peek")
+    else:
+        owner = Owner(index)
+    port(owner)
     ports.append(port)
 del name
 
@@ -108,7 +150,7 @@ def worker(index):
             value[136] = True
         if path == 0:
             native.read()
-        elif path in (1, 5):
+        elif path in (1, 5, 7, 9):
             native.get()
         elif path == 2:
             native.write(value)

@@ -22,6 +22,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Preserve standalone, blocking-combined, and full TLM get/peek signatures while avoiding cppyy multiword return dispatcher failures, including long double, and expose concrete adapter result aliases for successful completion.
 
 ### Tests
+- Verify standalone get/peek callback owners survive end-of-simulation and are collected after explicit release, with post-release callback rejection and preserved peek output.
+- Check malformed standalone TLM nonblocking tuple shape, success flags, and values preserve caller output and recover to valid copies.
+- Check standalone multiword/wide TLM get/peek inherited readiness-event identity and exactly one delayed observer callback at 1 ns.
+- Verify standalone TLM value-returning get/peek propagate owner exceptions and conversion failures before normal timed recovery.
+- Cover full blocking/nonblocking TLM get/peek reset and kill cleanup for both blocking operations, bringing the structural matrix to 693 combinations.
+- Include signed and unsigned 64-bit types in all structural reset/kill paths, checking 567 type/wait/access combinations.
+- Extend reset/kill cleanup to standalone combined TLM get and peek owners without full-interface selection, covering 405 type/wait/access combinations.
 - Exercise standalone multiword/wide TLM get and peek owners without full-interface auto-upgrade, checking both blocking overloads, readiness, output preservation, exception recovery, and exact service time.
 - Verify malformed nonblocking TLM result tuples, nonconvertible values, and raised exceptions preserve outputs and recover.
 - Verify full multiword TLM get/peek both readiness states and successful/failed nonblocking output behavior through partial bindings.

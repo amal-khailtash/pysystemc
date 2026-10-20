@@ -1147,9 +1147,9 @@ final get/peek accesses from end-of-simulation hooks before explicit release.
 
 Blocking TLM get/peek bridges use internal value-pair callbacks to support
 multiword native return types while preserving public native signatures. Reset
-and kill ordering is checked across int, float, double, long double, and
-sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
-and combined TLM blocking get/peek (315 combinations). Complete channel and TLM matrices remain open.
+and kill ordering is checked across int, long long, unsigned long long, float,
+double, long double, and sc_biguint<137> for FIFO read/write and TLM get/put/peek with nine wait forms
+and combined TLM blocking get/peek. Complete channel and TLM matrices remain open.
 
 Multiword standalone and combined TLM blocking get/peek completion checks both returned values
 and caller-output overloads for long long, unsigned long long, long double, and sc_biguint<137> with bit136
@@ -1178,3 +1178,30 @@ multiword-safe bridge. Partial-only owners cover long long, unsigned long long,
 long double, and sc_biguint<137>. Native checks reject accidental full get/peek
 adapter selection and verify both blocking overloads, readiness, copied outputs,
 exception preservation and recovery, and two 1 ns services per owner.
+
+Reset and kill cleanup also cover standalone combined TLM get and peek owners
+that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
+The structural matrix checks 693 combinations across seven value types, nine
+wait forms, and eleven access paths,
+asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
+
+Standalone multiword/wide TLM get and peek value-returning overloads reject
+raised owner exceptions and nonconvertible samples. Caller-output overloads
+retain their previous value on the same conversion failures, and subsequent
+services complete with exact values, callback counts, and simulation time.
+
+Standalone combined get and peek readiness events retain native address identity
+through their inherited nonblocking interfaces. Across four multiword/wide types,
+observers run once at 1 ns after delayed notification and never at initialization.
+
+Standalone get/peek nonblocking callbacks reject malformed tuple lengths,
+non-bool success flags, and nonconvertible successful values. Borrowed caller
+outputs remain unchanged and valid copied samples recover after each failure
+for all four tested multiword/wide types.
+
+Standalone combined get and peek callback owners remain alive after external
+references are dropped and remain callable through end-of-simulation. Explicit
+stopped-kernel release collects both owners, including self-bound callback
+cycles; repeated release is idempotent. Released callbacks reject access and
+nonblocking peek preserves caller output. Native adapters remain retained while
+ports borrow their addresses; safe native adapter teardown remains open.
