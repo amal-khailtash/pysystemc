@@ -28,6 +28,22 @@ jobs:
         with:
           python-version: '3.14'
           enable-cache: true
+      - name: Read project metadata from depot
+        id: project
+        run: |
+          uv run --no-project python - <<'PYTHON'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+          name = project["name"]
+          description = project.get("description", "")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"name={name}", file=output)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              print(f"### {name}\n\n{description}", file=summary)
+          PYTHON
       - name: Compute native cache identity
         if: github.event.repository.name == 'pysystemc'
         id: native-key
@@ -41,7 +57,7 @@ jobs:
         with:
           path: build/deps
           key: native-${{ runner.os }}-${{ runner.arch }}-${{ steps.native-key.outputs.key }}
-      - name: Set up native and Python dependencies
+      - name: Set up ${{ steps.project.outputs.name }} native dependencies
         if: github.event.repository.name == 'pysystemc'
         run: make setup
       - name: Check Python lint and formatting
@@ -49,7 +65,7 @@ jobs:
         run: |
           make lint
           uv run ruff format --check .
-      - name: Set up IP-XACT dependencies
+      - name: Set up ${{ steps.project.outputs.name }} dependencies
         if: github.event.repository.name == 'pyipxact-de'
         run: |
           sudo apt-get update
