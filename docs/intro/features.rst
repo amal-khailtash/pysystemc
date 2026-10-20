@@ -1134,4 +1134,5 @@ checking subsequent recovery.
 
 Additional partial-first TLM get/peek binding orders share the combined native
 interface and matching get/peek readiness events while retaining queue state.
+Both readiness observers execute exactly once at the scheduled 1 ns notification.
 The complete cross-specialization identity matrix remains open.

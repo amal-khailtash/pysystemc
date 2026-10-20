@@ -210,6 +210,18 @@ print("IDENTITY_REFERENCE 41 1 41 43", sc.sc_time_stamp())
 for scalar_owner, scalar_port, values in scalar_cases:
     assert [scalar_port.get_interface().read(), scalar_port.get_interface().read()] == values
 ready_seen = []
+permuted_ready_seen = []
+for index, (queue, ports) in enumerate(permuted_tlm_groups):
+    combined = ports[-1].get_interface()
+    for method in ("ok_to_get", "ok_to_peek"):
+        def record_ready(index=index, method=method):
+            """Record readiness through each borrowed partial-family event."""
+            permuted_ready_seen.append((index, method, str(sc.sc_time_stamp())))
+
+        top.sc_method(f"permuted_ready_{index}_{method}", record_ready)
+        top.sensitive(getattr(combined, method)())
+        top.dont_initialize()
+    combined.notify_ready(sc.sc_time(1, sc.SC_NS))
 combined_tlm = reverse_tlm_ports[2].get_interface()
 get_event = reverse_tlm_ports[1].get_interface().ok_to_get()
 peek_event = reverse_tlm_ports[0].get_interface().ok_to_peek()
@@ -228,6 +240,11 @@ write_only.get_interface().write(value_type(29))
 sc.sc_start(2, sc.SC_NS)
 assert seen == [(29, "0 s")], seen
 assert ready_seen == ["1 ns"], ready_seen
+assert sorted(permuted_ready_seen) == [
+    (index, method, "1 ns")
+    for index in range(len(permuted_tlm_groups))
+    for method in ("ok_to_get", "ok_to_peek")
+], permuted_ready_seen
 print("IDENTITY_READY", ready_seen[0])
 assert writer.get_interface().read().to_uint64() == 29
 assert export_reader.get_interface().read().to_uint64() == 29
