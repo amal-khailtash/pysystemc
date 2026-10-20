@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Fixed
+
+- Dispatch publication directly with its configured trusted publisher workflow identity.
+- Synchronize Read the Docs release tags, wait for discovery, activate versions, and request builds after publication.
 - Preserve standalone, blocking-combined, and full TLM get/peek signatures while avoiding cppyy multiword return dispatcher failures, including long double, and expose concrete adapter result aliases for successful completion.
 
 ### Tests
