@@ -27,33 +27,103 @@ and active so the post-publication API trigger can build them. A successful
 trigger means the build was queued; inspect Read the Docs for its final result.
 GitHub Pages and the separate TestPyPI workflow are removed.
 
-Contributor and release flow
-----------------------------
+Branch naming
+-------------
 
-Use ``<type>/<short-description>`` for contributor branches in both repositories:
-``feat/...``, ``fix/...``, ``ci/...``, ``docs/...``, or ``test/...``. Use lowercase
-words separated by hyphens, for example ``ci/consolidate-workflows``. Target
-``main`` and use the same branch name when one change spans both repositories.
-Release Please owns its generated ``release-please--branches--main--components--<package>``
-branch; let it manage that name rather than creating manual release branches.
+Both projects use ``<type>/<short-description>``. Choose a prefix describing the
+work and lowercase words separated by hyphens:
 
-Work on a branch, open a PR, and wait for title, Tests and coverage, Build
-distributions, and Build documentation checks to pass. Squash-merge with the
-Conventional Commit PR title and enable automatic deletion of merged branches.
-Require those checks in main protection. A sole maintainer may use zero required
-reviews; require a review when another reviewer is available.
+.. list-table:: Contributor branch examples
+   :header-rows: 1
+   :widths: 15 40 45
 
-Contributors do not edit versions or create tags. Release Please manages
-``pyproject.toml``, ``uv.lock``, the manifest, and ``CHANGELOG.md``. ``fix:`` and
-``perf:`` request a patch; ``feat:`` requests a minor; ``feat!:`` or a
-``BREAKING CHANGE:`` footer requests a major, including below 1.0. CI, docs,
-tests, and chores alone do not request releases. Review the generated release
-PR and its checks before merging.
+   * - Prefix
+     - Example
+     - Purpose
+   * - ``feat``
+     - ``feat/custom-interfaces``
+     - New public behavior
+   * - ``fix``
+     - ``fix/version-validation``
+     - Correct existing behavior
+   * - ``ci``
+     - ``ci/consolidate-workflows``
+     - Automation and workflow changes
+   * - ``docs``
+     - ``docs/development-workflow``
+     - Documentation changes
+   * - ``test``
+     - ``test/interface-lifetime``
+     - Test coverage
+
+Use ``build``, ``perf``, or ``refactor`` when those Conventional Commit types
+better describe the change. Branch names organize work; the squash commit's PR
+title determines release impact. For example, ``ci/consolidate-workflows`` with
+PR title ``ci: consolidate numbered release workflows`` requests no release.
+
+Create branches from current ``main`` and target PRs at ``main``. For changes
+spanning both repositories, use the same branch name in each, but open a separate
+PR in each repository: the branches and merges remain independent. For example::
+
+   git switch main
+   git pull --ff-only
+   git switch -c ci/consolidate-workflows
+
+Release Please manages ``release-please--branches--main--components--<package>``;
+``<package>`` is ``pysystemc`` or ``pyipxact-de``. These generated release PR
+branches have different component suffixes because they release different
+packages. Contributors do not create manual version/release branches or tags.
+
+PR workflow
+-----------
+
+1. Implement and validate the change on its contributor branch. Update relevant
+   docs and changelog notes, commit, push, and open a PR with a Conventional
+   Commit title, such as ``feat: support custom interfaces``.
+2. ``01. PR title`` checks the title; ``02. CI`` runs tests, builds distributions,
+   and validates docs. Read the Docs supplies a separate PR preview.
+3. Review the result and wait for title, Tests and coverage, Build distributions,
+   and Build documentation checks to pass. Require these checks in main
+   protection. A sole maintainer may use zero required reviews; require a review
+   when another reviewer is available.
+4. Squash-merge using the PR title. Main receives one commit containing the PR's
+   changes. Individual branch commit IDs are replaced by the squash commit ID;
+   this is expected and does not remove the merged files.
+5. GitHub deletes the merged remote branch when automatic deletion is enabled.
+   Update local main and delete the completed local branch after confirming its
+   changes are present. Squash commits may prevent ``git branch -d`` from
+   recognizing ancestry; inspect the merged PR before using ``git branch -D``.
+
+Release workflow
+----------------
+
+1. A merge into main runs ``03. Release Please``, which collects release-worthy
+   squash commits into a generated release PR. ``fix:`` and ``perf:`` request a
+   patch, ``feat:`` requests a minor, and ``feat!:`` or a ``BREAKING CHANGE:``
+   footer requests a major, including below 1.0. CI, docs, tests, and chores alone
+   do not request releases.
+2. Release Please updates ``pyproject.toml``, ``uv.lock``, its manifest, and
+   ``CHANGELOG.md``. Other open feature PRs are excluded until merged. Review
+   the proposed version and wait for the release PR's CI to pass.
+3. Merge the release PR only when ready to publish. Leaving it open defers the
+   release while ordinary contributor PRs can continue merging. Its squash merge
+   creates the tag and GitHub release and directly calls ``04. Publish``.
+4. The publisher runs CI against the immutable tag, verifies tag/version and
+   main ancestry, and uses those CI distribution artifacts. Project-specific
+   checks below run before uploading to PyPI.
+5. After a successful PyPI upload, trigger released docs on Read the Docs. A
+   TestPyPI dispatch uses the same publication flow but does not trigger release
+   docs. Inspect the final Read the Docs build as well as the Actions result.
+
+Publication recovery
+--------------------
 
 PyPI versions and tags are immutable. Inspect uploaded files before retrying a
-partial publication. Run ``04. Publish`` from main with the existing tag to use
-workflow repairs without changing released source. No new version or tag is
-needed for a workflow-only repair.
+partial publication. Run ``04. Publish`` manually from main with the existing
+tag and destination to use workflow repairs without changing released source.
+No new version or tag is needed for a workflow-only repair. This manual dispatch
+publishes a package; use it only when publication is intended. Merging a CI or
+documentation contributor PR alone does not authorize or initiate a release.
 
 Service setup
 -------------
