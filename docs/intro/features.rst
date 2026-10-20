@@ -1189,3 +1189,7 @@ Standalone multiword/wide TLM get and peek value-returning overloads reject
 raised owner exceptions and nonconvertible samples. Caller-output overloads
 retain their previous value on the same conversion failures, and subsequent
 services complete with exact values, callback counts, and simulation time.
+
+Standalone combined get and peek readiness events retain native address identity
+through their inherited nonblocking interfaces. Across four multiword/wide types,
+observers run once at 1 ns after delayed notification and never at initialization.
