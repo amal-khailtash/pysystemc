@@ -340,6 +340,7 @@ def _adapt(interface, implementation, factory):
         output_pair = getattr(base, "output_pair", None)
         scalar_pair = getattr(base, "scalar_pair", None)
         fifo_scalar_pair = getattr(base, "fifo_scalar_pair", None)
+        blocking_value_pair = getattr(base, "blocking_value_pair", None)
         callbacks = {}
         for native_name, python_name in methods.items():
 
@@ -449,6 +450,8 @@ def _adapt(interface, implementation, factory):
                 ):
                     if not isinstance(result, cppyy.gbl.sc_core.sc_event) or not cppyy.addressof(result):
                         raise TypeError(f"{_method} must return a live native sc_event")
+                if blocking_value_pair is not None and _method in ("get", "peek"):
+                    return blocking_value_pair(result, True)
                 if scalar_pair is not None and _method == "read":
                     scalar = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
                     if scalar == "bool":

@@ -7,6 +7,9 @@ clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.S
 first = sc.sc_event("first")
 second = sc.sc_event("second")
 wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
+value_types = (int, "float", "double", "long double", sc_dt.sc_biguint[137])
+paths_per_type = 7
+cases_per_type = paths_per_type * len(wait_kinds)
 
 
 class Owner:
@@ -28,7 +31,7 @@ class Owner:
 
     def check_argument(self, value):
         """Assert native copied writes retain arbitrary-width high bits."""
-        if self.index < 5 * len(wait_kinds):
+        if self.index // cases_per_type < len(value_types) - 1:
             assert value == 17
         else:
             assert value[136] and value.to_uint64() == 17
@@ -45,7 +48,7 @@ class Owner:
         """Record callback lifetime and propagate scheduler unwind through cleanup."""
         records.append((self.index, "callback-start", str(sc.sc_time_stamp())))
         try:
-            kind = wait_kinds[(self.index // 5) % len(wait_kinds)]
+            kind = wait_kinds[(self.index // paths_per_type) % len(wait_kinds)]
             if kind == "time":
                 sc.wait(100, sc.SC_NS)
             elif kind == "event":
@@ -73,7 +76,7 @@ name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 ports = []
 interfaces = []
-for value_type in (int, sc_dt.sc_biguint[137]):
+for value_type in value_types:
     interfaces.extend(
         (
             sc.sc_fifo_blocking_in_if[value_type],
@@ -81,6 +84,8 @@ for value_type in (int, sc_dt.sc_biguint[137]):
             sc.sc_fifo_blocking_out_if[value_type],
             tlm.tlm_blocking_put_if[value_type],
             tlm.tlm_blocking_peek_if[value_type],
+            tlm.tlm_blocking_get_peek_if[value_type],
+            tlm.tlm_blocking_get_peek_if[value_type],
         )
         * len(wait_kinds)
     )
@@ -96,13 +101,14 @@ def worker(index):
     records.append((index, "worker-start", str(sc.sc_time_stamp())))
     try:
         native = ports[index].get_interface()
-        path = index % 5
-        value = 17 if index < 5 * len(wait_kinds) else sc_dt.sc_biguint[137](17)
-        if index >= 5 * len(wait_kinds):
+        path = index % paths_per_type
+        wide = index // cases_per_type == len(value_types) - 1
+        value = sc_dt.sc_biguint[137](17) if wide else 17
+        if wide:
             value[136] = True
         if path == 0:
             native.read()
-        elif path == 1:
+        elif path in (1, 5):
             native.get()
         elif path == 2:
             native.write(value)

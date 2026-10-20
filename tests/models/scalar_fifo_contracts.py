@@ -2,6 +2,7 @@
 
 from amal.eda.systemc import sc_core as sc
 import cppyy
+import math
 
 
 class Owner:
@@ -11,14 +12,19 @@ class Owner:
         """Allocate stable reader event and initial sample."""
         self.value = 0
         self.success = True
+        self.error = False
         self.changed = sc.sc_event()
 
     def read(self):
         """Return the selected scalar sample."""
+        if self.error:
+            raise RuntimeError("configured FIFO read failure")
         return self.value
 
     def nb_read(self):
         """Return the selected success flag and sample."""
+        if self.error:
+            raise RuntimeError("configured FIFO nonblocking failure")
         return self.success, self.value
 
     def num_available(self):
@@ -63,9 +69,39 @@ cppyy.cppdef("""
  * is released after clearing the Python callback error.
  */
 namespace scalar_fifo_check {
+ /** Compare blocking assignment into caller-owned floating storage.
+  * Storage lives only for this call. The adapter manages callback GIL state;
+  * no reference is retained and the configured owner does not wait.
+  */
+ template<class T> bool floating_blocking_output(sc_core::sc_fifo_in_if<T>& channel, double expected) {
+   T output = 7;
+   channel.read(output);
+   if (std::isnan(expected)) return std::isnan(output);
+   return output == T(expected) && std::signbit(output) == std::signbit(expected);
+ }
+ /** Compare successful floating outputs, including NaN and signed zero.
+  * The interface and output are borrowed for this call. Python callbacks hold
+  * the GIL through the adapter; this helper neither retains storage nor waits.
+  */
+ template<class T> bool floating_output(sc_core::sc_fifo_in_if<T>& channel, double expected) {
+   T output = 7;
+   if (!channel.nb_read(output)) return false;
+   if (std::isnan(expected)) return std::isnan(output);
+   return output == T(expected) && std::signbit(output) == std::signbit(expected);
+ }
  template<class T> bool rejected_output(sc_core::sc_fifo_in_if<T>& channel) {
    T output = 7;
    try { channel.nb_read(output); } catch (...) { auto gil = PyGILState_Ensure(); PyErr_Clear();
+     PyGILState_Release(gil); return output == T(7); }
+   return false;
+ }
+ /** Verify rejected blocking reads preserve caller-owned output.
+  * The callback adapter releases acquired GIL state on failure. This helper
+  * clears the Python error while holding the GIL and retains no references.
+  */
+ template<class T> bool rejected_blocking_output(sc_core::sc_fifo_in_if<T>& channel) {
+   T output = 7;
+   try { channel.read(output); } catch (...) { auto gil = PyGILState_Ensure(); PyErr_Clear();
      PyGILState_Release(gil); return output == T(7); }
    return false;
  }
@@ -75,6 +111,15 @@ namespace scalar_fifo_check {
  }
 }
 """)
+for scalar, owner, port in cases + additional:
+    native = port.get_interface()
+    owner.error = True
+    assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
+    assert cppyy.gbl.scalar_fifo_check.rejected_blocking_output[scalar](native), scalar
+    owner.error = False
+    owner.value = False if scalar == "bool" else 0
+    result = native.read()
+    assert (ord(result) if isinstance(result, str) else result) == owner.value, scalar
 for scalar, owner, port in cases:
     native = port.get_interface()
     bits = cppyy.sizeof(scalar) * 8
@@ -90,6 +135,7 @@ for scalar, owner, port in cases:
         else:
             raise AssertionError((scalar, invalid))
         assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
+        assert cppyy.gbl.scalar_fifo_check.rejected_blocking_output[scalar](native), scalar
     owner.value = 0
     owner.success = False
     assert cppyy.gbl.scalar_fifo_check.failed_output[scalar](native), scalar
@@ -113,8 +159,28 @@ for scalar, owner, port in additional:
         else:
             raise AssertionError((scalar, invalid))
         assert cppyy.gbl.scalar_fifo_check.rejected_output[scalar](native), scalar
+        assert cppyy.gbl.scalar_fifo_check.rejected_blocking_output[scalar](native), scalar
     owner.value = False if scalar == "bool" else 1.25
     assert native.read() == owner.value
+    if scalar != "bool":
+        # IEEE non-finite samples must survive the native callback conversion.
+        # Check blocking and successful nonblocking reads, then finite recovery.
+        for value in (float("inf"), float("-inf"), float("nan"), -0.0):
+            owner.value = value
+            result = native.read()
+            if math.isnan(value):
+                assert math.isnan(result), (scalar, result)
+            else:
+                assert result == value, (scalar, result, value)
+                assert math.copysign(1.0, result) == math.copysign(1.0, value)
+            assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, value), scalar
+            assert cppyy.gbl.scalar_fifo_check.floating_blocking_output[scalar](native, value), scalar
+            print("FLOAT_FIFO", scalar.replace(" ", "_"), 1, 1)
+        owner.value = 1.25
+        assert native.read() == 1.25, scalar
+        assert cppyy.gbl.scalar_fifo_check.floating_output[scalar](native, 1.25), scalar
+        assert cppyy.gbl.scalar_fifo_check.floating_blocking_output[scalar](native, 1.25), scalar
+        print("FLOAT_FIFO", scalar.replace(" ", "_"), 1, 1)
     owner.success = False
     assert cppyy.gbl.scalar_fifo_check.failed_output[scalar](native), scalar
 sc.sc_start(1, sc.SC_NS)

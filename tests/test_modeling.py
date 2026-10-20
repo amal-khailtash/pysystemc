@@ -664,7 +664,36 @@ def test_structural_inherited_interface_identity(tmp_path):
 
 def test_scalar_fifo_callback_contracts(tmp_path):
     """Check native integral widths, rejected outputs and callback recovery."""
-    assert "SCALAR_FIFO_CONTRACTS_OK" in run_example(tmp_path, "tests/models/scalar_fifo_contracts.py")
+    output = run_example(tmp_path, "tests/models/scalar_fifo_contracts.py")
+    assert "SCALAR_FIFO_CONTRACTS_OK" in output
+    reference = []
+    for scalar in ("float", "double", "long_double"):
+        native = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "examples/run_sysc_cpp.py"),
+                str(ROOT / "tests/native/floating_fifo.cpp"),
+                "--",
+                scalar,
+            ],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert native.returncode == 0, native.stdout + native.stderr
+        reference.extend(line for line in native.stdout.splitlines() if line.startswith("FLOAT_FIFO"))
+    assert [line for line in output.splitlines() if line.startswith("FLOAT_FIFO")] == reference
+
+
+def test_partial_multiword_tlm_completion(tmp_path):
+    """Verify standalone get/peek overloads, nonblocking outputs and recovery."""
+    assert "PARTIAL_MULTIWORD_TLM_OK" in run_example(tmp_path, "tests/models/partial_multiword_tlm.py")
+
+
+def test_multiword_tlm_blocking_completion(tmp_path):
+    """Check multiword value/output overloads, callback counts and service time."""
+    assert "MULTIWORD_TLM_COMPLETION_OK" in run_example(tmp_path, "tests/models/multiword_tlm_completion.py")
 
 
 def test_stopped_structural_callback_release(tmp_path):

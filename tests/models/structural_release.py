@@ -3,6 +3,7 @@
 from amal.eda.systemc import sc_core as sc, sc_dt, tlm
 import gc
 import weakref
+import cppyy
 
 
 class Owner:
@@ -54,6 +55,34 @@ class TlmOwner:
         self.values.append(value)
 
 
+class QueueOwner:
+    """Provide combined get/peek callbacks retained through several views."""
+
+    def get(self):
+        """Return one scalar sample without waiting."""
+        return 43
+
+    def peek(self):
+        """Return the same sample without consuming it."""
+        return 43
+
+    def nb_get(self):
+        """Return a successful nonblocking sample."""
+        return True, 43
+
+    def nb_peek(self):
+        """Return a successful nonblocking peek."""
+        return True, 43
+
+    def nb_can_get(self):
+        """Report a sample available."""
+        return True
+
+    def nb_can_peek(self):
+        """Report a sample available for peeking."""
+        return True
+
+
 class Top(sc.sc_module):
     """Verify callback owners remain usable through native lifecycle hooks."""
 
@@ -61,6 +90,8 @@ class Top(sc.sc_module):
         """Read both interfaces before explicit callback cleanup."""
         assert port.get_interface().read() == 17
         assert wide_port.get_interface().read().to_uint64() == 29
+        assert queue_ports[1].get_interface().get() == 43
+        assert queue_ports[-1].get_interface().peek() == 43
         ordering.append("end")
 
 
@@ -87,9 +118,20 @@ tlm_port = sc.sc_port[tlm.tlm_analysis_if[int]]()
 tlm_port(tlm_owner)
 tlm_port.get_interface().write(31)
 assert tlm_owner.values == [31]
+queue_owner = QueueOwner()
+queue_reference = weakref.ref(queue_owner)
+queue_ports = []
+for contract in (tlm.tlm_nonblocking_peek_if, tlm.tlm_blocking_get_if, tlm.tlm_get_peek_if):
+    queue_port = sc.sc_port[contract[int]]()
+    queue_port(queue_owner)
+    queue_ports.append(queue_port)
+assert queue_ports[-1].get_interface().peek() == 43
+del queue_owner
 del name, owner, wide_owner, tlm_owner
 gc.collect()
 assert reference() is not None
+assert queue_reference() is not None
+assert queue_ports[1].get_interface().get() == 43
 assert port.get_interface().read() == 17
 try:
     sc.release_interface_callbacks()
@@ -107,19 +149,46 @@ def check_running_cleanup():
         ordering.append("running-rejected")
     else:
         raise AssertionError("cleanup allowed during simulation")
+    assert queue_ports[-1].get_interface().peek() == 43
 
 
 top.sc_thread("check_running_cleanup", check_running_cleanup)
 sc.sc_start(1, sc.SC_NS)
 sc.sc_stop()
 assert ordering == ["running-rejected", "end"]
-assert sc.release_interface_callbacks() == 3
+assert sc.release_interface_callbacks() == 4
 assert sc.release_interface_callbacks() == 0
 gc.collect()
 assert reference() is None
 assert wide_reference() is None
 assert result_reference() is None
 assert tlm_reference() is None
+assert queue_reference() is None
+cppyy.cppdef("""
+/** Verify a released shared adapter rejects nonblocking callbacks.
+ * Interface and output are borrowed for this call. Exceptions are inspected
+ * with the GIL held while clearing Python error state; no references survive.
+ */
+bool released_peek_output(tlm::tlm_nonblocking_peek_if<int>& channel) {
+  int value = 71;
+  try { channel.nb_peek(value); }
+  catch (...) {
+    auto gil = PyGILState_Ensure();
+    PyErr_Clear();
+    PyGILState_Release(gil);
+    return value == 71;
+  }
+  return false;
+}
+""")
+assert cppyy.gbl.released_peek_output(queue_ports[0].get_interface())
+for queue_port, method in ((queue_ports[1], "get"), (queue_ports[-1], "peek")):
+    try:
+        getattr(queue_port.get_interface(), method)()
+    except RuntimeError as error:
+        assert "released" in str(error)
+    else:
+        raise AssertionError("shared TLM callback executed after release")
 try:
     port.get_interface().read()
 except RuntimeError as error:
