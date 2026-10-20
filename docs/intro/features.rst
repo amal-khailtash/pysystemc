@@ -122,6 +122,9 @@ B. Custom interfaces and channels — partially implemented
 
 Recent validation contributes to B1-B4; it does not add or complete requirements.
 See :doc:`../api/coverage` for the tested matrices and their remaining limits.
+The reset/kill matrix currently checks 693 combinations across seven types,
+nine wait forms, and eleven access paths. Selected inherited TLM readiness-event
+identity is independently compared with native FIFO specializations.
 
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
 adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
@@ -163,6 +166,11 @@ and TLM2 transport/debug/DMI adapters have selected semantic tests. Callback typ
 write values and failed get/peek output preservation are checked.
 Inherited get/peek views share their corresponding combined readiness events;
 delayed notification count/time matches an independent native reference.
+Standalone get/peek value and caller-output overloads, nonblocking copies and
+readiness, and inherited event identity match independent native FIFO checks
+for long long, unsigned long long, long double, sc_biguint<137>, sc_bigint<128>,
+and sc_biguint<128>. Signed and unsigned wide samples retain their high bits.
+This evidence covers selected get/peek cases; C1 remains incomplete.
 
 Still required: Reconcile every public overload, type, readiness event, lifetime and
 native-reference case. Adapter-owned readiness events and complete owner/type/reset matrices still
