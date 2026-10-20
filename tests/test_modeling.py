@@ -232,7 +232,10 @@ def test_structural_tlm_fifo_debug_and_configuration(tmp_path):
 
 def test_structural_tlm_fifo_compound_interfaces(tmp_path):
     """Verify compound FIFO indexed/ordinary peek and shared blocking queue state."""
-    assert "STRUCTURAL_TLM_FIFO_COMPOUND_OK" in run_example(tmp_path, "tests/models/python_tlm_fifo_compound.py")
+    for scalar in ("int", "long_long", "unsigned_long_long", "long_double", "bigint128", "biguint128", "biguint137"):
+        assert "STRUCTURAL_TLM_FIFO_COMPOUND_OK" in run_example(
+            tmp_path, "tests/models/python_tlm_fifo_compound.py", (scalar,)
+        )
 
 
 def test_native_tlm_quantumkeeper_and_payload_queue(tmp_path):
@@ -726,7 +729,19 @@ def test_stopped_structural_callback_release(tmp_path):
 
 def test_structural_fifo_reset_cleanup(tmp_path):
     """Verify reset/kill ordering through native structural FIFO callback frames."""
-    assert "STRUCTURAL_FIFO_RESET_OK" in run_example(tmp_path, "tests/models/structural_fifo_reset.py")
+    for start, stop in (("0", "5"), ("5", "10"), ("10", "14")):
+        assert "STRUCTURAL_FIFO_RESET_OK" in run_example(
+            tmp_path, "tests/models/structural_fifo_reset.py", (start, stop)
+        )
+    native = subprocess.run(
+        [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/fifo_output_reset.cpp")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert "FIFO_OUTPUT_RESET_REFERENCE 14 5 2 3 4 ns" in native.stdout
 
 
 def test_native_structural_fifo(tmp_path):

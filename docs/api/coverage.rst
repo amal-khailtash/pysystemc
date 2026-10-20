@@ -218,8 +218,8 @@ exception preservation and recovery, and two 1 ns services per owner.
 
 Reset and kill cleanup also cover standalone combined TLM get and peek owners
 that expose only their requested operation. Full blocking/nonblocking get/peek owners exercise both blocking operations too.
-The structural matrix checks 693 combinations across seven value types, nine
-wait forms, and eleven access paths,
+The structural matrix checks 2,268 combinations across fourteen value types, nine
+wait forms, and eighteen access paths,
 asserting callback/worker cleanup at 2 ns, restart, and final termination at 3 ns.
 
 Standalone multiword/wide TLM get and peek value-returning overloads reject
@@ -265,3 +265,129 @@ a large unsigned sample. Blocking and nonblocking copies, errors, inherited
 event identity, and native FIFO comparisons use all six types. Twelve owners
 complete two blocking services each in 24 ns. These are tested instances, not
 a fixed specialization list or a completeness claim.
+
+The B1/B4/C1 reset matrix includes signed and unsigned 128-bit SystemC values
+with bit 127 set. FIFO write and TLM put callback arguments preserve the high
+bit and the negative signed sample before guarded waits unwind. All eleven
+access paths retain the same reset-at-2-ns and kill-at-3-ns ordering assertions.
+
+B3/C1 callback-release evidence covers native nonblocking get and peek output
+preservation after owner cleanup, for standalone and combined views. Standalone
+get/peek readiness callbacks also reject post-release access. Adapter storage
+remains retained because ports borrow it; native teardown is still incomplete.
+
+B3/C1 lifetime checks capture distinct readiness-event addresses for standalone
+get, standalone peek, and both full get/peek operations. All four addresses
+remain unchanged after callback owners are collected. This proves retained
+event storage for these views, not safe deletion of the native adapters.
+
+B3/C1 post-release checks include both blocking caller-output get/peek overloads
+through standalone and full adapters. Rejected callbacks preserve distinct
+output sentinels. Full-adapter readiness callbacks reject access as standalone
+callbacks do; these checks do not delete native adapter storage.
+
+B1/B4 reset coverage includes short, unsigned short, unsigned int, long, and
+unsigned long in addition to the previously tested types. Type-based wide-sample
+checks preserve signed/high-bit assertions independently of matrix ordering.
+The fourteen types cover the same nine waits and eighteen access paths.
+
+B1/B4/C1 reset coverage includes native FIFO ``read(T&)`` and TLM ``get(T&)``/
+``peek(T&)`` overloads, using local C++ output storage and explicit GIL release
+around blocking calls. Scheduler unwind crosses the output-wrapper frame with
+the same callback/worker ordering. The full matrix runs in three independent
+processes, each retaining the 60-second timeout.
+
+B1/B4/C1 caller-output reset helpers inspect native output storage in the catch
+path before rethrowing scheduler unwind. FIFO read and TLM get/peek outputs
+retain their sentinel during both reset and kill. A changed output terminates
+the subprocess, so cleanup ordering alone cannot mask an output mutation.
+
+The independent native ``tests/native/fifo_output_reset.cpp`` reference checks
+all fourteen types through empty ``sc_fifo::read(T&)``, ``tlm_get_if::get(T&)``
+and ``tlm_peek_if::peek(T&)`` calls. Each consumer starts at 0 ns, resets and
+restarts at 2 ns, and is killed at 3 ns. The native unwind frame asserts its
+reset/kill kind and unchanged output before rethrowing; final checks require two
+starts, two unwinds, terminated consumers, empty channels and final time 4 ns.
+This supplies independent native output/lifecycle evidence for these three
+paths; the native channels wait on their own data events, rather than reproducing
+all nine structural callback wait forms. Safe adapter teardown remains open.
+
+C1 compound ``tlm_fifo_get_if`` blocking callbacks now return an internal native
+pair, preserving public value/output ``get`` and ``peek`` signatures while
+avoiding invalid cppyy multiword scalar dispatcher returns. Compound FIFO
+simulations cover int, long long, unsigned long long and long double, including
+indexed/ordinary peeks, blocking overloads, failed nonblocking output retention,
+shared queue state, configuration defaults and a completed worker at 1 ns.
+The full compound type/error/reset/native-reference matrix remains open.
+
+The compound FIFO matrix also includes signed/unsigned 128-bit and unsigned
+137-bit types. High-bit samples pass through put, blocking peek/get output,
+indexed nonblocking peek/poke and failed get output retention; exact native
+representations avoid cppyy equality coercion. Compound integral callback
+validation rejects bool, float, objects and both overflow endpoints before
+conversion. Int, long long and unsigned long long tests check unchanged output
+for all four blocking/nonblocking get/peek callbacks and recovery at both native
+endpoints. These checks contribute to existing B1/B4/C1 requirements.
+
+The reset matrix includes four compound ``tlm_fifo_get_if`` paths: get/peek
+value and caller-output overloads. Fourteen types, nine callback waits and
+eighteen paths produce 2,268 combinations. Compound callbacks must unwind at
+2 ns, restart immediately, unwind again on kill at 3 ns, and terminate; native
+output helpers check unchanged storage before rethrowing. The independent
+native reference additionally checks get/peek output through compound interface
+views with the same times, unwind kinds, counts and final empty state.
+
+B2 specialization identity checks cover int, long long and sc_biguint137 for
+signal, FIFO and TLM inherited views in combined-first and partial-first order.
+Native virtual interface addresses and corresponding events match across views;
+one FIFO owner bound to three types has distinct native adapters and shared
+Python sample state. Event observers use dont_initialize and fire once at 1 ns.
+The new matrix and existing identity regression pass together; this does not
+establish identity across all compound or transport specializations.
+
+C1 master/slave blocking callbacks use native pair returns for the response
+type, preserving public value/output overloads with multiword types. Twelve
+blocking/full master/slave specializations cover asymmetric int/long long,
+unsigned long long/long double and sc_biguint137/sc_bigint128 request/response
+pairs. Exact endpoints/high bits, copied puts, blocking get/peek value/output,
+full-interface nonblocking success/failure, caller-output retention, callback
+counts and simulation times agree with an independent native reference.
+The new matrix and existing master/slave regression pass together. Complete
+type/error/reset/lifetime matrices remain open.
+
+B1 scalar signal reference checks compare eight normalized records for bool,
+signed/unsigned int and long long, and float/double/long double. Integral
+endpoints, finite floating values, signed zero, infinity, NaN, value-change
+callbacks and delta updates agree with native sc_signal specializations.
+Structural reads reject bool/type/range mismatches, preserve sampled storage
+and recover through read/get_data_ref after valid results are restored. All
+objects are constructed before simulation and each reference runs in a fresh
+subprocess. Wider scalar/tracing/policy matrices remain open.
+
+B3 compound callback lifetime checks cover four int owners: FIFO put/get and
+full master/slave. External references are dropped before simulation; weakrefs
+remain live through worker callbacks and end_of_simulation at 1 ns. Release
+during simulation rejects without changing owner state. Stopped-kernel cleanup
+releases exactly four adapters' callback owners, permits collection and returns
+zero on repetition. Borrowed readiness events retain addresses; subsequent
+callbacks reject and native get/peek/nonblocking output probes preserve their
+sentinels. Native adapters still remain retained while ports borrow addresses;
+safe native teardown is not established.
+
+B4/C1 master/slave unwind checks cover blocking/full master/slave interfaces,
+int, long long, long double and sc_biguint137, five blocking paths (put,
+get/peek value and get/peek caller-output), and nine waits: 720 combinations.
+Three fresh-process slices retain the 60-second timeout. Callback/worker cleanup
+at 2 ns, immediate restart, kill cleanup at 3 ns, exact callback counts and
+terminated handles are asserted. An independent native reference supplies 32
+event-wait get/peek output consumers across the same types/families, asserting
+unwind kind, output preservation, times and counts before mandatory rethrow.
+Native reference records match the corresponding Python output-event subset.
+The native reference does not reproduce all nine callback wait forms.
+
+Plain ``char`` signal/FIFO callbacks now require integer results within the
+native compiler range (including native signedness). Selected endpoint checks
+compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
+with an independent native reference. Invalid signal samples preserve sampled
+storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
+policy and reset matrices remain open.

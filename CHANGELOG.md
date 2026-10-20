@@ -8,7 +8,28 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+- Validate plain char signal/FIFO callback integers using native signedness before conversion.
+- Preserve master/slave multiword blocking get/peek signatures through native pair-return callbacks.
+- Validate compound TLM FIFO integral blocking/nonblocking callback values before native conversion, preserving caller outputs on rejected results.
+- Use native pair-return callbacks for compound TLM FIFO blocking get/peek so multiword scalar dispatch preserves public value/output overloads.
+
 ### Tests
+- Compare plain char signal references and FIFO output overloads with native endpoints; reject invalid samples and preserve prior storage.
+- Exercise 720 master/slave reset/kill combinations with a 32-consumer native output-unwind reference.
+- Verify compound FIFO/master/slave callback-owner retention, stopped-kernel release and post-release output preservation.
+- Compare scalar signal endpoint and floating special-value semantics with native signals, including callback rejection and recovery.
+- Compare twelve asymmetric master/slave overload specializations with independent native references and expand signal/FIFO/TLM specialization identity matrices.
+- Extend the planned reset matrix to compound FIFO get/peek value/output overloads across 2,268 combinations and native compound output references.
+- Extend compound FIFO overload checks to signed/unsigned 128-bit and unsigned 137-bit values, plus integral callback rejection and endpoint recovery.
+- Assert interrupted FIFO/TLM blocking caller-output storage stays unchanged before reset/kill unwind is rethrown.
+- Compare caller-output reset/kill semantics with an independent native FIFO/TLM reference across fourteen types.
+- Cover caller-output FIFO read and TLM get/peek reset unwind across 1,764 existing type/wait/access combinations.
+- Broaden existing scalar interface reset coverage to short/unsigned short/unsigned int/long/unsigned long across 1,386 combinations.
+- Assert released standalone/full TLM blocking caller-output overloads preserve output and full readiness callbacks reject access.
+- Verify standalone and full TLM readiness events remain distinct and preserve native addresses after callback-owner cleanup.
+- Check released standalone get/peek readiness callbacks reject access and native nonblocking get preserves caller output after owner cleanup.
+- Extend existing interface reset/kill coverage to signed/unsigned 128-bit values, preserving high bits and signed copied arguments across 891 combinations.
 - Extend existing standalone TLM native-reference, overload, error, and readiness checks to signed/unsigned 128-bit SystemC values with bit 127 set.
 - Compare inherited TLM get/peek readiness-event identity with independent native FIFO specializations across the four multiword/wide types.
 - Extend the independent multiword TLM FIFO comparison to nonblocking copies, empty outputs, and readiness before and after consumption.

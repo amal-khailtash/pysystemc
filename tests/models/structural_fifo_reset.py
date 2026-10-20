@@ -1,14 +1,33 @@
 """Verify reset/kill unwind through structural FIFO native callback boundaries."""
 
 from amal.eda.systemc import sc_core as sc, sc_dt, tlm
+import sys
+import cppyy
 
 records = []
 clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.SC_NS), True)
 first = sc.sc_event("first")
 second = sc.sc_event("second")
 wait_kinds = ("time", "event", "or", "and", "timed-event", "timed-or", "timed-and", "cycle", "count")
-value_types = (int, "long long", "unsigned long long", "float", "double", "long double", sc_dt.sc_biguint[137])
-paths_per_type = 11
+value_types = (
+    int,
+    "short",
+    "unsigned short",
+    "unsigned int",
+    "long",
+    "unsigned long",
+    "long long",
+    "unsigned long long",
+    "float",
+    "double",
+    "long double",
+    sc_dt.sc_bigint[128],
+    sc_dt.sc_biguint[128],
+    sc_dt.sc_biguint[137],
+)
+if len(sys.argv) == 3:
+    value_types = value_types[int(sys.argv[1]) : int(sys.argv[2])]
+paths_per_type = 18
 cases_per_type = paths_per_type * len(wait_kinds)
 
 
@@ -31,10 +50,14 @@ class Owner:
 
     def check_argument(self, value):
         """Assert native copied writes retain arbitrary-width high bits."""
-        if self.index // cases_per_type < len(value_types) - 1:
+        value_type = value_types[self.index // cases_per_type]
+        if isinstance(value_type, str) or value_type is int:
             assert value == 17
         else:
-            assert value[136] and value.to_uint64() == 17
+            bit = 136 if value_type == sc_dt.sc_biguint[137] else 127
+            assert value[bit] and value.to_uint64() == 17
+            if value_type == sc_dt.sc_bigint[128]:
+                assert value < 0
 
     def peek(self):
         """Suspend a native TLM peek callback."""
@@ -103,6 +126,29 @@ class PartialOwner:
         setattr(self, "nb_can_" + operation, lambda: False)
 
 
+class CompoundOwner(FullOwner):
+    """Supply FIFO debug callbacks while blocking get/peek wait in the owner."""
+
+    def used(self):
+        """Report empty FIFO storage."""
+        return 0
+
+    def size(self):
+        """Report one available storage slot."""
+        return 1
+
+    def debug(self):
+        """Inspect without changing storage or waiting."""
+
+    def nb_peek(self, index=None):
+        """Reject both ordinary and indexed reads of the empty FIFO."""
+        return False, None
+
+    def nb_poke(self, value, index):
+        """Reject writes to nonexistent occupied entries."""
+        return False
+
+
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 ports = []
@@ -121,15 +167,24 @@ for value_type in value_types:
             tlm.tlm_peek_if[value_type],
             tlm.tlm_get_peek_if[value_type],
             tlm.tlm_get_peek_if[value_type],
+            sc.sc_fifo_blocking_in_if[value_type],
+            tlm.tlm_blocking_get_if[value_type],
+            tlm.tlm_blocking_peek_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
+            tlm.tlm_fifo_get_if[value_type],
         )
         * len(wait_kinds)
     )
 for index, interface in enumerate(interfaces):
     port = sc.sc_port[interface]()
     path = index % paths_per_type
-    if path >= 9:
+    if path >= 14:
+        owner = CompoundOwner(index)
+    elif path in (9, 10):
         owner = FullOwner(index)
-    elif path >= 7:
+    elif path in (7, 8):
         owner = PartialOwner(index, "get" if path == 7 else "peek")
     else:
         owner = Owner(index)
@@ -138,19 +193,44 @@ for index, interface in enumerate(interfaces):
 del name
 
 
+output_helpers = {}
+for index, interface in enumerate(interfaces):
+    path = index % paths_per_type
+    if path not in (11, 12, 13, 16, 17):
+        continue
+    operation = {11: "read", 12: "get", 13: "peek", 16: "get", 17: "peek"}[path]
+    native_name = interface.__cpp_name__
+    value_name = native_name.split("<", 1)[1].removesuffix(">")
+    helper_name = f"reset_output_{index}"
+    cppyy.cppdef(
+        f"/** Borrow local output during a blocking callback; caller releases GIL, "
+        f"adapter reacquires it; verify output before rethrowing scheduler unwind. */ "
+        f"void {helper_name}({native_name}& channel) {{ "
+        f"{value_name} output = 71; try {{ channel.{operation}(output); }} "
+        f"catch (...) {{ if (output != static_cast<{value_name}>(71)) "
+        "std::abort(); throw; } }"
+    )
+    helper = getattr(cppyy.gbl, helper_name)
+    helper.__release_gil__ = True
+    output_helpers[index] = helper
+
+
 def worker(index):
     """Call a native interface and retain outer Python cleanup ordering."""
     records.append((index, "worker-start", str(sc.sc_time_stamp())))
     try:
         native = ports[index].get_interface()
         path = index % paths_per_type
-        wide = index // cases_per_type == len(value_types) - 1
-        value = sc_dt.sc_biguint[137](17) if wide else 17
+        value_type = value_types[index // cases_per_type]
+        wide = not (isinstance(value_type, str) or value_type is int)
+        value = value_type(17) if wide else 17
         if wide:
-            value[136] = True
-        if path == 0:
+            value[136 if value_type == sc_dt.sc_biguint[137] else 127] = True
+        if index in output_helpers:
+            output_helpers[index](native)
+        elif path == 0:
             native.read()
-        elif path in (1, 5, 7, 9):
+        elif path in (1, 5, 7, 9, 14):
             native.get()
         elif path == 2:
             native.write(value)

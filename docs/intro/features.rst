@@ -122,9 +122,23 @@ B. Custom interfaces and channels — partially implemented
 
 Recent validation contributes to B1-B4; it does not add or complete requirements.
 See :doc:`../api/coverage` for the tested matrices and their remaining limits.
-The reset/kill matrix currently checks 693 combinations across seven types,
-nine wait forms, and eleven access paths. Selected inherited TLM readiness-event
+The reset/kill matrix currently checks 2,268 combinations across fourteen types,
+nine wait forms, and eighteen access paths. Interrupted caller-output overloads
+assert unchanged native output before propagating reset/kill unwind.
+An independent native FIFO/TLM reference checks these output overloads
+across all fourteen types with matching reset/kill times and termination.
+Compound TLM FIFO blocking get/peek adapters use native pair-return callbacks
+for multiword scalar dispatch; selected compound overloads are checked across
+int, long long, unsigned long long and long double.
+Compound FIFO checks additionally cover 128/137-bit high-bit preservation and
+integral callback rejection with unchanged outputs and endpoint recovery.
+Selected inherited TLM readiness-event
 identity is independently compared with native FIFO specializations.
+Signal/FIFO/TLM specialization identity now covers int, long long and
+sc_biguint137 in both combined-first and partial-first orders, with delayed
+event observers and shared state checks.
+Scalar signal endpoint and floating special-value checks now have independent
+native equivalence records, with callback rejection and sampled-value recovery.
 
 Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
 adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
@@ -133,6 +147,13 @@ Floating signal read/get_data_ref callbacks reject nonnumeric values, preserve
 sampled storage on rejection and recover for float/double/long double.
 ``release_interface_callbacks()`` releases structural owners and retained results
 after native stop; adapters remain alive and later callbacks reject access.
+Standalone get/peek readiness rejects post-release access, while failed native
+blocking and nonblocking get/peek calls preserve caller outputs. Full and
+standalone readiness callbacks reject access after cleanup. Adapter-owned readiness events
+retain their native addresses after owner cleanup. Native teardown remains open.
+Compound FIFO put/get and full master/slave owners are retained through final
+simulation hooks and collect after explicit stopped-kernel callback release;
+post-release output retention and event addresses are checked.
 Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
 reset/kill cleanup ordering in timed native-process tests.
 Each path covers timed, event, OR/AND, timed-event/list, cycle and counted-cycle
@@ -159,6 +180,11 @@ C. TLM interface families — partial
 * ☐ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
 
 Multiword get/peek validation contributes to C1; the full requirement remains open.
+Master/slave multiword blocking callbacks use native pair returns; twelve
+asymmetric blocking/full specializations have independent native value/output,
+copy, callback-count and timing checks.
+Master/slave reset/kill validation covers 720 type/family/wait/access combinations
+and an independent native output-unwind reference for 32 event-wait consumers.
 See :doc:`../api/coverage` for overload, event, lifetime, and native-reference evidence.
 
 Implemented and tested: TLM1 put/get/peek/transport/analysis, combined/master/slave/FIFO families
@@ -1130,3 +1156,10 @@ tlm_utils public families
 * ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
+
+Plain ``char`` signal/FIFO callbacks now require integer results within the
+native compiler range (including native signedness). Selected endpoint checks
+compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
+with an independent native reference. Invalid signal samples preserve sampled
+storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
+policy and reset matrices remain open.

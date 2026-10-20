@@ -150,6 +150,13 @@ for operation in ("get", "peek"):
     partial_port = sc.sc_port[getattr(tlm, "tlm_" + operation + "_if")[int]]()
     partial_port(partial_owner)
     partial_ports.append((partial_port, operation))
+event_views = [(partial_port, operation) for partial_port, operation in partial_ports]
+event_views.extend((queue_ports[-1], operation) for operation in ("get", "peek"))
+event_addresses = [
+    cppyy.addressof(getattr(event_port.get_interface(), "ok_to_" + operation)())
+    for event_port, operation in event_views
+]
+assert len(set(event_addresses)) == 4
 del partial_owner
 gc.collect()
 assert all(reference() is not None for reference in partial_references)
@@ -192,11 +199,47 @@ assert result_reference() is None
 assert tlm_reference() is None
 assert queue_reference() is None
 assert all(reference() is None for reference in partial_references)
+assert [
+    cppyy.addressof(getattr(event_port.get_interface(), "ok_to_" + operation)())
+    for event_port, operation in event_views
+] == event_addresses
 cppyy.cppdef("""
 /** Verify a released shared adapter rejects nonblocking callbacks.
  * Interface and output are borrowed for this call. Exceptions are inspected
  * with the GIL held while clearing Python error state; no references survive.
  */
+/** Preserve caller-owned get output on released callbacks; clear errors under GIL. */
+bool released_blocking_get_output(tlm::tlm_blocking_get_if<int>& channel) {
+  int value = 79;
+  try { channel.get(value); }
+  catch (...) {
+    auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil);
+    return value == 79;
+  }
+  return false;
+}
+/** Preserve caller-owned peek output when released callbacks reject. */
+bool released_blocking_peek_output(tlm::tlm_blocking_peek_if<int>& channel) {
+  int value = 83;
+  try { channel.peek(value); }
+  catch (...) {
+    auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil);
+    return value == 83;
+  }
+  return false;
+}
+/** Preserve nonblocking get output; catch callbacks and clear errors under GIL. */
+bool released_get_output(tlm::tlm_nonblocking_get_if<int>& channel) {
+  int value = 73;
+  try { channel.nb_get(value); }
+  catch (...) {
+    auto gil = PyGILState_Ensure();
+    PyErr_Clear();
+    PyGILState_Release(gil);
+    return value == 73;
+  }
+  return false;
+}
 bool released_peek_output(tlm::tlm_nonblocking_peek_if<int>& channel) {
   int value = 71;
   try { channel.nb_peek(value); }
@@ -209,9 +252,28 @@ bool released_peek_output(tlm::tlm_nonblocking_peek_if<int>& channel) {
   return false;
 }
 """)
+for get_port in (partial_ports[0][0], queue_ports[-1]):
+    assert cppyy.gbl.released_blocking_get_output(get_port.get_interface())
+for peek_port in (partial_ports[1][0], queue_ports[-1]):
+    assert cppyy.gbl.released_blocking_peek_output(peek_port.get_interface())
+for operation in ("get", "peek"):
+    try:
+        getattr(queue_ports[-1].get_interface(), "nb_can_" + operation)()
+    except (RuntimeError, TypeError) as error:
+        assert "released" in str(error)
+    else:
+        raise AssertionError("full readiness callback executed after release")
+assert cppyy.gbl.released_get_output(queue_ports[-1].get_interface())
+assert cppyy.gbl.released_get_output(partial_ports[0][0].get_interface())
 assert cppyy.gbl.released_peek_output(queue_ports[0].get_interface())
 assert cppyy.gbl.released_peek_output(partial_ports[1][0].get_interface())
 for partial_port, operation in partial_ports:
+    try:
+        getattr(partial_port.get_interface(), "nb_can_" + operation)()
+    except (RuntimeError, TypeError) as error:
+        assert "released" in str(error)
+    else:
+        raise AssertionError("partial readiness callback executed after release")
     try:
         getattr(partial_port.get_interface(), operation)()
     except (RuntimeError, TypeError) as error:
