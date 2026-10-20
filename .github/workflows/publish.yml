@@ -14,7 +14,7 @@ on:
         default: pypi
         required: true
       tag:
-        description: Existing release tag to publish (for example v0.12.0)
+        description: Existing immutable release tag to publish
         type: string
         required: true
 permissions:
@@ -40,7 +40,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
-      - name: Check release tag matches package version
+      - name: Verify immutable tag and package version
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |

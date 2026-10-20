@@ -1,8 +1,8 @@
 name: 02. CI
 on:
+  pull_request:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -12,10 +12,10 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: tests-${{ github.workflow }}-${{ inputs.ref || github.ref }}
+  group: ci-${{ github.workflow }}-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 jobs:
-  test:
+  tests:
     name: Tests and coverage
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -27,6 +27,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
+          enable-cache: true
       - name: Compute native cache identity
         id: native-key
         shell: bash
@@ -50,7 +51,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-python-3.14
+          name: coverage
           path: build/coverage/
           if-no-files-found: warn
       - name: Upload coverage to Codecov
@@ -72,6 +73,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
+          enable-cache: true
       - name: Build and repair native distributions
         run: |
           uv build
@@ -92,11 +94,12 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
+          enable-cache: true
       - name: Check documentation
         run: |
           uv sync --locked --only-group docs
           uv run --no-sync sphinx-build -W -b html docs build/docs
       - uses: actions/upload-artifact@v7
         with:
-          name: ci-documentation
+          name: documentation
           path: build/docs/
