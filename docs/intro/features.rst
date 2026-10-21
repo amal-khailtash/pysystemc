@@ -120,87 +120,26 @@ B. Custom interfaces and channels — partially implemented
 * ☐ **B3** — Adapter teardown and release of retained callback owners before shutdown.
 * ☐ **B4** — Complete custom-channel error/reset/GIL/access-path matrix.
 
-Recent validation contributes to B1-B4; it does not add or complete requirements.
-See :doc:`../api/coverage` for the tested matrices and their remaining limits.
-The reset/kill matrix currently checks 2,268 combinations across fourteen types,
-nine wait forms, and eighteen access paths. Interrupted caller-output overloads
-assert unchanged native output before propagating reset/kill unwind.
-An independent native FIFO/TLM reference checks these output overloads
-across all fourteen types with matching reset/kill times and termination.
-Compound TLM FIFO blocking get/peek adapters use native pair-return callbacks
-for multiword scalar dispatch; selected compound overloads are checked across
-int, long long, unsigned long long and long double.
-Compound FIFO checks additionally cover 128/137-bit high-bit preservation and
-integral callback rejection with unchanged outputs and endpoint recovery.
-Selected inherited TLM readiness-event
-identity is independently compared with native FIFO specializations.
-Signal/FIFO/TLM specialization identity now covers int, long long and
-sc_biguint137 in both combined-first and partial-first orders, with delayed
-event observers and shared state checks.
-Scalar signal endpoint and floating special-value checks now have independent
-native equivalence records, with callback rejection and sampled-value recovery.
+Structural signal/FIFO adapters, callback validation, inherited interface reuse
+and guarded reset/kill are supported in tested cases. Stopped-kernel callback
+release and native adapter teardown are implemented; teardown requires all
+native ports/exports to be destroyed first.
 
-Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
-adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
-cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
-Floating signal read/get_data_ref callbacks reject nonnumeric values, preserve
-sampled storage on rejection and recover for float/double/long double.
-``release_interface_callbacks()`` releases structural owners and retained results
-after native stop; adapters remain alive and later callbacks reject access.
-Standalone get/peek readiness rejects post-release access, while failed native
-blocking and nonblocking get/peek calls preserve caller outputs. Full and
-standalone readiness callbacks reject access after cleanup. Adapter-owned readiness events
-retain their native addresses after owner cleanup. Native teardown remains open.
-Compound FIFO put/get and full master/slave owners are retained through final
-simulation hooks and collect after explicit stopped-kernel callback release;
-post-release output retention and event addresses are checked.
-Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
-reset/kill cleanup ordering in timed native-process tests.
-Each path covers timed, event, OR/AND, timed-event/list, cycle and counted-cycle
-guarded waits with explicit static clock sensitivity for int and 137-bit
-unsigned values; wide write/put callback arguments retain their high bits.
-Scalar/wide and TLM analysis owner collection, plus replaced-reference
-collection, are checked after final
-end-of-simulation reads; cleanup during a running process is rejected.
-Existing combined adapters are reused for compatible inherited signal/FIFO/TLM
-views. Scalar FIFO reads use native pair callbacks, including signed/unsigned
-64-bit results; integral range/type failures preserve native outputs and recover.
-
-Still required: Complete type/conversion/tracing/reset/error coverage remains open, including plain
-char/floating policies. Shared owner events work, but cross-specialization interface identity and
-pre-shutdown owner/result release are incomplete.
-Complete signal/FIFO owners select combined adapters even when first bound
-through a partial interface. Complete TLM get/peek owners likewise select a
-combined adapter through partial-first bindings. Transport protocol mapping and
-complete cross-specialization/lifetime matrices remain open.
+The complete type, conversion, tracing, identity, error and lifetime matrices
+remain open. See :doc:`../api/coverage` for tested combinations, native-reference
+evidence and teardown constraints.
 
 C. TLM interface families — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☐ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
 
-Multiword get/peek validation contributes to C1; the full requirement remains open.
-Master/slave multiword blocking callbacks use native pair returns; twelve
-asymmetric blocking/full specializations have independent native value/output,
-copy, callback-count and timing checks.
-Master/slave reset/kill validation covers 720 type/family/wait/access combinations
-and an independent native output-unwind reference for 32 event-wait consumers.
-See :doc:`../api/coverage` for overload, event, lifetime, and native-reference evidence.
+TLM1 put/get/peek/transport/analysis and compound interfaces, plus TLM2
+transport/debug/DMI, have selected semantic support. Compatible inherited
+views share adapters in tested binding orders.
 
-Implemented and tested: TLM1 put/get/peek/transport/analysis, combined/master/slave/FIFO families
-and TLM2 transport/debug/DMI adapters have selected semantic tests. Callback types/bounds, copied
-write values and failed get/peek output preservation are checked.
-Inherited get/peek views share their corresponding combined readiness events;
-delayed notification count/time matches an independent native reference.
-Standalone get/peek value and caller-output overloads, nonblocking copies and
-readiness, and inherited event identity match independent native FIFO checks
-for long long, unsigned long long, long double, sc_biguint<137>, sc_bigint<128>,
-and sc_biguint<128>. Signed and unsigned wide samples retain their high bits.
-This evidence covers selected get/peek cases; C1 remains incomplete.
-
-Still required: Reconcile every public overload, type, readiness event, lifetime and
-native-reference case. Adapter-owned readiness events and complete owner/type/reset matrices still
-require review.
+Complete overload, type, event, lifetime and independent native-reference
+coverage remains open. See :doc:`../api/coverage` for evidence and limitations.
 
 D. Callable sockets — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1156,53 +1095,3 @@ tlm_utils public families
 * ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
-
-Plain ``char`` signal/FIFO callbacks now require integer results within the
-native compiler range (including native signedness). Selected endpoint checks
-compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
-with an independent native reference. Invalid signal samples preserve sampled
-storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
-policy and reset matrices remain open.
-
-Complete structural TLM put owners now share a combined adapter when first bound
-through blocking or nonblocking put interfaces. Selected checks cover int,
-long long and sc_biguint<137>, three binding orders, virtual interface/event
-identity, copied inputs, failed nonblocking puts and readiness at 1 ns. A native
-reference checks the same type/state/event semantics. B2 and C1 remain open for
-other families, specializations and lifecycle paths.
-
-Standard-protocol TLM2 forward/backward owners now select a shared combined
-adapter for compatible partial-first bindings. Native inheritance validates
-payload/phase compatibility. Selected tests cover all five forward and three
-backward first-bind choices, shared virtual interface addresses and borrowed
-payload/phase/delay/DMI updates. Custom protocol promotion remains unimplemented;
-complete-first native reuse remains available. Full B2/C1 matrices remain open.
-
-B3 native teardown implementation: ``sc_core.teardown_interfaces()`` deletes
-retained structural adapters only after simulation stop and destruction of all
-native ports/exports, including native-created borrowers. The conservative
-hierarchy gate rejects before releasing callbacks. Close traces and finish all
-reference/event access before calling; borrowed proxies become invalid after
-deletion. Directly constructed channels and process callbacks are outside this
-API. Broader B3 lifetime/trace/family teardown validation remains open.
-
-B3 teardown evidence now includes seven adapters: scalar and 137-bit signal,
-FIFO and combined TLM get/peek, plus analysis. Tests verify readiness accesses
-before deletion, native registry removal, retained owner/result collection and
-idempotence. A 137-bit VCD declares and changes the traced sample before closure
-and deletion. Broader master/slave, transport, blocking/reset and destruction
-ordering coverage remains open; B3 is not complete.
-
-B3 compound/transport teardown checks cover full int master/slave, TLM1
-transport and standard TLM2 forward/backward owners. Callbacks execute before
-simulation, in end-of-simulation hooks and after stop before borrower deletion.
-Native registry removal and owner collection follow explicit teardown at 2 ns.
-Blocking/reset teardown and wider/custom protocol/native-reference matrices
-remain open; these checks do not close B3.
-
-B3 teardown after blocking unwind is checked across six paths: FIFO read,
-TLM get, blocking master get/slave peek, TLM1 transport and TLM2 blocking
-transport. Reset at 2 ns and kill at 3 ns run callback cleanup before worker
-cleanup; handles terminate before stopped-kernel deletion at 4 ns. Owners
-collect and native registry entries disappear afterward. This selected timed
-wait matrix does not close wider wait/type/native-reference teardown scope.

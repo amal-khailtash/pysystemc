@@ -4,8 +4,37 @@ from amal.eda.systemc import sc_core as sc, tlm
 import cppyy
 import gc
 import weakref
+import sys
 
 records = []
+wait_kind = sys.argv[1] if len(sys.argv) > 1 else "time"
+first = sc.sc_event("first")
+second = sc.sc_event("second")
+clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.SC_NS), True)
+
+
+def suspend():
+    """Suspend through a guarded wait family until reset or kill."""
+    if wait_kind == "time":
+        sc.wait(100, sc.SC_NS)
+    elif wait_kind == "event":
+        sc.wait(first)
+    elif wait_kind == "or":
+        sc.wait(first | second)
+    elif wait_kind == "and":
+        sc.wait(first & second)
+    elif wait_kind == "timed-event":
+        sc.wait(100, sc.SC_NS, first)
+    elif wait_kind == "timed-or":
+        sc.wait(100, sc.SC_NS, first | second)
+    elif wait_kind == "timed-and":
+        sc.wait(100, sc.SC_NS, first & second)
+    elif wait_kind == "cycle":
+        sc.wait()
+    elif wait_kind == "count":
+        sc.wait(2)
+    else:
+        raise ValueError(wait_kind)
 
 
 class Owner:
@@ -19,7 +48,7 @@ class Owner:
         """Wait with a finally block that runs before worker cleanup."""
         records.append((self.label, "callback", str(sc.sc_time_stamp())))
         try:
-            sc.wait(100, sc.SC_NS)
+            suspend()
             raise AssertionError("interrupted callback returned")
         finally:
             records.append((self.label, "callback-cleanup", str(sc.sc_time_stamp())))
@@ -82,7 +111,11 @@ def worker(index):
         records.append((label, "worker-cleanup", str(sc.sc_time_stamp())))
 
 
-handles = [sc.sc_spawn(lambda index=index: worker(index), f"worker_{index}") for index in range(len(groups))]
+handles = []
+for index in range(len(groups)):
+    options = sc.sc_spawn_options()
+    options.set_sensitivity(clock.posedge_event())
+    handles.append(sc.sc_spawn(lambda index=index: worker(index), f"worker_{index}", options))
 
 
 def controller():
@@ -123,3 +156,6 @@ assert all(
 assert records[-1] == ("all", "deleted", "4 ns")
 assert sc.teardown_interfaces() == 0
 print("RESET_TEARDOWN_OK 6 4 ns")
+for entry in records:
+    if entry[0] == "fifo" or entry[0] == "all":
+        print("TEARDOWN_REFERENCE", *entry)

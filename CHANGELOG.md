@@ -14,6 +14,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.
 
 ### Tests
+- Extend B3 teardown after reset/kill to nine guarded wait families across six paths, and compare native FIFO cleanup/deletion ordering.
 - Verify native teardown follows reset/kill cleanup and process termination across FIFO, TLM get/master/slave and transport callbacks.
 - Check master/slave and TLM1/TLM2 transport native teardown after end hooks, preserving callback owners until final reads.
 - Verify native teardown across seven scalar/wide signal, FIFO, TLM and analysis adapters, including retained-result collection and VCD closure.

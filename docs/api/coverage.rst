@@ -434,3 +434,10 @@ transport. Reset at 2 ns and kill at 3 ns run callback cleanup before worker
 cleanup; handles terminate before stopped-kernel deletion at 4 ns. Owners
 collect and native registry entries disappear afterward. This selected timed
 wait matrix does not close wider wait/type/native-reference teardown scope.
+
+B3 reset/kill teardown covers 54 combinations: six blocking paths across time,
+event, OR/AND, timed event/OR/AND, cycle and count waits. Static clock sensitivity
+starts at 50 ns so cycle waits remain suspended for reset at 2 ns and kill at
+3 ns. An independent native FIFO reference matches nine exact callback/worker
+cleanup and deletion records through 4 ns and verifies registry removal.
+Native reference breadth beyond FIFO and full type/lifecycle scope remain open.
