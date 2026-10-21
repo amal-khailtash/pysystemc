@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support Python string and bytes inputs for native void-pointer string hash/compare/key-duplication helpers while preserving native pointer calls and explicit key allocation ownership.
 - Restore the default preserve-first argument for native unique-name generation and verify module, thread and global scope counters and native version function returns against C++.
 - Restore default-context pending-activity queries, verify both hierarchical name-registry overloads against C++, and include complete name-generator declarations in source extraction.
 - Restore default-context top-level object/event lookups and safe iteration of empty borrowed pointer vectors; expose the complete native name generator.

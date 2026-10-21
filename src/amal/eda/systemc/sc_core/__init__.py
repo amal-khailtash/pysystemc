@@ -36,7 +36,7 @@ from . import _tracing
 # Compile first-party bridges before publishing native aliases or configuring
 # their methods. The parent package has already loaded SystemC and selected C++17.
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp", "interface_teardown.cpp"):
+for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp", "interface_teardown.cpp", "hash_helpers.cpp"):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
 
@@ -120,6 +120,68 @@ _guard_native_channels()
 sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
 sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
+
+
+def default_str_hash_fn(key):
+    """Hash a string or borrowed native NUL-terminated key pointer.
+
+    Args:
+        key: Python str/bytes, or native pointer; a null pointer hashes to zero.
+
+    Returns:
+        Native unsigned string hash.
+
+    Raises:
+        TypeError: key cannot convert to the native parameter.
+
+    Pointer storage must survive the call. Call on the simulation thread with
+    the GIL held; no ownership transfers or callbacks occur.
+    """
+    if isinstance(key, (str, bytes)):
+        return cppyy.gbl.pysystemc.string_hash(key)
+    return cppyy.gbl.sc_core.default_str_hash_fn(key)
+
+
+def sc_strhash_kdup(key):
+    """Allocate a native copy of a nonnull NUL-terminated string key.
+
+    Args:
+        key: Python str/bytes or a borrowed valid native string pointer.
+
+    Returns:
+        Native void pointer owned by the caller. Free it exactly once using
+        sc_strhash_kfree; never use the pointer after freeing it.
+
+    Raises:
+        TypeError: key cannot convert to the native parameter.
+        Exception: Native allocation fails.
+
+    Call on the simulation thread with the GIL held; no callbacks occur.
+    """
+    if isinstance(key, (str, bytes)):
+        return cppyy.gbl.pysystemc.duplicate_string_key(key)
+    return cppyy.gbl.sc_core.sc_strhash_kdup(key)
+
+
+def sc_strhash_cmp(left, right):
+    """Compare two nonnull NUL-terminated string keys with native strcmp.
+
+    Args:
+        left: Python str/bytes or borrowed native string pointer.
+        right: Python str/bytes or borrowed native string pointer.
+
+    Returns:
+        Native integer whose sign indicates lexical ordering.
+
+    Raises:
+        TypeError: A key cannot convert to its native parameter.
+
+    Native pointer storage must survive the call. Call on the simulation thread
+    with the GIL held; no callbacks or ownership transfers occur.
+    """
+    if isinstance(left, (str, bytes)) or isinstance(right, (str, bytes)):
+        return cppyy.gbl.pysystemc.compare_string_keys(left, right)
+    return cppyy.gbl.sc_core.sc_strhash_cmp(left, right)
 
 
 def sc_gen_unique_name(basename, preserve_first=False):

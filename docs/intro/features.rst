@@ -580,9 +580,9 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::SC_ZERO_TIME`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::at_negedge`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::at_posedge`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::default_int_hash_fn`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::default_ptr_hash_fn`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::default_int_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::default_ptr_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::halt`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::next_trigger`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
 * ☐ ``sc_core::notify`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
@@ -769,10 +769,10 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
-* ☐ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_strhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
-* ☐ ``sc_core::sc_strhash_kdup`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_strhash_kdup`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_time`` — 34 declarations; runtime: 34 untested; mapping: 9 partial, 25 reviewed.
 * ☐ ``sc_core::sc_time_params`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
 * ☐ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
