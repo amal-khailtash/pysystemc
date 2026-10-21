@@ -587,6 +587,7 @@ def main():
         "sysc/communication/sc_host_mutex.h",
         "sysc/communication/sc_host_semaphore.h",
         "sysc/kernel/sc_cor.h",
+        "sysc/kernel/sc_name_gen.h",
         "sysc/kernel/sc_runnable.h",
         "sysc/tracing/sc_tracing_ids.h",
         "sysc/utils/sc_string.h",

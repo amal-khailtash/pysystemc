@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Restore default-context pending-activity queries, verify both hierarchical name-registry overloads against C++, and include complete name-generator declarations in source extraction.
 - Restore default-context top-level object/event lookups and safe iteration of empty borrowed pointer vectors; expose the complete native name generator.
 - Expose native tracing report identifiers omitted by the SystemC umbrella header and verify public sc_core constants, bind proxies and CFT comparator callbacks.
 - Support plain/delayed TLM write and delayed analysis structural interfaces, and enforce debug transport payload-length bounds.

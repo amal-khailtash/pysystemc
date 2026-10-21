@@ -172,6 +172,84 @@ def sc_get_top_level_events(context=None):
     return cppyy.gbl.sc_core.sc_get_top_level_events(context)
 
 
+def sc_pending_activity_at_current_time(context=None) -> bool:
+    """Return whether work remains at the current simulation time.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native pending-work state without advancing simulation.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_pending_activity_at_current_time(context)
+
+
+def sc_pending_activity_at_future_time(context=None) -> bool:
+    """Return whether timed notifications remain in the selected context.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native future-activity state without advancing simulation.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_pending_activity_at_future_time(context)
+
+
+def sc_pending_activity(context=None) -> bool:
+    """Return whether current or future work remains in the selected context.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native pending-activity state without advancing simulation.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_pending_activity(context)
+
+
+def sc_time_to_pending_activity(context=None):
+    """Return the native interval until the next activity in a context.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native sc_time value: zero for current work, or the next notification
+        interval. With no work, native maximum time minus current time.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context. The
+    returned time is a value, without borrowed context ownership.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_time_to_pending_activity(context)
+
+
 def sc_is_running(context=None) -> bool:
     """Return whether the native simulation is running in the selected context.
 
