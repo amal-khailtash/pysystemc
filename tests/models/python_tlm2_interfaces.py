@@ -106,6 +106,7 @@ bw.invalidate_direct_mem_ptr(16, 31)
 assert initiator.invalidations == [(16, 31)]
 fw.b_transport(trans, delay)
 assert target.calls == ["fw", "debug", "dmi", "blocking"]
+trans.set_data_length(2**32 - 1)
 target.debug_result = 2**32 - 1
 assert fw.transport_dbg(trans) == 2**32 - 1
 for invalid in (-1, 2**32):
@@ -123,6 +124,7 @@ assert phase == tlm.END_RESP
 assert not standalone[2].get_interface().get_direct_mem_ptr(trans, dmi)
 standalone[3].get_interface().invalidate_direct_mem_ptr(0, 2**64 - 1)
 assert initiator.invalidations[-1] == (0, 2**64 - 1)
+trans.set_data_length(2**32 - 1)
 target.debug_result = 2**32 - 1
 assert standalone[4].get_interface().transport_dbg(trans) == 2**32 - 1
 for invalid in (-1, 2**32):
@@ -163,3 +165,17 @@ assert records == ["1 ns"], records
 assert handle.terminated()
 sc.sc_stop()
 print("STRUCTURAL_TLM2_INTERFACES_OK")
+
+# A debug callback cannot claim more bytes than the declared transaction length.
+trans.set_data_length(3)
+target.debug_result = 4
+for native in (fw, standalone[4].get_interface()):
+    try:
+        native.transport_dbg(trans)
+    except Exception as error:
+        assert "payload data length" in str(error)
+    else:
+        raise AssertionError("debug byte count exceeded transaction length")
+    target.debug_result = 3
+    assert native.transport_dbg(trans) == 3
+    target.debug_result = 4

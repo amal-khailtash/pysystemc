@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support plain/delayed TLM write and delayed analysis structural interfaces, and enforce debug transport payload-length bounds.
+- Audit every registered structural adapter family through callback release and native destruction.
 - Guard native FIFO, mutex and semaphore blocking calls against reset/kill unwind, including borrowed interfaces and FIFO convenience ports; reject teardown with suspended thread frames.
 - Preserve native signal template types in floating waveform registration and validate structural writer-policy enum types.
 - Release the GIL for arbitrary declared-interface native method entry and verify reset/kill callback cleanup.

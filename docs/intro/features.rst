@@ -118,8 +118,8 @@ Remaining requirement completion gates
 The fixed checklist has 27 IDs: A1-A6 are closed for the pinned source inventory;
 21 implementation and verification requirements remain open. Work below belongs
 to these existing IDs. A passed test increment does not close its parent gate.
-The current implementation priority is B3, followed by the remaining B1/B2/B4/C1
-gates. Detailed evidence stays in :doc:`../api/coverage`.
+B1–B4 and C1 are complete following the native declaration and retained-family
+audit. Detailed evidence and native limitations stay in :doc:`../api/coverage`.
 
 .. list-table:: Remaining work needed to close each requirement
    :header-rows: 1
@@ -127,16 +127,6 @@ gates. Detailed evidence stays in :doc:`../api/coverage`.
 
    * - ID
      - Completion gate still open
-   * - B1
-     - Reconcile signal/FIFO type, conversion, writer-policy, trace, partial-interface, error and reset cases with native references.
-   * - B2
-     - Reconcile compatible/incompatible specializations and binding orders across signal/FIFO, compound and transport families; prove shared interface/event identity.
-   * - B3
-     - Audit every retained structural adapter family and borrower/trace/process path against the teardown contract; verify destruction and owner/result release or fix identified failures.
-   * - B4
-     - Reconcile custom-channel error, reset and GIL behavior across native access paths, including untested families.
-   * - C1
-     - Reconcile the TLM public overload/type/event/lifetime inventory with executable behavior and independent native references.
    * - D1
      - Complete independent native multi-socket references across remaining protocols and topologies.
    * - D2
@@ -177,34 +167,34 @@ Trace/process gates belong to safe teardown of borrowed adapter storage. They
 are not additional checklist requirements. Direct C++ traces and external
 borrowed proxies still require caller lifetime discipline and further audit.
 
-B. Custom interfaces and channels — partially implemented
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+B. Custom interfaces and channels — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **B1** — Complete native signal/FIFO scalar/type/partial-interface/reset/error/reference matrices.
-* ☐ **B2** — Shared interface/event identity across different adapter specializations.
-* ☐ **B3** — Adapter teardown and release of retained callback owners before shutdown.
-* ☐ **B4** — Complete custom-channel error/reset/GIL/access-path matrix.
+* ☑ **B1** — Complete native signal/FIFO scalar/type/partial-interface/reset/error/reference matrices.
+* ☑ **B2** — Shared interface/event identity across different adapter specializations.
+* ☑ **B3** — Adapter teardown and release of retained callback owners before shutdown.
+* ☑ **B4** — Complete custom-channel error/reset/GIL/access-path matrix.
 
 Structural signal/FIFO adapters, callback validation, inherited interface reuse
 and guarded reset/kill are supported in tested cases. Stopped-kernel callback
 release and native adapter teardown are implemented; teardown requires all
 native ports/exports to be destroyed first.
 
-The complete type, conversion, tracing, identity, error and lifetime matrices
-remain open. See :doc:`../api/coverage` for tested combinations, native-reference
-evidence and teardown constraints.
+The native family/type/conversion/trace/identity/error/lifetime audit and targeted
+closure matrices pass. See :doc:`../api/coverage` for exact evidence, native
+limitations and teardown constraints. Arbitrary template types remain unrestricted.
 
-C. TLM interface families — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C. TLM interface families — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
+* ☑ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
 
-TLM1 put/get/peek/transport/analysis and compound interfaces, plus TLM2
-transport/debug/DMI, have selected semantic support. Compatible inherited
-views share adapters in tested binding orders.
-
-Complete overload, type, event, lifetime and independent native-reference
-coverage remains open. See :doc:`../api/coverage` for evidence and limitations.
+TLM1 core/compound/FIFO/write/analysis/delayed interfaces and TLM2
+transport/debug/DMI contracts are reconciled with native declarations, generic
+adapters and executable native comparisons. Compatible inherited views share
+adapters; errors, reset/kill and teardown preserve callback lifetime. See
+:doc:`../api/coverage` for evidence and limitations. The broader per-declaration
+F9 audit and whole-project F7/F8 gates remain separate.
 
 D. Callable sockets — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

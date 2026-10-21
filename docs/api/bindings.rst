@@ -250,3 +250,21 @@ FIFO debug ``used`` and ``size`` callbacks return signed native 32-bit integers.
 Bool, noninteger and out-of-range results raise ``TypeError``. Negative values
 remain representable for native sentinel semantics; the owner determines whether
 its counts are consistent with its FIFO state.
+
+TLM write and debug callback contracts
+--------------------------------------
+
+Structural owners may bind ``tlm_write_if[T]``, ``tlm_analysis_if[T]``,
+``tlm_delayed_write_if[T]`` and ``tlm_delayed_analysis_if[T]``. Implement
+``write(value)`` or ``write(value, delay)`` respectively and return ``None``.
+Values are copied before Python callback entry; delay is borrowed native time
+storage and must be copied if retained beyond the callback. Compatible
+write/analysis views share the same adapter. Keep owners and borrowers alive
+until stop and follow the structural teardown contract above.
+
+``transport_dbg(payload)`` must return a Python integer in the unsigned native
+range and no greater than ``payload.get_data_length()``. Invalid counts raise
+before native return conversion. Debug callbacks must not wait or notify events.
+Native enum metadata may be lost when cppyy converts a return to Python int;
+structural writer-policy callbacks must explicitly return ``sc_writer_policy``
+values, including when delegating to a native channel.

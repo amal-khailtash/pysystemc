@@ -9,7 +9,19 @@ top = sc.sc_module(name)
 channel = sc.sc_mutex("channel") if kind == "mutex" else sc.sc_semaphore("channel", 0)
 interface = sc.sc_mutex_if if kind == "mutex" else sc.sc_semaphore_if
 port = sc.sc_port[interface]("port")
-port(channel)
+if access == "structural":
+
+    class Delegate:
+        """Forward blocking callbacks into native synchronization storage."""
+
+        def __getattr__(self, method):
+            """Borrow a native method with automatic unwind protection."""
+            return getattr(channel, method)
+
+    delegate = Delegate()
+    port(delegate)
+else:
+    port(channel)
 target = channel if access == "direct" else port.get_interface()
 del name
 records = []

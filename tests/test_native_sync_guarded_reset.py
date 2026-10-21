@@ -8,7 +8,7 @@ from .support import ROOT, run_example
 
 
 @pytest.mark.parametrize("kind", ("mutex", "semaphore"))
-@pytest.mark.parametrize("access", ("direct", "port"))
+@pytest.mark.parametrize("access", ("direct", "port", "structural"))
 def test_native_sync_guarded_reset(tmp_path, kind, access):
     """Assert reset/kill timing, Python cleanup and native resource retention."""
     output = run_example(tmp_path, "tests/models/native_sync_guarded_reset.py", (kind, access))
@@ -20,7 +20,7 @@ def test_native_sync_guarded_reset(tmp_path, kind, access):
             str(ROOT / "tests/native/sync_guarded_reset.cpp"),
             "--",
             kind,
-            access,
+            "port" if access == "structural" else access,
         ],
         cwd=tmp_path,
         capture_output=True,

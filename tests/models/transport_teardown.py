@@ -100,6 +100,7 @@ def exercise(label, native):
         assert native.transport(17) == 23
     else:
         payload = tlm.tlm_generic_payload()
+        payload.set_data_length(7)
         phase = tlm.tlm_phase(tlm.BEGIN_REQ)
         delay = sc.sc_time(0, sc.SC_NS)
         if label == "fw":

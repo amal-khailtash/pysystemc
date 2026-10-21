@@ -151,9 +151,10 @@ native adapter because cppyy does not discover the free operator for Python
 Evidence for existing B1-B4 and C1 requirements
 -----------------------------------------------
 
-These results are partial validation evidence for the existing requirements in
-:doc:`../intro/features`. They introduce no new feature items and do not close
-B1-B4 or C1. Callback release remains partial because native adapters are retained.
+The historical evidence below records implementation progress for the existing
+requirements in :doc:`../intro/features`. The final closure inventory at the end
+of this section supersedes historical open-gate notes; callback release and native
+adapter teardown are both implemented and validated.
 
 Floating FIFO callback samples
 ------------------------------
@@ -511,3 +512,54 @@ real declarations and transitions from 1.25 to -2.5 at 1 ns. Native SystemC has 
 long-double trace overload; the Python signal helper reports this explicitly.
 Structural writer-policy callbacks require native enum objects and reject plain
 integers even when their values coincide with valid policy enumerators.
+
+Original B1–B4/C1 closure inventory
+-----------------------------------
+
+The completion audit follows native interface declarations, inherited views and
+shared adapter machinery. Arbitrary valid template types remain instantiated on
+demand; fundamental, multiword, floating, logic and arbitrary-width cases exercise
+the distinct conversion and callback paths. This inventory is separate from the
+broader per-declaration F9 review and final whole-project F7/F8 gates.
+
+.. list-table:: Original requirement evidence
+   :header-rows: 1
+   :widths: 12 40 48
+
+   * - ID
+     - Reconciled contract
+     - Executable/native evidence
+   * - B1
+     - Signal/FIFO scalar conversion, stable references, bool/logic edges, writer policies, tracing, partial interfaces, errors and reset/kill.
+     - signal_type_matrix, scalar_fifo_contracts, plain_char, structural_float_trace, native_structural_fifo, native_fifo_partial, structural_fifo_reset; native signal/FIFO models compare values, events, output retention and cleanup.
+   * - B2
+     - Compatible inherited views share native virtual interface/readiness events; incompatible types stay distinct, invalid native binds reject, all supported compound/transport promotion paths reconcile.
+     - interface_identity_matrix, structural_base_identity, tlm_put_identity, python_tlm_fifo_compound, transport_teardown, tlm2_binding_identity and tlm_write_contracts; native identity/event/reference models.
+   * - B3
+     - Every registered structural family and generated Protocol executes callbacks, rejects live borrowers, releases owner/reference storage, rejects released forwards and deletes native registry entries idempotently.
+     - retained_family_teardown exhausts the registry; interface_teardown checks native borrowers/exports/traces; teardown_live_process checks suspended threads; reset_teardown and native FIFO/master/slave references check cleanup before deletion; custom protocol teardown follows reset/kill.
+   * - B4
+     - Structural/subclass/custom declared callbacks, native delegates and direct/borrowed/convenience paths preserve GIL, ordinary exceptions, reset/kill cleanup and resource state.
+     - custom_channel_reset covers mutex/semaphore; declared_channel_reset covers arbitrary names; native_sync_guarded_reset covers direct/port/delegate native references; native_fifo_guarded_reset covers direct/port/convenience calls; callback contract models cover remaining event/signal/FIFO/TLM families.
+   * - C1
+     - TLM1 core/get/peek/put/master/slave/FIFO/debug/config/write/analysis/delayed families and TLM2 forward/backward/blocking/debug/DMI declarations, copied inputs, output overloads, readiness, errors and callback lifetime.
+     - partial_multiword_tlm, master_slave_type_matrix/reset_matrix, transport_multiword, tlm_put_identity, tlm_write_contracts and standard/custom tlm2_binding_identity; independent native value/event/lifecycle comparisons.
+
+The write audit adds structural ``tlm_write_if``, ``tlm_delayed_write_if`` and
+``tlm_delayed_analysis_if`` with copied arbitrary-width values and borrowed time
+arguments. Write-first and analysis views share native adapters. Debug transport
+returns must fit unsigned int and must not exceed the payload data length;
+subclass and structural bridges reject invalid counts before conversion.
+
+Native limitations and caller obligations remain explicit: SystemC has no
+long-double waveform overload; external C++ traces/proxies need caller-managed
+lifetime; stop and borrower destruction precede structural teardown; process
+callbacks/directly constructed channels are outside structural adapter ownership.
+No kernel reset or post-teardown simulation restart is supported.
+
+The original B1–B4/C1 gates are complete. Final closure validation passed 67 tests
+(including reset/lifetime matrices), the latest-change integration passed 16,
+and the separate signal/FIFO/custom source-contract harness passed 13. Ruff,
+first-party C++ formatting and strict Sphinx checks pass. These results close the
+five original interface requirements without promoting the separate full public
+API declaration inventory or F7/F8/F9 whole-project gates.

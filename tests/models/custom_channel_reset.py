@@ -1,6 +1,12 @@
 """Verify B4 subclass and structural synchronization reset/error paths."""
 
 from amal.eda.systemc import sc_core as sc
+import sys
+
+semaphore = len(sys.argv) > 1
+contract = sc.sc_semaphore_if if semaphore else sc.sc_mutex_if
+blocking = "wait" if semaphore else "lock"
+release = "post" if semaphore else "unlock"
 
 records = []
 
@@ -25,7 +31,13 @@ class Owner:
         return 0
 
 
-class Channel(sc.channel_interface(sc.sc_mutex_if)):
+Owner.wait = Owner.lock
+Owner.trywait = Owner.trylock
+Owner.post = Owner.unlock
+Owner.get_value = lambda self: 0
+
+
+class Channel(sc.channel_interface(contract)):
     """Implement a Python subclass through native virtual dispatch."""
 
     def __init__(self):
@@ -36,6 +48,22 @@ class Channel(sc.channel_interface(sc.sc_mutex_if)):
     def lock(self):
         """Suspend the subclass callback in a guarded wait."""
         return Owner.lock(self)
+
+    def wait(self):
+        """Suspend the semaphore callback through a guarded wait."""
+        return Owner.lock(self)
+
+    def trywait(self):
+        """Reject a semaphore token without suspension."""
+        return -1
+
+    def post(self):
+        """Raise a configured ordinary semaphore callback error."""
+        raise ValueError("configured unlock failure")
+
+    def get_value(self):
+        """Return the native empty token count."""
+        return 0
 
     def trylock(self):
         """Return a native contention result."""
@@ -51,12 +79,12 @@ top = sc.sc_module(name)
 channel = Channel()
 ports = []
 for owner in (Owner(), channel):
-    port = sc.sc_port[sc.sc_mutex_if]()
+    port = sc.sc_port[contract]()
     port(owner)
     ports.append(port)
 del name
 try:
-    ports[1].get_interface().unlock()
+    getattr(ports[1].get_interface(), release)()
 except ValueError as error:
     assert "configured unlock" in str(error)
 else:
@@ -65,7 +93,7 @@ else:
 
 def worker(port):
     """Invoke the native interface and require interrupted cleanup."""
-    port.get_interface().lock()
+    getattr(port.get_interface(), blocking)()
     raise AssertionError("interrupted lock returned")
 
 

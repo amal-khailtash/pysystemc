@@ -230,6 +230,9 @@ _METHODS = {
     "tlm::tlm_blocking_get_if": {"get_value": "get"},
     "tlm::tlm_blocking_peek_if": {"peek_value": "peek"},
     "tlm::tlm_analysis_if": {"write_value": "write"},
+    "tlm::tlm_write_if": {"write_value": "write"},
+    "tlm::tlm_delayed_write_if": {"write_value": "write"},
+    "tlm::tlm_delayed_analysis_if": {"write_value": "write"},
     "tlm::tlm_nonblocking_put_if": {"put_value": "nb_put", "can_put": "nb_can_put"},
     "tlm::tlm_nonblocking_get_if": {"get_value": "nb_get", "can_get": "nb_can_get"},
     "tlm::tlm_nonblocking_peek_if": {"peek_value": "nb_peek", "can_peek": "nb_can_peek"},
@@ -325,6 +328,13 @@ def _adapt(interface, implementation, factory):
     for native_interface, owner, adapter in _owners:
         if owner is implementation and (native_interface == interface or isinstance(adapter, interface)):
             return adapter
+    write_family = {
+        "tlm::tlm_write_if": "tlm_analysis_if",
+        "tlm::tlm_delayed_write_if": "tlm_delayed_analysis_if",
+    }.get(family)
+    if write_family:
+        value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+        return _adapt(getattr(cppyy.gbl.tlm, write_family)[value], implementation, factory)
     fifo_get_views = (
         "tlm::tlm_blocking_get_if",
         "tlm::tlm_nonblocking_get_if",
@@ -574,6 +584,8 @@ def _adapt(interface, implementation, factory):
                         raise TypeError("transport_dbg must return int")
                     if not 0 <= result < 2**32:
                         raise ValueError("transport_dbg result outside unsigned int range")
+                    if result > args[0].get_data_length():
+                        raise ValueError("transport_dbg result exceeds payload data length")
                 if family in ("sc_core::sc_mutex_if", "sc_core::sc_semaphore_if"):
                     if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
                         raise TypeError(f"{_method} must return a native int in range")

@@ -42,6 +42,11 @@ class Owner:
     def b_transport(self, payload, delay):
         """Set the borrowed response status without waiting."""
         self.calls.append("blocking")
+        if getattr(self, "blocking_wait", False):
+            try:
+                sc.wait(100, sc.SC_NS)
+            finally:
+                cleanup.append(str(sc.sc_time_stamp()))
         payload.set_response_status(tlm.TLM_OK_RESPONSE)
 
     def transport_dbg(self, payload):
@@ -102,6 +107,7 @@ for types, owner, ports in groups:
     addresses = [cppyy.gbl.transport_identity(port.get_interface()) for port in ports.values()]
     assert len(set(addresses)) == 1, addresses
     payload = payload_type()
+    payload.set_data_length(73)
     if custom:
         payload.wide[136] = True
     phase = tlm.tlm_phase(tlm.BEGIN_REQ)
@@ -124,8 +130,36 @@ for types, owner, ports in groups:
         assert owner.calls == ["bw", (73, 79)]
     if custom:
         assert bool(payload.wide[136]), "custom high bit lost"
+cleanup = []
+blocking_owner = groups[0][1]
+blocking_owner.blocking_wait = True
+blocking_port = groups[0][2][2]
+
+
+def worker(port=blocking_port):
+    """Invoke custom/standard blocking transport until reset and kill."""
+    payload = payload_type()
+    port.get_interface().b_transport(payload, sc.sc_time(0, sc.SC_NS))
+    raise AssertionError("blocking transport returned")
+
+
+handle = sc.sc_spawn(worker)
+
+
+def control():
+    """Interrupt borrowed transport callback twice before native deletion."""
+    sc.wait(1, sc.SC_NS)
+    handle.reset()
+    sc.wait(0.5, sc.SC_NS)
+    handle.kill()
+
+
+controller = sc.sc_spawn(control)
 sc.sc_start(2, sc.SC_NS)
+assert cleanup == ["1 ns", "1500 ps"], cleanup
+assert handle.terminated() and controller.terminated()
 sc.sc_stop()
+del blocking_owner, blocking_port
 owner_refs = [weakref.ref(group[1]) for group in groups]
 adapter_names = [port.get_interface().name() for _, _, ports in groups for port in (ports[0],)]
 try:

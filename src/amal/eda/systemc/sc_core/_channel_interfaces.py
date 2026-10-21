@@ -579,11 +579,19 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             argument = name.removeprefix("tlm::tlm_blocking_peek_if<").removesuffix(">")
             name = f"pysystemc_interfaces::PeekAdapter<{argument}>"
 
-        if name.startswith("tlm::tlm_analysis_if<"):
-            value_type = name.removeprefix("tlm::tlm_analysis_if<").removesuffix(">")
+        if fifo_family in (
+            "tlm::tlm_analysis_if",
+            "tlm::tlm_write_if",
+            "tlm::tlm_delayed_write_if",
+            "tlm::tlm_delayed_analysis_if",
+        ):
+            value_type = name.split("<", 1)[1].removesuffix(">")
+            delayed = "delayed" in fifo_family
+            argument = ", const sc_core::sc_time& delay" if delayed else ""
+            call = ", delay" if delayed else ""
             methods = (
-                f"void write(const {value_type}& value) override {{ write_value(value); }} "
-                f"virtual void write_value({value_type}) = 0; "
+                f"void write(const {value_type}& value{argument}) override {{ write_value(value{call}); }} "
+                f"virtual void write_value({value_type}{argument}) = 0; "
             )
 
         if name.startswith("tlm::tlm_transport_dbg_if<"):
@@ -592,6 +600,8 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 f"unsigned int transport_dbg({payload}& trans) override {{ auto value = debug_transport(trans); "
                 "if (value < 0 || static_cast<unsigned long>(value) > std::numeric_limits<unsigned int>::max()) "
                 'throw std::out_of_range("transport_dbg result outside unsigned int range"); '
+                "if (static_cast<unsigned long>(value) > trans.get_data_length()) "
+                'throw std::out_of_range("transport_dbg result exceeds payload data length"); '
                 "return static_cast<unsigned int>(value); } "
                 f"virtual long debug_transport({payload}&) = 0; "
             )
@@ -613,6 +623,8 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     f"unsigned int transport_dbg({payload}& trans) override {{ auto value = debug_transport(trans); "
                     "if (value < 0 || static_cast<unsigned long>(value) > std::numeric_limits<unsigned int>::max()) "
                     'throw std::out_of_range("transport_dbg result outside unsigned int range"); '
+                    "if (static_cast<unsigned long>(value) > trans.get_data_length()) "
+                    'throw std::out_of_range("transport_dbg result exceeds payload data length"); '
                     "return static_cast<unsigned int>(value); } "
                     f"virtual long debug_transport({payload}&) = 0; "
                 )

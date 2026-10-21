@@ -13,8 +13,10 @@ class Delegate:
     def __getattr__(self, name):
         """Forward required interface callbacks."""
         method = getattr(self.channel, name)
-        if name in ("lock", "wait"):
-            type(self.channel).__dict__[name].__release_gil__ = True
+        if name == "get_writer_policy":
+            # cppyy converts native enum returns to int; restore enum metadata
+            # explicitly at this structural callback boundary.
+            return lambda: sc.sc_writer_policy(method())
         return method
 
 

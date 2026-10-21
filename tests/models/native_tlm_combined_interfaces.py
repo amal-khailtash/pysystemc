@@ -92,6 +92,7 @@ bw.invalidate_direct_mem_ptr(16, 31)
 assert initiator.invalidations == [(16, 31)]
 fw.b_transport(trans, delay)
 assert target.calls == ["fw", "debug", "dmi", "blocking"]
+trans.set_data_length(2**32 - 1)
 target.debug_result = 2**32 - 1
 assert fw.transport_dbg(trans) == 2**32 - 1
 for invalid in (-1, 2**32):
