@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Disambiguate report-handler stop_after severity/limit overloads and preserve native handler pointer round-trips with borrowed tokens; verify configuration, caching, logging and release against C++.
 - Complete the public sc_report family by restoring legacy static controls omitted by cppyy exception reflection and native report assignment, with full public-method native comparisons.
 - Release the GIL for native sc_initialize and verify pthread initialization/wait, free notify overload timing and pause/resume against C++.
 - Support explicit native argc/argv calls to sc_elab_and_sim alongside the default sys.argv helper, with pre-entry count/type/NUL validation and native status preservation.

@@ -35,6 +35,20 @@ pass-through availability does not by itself establish tested support.
    persist in the singleton kernel; restore them when finished. Destruction
    releases copy-owned fields. Borrowed views must not outlive their report.
 
+``sc_report_handler.stop_after(subject, ...)``
+   Select severity-wide, message-wide or message/severity limits using native
+   severity enums. An omitted limit is -1 and removes that selected limit.
+   This adapter avoids treating a severity enum as an integer message limit.
+
+``sc_report_handler.get_handler()`` / ``set_handler(token_or_none)``
+   Save and restore borrowed native handler pointer tokens. ``None`` restores
+   the native default. Tokens do not retain Python callbacks; use
+   ``set_report_handler`` for Python callables. A saved Python dispatcher token
+   requires its callback to remain retained and active before reinstalling it.
+   Report caches are borrowed and invalidate on replacement, clear or release;
+   copy reports first. Destroy copies before handler ``release()`` because message
+   definitions remain owned by native handler storage.
+
 ``sc_trace(file, signal, name)``
    Record stable native signal storage. Keep signals alive until file closure.
 

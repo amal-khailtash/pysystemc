@@ -43,6 +43,7 @@ for _bridge in (
     "interface_teardown.cpp",
     "hash_helpers.cpp",
     "report_legacy.cpp",
+    "report_handler.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
@@ -188,6 +189,77 @@ def _assign_report(self, source):
 
 
 cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
+
+
+def _report_stop_after(subject, *args):
+    """Set a native severity, message or message/severity stop threshold.
+
+    Args:
+        subject: Native severity enum or message-type string.
+        args: Optional integer limit, or severity enum and optional limit for
+            a message. Omitted limit is -1, removing the selected threshold.
+
+    Returns:
+        Previous native threshold, -1 when no selected threshold was set.
+
+    Raises:
+        TypeError: Arguments do not match a native stop_after signature.
+
+    Call on the simulation thread with GIL held. Limits persist in native policy
+    storage. No ownership transfers; diagnostics follow the configured handler.
+    """
+    bridge = cppyy.gbl.pysystemc
+    severity_type = cppyy.gbl.sc_core.sc_severity
+    if isinstance(subject, severity_type) and len(args) <= 1:
+        return bridge.report_stop_severity(subject, args[0] if args else -1)
+    if isinstance(subject, (str, bytes)):
+        if args and isinstance(args[0], severity_type) and len(args) <= 2:
+            return bridge.report_stop_message_severity(subject, args[0], args[1] if len(args) == 2 else -1)
+        if len(args) <= 1:
+            return bridge.report_stop_message(subject, args[0] if args else -1)
+    raise TypeError("stop_after expects severity/limit, message/limit or message/severity/limit")
+
+
+cppyy.gbl.sc_core.sc_report_handler.stop_after = staticmethod(_report_stop_after)
+
+
+def _report_get_handler():
+    """Return a borrowed native handler pointer token usable by set_handler.
+
+    Returns:
+        Native pointer token; it does not retain Python callback ownership.
+
+    Hold the GIL on the simulation thread. Python dispatchers require the callback
+    registered through set_report_handler to remain retained and active.
+    """
+    return cppyy.gbl.pysystemc.report_get_handler()
+
+
+def _report_set_handler(handler):
+    """Install a native pointer token or restore the default handler with None.
+
+    Args:
+        handler: Token from get_handler/set_handler, or None for native default.
+
+    Returns:
+        Previous borrowed pointer token; tokens do not own callback references.
+
+    Raises:
+        TypeError: handler is not a native pointer token or None.
+
+    Use set_report_handler for Python callables and callback retention. Hold the
+    GIL on the simulation thread; saved Python dispatcher tokens require an active
+    retained callback before reinstalling them.
+    """
+    if handler is None:
+        return cppyy.gbl.pysystemc.report_reset_handler()
+    if not isinstance(handler, cppyy.gbl.pysystemc.report_handler_pointer):
+        raise TypeError("handler must be a native handler pointer token or None")
+    return cppyy.gbl.pysystemc.report_set_handler(handler)
+
+
+cppyy.gbl.sc_core.sc_report_handler.get_handler = staticmethod(_report_get_handler)
+cppyy.gbl.sc_core.sc_report_handler.set_handler = staticmethod(_report_set_handler)
 
 
 def default_str_hash_fn(key):
