@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Expose native tracing report identifiers omitted by the SystemC umbrella header and verify public sc_core constants, bind proxies and CFT comparator callbacks.
 - Support plain/delayed TLM write and delayed analysis structural interfaces, and enforce debug transport payload-length bounds.
 - Audit every registered structural adapter family through callback release and native destruction.
 - Guard native FIFO, mutex and semaphore blocking calls against reset/kill unwind, including borrowed interfaces and FIFO convenience ports; reject teardown with suspended thread frames.

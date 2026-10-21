@@ -37,6 +37,8 @@ cppyy.cppdef("""
 cppyy.cppdef("#define SC_INCLUDE_DYNAMIC_PROCESSES")
 cppyy.cppdef("#define SC_INCLUDE_FX")
 cppyy.include("systemc")
+# Public tracing report identifiers are not included by the umbrella header.
+cppyy.include("sysc/tracing/sc_tracing_ids.h")
 cppyy.include("tlm")
 # cppyy renders enum template arguments without their namespace qualifier.
 # Make fixed-point policies visible to Cling's generated specializations.

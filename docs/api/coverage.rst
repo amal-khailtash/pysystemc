@@ -563,3 +563,20 @@ and the separate signal/FIFO/custom source-contract harness passed 13. Ruff,
 first-party C++ formatting and strict Sphinx checks pass. These results close the
 five original interface requirements without promoting the separate full public
 API declaration inventory or F7/F8/F9 whole-project gates.
+
+sc_core constant and simple utility families
+--------------------------------------------
+
+An independent native reference compares every inventoried public scalar/string/enum
+constant (239 declarations), including hash defaults, stack size, version strings,
+report IDs and enum values. Tracing report IDs require the native tracing-ID header,
+which package initialization now loads. Mutable globals, native tables and pointer
+proxies are excluded from scalar-value claims. Bind-proxy default/interface/port
+constructors and native nil storage preserve borrowed pointer identity. The CFT
+comparison signature executes a Python callback during native pointer-vector sort
+and matches native C++ pointee ordering; the vector owns no pointees.
+
+All sixteen native logic-resolution table cells match C++ and retain symmetry.
+Initial public configuration booleans are readable and match native storage;
+assigning a copied Python module boolean is not claimed to mutate native globals,
+so those mutable-global entries remain open for a complete write contract.
