@@ -122,6 +122,28 @@ sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
 
 
+def sc_gen_unique_name(basename, preserve_first=False):
+    """Generate a native unique name in the current module, process or context.
+
+    Args:
+        basename: Nonempty base name convertible to a native string.
+        preserve_first: Return the unchanged base on its first use when true.
+
+    Returns:
+        Python string copy. Counters belong to the current construction module,
+        otherwise the executing process, otherwise the current simulation context.
+
+    Raises:
+        TypeError: Arguments cannot convert to the native parameter types.
+        Exception: Native report handler rejects an empty or null basename.
+
+    Call from the simulation thread with the GIL held. Native scopes own counters;
+    returned strings survive subsequent calls and scope destruction. No callbacks
+    are retained by this function.
+    """
+    return cppyy.gbl.sc_core.sc_gen_unique_name(basename, preserve_first)
+
+
 def _iterate_hierarchy_vector(vector):
     """Iterate borrowed pointers without cppyy's unsafe empty data() conversion."""
     for index in range(vector.size()):
