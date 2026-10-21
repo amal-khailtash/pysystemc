@@ -31,6 +31,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.
 
 ### Tests
+- Complete the public sc_report_handler family with independent default-action comparisons for display/log/interrupt/throw/stop, action ordering, no-op behavior and isolated native abort termination.
 - Compare report copy ownership, getters, swap and composed messages against C++ for reports outside processes and from a pthread callback at 2 ns.
 - Compare native public time resolution/default-unit configuration and rejection recovery, maximum/simulation time, stop-mode settings and simulator status against C++.
 - Compare public process kind/raw/current/last-created queries and reset/kill unwind state against native method and pthread thread behavior, including construction-scope fallback.
