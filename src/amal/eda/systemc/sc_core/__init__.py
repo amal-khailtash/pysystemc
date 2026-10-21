@@ -405,6 +405,25 @@ def __dir__():
     return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
 
 
+def sc_argv() -> tuple[str, ...]:
+    """Copy the original native entry arguments into an immutable tuple.
+
+    Returns:
+        Argument strings in native order, including argv[0]. The snapshot remains
+        valid after entry returns and is independent of the sc_main argument list.
+
+    Raises:
+        RuntimeError: Called outside an active native sc_main invocation.
+
+    Call on the entry/simulation thread with the GIL held. The native array is
+    borrowed only during entry; copying avoids exposing dangling pointers or
+    cppyy's pointer-address conversion. No native ownership transfers.
+    """
+    if not cppyy.gbl.sc_core.sc_in_action:
+        raise RuntimeError("native argv is only valid during sc_main")
+    return tuple(str(cppyy.gbl.sc_core.python_argv_at(index)) for index in range(cppyy.gbl.sc_core.sc_argc()))
+
+
 def sc_elab_and_sim() -> int:
     """Enter native sc_main with sys.argv and return its integer exit status.
 

@@ -30,6 +30,14 @@ pass-through availability does not by itself establish tested support.
 ``sc_status()``
    Query the native current status and convert it to ``ScStatus``.
 
+``sc_argc()`` / ``sc_argv()``
+   During ``sc_main``, read the native argument count and an immutable tuple of
+   original argument strings, including argument zero. The tuple copies native
+   storage and survives entry return. Mutating the Python ``sc_main`` argument
+   list does not change these original values. ``sc_argv()`` raises
+   ``RuntimeError`` outside active entry because native argument storage is
+   borrowed only during entry. Native C++ retains its pointer-array signature.
+
 Diagnostics
 -----------
 
