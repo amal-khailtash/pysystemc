@@ -1199,3 +1199,10 @@ simulation, in end-of-simulation hooks and after stop before borrower deletion.
 Native registry removal and owner collection follow explicit teardown at 2 ns.
 Blocking/reset teardown and wider/custom protocol/native-reference matrices
 remain open; these checks do not close B3.
+
+B3 teardown after blocking unwind is checked across six paths: FIFO read,
+TLM get, blocking master get/slave peek, TLM1 transport and TLM2 blocking
+transport. Reset at 2 ns and kill at 3 ns run callback cleanup before worker
+cleanup; handles terminate before stopped-kernel deletion at 4 ns. Owners
+collect and native registry entries disappear afterward. This selected timed
+wait matrix does not close wider wait/type/native-reference teardown scope.
