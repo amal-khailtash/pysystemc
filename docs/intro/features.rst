@@ -604,9 +604,9 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_argv`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_assemble_vector`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_assertion_failed`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_attr_base`` — 5 declarations; runtime: 5 untested; mapping: 3 partial, 2 reviewed.
-* ☐ ``sc_core::sc_attr_cltn`` — 17 declarations; runtime: 17 untested; mapping: 3 partial, 14 reviewed.
-* ☐ ``sc_core::sc_attribute`` — 7 declarations; runtime: 7 untested; mapping: 4 partial, 3 reviewed.
+* ☑ ``sc_core::sc_attr_base`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``sc_core::sc_attr_cltn`` — 17 declarations; runtime: 17 supported; mapping: 17 reviewed.
+* ☑ ``sc_core::sc_attribute`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☐ ``sc_core::sc_behavior`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☑ ``sc_core::sc_bind_proxy`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.

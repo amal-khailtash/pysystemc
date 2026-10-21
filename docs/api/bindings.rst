@@ -49,6 +49,15 @@ pass-through availability does not by itself establish tested support.
    copy reports first. Destroy copies before handler ``release()`` because message
    definitions remain owned by native handler storage.
 
+``sc_attr_base`` / ``sc_attribute[T]`` / ``sc_attr_cltn``
+   Attribute templates remain native and accept any native-valid default/copy
+   constructible type. Attributes own their names and values. Collections borrow
+   pointers; collection copies share those pointers. Keep attributes alive while
+   either collection uses them. Removing an attribute or clearing/destroying a
+   collection does not delete attributes. Native removal swaps the final pointer
+   into the removed slot, so iteration order can change. Lookup returns a borrowed
+   pointer or a null proxy; iterators invalidate when the collection is modified.
+
 ``sc_trace(file, signal, name)``
    Record stable native signal storage. Keep signals alive until file closure.
 
