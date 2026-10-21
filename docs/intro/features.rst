@@ -1185,3 +1185,10 @@ hierarchy gate rejects before releasing callbacks. Close traces and finish all
 reference/event access before calling; borrowed proxies become invalid after
 deletion. Directly constructed channels and process callbacks are outside this
 API. Broader B3 lifetime/trace/family teardown validation remains open.
+
+B3 teardown evidence now includes seven adapters: scalar and 137-bit signal,
+FIFO and combined TLM get/peek, plus analysis. Tests verify readiness accesses
+before deletion, native registry removal, retained owner/result collection and
+idempotence. A 137-bit VCD declares and changes the traced sample before closure
+and deletion. Broader master/slave, transport, blocking/reset and destruction
+ordering coverage remains open; B3 is not complete.
