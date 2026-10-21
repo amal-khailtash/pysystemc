@@ -1,6 +1,6 @@
 """Verify B3 adapter destruction follows reset/kill callback and worker cleanup."""
 
-from amal.eda.systemc import sc_core as sc, tlm
+from amal.eda.systemc import sc_core as sc, sc_dt, tlm
 import cppyy
 import gc
 import weakref
@@ -8,6 +8,13 @@ import sys
 
 records = []
 wait_kind = sys.argv[1] if len(sys.argv) > 1 else "time"
+type_name = sys.argv[2] if len(sys.argv) > 2 else "int"
+datatype = {
+    "int": "int",
+    "long_long": "long long",
+    "wide137": sc_dt.sc_biguint[137],
+    "signed128": sc_dt.sc_bigint[128],
+}[type_name]
 first = sc.sc_event("first")
 second = sc.sc_event("second")
 clock = sc.sc_clock("clock", sc.sc_time(100, sc.SC_NS), 0.5, sc.sc_time(50, sc.SC_NS), True)
@@ -80,10 +87,10 @@ name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 groups = []
 for label, interface, method in (
-    ("fifo", sc.sc_fifo_blocking_in_if[int], "read"),
-    ("get", tlm.tlm_blocking_get_if[int], "get"),
-    ("master", tlm.tlm_blocking_master_if[int, int], "get"),
-    ("slave", tlm.tlm_blocking_slave_if[int, int], "peek"),
+    ("fifo", sc.sc_fifo_blocking_in_if[datatype], "read"),
+    ("get", tlm.tlm_blocking_get_if[datatype], "get"),
+    ("master", tlm.tlm_blocking_master_if[datatype, datatype], "get"),
+    ("slave", tlm.tlm_blocking_slave_if[datatype, datatype], "peek"),
     ("transport", tlm.tlm_transport_if[int, int], "transport"),
     ("blocking", tlm.tlm_blocking_transport_if[tlm.tlm_generic_payload], "b_transport"),
 ):
@@ -157,5 +164,5 @@ assert records[-1] == ("all", "deleted", "4 ns")
 assert sc.teardown_interfaces() == 0
 print("RESET_TEARDOWN_OK 6 4 ns")
 for entry in records:
-    if entry[0] == "fifo" or entry[0] == "all":
+    if entry[0] in ("fifo", "get", "slave", "all"):
         print("TEARDOWN_REFERENCE", *entry)

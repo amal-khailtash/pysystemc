@@ -441,3 +441,11 @@ starts at 50 ns so cycle waits remain suspended for reset at 2 ns and kill at
 3 ns. An independent native FIFO reference matches nine exact callback/worker
 cleanup and deletion records through 4 ns and verifies registry removal.
 Native reference breadth beyond FIFO and full type/lifecycle scope remain open.
+
+B3 type teardown checks add long long, sc_biguint<137> and sc_bigint<128>
+to the nine-wait matrix for FIFO, TLM get and blocking master/slave adapters.
+TLM1/TLM2 transport paths remain int/standard-protocol controls in these runs.
+Independent native blocking TLM get/peek references compare exact callback and
+worker unwind followed by borrower/channel deletion and registry removal.
+These references cover base get/peek semantics; native master/slave-specific
+teardown and complete type/custom-protocol lifecycle coverage remain open.
