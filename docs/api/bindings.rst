@@ -38,6 +38,14 @@ pass-through availability does not by itself establish tested support.
    ``RuntimeError`` outside active entry because native argument storage is
    borrowed only during entry. Native C++ retains its pointer-array signature.
 
+``sc_elab_and_sim(argc=None, argv=None)``
+   Enter ``sc_main`` with ``sys.argv`` when both arguments are omitted, or pass
+   an explicit nonnegative native count and a list/tuple of strings. Only the
+   first ``argc`` entries are selected. Invalid counts, incomplete arguments,
+   nonstring selected entries and embedded NULs fail before native entry.
+   The native integer status is returned, including nonzero results. Use a
+   fresh process for each independent simulation; entry does not reset the kernel.
+
 Diagnostics
 -----------
 

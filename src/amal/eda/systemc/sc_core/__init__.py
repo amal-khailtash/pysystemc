@@ -424,16 +424,42 @@ def sc_argv() -> tuple[str, ...]:
     return tuple(str(cppyy.gbl.sc_core.python_argv_at(index)) for index in range(cppyy.gbl.sc_core.sc_argc()))
 
 
-def sc_elab_and_sim() -> int:
-    """Enter native sc_main with sys.argv and return its integer exit status.
+def sc_elab_and_sim(argc=None, argv=None) -> int:
+    """Enter native sc_main with explicit arguments or the current sys.argv.
 
-    This releases the GIL while native code runs and reacquires it for Python
-    callbacks. Invoke once per independent simulation process.
+    Args:
+        argc: Nonnegative native argument count. Omit both arguments to use sys.argv.
+        argv: List or tuple of strings containing at least argc entries; only
+            the first argc entries are passed, matching native count semantics.
+
+    Returns:
+        Native integer entry status, including nonzero callback failure status.
+
+    Raises:
+        TypeError: Arguments are incomplete or have invalid Python types.
+        ValueError: Count is negative, exceeds native int or available entries,
+            or a selected argument contains a NUL character.
+
+    The selected argument strings are copied for the duration of entry. This
+    releases the GIL while native code runs and reacquires it for Python callbacks.
+    Invoke once per independent simulation process; kernel state is not reset.
     """
-    log(f"sc_elab_and_sim({sys.argv})")
-
-    argc = len(sys.argv)
-    argv = sys.argv
+    if argc is None and argv is None:
+        argv = list(sys.argv)
+        argc = len(argv)
+    elif argc is None or argv is None:
+        raise TypeError("argc and argv must be supplied together")
+    if isinstance(argc, bool) or not isinstance(argc, int):
+        raise TypeError("argc must be an integer")
+    if not isinstance(argv, (list, tuple)):
+        raise TypeError("argv must be a list or tuple of strings")
+    if argc < 0 or argc > 2**31 - 1 or argc > len(argv):
+        raise ValueError("argc must fit native int and the available argument entries")
+    argv = list(argv[:argc])
+    if any(not isinstance(value, str) for value in argv):
+        raise TypeError("argv entries must be strings")
+    if any("\0" in value for value in argv):
+        raise ValueError("argv entries must not contain NUL characters")
 
     log(f"Entering native simulation with {argc} arguments")
 
