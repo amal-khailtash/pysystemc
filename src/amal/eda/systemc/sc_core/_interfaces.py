@@ -320,6 +320,23 @@ def _adapt(interface, implementation, factory):
     ):
         value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
         return _adapt(getattr(cppyy.gbl.tlm, combined)[value], implementation, factory)
+    transport_candidates = {
+        "tlm::tlm_fw_nonblocking_transport_if": "tlm_fw_transport_if",
+        "tlm::tlm_blocking_transport_if": "tlm_fw_transport_if",
+        "tlm::tlm_fw_direct_mem_if": "tlm_fw_transport_if",
+        "tlm::tlm_transport_dbg_if": "tlm_fw_transport_if",
+        "tlm::tlm_bw_nonblocking_transport_if": "tlm_bw_transport_if",
+        "tlm::tlm_bw_direct_mem_if": "tlm_bw_transport_if",
+    }
+    combined = transport_candidates.get(family)
+    if combined:
+        candidate = getattr(cppyy.gbl.tlm, combined)[cppyy.gbl.tlm.tlm_base_protocol_types]
+        # Native inheritance validates payload/phase compatibility without
+        # guessing a protocol from the partial interface's template spelling.
+        if issubclass(candidate, interface) and all(
+            callable(getattr(implementation, method, None)) for method in _METHODS["tlm::" + combined].values()
+        ):
+            return _adapt(candidate, implementation, factory)
     if family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
         methods = dict(methods)
         value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")

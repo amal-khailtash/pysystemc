@@ -398,3 +398,10 @@ long long and sc_biguint<137>, three binding orders, virtual interface/event
 identity, copied inputs, failed nonblocking puts and readiness at 1 ns. A native
 reference checks the same type/state/event semantics. B2 and C1 remain open for
 other families, specializations and lifecycle paths.
+
+Standard-protocol TLM2 forward/backward owners now select a shared combined
+adapter for compatible partial-first bindings. Native inheritance validates
+payload/phase compatibility. Selected tests cover all five forward and three
+backward first-bind choices, shared virtual interface addresses and borrowed
+payload/phase/delay/DMI updates. Custom protocol promotion remains unimplemented;
+complete-first native reuse remains available. Full B2/C1 matrices remain open.

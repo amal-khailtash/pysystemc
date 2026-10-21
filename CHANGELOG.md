@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Share complete standard-protocol TLM2 transport adapters across compatible partial-first bindings using native inheritance checks.
 - Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.
 
 ### Tests
