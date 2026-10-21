@@ -1192,3 +1192,10 @@ before deletion, native registry removal, retained owner/result collection and
 idempotence. A 137-bit VCD declares and changes the traced sample before closure
 and deletion. Broader master/slave, transport, blocking/reset and destruction
 ordering coverage remains open; B3 is not complete.
+
+B3 compound/transport teardown checks cover full int master/slave, TLM1
+transport and standard TLM2 forward/backward owners. Callbacks execute before
+simulation, in end-of-simulation hooks and after stop before borrower deletion.
+Native registry removal and owner collection follow explicit teardown at 2 ns.
+Blocking/reset teardown and wider/custom protocol/native-reference matrices
+remain open; these checks do not close B3.
