@@ -661,14 +661,14 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_get_curr_simcontext`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_current_object`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_current_process_handle`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_core::sc_get_default_time_unit`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_get_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_get_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_get_last_created_process_handle`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_parent`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_get_simulator_status`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_get_simulator_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_get_stop_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_time_resolution`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_get_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_get_top_level_events`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_top_level_objects`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_handle_exception`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
@@ -689,7 +689,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_join`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
 * ☑ ``sc_core::sc_logic_resolution_tbl`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_lv_resolve`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
@@ -744,11 +744,11 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
 * ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_set_random_seed`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_set_stack_size`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_severity`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_signal`` — 64 declarations; runtime: 64 untested; mapping: 64 partial.
 * ☐ ``sc_core::sc_signal_channel`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
@@ -759,7 +759,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 untested; mapping: 119 partial.
 * ☐ ``sc_core::sc_signal_write_if`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_simcontext`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
 * ☐ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 untested; mapping: 2 partial, 19 reviewed.
 * ☐ ``sc_core::sc_start`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
