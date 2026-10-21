@@ -656,14 +656,14 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_find_event`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_find_object`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_gen_unique_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_core::sc_get_curr_process_handle`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_curr_process_kind`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_get_curr_process_handle`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_curr_process_kind`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_curr_simcontext`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_current_object`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_get_current_process_handle`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_get_current_process_handle`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_get_default_time_unit`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☑ ``sc_core::sc_get_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_core::sc_get_last_created_process_handle`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_get_last_created_process_handle`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_get_parent`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_get_simulator_status`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☑ ``sc_core::sc_get_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -685,7 +685,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_interface`` — 8 declarations; runtime: 8 untested; mapping: 2 partial, 6 reviewed.
 * ☑ ``sc_core::sc_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_is_running`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_is_unwinding`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_is_unwinding`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_join`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
 * ☑ ``sc_core::sc_logic_resolution_tbl`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_lv_resolve`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
