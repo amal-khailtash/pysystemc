@@ -124,6 +124,12 @@ class Top(sc.sc_module):
         ordering.append(("end", str(sc.sc_time_stamp())))
 
 
+cppyy.cppdef("""
+/** Borrow the virtual native interface address without retaining it. */
+std::uintptr_t teardown_identity(sc_core::sc_interface* value) {
+  return reinterpret_cast<std::uintptr_t>(value);
+}
+""")
 ordering = []
 name = sc.sc_module_name("top")
 top = Top(name)
@@ -136,8 +142,27 @@ for label, interface in (
     ("bw", tlm.tlm_bw_transport_if[tlm.tlm_base_protocol_types]),
 ):
     owner = Owner()
+    early = None
+    if label in ("master", "slave"):
+        early = sc.sc_port[getattr(tlm, f"tlm_nonblocking_{label}_if")[int, int]]()
+        early(owner)
     port = sc.sc_port[interface]()
     port(owner)
+    if label in ("master", "slave"):
+        partial_ports = []
+        for mode in ("blocking", "nonblocking"):
+            partial = sc.sc_port[getattr(tlm, f"tlm_{mode}_{label}_if")[int, int]]()
+            partial(owner)
+            partial_ports.append(partial)
+        for partial in partial_ports:
+            assert cppyy.gbl.teardown_identity(partial.get_interface()) == cppyy.gbl.teardown_identity(
+                port.get_interface()
+            )
+        for partial in partial_ports:
+            partial.__destruct__()
+    if early is not None:
+        assert cppyy.gbl.teardown_identity(early.get_interface()) == cppyy.gbl.teardown_identity(port.get_interface())
+        early.__destruct__()
     groups.append((label, port, port.get_interface().name(), weakref.ref(owner)))
     exercise(label, port.get_interface())
 del owner, port, name

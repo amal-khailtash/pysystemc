@@ -95,6 +95,25 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
     """
     if hasattr(value, "read"):
         sample = value.read()
+        # Python float/int conversion loses the native signal specialization.
+        # Resolve the inherited native input interface before falling back to
+        # the callback value type (for wrappers lacking native class metadata).
         value_type = bool if isinstance(sample, bool) else type(sample)
+        for cls in type(value).__mro__:
+            native_name = getattr(cls, "__cpp_name__", "")
+            if native_name.startswith(
+                ("sc_core::sc_signal_in_if<", "sc_core::sc_signal_inout_if<", "sc_core::sc_signal<")
+            ):
+                arguments = native_name.split("<", 1)[1].removesuffix(">")
+                depth = 0
+                for index, char in enumerate(arguments):
+                    depth += (char == "<") - (char == ">")
+                    if char == "," and depth == 0:
+                        arguments = arguments[:index]
+                        break
+                value_type = arguments.strip()
+                break
+        if value_type == "long double":
+            raise TypeError("native SystemC tracing does not provide a long double overload")
         return cppyy.gbl.sc_core.trace_signal[value_type](file, value, name)
     return _native_sc_trace(file, value, name, *args)

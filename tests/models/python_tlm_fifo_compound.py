@@ -40,6 +40,10 @@ cppyy.cppdef("""
  * @details No waits or GIL release are needed. Python callbacks acquire GIL;
  * owners and output storage remain alive. Callback exceptions propagate.
  */
+/** Borrow virtual interface addresses without invoking callbacks. */
+std::uintptr_t fifo_compound_identity(sc_core::sc_interface* value) {
+    return reinterpret_cast<std::uintptr_t>(value);
+}
 bool fifo_base_reference(tlm::tlm_get_peek_if<int>& ordinary,
                         tlm::tlm_fifo_debug_if<int>& debug)
 {
@@ -157,6 +161,28 @@ put_port = sc.sc_port[tlm.tlm_fifo_put_if[value_type]]("put")
 get_port = sc.sc_port[tlm.tlm_fifo_get_if[value_type]]("get")
 put_port(debug)
 get_port(debug)
+assert len({cppyy.gbl.fifo_compound_identity(port.get_interface()) for port in (debug_port, put_port, get_port)}) == 1
+# Both compound-first orders must retain the same virtual debug base.
+identity_owners, identity_ports = [], []
+for order in (
+    (tlm.tlm_fifo_get_if, tlm.tlm_fifo_put_if, tlm.tlm_fifo_debug_if),
+    (tlm.tlm_fifo_put_if, tlm.tlm_fifo_debug_if, tlm.tlm_fifo_get_if),
+):
+    identity_owner = Debug()
+    ports = []
+    for contract in order:
+        port = sc.sc_port[contract[value_type]]()
+        port(identity_owner)
+        ports.append(port)
+    assert len({cppyy.gbl.fifo_compound_identity(port.get_interface()) for port in ports}) == 1
+    ordinary = sc.sc_port[tlm.tlm_get_peek_if[value_type]]()
+    ordinary(identity_owner)
+    assert cppyy.gbl.fifo_compound_identity(ordinary.get_interface()) == cppyy.gbl.fifo_compound_identity(
+        ports[0].get_interface()
+    )
+    ports.append(ordinary)
+    identity_owners.append(identity_owner)
+    identity_ports.extend(ports)
 del name
 interface = debug_port.get_interface()
 assert interface.used() == 2 and interface.size() == 4

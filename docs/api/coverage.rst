@@ -37,7 +37,7 @@ Kernel and modeling
      - Event cancellation, barrier and thread tests
    * - sc_fifo, sc_fifo_in, sc_fifo_out
      - Blocking producer/consumer exchange and capacity-one port traffic on pthreads
-     - Blocking methods require GIL release; reset inside channel calls unverified
+     - Python FIFO blocking calls guard reset/kill; direct C++ calls retain native behavior
    * - sc_event_queue, resolved signals and ports
      - Duplicate timed queue notifications, cancellation, resolved contention and port propagation
      - Independent zero/one writers resolve to X; resolved port reads are checked
@@ -90,12 +90,13 @@ Remaining features are accounted for
 ------------------------------------
 
 Native reflection exposes further classes and templates without wrapping them.
-Availability is not semantic support. Custom Python channels/interfaces, complete
-port and fixed-point policy matrices, TLM transport callbacks and platform/compiler
-expansion remain untested or planned. The tables above describe the exercised
+Availability is not semantic support. Basic custom Python channel/interface and
+TLM transport callback paths are tested; complete port/fixed-point policy and
+platform/compiler matrices remain open. The tables above describe the exercised
 combinations; they do not imply coverage of every overload. Direct export conversion, kernel restart and deletion of live module
-hosts are unsupported. Arbitrary process ``throw_it`` and reset inside native
-blocking channel operations remain outside the verified reset contract.
+hosts are unsupported. Arbitrary process ``throw_it`` and reset inside other native
+blocking channel operations remain outside the verified reset contract. Python
+FIFO direct/port read/write now use guarded native operations.
 
 The private development plan records these separately from milestone checks;
 the remaining upstream example inventory continues under later interoperability
@@ -355,8 +356,8 @@ counts and simulation times agree with an independent native reference.
 The new matrix and existing master/slave regression pass together. Complete
 type/error/reset/lifetime matrices remain open.
 
-B1 scalar signal reference checks compare eight normalized records for bool,
-signed/unsigned int and long long, and float/double/long double. Integral
+B1 scalar signal reference checks compare twelve normalized records for bool,
+signed/unsigned short, int, long and long long, and float/double/long double. Integral
 endpoints, finite floating values, signed zero, infinity, NaN, value-change
 callbacks and delta updates agree with native sc_signal specializations.
 Structural reads reject bool/type/range mismatches, preserve sampled storage
@@ -403,8 +404,10 @@ Standard-protocol TLM2 forward/backward owners now select a shared combined
 adapter for compatible partial-first bindings. Native inheritance validates
 payload/phase compatibility. Selected tests cover all five forward and three
 backward first-bind choices, shared virtual interface addresses and borrowed
-payload/phase/delay/DMI updates. Custom protocol promotion remains unimplemented;
-complete-first native reuse remains available. Full B2/C1 matrices remain open.
+payload/phase/delay/DMI updates. Custom owners may declare native
+``protocol_types``; the tested custom protocol checks partial-first identity and
+stopped-kernel teardown. Broader custom-protocol/native-reference coverage and
+the full B2/C1 matrices remain open.
 
 B3 native teardown implementation: ``sc_core.teardown_interfaces()`` deletes
 retained structural adapters only after simulation stop and destruction of all
@@ -418,15 +421,15 @@ B3 teardown evidence now includes seven adapters: scalar and 137-bit signal,
 FIFO and combined TLM get/peek, plus analysis. Tests verify readiness accesses
 before deletion, native registry removal, retained owner/result collection and
 idempotence. A 137-bit VCD declares and changes the traced sample before closure
-and deletion. Broader master/slave, transport, blocking/reset and destruction
-ordering coverage remains open; B3 is not complete.
+and deletion. Compound/transport and blocking/reset evidence follows below;
+the full retained-family lifetime audit remains open.
 
 B3 compound/transport teardown checks cover full int master/slave, TLM1
 transport and standard TLM2 forward/backward owners. Callbacks execute before
 simulation, in end-of-simulation hooks and after stop before borrower deletion.
 Native registry removal and owner collection follow explicit teardown at 2 ns.
-Blocking/reset teardown and wider/custom protocol/native-reference matrices
-remain open; these checks do not close B3.
+Blocking/reset native references and custom protocol teardown follow below.
+The full type/protocol/native-reference lifecycle audit remains open.
 
 B3 teardown after blocking unwind is checked across six paths: FIFO read,
 TLM get, blocking master get/slave peek, TLM1 transport and TLM2 blocking
@@ -440,19 +443,71 @@ event, OR/AND, timed event/OR/AND, cycle and count waits. Static clock sensitivi
 starts at 50 ns so cycle waits remain suspended for reset at 2 ns and kill at
 3 ns. An independent native FIFO reference matches nine exact callback/worker
 cleanup and deletion records through 4 ns and verifies registry removal.
-Native reference breadth beyond FIFO and full type/lifecycle scope remain open.
+Native FIFO and base/compound TLM get/master/slave references check borrower-first deletion after unwind. Full type/lifecycle scope remains open.
 
 B3 type teardown checks add long long, sc_biguint<137> and sc_bigint<128>
 to the nine-wait matrix for FIFO, TLM get and blocking master/slave adapters.
 TLM1/TLM2 transport paths remain int/standard-protocol controls in these runs.
 Independent native blocking TLM get/peek references compare exact callback and
 worker unwind followed by borrower/channel deletion and registry removal.
-These references cover base get/peek semantics; native master/slave-specific
-teardown and complete type/custom-protocol lifecycle coverage remain open.
+These references cover base get and native blocking master/slave declarations.
+Complete type/custom-protocol lifecycle coverage remains open.
 
-B3 teardown now rejects open Python-created VCD/WIF traces before callback
-release. Python trace creation/closure tracks native addresses, including scoped
-VCD files. Direct C++ traces still require owner-managed closure. A native process
-gate remains unimplemented: explicit clock-process termination caused a native
-crash/timeout during validation. Do not treat stopped status as proof that all
-processes terminated; finish process cleanup before stop and teardown.
+B3 teardown now rejects open Python-created VCD/WIF traces and suspended
+non-method processes before callback release or borrower deletion. Python trace
+creation/closure tracks native addresses, including scoped VCD files. Direct C++
+traces still require owner-managed closure. Teardown does not kill clock processes;
+the earlier explicit clock-kill approach caused a native crash/timeout and is not
+used. Method processes do not retain suspended Python stacks and are not force-killed
+after stop.
+
+Current B1–B4/C1 implementation reconciliation
+-----------------------------------------------
+
+Native FIFO direct and borrowed port read/write preserve Python reset/kill cleanup
+and caller-output storage through non-template scheduler unwind guards. Templates
+remain arbitrary and native C++ overloads remain unchanged. Generated custom
+channel bases configure blocking GIL release automatically. Structural/subclass
+mutex reset and ordinary callback error paths are checked. Signal native-reference
+records now include short/unsigned short/long/unsigned long endpoints.
+
+Complete master/slave owners share combined adapters in partial-first bindings.
+Custom TLM2 owners may declare native ``protocol_types`` to select a compatible
+combined adapter; native inheritance checks payload/phase compatibility. TLM1
+transport uses copied pair responses to preserve multiword value/output overloads.
+
+Teardown rejects suspended native thread processes; method processes have no
+suspended Python stack and do not need forced kill after stop. Native clock killing
+is not used. Traces opened directly in C++ and external borrowed reference proxies
+retain native caller-managed lifetime obligations. B1–B4/C1 completion still needs
+full source-family/access/type/policy reconciliation and the final validation gate.
+
+Native synchronization access and FIFO compound identity
+---------------------------------------------------------
+
+Native mutex lock and semaphore wait now guard scheduler unwind on both direct
+channels and borrowed interface pointers. Reset at 2 ns and kill at 3 ns preserve
+Python cleanup, native ownership/token state and termination. Independent native
+C++ references match all four exact start/cleanup records for each access path.
+FIFO convenience input/output ports use the same guarded read/write bridge.
+
+Complete FIFO debug/get/put owners select one native combined adapter with virtual
+native debug/interface bases. Debug-first, get-first and put-first bindings check
+native identity while existing indexed/ordinary peek and output-retention checks
+exercise scalar and arbitrary-width specializations. Standard/custom TLM2 identity
+checks also reject live borrowers before teardown and verify eight adapter
+registry removals, retained-owner collection and idempotence after port destruction.
+
+Declared custom interface methods release the GIL on native entry regardless of
+method name; cppyy reacquires it for Python overrides. An arbitrarily named
+blocking callback verifies reset/kill cleanup at 2/3 ns, process termination and
+ordinary exception recovery through a borrowed native port. Implementations must
+use guarded waits and retain owners; direct C++ scheduling inside a Python
+callback still needs an appropriate first-party unwind guard.
+
+Structural float/double signal tracing resolves the native template specialization
+rather than the converted Python sample type. Independent VCD comparisons verify
+real declarations and transitions from 1.25 to -2.5 at 1 ns. Native SystemC has no
+long-double trace overload; the Python signal helper reports this explicitly.
+Structural writer-policy callbacks require native enum objects and reject plain
+integers even when their values coincide with valid policy enumerators.

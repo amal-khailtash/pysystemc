@@ -9,8 +9,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
-
-- Reject structural teardown while Python-created traces are open .
+- Guard native FIFO, mutex and semaphore blocking calls against reset/kill unwind, including borrowed interfaces and FIFO convenience ports; reject teardown with suspended thread frames.
+- Preserve native signal template types in floating waveform registration and validate structural writer-policy enum types.
+- Release the GIL for arbitrary declared-interface native method entry and verify reset/kill callback cleanup.
+- Preserve multiword TLM1 transport response overloads and share FIFO debug/get/put and compound/custom-protocol interface adapters.
+- Reject structural teardown while Python-created traces are open.
 - Add stopped-kernel structural adapter teardown guarded against live native ports and exports.
 - Share complete standard-protocol TLM2 transport adapters across compatible partial-first bindings using native inheritance checks.
 - Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.

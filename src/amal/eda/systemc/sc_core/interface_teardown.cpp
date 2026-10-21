@@ -2,7 +2,7 @@
  * @brief Conservative native borrower gate for structural adapter teardown.
  * @details Call from Python with the GIL held after SC_STOPPED and final trace
  * reads. Objects are borrowed only during traversal. No callbacks, waits or
- * ownership transfers occur; a live port/export prevents adapter deletion.
+ * ownership transfers occur; a live port/export or suspended thread prevents adapter deletion.
  */
 #include <systemc>
 
@@ -16,6 +16,8 @@ bool has_interface_borrowers(const sc_core::sc_object* object)
 {
   if (dynamic_cast<const sc_core::sc_port_base*>(object) || dynamic_cast<const sc_core::sc_export_base*>(object))
     return true;
+  sc_core::sc_process_handle process(const_cast<sc_core::sc_object*>(object));
+  if (process.valid() && process.proc_kind() != sc_core::SC_METHOD_PROC_ && !process.terminated()) return true;
   for (const auto* child : object->get_child_objects())
     if (has_interface_borrowers(child)) return true;
   return false;
@@ -32,6 +34,7 @@ void require_interface_teardown()
     throw std::runtime_error("interface teardown requires simulation stop");
   for (const auto* object : sc_core::sc_get_top_level_objects())
     if (has_interface_borrowers(object))
-      throw std::runtime_error("destroy all native ports and exports before interface teardown");
+      throw std::runtime_error(
+        "destroy all native ports/exports and terminate thread processes before interface teardown");
 }
 }  // namespace pysystemc_interfaces

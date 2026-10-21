@@ -1,4 +1,4 @@
-/** @file reset_teardown.cpp
+/** @file tlm_reset_teardown.cpp
  * @brief Independent native reference for blocking unwind then channel deletion.
  * @details Channel and port are heap-owned by sc_main. Destroy the port first,
  * after all process handles terminate. No Python callbacks or GIL operations
@@ -29,8 +29,9 @@ struct cleanup
     record(owner, action);
   }
 };
-/** @brief Native blocking FIFO adapter with destructor evidence. */
-struct channel : sc_core::sc_module, tlm::tlm_blocking_get_peek_if<int>
+/** @brief Native blocking adapter with borrower-first destruction evidence. */
+template <class Interface>
+struct channel : sc_core::sc_module, Interface
 {
   explicit channel(sc_core::sc_module_name name) : sc_module(name)
   {
@@ -63,6 +64,11 @@ struct channel : sc_core::sc_module, tlm::tlm_blocking_get_peek_if<int>
   {
     value = sample();
   }
+  /** @brief Complete the compound put contract; this probe blocks on get/peek. */
+  void put(const int&)
+  {
+    throw std::runtime_error("unexpected compound put");
+  }
   /** @brief Record native destruction after borrowers and processes finish. */
   ~channel() override
   {
@@ -70,28 +76,27 @@ struct channel : sc_core::sc_module, tlm::tlm_blocking_get_peek_if<int>
   }
 };
 /** @brief Own one native borrower until after process termination. */
+template <class Interface>
 struct model : sc_core::sc_module
 {
-  sc_core::sc_port<tlm::tlm_blocking_get_peek_if<int>> port;
+  sc_core::sc_port<Interface> port;
   explicit model(sc_core::sc_module_name name) : sc_module(name), port("port")
   {
   }
 };
 /** @brief Compare native callback/worker cleanup, termination and registry removal. */
-int sc_main(int argc, char** argv)
+template <class Interface>
+int run_reference()
 {
-  if (argc != 2) return 2;
-  path = argv[1];
-  if (path != "get" && path != "slave") return 2;
-  auto* adapter = new channel("adapter");
-  auto* borrower = new model("borrower");
+  auto* adapter = new channel<Interface>("adapter");
+  auto* borrower = new model<Interface>("borrower");
   borrower->port.bind(*adapter);
   auto worker = sc_core::sc_spawn(
     [&]
     {
       record(path, "worker");
       cleanup guard{path, "worker-cleanup"};
-      if (path == "get")
+      if (path == "get" || path == "master")
         borrower->port->get();
       else
         borrower->port->peek();
@@ -120,4 +125,15 @@ int sc_main(int argc, char** argv)
   if (records != expected) throw std::runtime_error("ordering");
   for (const auto& entry : records) std::cout << "TEARDOWN_REFERENCE " << entry << '\n';
   return 0;
+}
+
+/** @brief Select base or native compound declarations without Python adapters. */
+int sc_main(int argc, char** argv)
+{
+  if (argc != 2) return 2;
+  path = argv[1];
+  if (path == "get") return run_reference<tlm::tlm_blocking_get_peek_if<int>>();
+  if (path == "master") return run_reference<tlm::tlm_blocking_master_if<int, int>>();
+  if (path == "slave") return run_reference<tlm::tlm_blocking_slave_if<int, int>>();
+  return 2;
 }

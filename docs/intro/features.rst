@@ -171,8 +171,8 @@ gates. Detailed evidence stays in :doc:`../api/coverage`.
      - Verify selected public contracts and obtain scope decisions for APIs proven unrepresentable.
 
 B3's current teardown implementation checks stopped status, live ports/exports,
-Python-created open traces before mutation. Native process lifetime remains
-a B3 blocker: attempted clock-process termination crashed and is not supported.
+Python-created open traces before mutation. Suspended native threads are rejected;
+method processes require no forced kill after stop. The earlier failed clock-kill approach is not used.
 Trace/process gates belong to safe teardown of borrowed adapter storage. They
 are not additional checklist requirements. Direct C++ traces and external
 borrowed proxies still require caller lifetime discipline and further audit.

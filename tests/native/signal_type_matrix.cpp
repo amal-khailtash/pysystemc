@@ -186,6 +186,10 @@ struct FloatingCase
 int sc_main(int, char**)
 {
   IntegerCase<bool> boolean("bool", false, true);
+  IntegerCase<short> signed_short("short", std::numeric_limits<short>::lowest(), std::numeric_limits<short>::max());
+  IntegerCase<unsigned short> unsigned_short("unsigned_short", 0, std::numeric_limits<unsigned short>::max());
+  IntegerCase<long> signed_long("long", std::numeric_limits<long>::lowest(), std::numeric_limits<long>::max());
+  IntegerCase<unsigned long> unsigned_long("unsigned_long", 0, std::numeric_limits<unsigned long>::max());
   IntegerCase<int> signed_int("int", std::numeric_limits<int>::lowest(), std::numeric_limits<int>::max());
   IntegerCase<unsigned int> unsigned_int("unsigned_int", std::numeric_limits<unsigned int>::lowest(),
                                          std::numeric_limits<unsigned int>::max());
@@ -199,6 +203,10 @@ int sc_main(int, char**)
   FloatingCase<long double> extended("long_double");
 
   boolean.write_high();
+  signed_short.write_high();
+  unsigned_short.write_high();
+  signed_long.write_high();
+  unsigned_long.write_high();
   signed_int.write_high();
   unsigned_int.write_high();
   signed_long_long.write_high();
@@ -211,6 +219,10 @@ int sc_main(int, char**)
   real.check_zero();
   extended.check_zero();
   boolean.write_low();
+  signed_short.write_low();
+  unsigned_short.write_low();
+  signed_long.write_low();
+  unsigned_long.write_low();
   signed_int.write_low();
   unsigned_int.write_low();
   signed_long_long.write_low();
@@ -230,6 +242,10 @@ int sc_main(int, char**)
   sc_core::sc_start(sc_core::SC_ZERO_TIME);
 
   boolean.emit();
+  signed_short.emit();
+  unsigned_short.emit();
+  signed_long.emit();
+  unsigned_long.emit();
   signed_int.emit();
   unsigned_int.emit();
   signed_long_long.emit();

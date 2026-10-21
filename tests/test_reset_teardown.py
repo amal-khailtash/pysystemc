@@ -43,7 +43,7 @@ def test_typed_reset_teardown(tmp_path, datatype, wait_kind):
     assert "RESET_TEARDOWN_OK 6 4 ns" in run_example(tmp_path, "tests/models/reset_teardown.py", (wait_kind, datatype))
 
 
-@pytest.mark.parametrize("operation", ("get", "slave"))
+@pytest.mark.parametrize("operation", ("get", "master", "slave"))
 def test_tlm_reset_teardown_native_reference(tmp_path, operation):
     """Compare native blocking TLM get/peek cleanup and deletion with Python paths."""
     output = run_example(tmp_path, "tests/models/reset_teardown.py")

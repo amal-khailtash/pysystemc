@@ -2,10 +2,30 @@
 
 from amal.eda.systemc import sc_core as sc, tlm
 import cppyy
+import sys
+import gc
+import weakref
+
+
+custom = len(sys.argv) > 1 and sys.argv[1] == "custom"
+if custom:
+    cppyy.cppdef("""
+    /** Custom payload retains standard operations and an arbitrary-width field. */
+    struct IdentityPayload : tlm::tlm_generic_payload { sc_dt::sc_biguint<137> wide; };
+    /** Protocol explicitly names the payload and phase types used by interfaces. */
+    struct IdentityProtocol {
+      using tlm_payload_type = IdentityPayload;
+      using tlm_phase_type = tlm::tlm_phase;
+    };
+    """)
+protocol = cppyy.gbl.IdentityProtocol if custom else tlm.tlm_base_protocol_types
+payload_type = cppyy.gbl.IdentityPayload if custom else tlm.tlm_generic_payload
 
 
 class Owner:
     """Implement forward/backward callbacks over shared transaction state."""
+
+    protocol_types = protocol
 
     def __init__(self):
         """Initialize the ordered callback log."""
@@ -56,15 +76,15 @@ std::uintptr_t transport_identity(sc_core::sc_interface* value) {
 name = sc.sc_module_name("top")
 top = sc.sc_module(name)
 fw_types = (
-    tlm.tlm_fw_transport_if[tlm.tlm_base_protocol_types],
-    tlm.tlm_fw_nonblocking_transport_if[tlm.tlm_generic_payload, tlm.tlm_phase],
-    tlm.tlm_blocking_transport_if[tlm.tlm_generic_payload],
-    tlm.tlm_fw_direct_mem_if[tlm.tlm_generic_payload],
-    tlm.tlm_transport_dbg_if[tlm.tlm_generic_payload],
+    tlm.tlm_fw_transport_if[protocol],
+    tlm.tlm_fw_nonblocking_transport_if[payload_type, tlm.tlm_phase],
+    tlm.tlm_blocking_transport_if[payload_type],
+    tlm.tlm_fw_direct_mem_if[payload_type],
+    tlm.tlm_transport_dbg_if[payload_type],
 )
 bw_types = (
-    tlm.tlm_bw_transport_if[tlm.tlm_base_protocol_types],
-    tlm.tlm_bw_nonblocking_transport_if[tlm.tlm_generic_payload, tlm.tlm_phase],
+    tlm.tlm_bw_transport_if[protocol],
+    tlm.tlm_bw_nonblocking_transport_if[payload_type, tlm.tlm_phase],
     tlm.tlm_bw_direct_mem_if,
 )
 groups = []
@@ -81,7 +101,9 @@ del name
 for types, owner, ports in groups:
     addresses = [cppyy.gbl.transport_identity(port.get_interface()) for port in ports.values()]
     assert len(set(addresses)) == 1, addresses
-    payload = tlm.tlm_generic_payload()
+    payload = payload_type()
+    if custom:
+        payload.wide[136] = True
     phase = tlm.tlm_phase(tlm.BEGIN_REQ)
     delay = sc.sc_time(0, sc.SC_NS)
     if types is fw_types:
@@ -100,6 +122,26 @@ for types, owner, ports in groups:
         assert phase == tlm.END_RESP
         ports[2].get_interface().invalidate_direct_mem_ptr(73, 79)
         assert owner.calls == ["bw", (73, 79)]
+    if custom:
+        assert bool(payload.wide[136]), "custom high bit lost"
 sc.sc_start(2, sc.SC_NS)
 sc.sc_stop()
-print("TLM2_BINDING_IDENTITY 5 3 2 ns")
+owner_refs = [weakref.ref(group[1]) for group in groups]
+adapter_names = [port.get_interface().name() for _, _, ports in groups for port in (ports[0],)]
+try:
+    sc.teardown_interfaces()
+except RuntimeError:
+    pass
+else:
+    raise AssertionError("live transport borrowers accepted")
+for _, _, ports in groups:
+    for port in ports.values():
+        port.__destruct__()
+del groups, owner, ports, port, _
+gc.collect()
+assert sc.teardown_interfaces() == 8
+assert sc.teardown_interfaces() == 0
+gc.collect()
+assert all(ref() is None for ref in owner_refs), "transport owner retained"
+assert all(not sc.sc_find_object(name) for name in adapter_names), "transport adapter registered"
+print("TLM2_CUSTOM_BINDING_IDENTITY 5 3 2 ns" if custom else "TLM2_BINDING_IDENTITY 5 3 2 ns")

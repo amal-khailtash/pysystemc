@@ -107,7 +107,15 @@ sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
 signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
-fifo_channel = cppyy.gbl.sc_core.PythonFifoChannel
+from ._fifo import FifoTemplate as _FifoTemplate
+
+fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
+sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
+sc_fifo_in = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in)
+sc_fifo_out = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out)
+from ._blocking import guard_native_channels as _guard_native_channels
+
+_guard_native_channels()
 # Keep the public port specialization native; only Python bind gains adaptation.
 sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
 sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
@@ -373,6 +381,7 @@ __all__ = sorted(
         "vcd_trace",
         "interface",
         "release_interface_callbacks",
+        "teardown_interfaces",
         "declare_interface",
         "channel_interface",
         "read_interface",

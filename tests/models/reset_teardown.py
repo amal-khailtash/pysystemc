@@ -164,5 +164,5 @@ assert records[-1] == ("all", "deleted", "4 ns")
 assert sc.teardown_interfaces() == 0
 print("RESET_TEARDOWN_OK 6 4 ns")
 for entry in records:
-    if entry[0] in ("fifo", "get", "slave", "all"):
+    if entry[0] in ("fifo", "get", "master", "slave", "all"):
         print("TEARDOWN_REFERENCE", *entry)

@@ -15,6 +15,9 @@ def integer_token(value):
     Returns:
         The exact base-ten spelling of the value.
     """
+    if isinstance(value, str):
+        numeric = ord(value)
+        return str(numeric)
     return str(int(value))
 
 
@@ -185,6 +188,10 @@ top = sc.sc_module(name)
 ports = []
 integer_types = (
     ("bool", bool),
+    ("short", "short"),
+    ("unsigned_short", "unsigned short"),
+    ("long", "long"),
+    ("unsigned_long", "unsigned long"),
     ("int", int),
     ("unsigned_int", "unsigned int"),
     ("long_long", "long long"),
@@ -214,6 +221,22 @@ for label, native_type in (("float", "float"), ("double", "double"), ("long_doub
     port(owner)
     reject_invalid_reads(owner, port.get_interface(), (True, object()), 0.0)
 print("SIGNAL_CALLBACK_ERRORS_OK")
+
+# Structural policy metadata must reject invalid values and recover without rebinding.
+policy_owner = Owner(0)
+policy_port = sc.sc_port[sc.sc_signal_inout_if[int]]("policy")
+policy_port(policy_owner)
+for invalid in (True, None, "bad", 0, 1, 2, 3, 99):
+    policy_owner.get_writer_policy = lambda invalid=invalid: invalid
+    try:
+        policy_port.get_interface().get_writer_policy()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid writer policy accepted")
+for policy in (sc.SC_ONE_WRITER, sc.SC_MANY_WRITERS, sc.SC_UNCHECKED_WRITERS):
+    policy_owner.get_writer_policy = lambda policy=policy: policy
+    assert policy_port.get_interface().get_writer_policy() == policy
 
 # Build independent structural owners whose clean records match the native probe.
 for label, native_type in integer_types:

@@ -23,4 +23,4 @@ def test_signal_type_matrix_matches_native_reference(tmp_path):
     python_records = [line for line in output.splitlines() if line.startswith(prefixes)]
     native_records = [line for line in native.stdout.splitlines() if line.startswith(prefixes)]
     assert python_records == native_records
-    assert len(python_records) == 8
+    assert len(python_records) == 12

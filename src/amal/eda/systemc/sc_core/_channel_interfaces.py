@@ -187,7 +187,12 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     if incoming
                     else "virtual int num_free() const override = 0; "
                 )
-        elif fifo_family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if"):
+        elif fifo_family in (
+            "tlm::tlm_fifo_debug_if",
+            "tlm::tlm_fifo_put_if",
+            "tlm::tlm_fifo_get_if",
+            "pysystemc_interfaces::FifoCombinedInterface",
+        ):
             value = name.split("<", 1)[1].removesuffix(">")
             methods = (
                 "virtual int used() const override = 0; virtual int size() const override = 0; "
@@ -198,19 +203,23 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                 f"virtual std::pair<bool, {value}> debug_peek(int) const = 0; "
                 f"virtual bool debug_poke({value}, int) = 0; "
             )
-            if fifo_family == "tlm::tlm_fifo_put_if":
+            if fifo_family in ("tlm::tlm_fifo_put_if", "pysystemc_interfaces::FifoCombinedInterface"):
                 methods += (
-                    "private: sc_core::sc_event ready; public: "
+                    "private: sc_core::sc_event put_ready; public: "
                     f"void put(const {value}& value) override {{ put_value(value); }} "
                     f"bool nb_put(const {value}& value) override {{ return try_put_value(value); }} "
                     f"bool nb_can_put(tlm::tlm_tag<{value}>* = nullptr) const override {{ return can_put(); }} "
                     f"const sc_core::sc_event& ok_to_put(tlm::tlm_tag<{value}>* = nullptr) const override "
-                    "{ return ready; } "
-                    "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { ready.notify(delay); } "
-                    f"virtual void put_value({value}) = 0; virtual bool try_put_value({value}) = 0; "
+                    "{ return put_ready; } "
+                    + (
+                        ""
+                        if fifo_family == "pysystemc_interfaces::FifoCombinedInterface"
+                        else "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) { put_ready.notify(delay); } "
+                    )
+                    + f"virtual void put_value({value}) = 0; virtual bool try_put_value({value}) = 0; "
                     "virtual bool can_put() const = 0; "
                 )
-            if fifo_family == "tlm::tlm_fifo_get_if":
+            if fifo_family in ("tlm::tlm_fifo_get_if", "pysystemc_interfaces::FifoCombinedInterface"):
                 methods += (
                     f"using blocking_value_pair = std::pair<{value}, bool>; "
                     "private: sc_core::sc_event get_ready, peek_ready; public: "
@@ -229,7 +238,13 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     f"const sc_core::sc_event& ok_to_peek(tlm::tlm_tag<{value}>* = nullptr) const override "
                     "{ return peek_ready; } "
                     "void notify_ready(const sc_core::sc_time& delay = sc_core::SC_ZERO_TIME) "
-                    "{ get_ready.notify(delay); peek_ready.notify(delay); } "
+                    "{ get_ready.notify(delay); peek_ready.notify(delay); "
+                    + (
+                        "put_ready.notify(delay); "
+                        if fifo_family == "pysystemc_interfaces::FifoCombinedInterface"
+                        else ""
+                    )
+                    + "} "
                     "virtual blocking_value_pair get_value() = 0; "
                     "virtual blocking_value_pair peek_value() const = 0; "
                     f"virtual std::pair<bool, {value}> try_get_value() = 0; "
@@ -525,12 +540,14 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
                     "cppyy acquires GIL for callbacks. Blocking callers release GIL. Errors propagate. */ "
                     "namespace pysystemc_interfaces { template<class Req, class Rsp> "
                     "class TransportAdapter : public tlm::tlm_transport_if<Req, Rsp> { public: "
-                    "Rsp transport(const Req& req) override { return transport_value(req); } "
-                    "void transport(const Req& req, Rsp& rsp) override { rsp = transport_value(req); } "
-                    "virtual Rsp transport_value(Req) = 0; }; }"
+                    "using transport_value_pair = std::pair<Rsp, bool>; "
+                    "Rsp transport(const Req& req) override { return transport_value(req).first; } "
+                    "void transport(const Req& req, Rsp& rsp) override { rsp = transport_value(req).first; } "
+                    "virtual transport_value_pair transport_value(Req) = 0; }; }"
                 )
             arguments = name.removeprefix("tlm::tlm_transport_if<").removesuffix(">")
             name = f"pysystemc_interfaces::TransportAdapter<{arguments}>"
+            methods += f"using transport_value_pair = typename {name}::transport_value_pair; "
 
         if name.startswith("tlm::tlm_blocking_get_if<"):
             if not hasattr(getattr(cppyy.gbl, "pysystemc_interfaces", None), "GetAdapter"):
@@ -622,6 +639,10 @@ def channel_interface(interface: Any, *, _copy_put: bool = False) -> Any:
             f"~{identifier}() override = default; {methods} }}; }}"
         )
         base = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
+        for method in ("transport", "get", "peek", "put", "b_transport", "read", "write", "lock", "wait"):
+            overload = getattr(base, method, None)
+            if overload is not None and hasattr(overload, "__release_gil__"):
+                overload.__release_gil__ = True
         _channel_interfaces[cache_name] = base
     return _channel_interfaces[cache_name]
 
@@ -645,6 +666,7 @@ def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
 
     Signatures are trusted C++ declarations. Ports borrow implementations; retain
     Python owners through simulation. cppyy acquires the GIL for overrides.
+    Native method entry releases the GIL, including arbitrarily named methods.
     Blocking implementations must use guarded wait; do not suppress reset unwind.
     """
     if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", name) or not methods:
@@ -690,6 +712,10 @@ def declare_interface(name: str, methods: dict[str, tuple[str, str]]) -> Any:
         f"public: {name}() = default; ~{name}() override = default; {signatures} }}; }}"
     )
     interface = getattr(cppyy.gbl.pysystemc_interfaces, name)
+    # Declared names are arbitrary; any override may schedule a guarded wait.
+    # Native entry releases GIL, while cppyy reacquires it for Python overrides.
+    for method in methods:
+        getattr(interface, method).__release_gil__ = True
     _reference_callbacks[interface.__cpp_name__] = reference_callbacks
     _interface_declarations[name] = (declaration, interface)
     return interface
