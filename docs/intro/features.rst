@@ -732,9 +732,9 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☑ ``sc_core::sc_register_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_release`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_report`` — 25 declarations; runtime: 25 untested; mapping: 2 partial, 23 reviewed.
+* ☐ ``sc_core::sc_report`` — 25 declarations; runtime: 13 supported, 12 untested; mapping: 1 partial, 24 reviewed.
 * ☐ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 untested; mapping: 32 reviewed.
 * ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
