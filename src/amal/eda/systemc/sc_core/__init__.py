@@ -31,6 +31,7 @@ from ._interfaces import release_interface_callbacks as release_interface_callba
 from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
+from . import _tracing
 
 # Compile first-party bridges before publishing native aliases or configuring
 # their methods. The parent package has already loaded SystemC and selected C++17.
@@ -97,6 +98,10 @@ for name, member in sc_core_namespace.__dict__.items():
 # overwrite the adapters. Native C++ sc_module remains intact.
 sc_trace = _python_sc_trace
 vcd_trace = _python_vcd_trace
+sc_create_vcd_trace_file = _tracing.sc_create_vcd_trace_file
+sc_create_wif_trace_file = _tracing.sc_create_wif_trace_file
+sc_close_vcd_trace_file = _tracing.sc_close_vcd_trace_file
+sc_close_wif_trace_file = _tracing.sc_close_wif_trace_file
 sc_module = cppyy.gbl.sc_core.ScModule
 sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface

@@ -24,15 +24,21 @@ def teardown_interfaces():
 
     Raises:
         RuntimeError: Unless the kernel is stopped and every native port/export
-            has been destroyed. Rejection occurs before callback release.
+            has been destroyed and all Python-created trace files are closed. Rejection occurs
+            before callback release.
 
     Call with the GIL held after end hooks, trace closure and all final reads.
     Destroy ports/exports first, including native-created borrowers. This
     conservative gate rejects unrelated live ports too. Borrowed adapter,
     event and result proxies become invalid and must never be used afterward.
     Process callbacks and directly constructed channels are outside this API.
-    The stopped kernel is not reset or restarted.
+    Close traces created directly in C++ yourself; their registration is not
+    visible to the Python trace gate. The stopped kernel is not reset or restarted.
     """
+    from ._tracing import _open_trace_files
+
+    if _open_trace_files:
+        raise RuntimeError("close all Python-created trace files before interface teardown")
     try:
         cppyy.gbl.pysystemc_interfaces.require_interface_teardown()
     except cppyy.gbl.std.runtime_error as error:

@@ -9,11 +9,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+
+- Reject structural teardown while Python-created traces are open .
 - Add stopped-kernel structural adapter teardown guarded against live native ports and exports.
 - Share complete standard-protocol TLM2 transport adapters across compatible partial-first bindings using native inheritance checks.
 - Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.
 
 ### Tests
+
 - Extend B3 reset/kill teardown to multiword and arbitrary-width types, and add independent native TLM get/peek lifecycle references.
 - Extend B3 teardown after reset/kill to nine guarded wait families across six paths, and compare native FIFO cleanup/deletion ordering.
 - Verify native teardown follows reset/kill cleanup and process termination across FIFO, TLM get/master/slave and transport callbacks.

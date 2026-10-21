@@ -132,6 +132,7 @@ wide_owner = owner_refs[3]()
 wide_owner.value[0] = False
 wide_owner.value[1] = True
 sc.sc_start(1, sc.SC_NS)
+# Keep trace open until ports are destroyed to exercise the trace safety gate.
 sc.sc_close_vcd_trace_file(trace)
 vcd = Path("teardown.vcd").read_text()
 assert "$var wire   137" in vcd or any("137" in line and "wide" in line for line in vcd.splitlines())
@@ -165,6 +166,15 @@ for family, channel_port, channel_name in groups:
     else:
         interface.read()
     channel_port.__destruct__()
+open_trace = sc.sc_create_vcd_trace_file("late")
+try:
+    sc.teardown_interfaces()
+except RuntimeError as error:
+    assert "trace" in str(error)
+else:
+    raise AssertionError("open trace teardown accepted")
+assert all(ref() is not None for ref in owner_refs)
+sc.sc_close_vcd_trace_file(open_trace)
 assert sc.teardown_interfaces() == 7
 for family, channel_port, channel_name in groups:
     assert not cppyy.gbl.sc_core.sc_find_object(channel_name)

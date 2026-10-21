@@ -10,6 +10,39 @@ from typing import Any
 
 import cppyy
 
+_open_trace_files = {}
+
+
+def _trace_create(create):
+    """Retain Python-created native trace files until their matching close call."""
+
+    def wrapped(filename):
+        """Create a native trace and retain its address for teardown safety."""
+        trace = create(filename)
+        if trace:
+            _open_trace_files[cppyy.addressof(trace)] = trace
+        return trace
+
+    return wrapped
+
+
+def _trace_close(close):
+    """Forget a trace only after native closure succeeds."""
+
+    def wrapped(trace):
+        """Close borrowed native trace storage and release the open-file record."""
+        address = cppyy.addressof(trace)
+        close(trace)
+        _open_trace_files.pop(address, None)
+
+    return wrapped
+
+
+sc_create_vcd_trace_file = _trace_create(cppyy.gbl.sc_core.sc_create_vcd_trace_file)
+sc_create_wif_trace_file = _trace_create(cppyy.gbl.sc_core.sc_create_wif_trace_file)
+sc_close_vcd_trace_file = _trace_close(cppyy.gbl.sc_core.sc_close_vcd_trace_file)
+sc_close_wif_trace_file = _trace_close(cppyy.gbl.sc_core.sc_close_wif_trace_file)
+
 
 @contextmanager
 def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | None = None) -> Iterator[Any]:
@@ -33,7 +66,7 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
     trace_path = pathlib.Path(str(filename) + ".vcd")
     if not trace_path.parent.is_dir():
         raise RuntimeError(f"Cannot create VCD trace: directory does not exist: {trace_path.parent}")
-    trace = cppyy.gbl.sc_core.sc_create_vcd_trace_file(str(filename))
+    trace = sc_create_vcd_trace_file(str(filename))
     if not trace:
         raise RuntimeError(f"Cannot create VCD trace: {filename}")
     try:
@@ -41,7 +74,7 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
             trace.set_time_unit(*time_unit)
         yield trace
     finally:
-        cppyy.gbl.sc_core.sc_close_vcd_trace_file(trace)
+        sc_close_vcd_trace_file(trace)
 
 
 _native_sc_trace = cppyy.gbl.sc_core.sc_trace

@@ -449,3 +449,10 @@ Independent native blocking TLM get/peek references compare exact callback and
 worker unwind followed by borrower/channel deletion and registry removal.
 These references cover base get/peek semantics; native master/slave-specific
 teardown and complete type/custom-protocol lifecycle coverage remain open.
+
+B3 teardown now rejects open Python-created VCD/WIF traces before callback
+release. Python trace creation/closure tracks native addresses, including scoped
+VCD files. Direct C++ traces still require owner-managed closure. A native process
+gate remains unimplemented: explicit clock-process termination caused a native
+crash/timeout during validation. Do not treat stopped status as proof that all
+processes terminated; finish process cleanup before stop and teardown.

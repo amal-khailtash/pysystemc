@@ -112,6 +112,71 @@ All 33 native/Python baseline comparisons pass (performance FIFO uses a fixed se
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
 
+Remaining requirement completion gates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The fixed checklist has 27 IDs: A1-A6 are closed for the pinned source inventory;
+21 implementation and verification requirements remain open. Work below belongs
+to these existing IDs. A passed test increment does not close its parent gate.
+The current implementation priority is B3, followed by the remaining B1/B2/B4/C1
+gates. Detailed evidence stays in :doc:`../api/coverage`.
+
+.. list-table:: Remaining work needed to close each requirement
+   :header-rows: 1
+   :widths: 10 90
+
+   * - ID
+     - Completion gate still open
+   * - B1
+     - Reconcile signal/FIFO type, conversion, writer-policy, trace, partial-interface, error and reset cases with native references.
+   * - B2
+     - Reconcile compatible/incompatible specializations and binding orders across signal/FIFO, compound and transport families; prove shared interface/event identity.
+   * - B3
+     - Audit every retained structural adapter family and borrower/trace/process path against the teardown contract; verify destruction and owner/result release or fix identified failures.
+   * - B4
+     - Reconcile custom-channel error, reset and GIL behavior across native access paths, including untested families.
+   * - C1
+     - Reconcile the TLM public overload/type/event/lifetime inventory with executable behavior and independent native references.
+   * - D1
+     - Complete independent native multi-socket references across remaining protocols and topologies.
+   * - D2
+     - Complete multi/passthrough hierarchy, conversion and native access-path comparisons.
+   * - D3
+     - Complete tagged custom-protocol callback error, reset and lifetime cases.
+   * - D4
+     - Reconcile socket overload/template declarations and callback-owner teardown.
+   * - E1
+     - Complete generic/aligned endian type and byte-enable native-reference matrices.
+   * - E2
+     - Complete extension clone/copy/free and payload memory-manager ownership cases.
+   * - E3
+     - Reconcile timing/extension/endian declarations and context/lifetime contracts.
+   * - F1
+     - Complete datatype, proxy, concatenation, conversion and overload audit.
+   * - F2
+     - Complete writer, port and fixed-point policy audit.
+   * - F3
+     - Complete tracing type/format and vector assembly audit.
+   * - F4
+     - Complete report, process-control and lifecycle error audit.
+   * - F5
+     - Resolve arbitrary throw_it, channel-internal reset and direct native waits through implementation and feasibility evidence.
+   * - F6
+     - Verify host/kernel lifetime and ownership release beyond structural adapters.
+   * - F7
+     - Run reconciled full regression and coverage after implementation gates close.
+   * - F8
+     - Review first-party adapters and validate final installed wheel and sdist.
+   * - F9
+     - Verify selected public contracts and obtain scope decisions for APIs proven unrepresentable.
+
+B3's current teardown implementation checks stopped status, live ports/exports,
+Python-created open traces before mutation. Native process lifetime remains
+a B3 blocker: attempted clock-process termination crashed and is not supported.
+Trace/process gates belong to safe teardown of borrowed adapter storage. They
+are not additional checklist requirements. Direct C++ traces and external
+borrowed proxies still require caller lifetime discipline and further audit.
+
 B. Custom interfaces and channels — partially implemented
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
