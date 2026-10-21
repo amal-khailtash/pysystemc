@@ -24,6 +24,17 @@ pass-through availability does not by itself establish tested support.
    Install a retained callback receiving a native report and integer action mask;
    no callback restores the native default handler.
 
+``sc_report``
+   Copy a borrowed callback report before retaining it. Copies own their message,
+   file, process name and timestamp. ``__assign__(source)`` copies fields into
+   an existing report; ``swap(other)`` exchanges them. ``valid()`` reflects native
+   process-name context and can be false for populated reports outside a process.
+   Legacy static methods ``register_id``, ``get_message``, ``is_suppressed``,
+   ``suppress_id``, ``suppress_infos``, ``suppress_warnings`` and
+   ``make_warnings_errors`` preserve native diagnostics and policy. These settings
+   persist in the singleton kernel; restore them when finished. Destruction
+   releases copy-owned fields. Borrowed views must not outlive their report.
+
 ``sc_trace(file, signal, name)``
    Record stable native signal storage. Keep signals alive until file closure.
 

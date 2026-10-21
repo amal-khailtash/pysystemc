@@ -36,7 +36,14 @@ from . import _tracing
 # Compile first-party bridges before publishing native aliases or configuring
 # their methods. The parent package has already loaded SystemC and selected C++17.
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp", "interface_teardown.cpp", "hash_helpers.cpp"):
+for _bridge in (
+    "sc_main.cpp",
+    "native_entry.cpp",
+    "sc_module_new.cpp",
+    "interface_teardown.cpp",
+    "hash_helpers.cpp",
+    "report_legacy.cpp",
+):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
 
@@ -121,6 +128,66 @@ _guard_native_channels()
 sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
 sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
+
+
+def _legacy_report_method(name):
+    """Publish an omitted native static method with its native call signature."""
+    native = getattr(cppyy.gbl.pysystemc, "report_" + name)
+
+    def method(*args):
+        """Invoke native legacy report policy on the simulation thread.
+
+        Args:
+            args: Native method arguments: an ID/message, ID/bool, or bool.
+
+        Returns:
+            Native result; message strings are copied, suppression is bool, setters
+            return None. Global configuration persists for the kernel lifetime.
+
+        Raises:
+            TypeError: Arguments cannot convert to native parameters.
+            Exception: Native report policy rejects registration or a callback fails.
+
+        Hold the GIL; no ownership transfer. Native deprecation reports and any
+        configured callback execute synchronously with their native action policy.
+        """
+        return native(*args)
+
+    return staticmethod(method)
+
+
+for _method in (
+    "register_id",
+    "get_message",
+    "is_suppressed",
+    "suppress_id",
+    "suppress_infos",
+    "suppress_warnings",
+    "make_warnings_errors",
+):
+    setattr(cppyy.gbl.sc_core.sc_report, _method, _legacy_report_method(_method))
+
+
+def _assign_report(self, source):
+    """Copy source report fields into this report and return the borrowed self.
+
+    Args:
+        source: Live native report; self-assignment preserves values.
+
+    Returns:
+        Borrowed native reference to self. Both reports retain their own fields.
+
+    Raises:
+        TypeError: source cannot convert to a native report.
+        Exception: Native copying/allocation fails.
+
+    Call on the simulation thread with the GIL held; no callbacks or ownership
+    transfer. Any borrowed field views require the owning report to remain alive.
+    """
+    return cppyy.gbl.pysystemc.report_assign(self, source)
+
+
+cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
 
 
 def default_str_hash_fn(key):
