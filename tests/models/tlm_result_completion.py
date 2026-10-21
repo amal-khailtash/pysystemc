@@ -54,6 +54,7 @@ for family in (
 del name
 payload = tlm.tlm_generic_payload()
 payload.set_address(73)
+payload.set_data_length(8)
 phase = tlm.tlm_phase(tlm.BEGIN_REQ)
 delay = sc.sc_time(2, sc.SC_NS)
 for owner, port in entries:
@@ -63,8 +64,8 @@ for owner, port in entries:
             continue
         invoke = getattr(native, method)
         args = (payload,) if method == "transport_dbg" else (payload, phase, delay)
-        invalid = (None, True, 1.5, -1, 2**32) if method == "transport_dbg" else (None, True, 0, 7)
-        valid = (0, 2**32 - 1) if method == "transport_dbg" else (tlm.TLM_ACCEPTED, tlm.TLM_UPDATED, tlm.TLM_COMPLETED)
+        invalid = (None, True, 1.5, -1, 9, 2**32) if method == "transport_dbg" else (None, True, 0, 7)
+        valid = (0, 1, 8) if method == "transport_dbg" else (tlm.TLM_ACCEPTED, tlm.TLM_UPDATED, tlm.TLM_COMPLETED)
         for result in invalid:
             owner.result = result
             try:
@@ -76,6 +77,7 @@ for owner, port in entries:
         for result in valid:
             owner.result = result
             assert invoke(*args) == result
+        assert payload.get_data_length() == 8
         assert payload.get_address() == 73 and phase == tlm.BEGIN_REQ and delay == sc.sc_time(2, sc.SC_NS)
 for owner, port in value_ports:
     native = port.get_interface()
