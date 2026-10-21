@@ -16,6 +16,43 @@ _classes = {}
 _protocol_interfaces = {}
 
 
+def teardown_interfaces():
+    """Delete retained structural native adapters after all borrowers are destroyed.
+
+    Returns:
+        Number of native adapters destroyed; subsequent calls return zero.
+
+    Raises:
+        RuntimeError: Unless the kernel is stopped and every native port/export
+            has been destroyed, all thread processes have terminated, and all
+            Python-created trace files are closed. Rejection occurs
+            before callback release.
+
+    Call with the GIL held after end hooks, trace closure and all final reads.
+    Destroy ports/exports first, including native-created borrowers. This
+    conservative gate rejects unrelated live ports too. Borrowed adapter,
+    event and result proxies become invalid and must never be used afterward.
+    Process callbacks and directly constructed channels are outside this API.
+    Close traces created directly in C++ yourself; their registration is not
+    visible to the Python trace gate. The stopped kernel is not reset or restarted.
+    """
+    from ._tracing import _open_trace_files
+
+    if _open_trace_files:
+        raise RuntimeError("close all Python-created trace files before interface teardown")
+    try:
+        cppyy.gbl.pysystemc_interfaces.require_interface_teardown()
+    except cppyy.gbl.std.runtime_error as error:
+        raise RuntimeError(str(error)) from error
+    release_interface_callbacks()
+    count = len(_owners)
+    while _owners:
+        _, _, adapter = _owners[-1]
+        adapter.__destruct__()
+        _owners.pop()
+    return count
+
+
 def release_interface_callbacks():
     """Release structural callback owners after the kernel has stopped.
 
@@ -193,6 +230,9 @@ _METHODS = {
     "tlm::tlm_blocking_get_if": {"get_value": "get"},
     "tlm::tlm_blocking_peek_if": {"peek_value": "peek"},
     "tlm::tlm_analysis_if": {"write_value": "write"},
+    "tlm::tlm_write_if": {"write_value": "write"},
+    "tlm::tlm_delayed_write_if": {"write_value": "write"},
+    "tlm::tlm_delayed_analysis_if": {"write_value": "write"},
     "tlm::tlm_nonblocking_put_if": {"put_value": "nb_put", "can_put": "nb_can_put"},
     "tlm::tlm_nonblocking_get_if": {"get_value": "nb_get", "can_get": "nb_can_get"},
     "tlm::tlm_nonblocking_peek_if": {"peek_value": "nb_peek", "can_peek": "nb_can_peek"},
@@ -227,6 +267,12 @@ _METHODS["tlm::tlm_fifo_put_if"] = {
 _METHODS["tlm::tlm_fifo_get_if"] = {
     **_METHODS["tlm::tlm_fifo_debug_if"],
     **_METHODS["tlm::tlm_get_peek_if"],
+}
+
+
+_METHODS["pysystemc_interfaces::FifoCombinedInterface"] = {
+    **_METHODS["tlm::tlm_fifo_put_if"],
+    **_METHODS["tlm::tlm_fifo_get_if"],
 }
 
 
@@ -282,6 +328,56 @@ def _adapt(interface, implementation, factory):
     for native_interface, owner, adapter in _owners:
         if owner is implementation and (native_interface == interface or isinstance(adapter, interface)):
             return adapter
+    write_family = {
+        "tlm::tlm_write_if": "tlm_analysis_if",
+        "tlm::tlm_delayed_write_if": "tlm_delayed_analysis_if",
+    }.get(family)
+    if write_family:
+        value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+        return _adapt(getattr(cppyy.gbl.tlm, write_family)[value], implementation, factory)
+    fifo_get_views = (
+        "tlm::tlm_blocking_get_if",
+        "tlm::tlm_nonblocking_get_if",
+        "tlm::tlm_blocking_peek_if",
+        "tlm::tlm_nonblocking_peek_if",
+        "tlm::tlm_get_if",
+        "tlm::tlm_peek_if",
+        "tlm::tlm_blocking_get_peek_if",
+        "tlm::tlm_nonblocking_get_peek_if",
+        "tlm::tlm_get_peek_if",
+        "tlm::tlm_fifo_get_if",
+    )
+    fifo_put_views = (
+        "tlm::tlm_blocking_put_if",
+        "tlm::tlm_nonblocking_put_if",
+        "tlm::tlm_put_if",
+        "tlm::tlm_fifo_put_if",
+    )
+    if family in (*fifo_get_views, *fifo_put_views, "tlm::tlm_fifo_debug_if"):
+        value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+        complete = all(
+            callable(getattr(implementation, method, None))
+            for method in _METHODS["pysystemc_interfaces::FifoCombinedInterface"].values()
+        )
+        if complete:
+            if not hasattr(cppyy.gbl.pysystemc_interfaces, "FifoCombinedInterface"):
+                cppyy.cppdef("""
+                /** Combined FIFO views share virtual debug/interface bases.
+                 * Ports borrow owner storage; callbacks acquire GIL, blocking
+                 * callers release it. Ownership remains with the adapter cache.
+                 */
+                namespace pysystemc_interfaces {
+                template<class T> struct FifoCombinedInterface :
+                    tlm::tlm_fifo_get_if<T>, tlm::tlm_fifo_put_if<T> {};
+                }
+                """)
+            return _adapt(cppyy.gbl.pysystemc_interfaces.FifoCombinedInterface[value], implementation, factory)
+        for views, combined in ((fifo_get_views, "tlm_fifo_get_if"), (fifo_put_views, "tlm_fifo_put_if")):
+            if (family in views or family == "tlm::tlm_fifo_debug_if") and family != "tlm::" + combined:
+                if all(
+                    callable(getattr(implementation, method, None)) for method in _METHODS["tlm::" + combined].values()
+                ):
+                    return _adapt(getattr(cppyy.gbl.tlm, combined)[value], implementation, factory)
     candidates = {
         "sc_core::sc_signal_in_if": "sc_signal_inout_if",
         "sc_core::sc_signal_write_if": "sc_signal_inout_if",
@@ -303,6 +399,8 @@ def _adapt(interface, implementation, factory):
         if all(callable(getattr(implementation, method, None)) for method in required):
             return _adapt(getattr(cppyy.gbl.sc_core, combined)[value], implementation, factory)
     tlm_candidates = {
+        "tlm::tlm_blocking_put_if": "tlm_put_if",
+        "tlm::tlm_nonblocking_put_if": "tlm_put_if",
         "tlm::tlm_blocking_get_if": "tlm_get_peek_if",
         "tlm::tlm_nonblocking_get_if": "tlm_get_peek_if",
         "tlm::tlm_blocking_peek_if": "tlm_get_peek_if",
@@ -318,6 +416,39 @@ def _adapt(interface, implementation, factory):
     ):
         value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
         return _adapt(getattr(cppyy.gbl.tlm, combined)[value], implementation, factory)
+    if family in (
+        "tlm::tlm_blocking_master_if",
+        "tlm::tlm_nonblocking_master_if",
+        "tlm::tlm_blocking_slave_if",
+        "tlm::tlm_nonblocking_slave_if",
+    ):
+        combined = "tlm_master_if" if "master" in family else "tlm_slave_if"
+        if all(callable(getattr(implementation, method, None)) for method in _METHODS["tlm::" + combined].values()):
+            arguments = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
+            return _adapt(getattr(cppyy.gbl.tlm, combined)[arguments], implementation, factory)
+    transport_candidates = {
+        "tlm::tlm_fw_nonblocking_transport_if": "tlm_fw_transport_if",
+        "tlm::tlm_blocking_transport_if": "tlm_fw_transport_if",
+        "tlm::tlm_fw_direct_mem_if": "tlm_fw_transport_if",
+        "tlm::tlm_transport_dbg_if": "tlm_fw_transport_if",
+        "tlm::tlm_bw_nonblocking_transport_if": "tlm_bw_transport_if",
+        "tlm::tlm_bw_direct_mem_if": "tlm_bw_transport_if",
+    }
+    combined = transport_candidates.get(family)
+    if combined:
+        protocol = inspect.getattr_static(implementation, "protocol_types", None)
+        protocol = (
+            cppyy.gbl.tlm.tlm_base_protocol_types if protocol is None else getattr(implementation, "protocol_types")
+        )
+        if not hasattr(protocol, "__cpp_name__"):
+            raise TypeError("protocol_types must name a native TLM protocol class")
+        candidate = getattr(cppyy.gbl.tlm, combined)[protocol]
+        # Native inheritance validates payload/phase compatibility without
+        # guessing a protocol from the partial interface's template spelling.
+        if issubclass(candidate, interface) and all(
+            callable(getattr(implementation, method, None)) for method in _METHODS["tlm::" + combined].values()
+        ):
+            return _adapt(candidate, implementation, factory)
     if family in ("sc_core::sc_signal_in_if", "sc_core::sc_signal_inout_if"):
         methods = dict(methods)
         value = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
@@ -344,6 +475,7 @@ def _adapt(interface, implementation, factory):
         scalar_pair = getattr(base, "scalar_pair", None)
         fifo_scalar_pair = getattr(base, "fifo_scalar_pair", None)
         blocking_value_pair = getattr(base, "blocking_value_pair", None)
+        transport_value_pair = getattr(base, "transport_value_pair", None)
         callbacks = {}
         for native_name, python_name in methods.items():
 
@@ -361,7 +493,7 @@ def _adapt(interface, implementation, factory):
                     (
                         family in ("sc_core::sc_signal_inout_if", "sc_core::sc_signal_write_if")
                         or family.startswith("sc_core::sc_fifo_")
-                        or family.startswith("tlm::")
+                        or family.startswith(("tlm::", "pysystemc_interfaces::FifoCombinedInterface"))
                     )
                     and _method in ("write", "nb_write", "put", "nb_put", "nb_poke")
                     and hasattr(type(args[0]), "__cpp_name__")
@@ -370,6 +502,8 @@ def _adapt(interface, implementation, factory):
                     copy.__assign__(args[0])
                     args = (copy, *args[1:])
                 result = getattr(self._implementation, _method)(*args)
+                if transport_value_pair is not None and _method == "transport":
+                    return transport_value_pair(result, True)
                 if fifo_scalar_pair is not None and _method == "read":
                     result = _fifo_integer(result, interface.__cpp_name__.split("<", 1)[1].removesuffix(">"), _method)
                     return fifo_scalar_pair(result, True)
@@ -382,15 +516,25 @@ def _adapt(interface, implementation, factory):
                             or family.startswith("sc_core::sc_fifo_")
                         )
                     )
-                    or (_method == "put" and family.startswith("tlm::"))
+                    or (
+                        _method == "put" and family.startswith(("tlm::", "pysystemc_interfaces::FifoCombinedInterface"))
+                    )
                 ) and result is not None:
                     raise TypeError(f"{_method} must return None")
                 if (
                     (family == "sc_core::sc_event_queue_if" and _method in ("notify", "cancel_all"))
-                    or (family.startswith("tlm::") and _method in ("b_transport", "invalidate_direct_mem_ptr", "debug"))
+                    or (
+                        family.startswith(("tlm::", "pysystemc_interfaces::FifoCombinedInterface"))
+                        and _method in ("b_transport", "invalidate_direct_mem_ptr", "debug")
+                    )
                 ) and result is not None:
                     raise TypeError(f"{_method} must return None")
-                if family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if") and _method in (
+                if family in (
+                    "tlm::tlm_fifo_debug_if",
+                    "tlm::tlm_fifo_put_if",
+                    "tlm::tlm_fifo_get_if",
+                    "pysystemc_interfaces::FifoCombinedInterface",
+                ) and _method in (
                     "used",
                     "size",
                 ):
@@ -403,18 +547,27 @@ def _adapt(interface, implementation, factory):
                     if result is not None:
                         raise TypeError(f"{_method} must return None")
                 if (family == "tlm::tlm_fifo_config_size_if" and _method in ("nb_reduce", "nb_bound")) or (
-                    family in ("tlm::tlm_fifo_debug_if", "tlm::tlm_fifo_put_if", "tlm::tlm_fifo_get_if")
+                    family
+                    in (
+                        "tlm::tlm_fifo_debug_if",
+                        "tlm::tlm_fifo_put_if",
+                        "tlm::tlm_fifo_get_if",
+                        "pysystemc_interfaces::FifoCombinedInterface",
+                    )
                     and _method == "nb_poke"
                 ):
                     if not isinstance(result, bool):
                         raise TypeError(f"{_method} must return bool")
                 if (
-                    family.startswith("tlm::")
+                    family.startswith(("tlm::", "pysystemc_interfaces::FifoCombinedInterface"))
                     and _method in ("nb_put", "nb_can_put", "nb_can_get", "nb_can_peek", "get_direct_mem_ptr")
                     and not isinstance(result, bool)
                 ):
                     raise TypeError(f"{_method} must return bool")
-                if family.startswith("tlm::") and _method in ("nb_transport_fw", "nb_transport_bw"):
+                if family.startswith(("tlm::", "pysystemc_interfaces::FifoCombinedInterface")) and _method in (
+                    "nb_transport_fw",
+                    "nb_transport_bw",
+                ):
                     if isinstance(result, bool) or not isinstance(result, cppyy.gbl.tlm.tlm_sync_enum):
                         raise TypeError(f"{_method} must return native tlm_sync_enum")
                     if result not in (
@@ -423,11 +576,16 @@ def _adapt(interface, implementation, factory):
                         cppyy.gbl.tlm.TLM_COMPLETED,
                     ):
                         raise ValueError(f"{_method} returned invalid tlm_sync_enum")
-                if family.startswith("tlm::") and _method == "transport_dbg":
+                if (
+                    family.startswith(("tlm::", "pysystemc_interfaces::FifoCombinedInterface"))
+                    and _method == "transport_dbg"
+                ):
                     if isinstance(result, bool) or not isinstance(result, int):
                         raise TypeError("transport_dbg must return int")
                     if not 0 <= result < 2**32:
                         raise ValueError("transport_dbg result outside unsigned int range")
+                    if result > args[0].get_data_length():
+                        raise ValueError("transport_dbg result exceeds payload data length")
                 if family in ("sc_core::sc_mutex_if", "sc_core::sc_semaphore_if"):
                     if isinstance(result, bool) or not isinstance(result, int) or not -(2**31) <= result < 2**31:
                         raise TypeError(f"{_method} must return a native int in range")
@@ -442,7 +600,7 @@ def _adapt(interface, implementation, factory):
                     family in ("sc_core::sc_signal_write_if", "sc_core::sc_signal_inout_if")
                     and _method == "get_writer_policy"
                 ):
-                    if isinstance(result, bool) or result not in (
+                    if not isinstance(result, cppyy.gbl.sc_core.sc_writer_policy) or result not in (
                         cppyy.gbl.sc_core.SC_ONE_WRITER,
                         cppyy.gbl.sc_core.SC_MANY_WRITERS,
                         cppyy.gbl.sc_core.SC_UNCHECKED_WRITERS,
@@ -454,7 +612,7 @@ def _adapt(interface, implementation, factory):
                     if not isinstance(result, cppyy.gbl.sc_core.sc_event) or not cppyy.addressof(result):
                         raise TypeError(f"{_method} must return a live native sc_event")
                 if blocking_value_pair is not None and _method in ("get", "peek"):
-                    if family == "tlm::tlm_fifo_get_if":
+                    if family in ("tlm::tlm_fifo_get_if", "pysystemc_interfaces::FifoCombinedInterface"):
                         result = _fifo_integer(
                             result, interface.__cpp_name__.split("<", 1)[1].removesuffix(">"), _method
                         )
@@ -488,7 +646,7 @@ def _adapt(interface, implementation, factory):
                     if _method == "nb_read":
                         value_type = interface.__cpp_name__.split("<", 1)[1].removesuffix(">")
                         result = (result[0], _fifo_integer(result[1], value_type, _method))
-                    if family == "tlm::tlm_fifo_get_if" and result[0]:
+                    if family in ("tlm::tlm_fifo_get_if", "pysystemc_interfaces::FifoCombinedInterface") and result[0]:
                         result = (
                             True,
                             _fifo_integer(
@@ -512,7 +670,18 @@ def _adapt(interface, implementation, factory):
     adapter = _classes[interface](name)
     adapter._implementation = implementation
     adapter._reference_results = {}
-    for method in ("transport", "get", "peek", "put", "b_transport", "read", "write", "lock", "wait"):
+    for method in (
+        *methods.values(),
+        "transport",
+        "get",
+        "peek",
+        "put",
+        "b_transport",
+        "read",
+        "write",
+        "lock",
+        "wait",
+    ):
         overload = getattr(type(adapter), method, None)
         if overload is not None and hasattr(overload, "__release_gil__"):
             overload.__release_gil__ = True
@@ -526,7 +695,9 @@ class PortTemplate:
     Template arguments and constructed objects retain native SystemC types.
     Python adaptation currently supports TLM blocking get, peek, transport and
     analysis interfaces. Callback errors propagate; blocking callbacks use
-    guarded waits. Adapters introduce a child module and live until shutdown.
+    guarded waits. Adapters introduce a child module and live until teardown or shutdown.
+    Complete custom TLM2 owners may declare a native protocol_types class to
+    select a compatible combined adapter for partial-first binding.
     """
 
     def __init__(self, template, factory):
@@ -538,6 +709,16 @@ class PortTemplate:
         """Return the native specialization with an adapting bind overload."""
         parameters = arguments if isinstance(arguments, tuple) else (arguments,)
         interface = _protocol_interfaces.get(parameters[0], parameters[0])
+        family = interface.__cpp_name__.split("<", 1)[0]
+        if family in (
+            "sc_core::sc_fifo_in_if",
+            "sc_core::sc_fifo_out_if",
+            "sc_core::sc_fifo_blocking_in_if",
+            "sc_core::sc_fifo_blocking_out_if",
+        ):
+            from ._fifo import guard_fifo_class
+
+            guard_fifo_class(interface, interface.__cpp_name__.split("<", 1)[1].removesuffix(">"))
         native_arguments = (interface, *parameters[1:])
         port_class = self._template[native_arguments if len(native_arguments) > 1 else interface]
         if not getattr(port_class, "_python_interface_bind", False):

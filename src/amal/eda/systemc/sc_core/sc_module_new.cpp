@@ -199,6 +199,48 @@ bool guarded_wait(Operation operation)
   }
 }
 
+/** @brief Guard native FIFO read against cppyy consuming scheduler unwind.
+ * @details Borrow channel for this call, release GIL before entry. On unwind
+ * Python must raise its private unwind signal; output is assigned only on success.
+ */
+template <class T>
+std::pair<T, bool> python_fifo_read(sc_fifo_blocking_in_if<T>& channel)
+{
+  T value{};
+  bool complete = python_guarded_operation([&] { channel.read(value); });
+  return {value, complete};
+}
+
+/** @brief Guard native FIFO writes; borrowed input is copied by the channel.
+ * @details Release GIL; false requires Python stack unwind. Exceptions propagate.
+ */
+template <class T>
+bool python_fifo_write(sc_fifo_blocking_out_if<T>& channel, const T& value)
+{
+  return python_guarded_operation([&] { channel.write(value); });
+}
+
+/** @brief Guard a borrowed mutex lock while preserving scheduler unwind.
+ * @details Caller releases GIL and retains channel throughout suspension.
+ * Ordinary errors propagate; false completion requests Python frame cleanup.
+ */
+std::pair<int, bool> python_mutex_lock(sc_mutex_if& channel)
+{
+  int result = -1;
+  bool complete = python_guarded_operation([&] { result = channel.lock(); });
+  return {result, complete};
+}
+
+/** @brief Guard a borrowed semaphore wait with the same lifetime/GIL contract.
+ * @return Native status and completion; false requires Python unwind.
+ */
+std::pair<int, bool> python_semaphore_wait(sc_semaphore_if& channel)
+{
+  int result = -1;
+  bool complete = python_guarded_operation([&] { result = channel.wait(); });
+  return {result, complete};
+}
+
 /**
  * @brief Kill a process from an active native scheduler process.
  * @param handle Borrowed process handle, retained by the caller.
@@ -423,12 +465,21 @@ sc_process_handle spawn_callback(std::function<void()> callback, const char* nam
  * @tparam T Signal value type, instantiated on demand by cppyy.
  * @param file Open native trace file.
  * @param signal Signal retained by the caller for the simulation lifetime.
+ * @details A native method refreshes structural scalar reference storage on
+ * value changes; callbacks acquire GIL. Signal must outlive that method.
  * @param name Waveform variable name.
  */
 template <class T>
 void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const std::string& name)
 {
   sc_trace(file, signal.read(), name);
+  // Structural scalar references are refreshed by read(), unlike sc_signal
+  // storage which is updated directly by the primitive channel.
+  sc_spawn_options options;
+  options.spawn_method();
+  options.dont_initialize();
+  options.set_sensitivity(&signal.value_changed_event());
+  sc_spawn([&signal] { (void)signal.read(); }, sc_gen_unique_name("trace_refresh"), &options);
 }
 
 /**

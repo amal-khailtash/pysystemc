@@ -28,17 +28,28 @@ from ._channel_interfaces import declare_interface as declare_interface
 from ._interfaces import PortTemplate as _PortTemplate
 from ._interfaces import interface as interface
 from ._interfaces import release_interface_callbacks as release_interface_callbacks
+from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
+from . import _tracing
 
 # Compile first-party bridges before publishing native aliases or configuring
 # their methods. The parent package has already loaded SystemC and selected C++17.
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp"):
+for _bridge in (
+    "sc_main.cpp",
+    "native_entry.cpp",
+    "sc_module_new.cpp",
+    "interface_teardown.cpp",
+    "hash_helpers.cpp",
+    "report_legacy.cpp",
+    "report_handler.cpp",
+):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
 
 cppyy.gbl.sc_core.sc_start.__release_gil__ = True
+cppyy.gbl.sc_core.sc_initialize.__release_gil__ = True
 cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
 cppyy.gbl.sc_main.__release_gil__ = True
 
@@ -96,16 +107,371 @@ for name, member in sc_core_namespace.__dict__.items():
 # overwrite the adapters. Native C++ sc_module remains intact.
 sc_trace = _python_sc_trace
 vcd_trace = _python_vcd_trace
+sc_create_vcd_trace_file = _tracing.sc_create_vcd_trace_file
+sc_create_wif_trace_file = _tracing.sc_create_wif_trace_file
+sc_close_vcd_trace_file = _tracing.sc_close_vcd_trace_file
+sc_close_wif_trace_file = _tracing.sc_close_wif_trace_file
 sc_module = cppyy.gbl.sc_core.ScModule
 sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
 signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
-fifo_channel = cppyy.gbl.sc_core.PythonFifoChannel
+from ._fifo import FifoTemplate as _FifoTemplate
+
+fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
+sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
+sc_fifo_in = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in)
+sc_fifo_out = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out)
+from ._blocking import guard_native_channels as _guard_native_channels
+
+_guard_native_channels()
 # Keep the public port specialization native; only Python bind gains adaptation.
 sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
 sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
+
+
+def _legacy_report_method(name):
+    """Publish an omitted native static method with its native call signature."""
+    native = getattr(cppyy.gbl.pysystemc, "report_" + name)
+
+    def method(*args):
+        """Invoke native legacy report policy on the simulation thread.
+
+        Args:
+            args: Native method arguments: an ID/message, ID/bool, or bool.
+
+        Returns:
+            Native result; message strings are copied, suppression is bool, setters
+            return None. Global configuration persists for the kernel lifetime.
+
+        Raises:
+            TypeError: Arguments cannot convert to native parameters.
+            Exception: Native report policy rejects registration or a callback fails.
+
+        Hold the GIL; no ownership transfer. Native deprecation reports and any
+        configured callback execute synchronously with their native action policy.
+        """
+        return native(*args)
+
+    return staticmethod(method)
+
+
+for _method in (
+    "register_id",
+    "get_message",
+    "is_suppressed",
+    "suppress_id",
+    "suppress_infos",
+    "suppress_warnings",
+    "make_warnings_errors",
+):
+    setattr(cppyy.gbl.sc_core.sc_report, _method, _legacy_report_method(_method))
+
+
+def _assign_report(self, source):
+    """Copy source report fields into this report and return the borrowed self.
+
+    Args:
+        source: Live native report; self-assignment preserves values.
+
+    Returns:
+        Borrowed native reference to self. Both reports retain their own fields.
+
+    Raises:
+        TypeError: source cannot convert to a native report.
+        Exception: Native copying/allocation fails.
+
+    Call on the simulation thread with the GIL held; no callbacks or ownership
+    transfer. Any borrowed field views require the owning report to remain alive.
+    """
+    return cppyy.gbl.pysystemc.report_assign(self, source)
+
+
+cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
+
+
+def _report_stop_after(subject, *args):
+    """Set a native severity, message or message/severity stop threshold.
+
+    Args:
+        subject: Native severity enum or message-type string.
+        args: Optional integer limit, or severity enum and optional limit for
+            a message. Omitted limit is -1, removing the selected threshold.
+
+    Returns:
+        Previous native threshold, -1 when no selected threshold was set.
+
+    Raises:
+        TypeError: Arguments do not match a native stop_after signature.
+
+    Call on the simulation thread with GIL held. Limits persist in native policy
+    storage. No ownership transfers; diagnostics follow the configured handler.
+    """
+    bridge = cppyy.gbl.pysystemc
+    severity_type = cppyy.gbl.sc_core.sc_severity
+    if isinstance(subject, severity_type) and len(args) <= 1:
+        return bridge.report_stop_severity(subject, args[0] if args else -1)
+    if isinstance(subject, (str, bytes)):
+        if args and isinstance(args[0], severity_type) and len(args) <= 2:
+            return bridge.report_stop_message_severity(subject, args[0], args[1] if len(args) == 2 else -1)
+        if len(args) <= 1:
+            return bridge.report_stop_message(subject, args[0] if args else -1)
+    raise TypeError("stop_after expects severity/limit, message/limit or message/severity/limit")
+
+
+cppyy.gbl.sc_core.sc_report_handler.stop_after = staticmethod(_report_stop_after)
+
+
+def _report_get_handler():
+    """Return a borrowed native handler pointer token usable by set_handler.
+
+    Returns:
+        Native pointer token; it does not retain Python callback ownership.
+
+    Hold the GIL on the simulation thread. Python dispatchers require the callback
+    registered through set_report_handler to remain retained and active.
+    """
+    return cppyy.gbl.pysystemc.report_get_handler()
+
+
+def _report_set_handler(handler):
+    """Install a native pointer token or restore the default handler with None.
+
+    Args:
+        handler: Token from get_handler/set_handler, or None for native default.
+
+    Returns:
+        Previous borrowed pointer token; tokens do not own callback references.
+
+    Raises:
+        TypeError: handler is not a native pointer token or None.
+
+    Use set_report_handler for Python callables and callback retention. Hold the
+    GIL on the simulation thread; saved Python dispatcher tokens require an active
+    retained callback before reinstalling them.
+    """
+    if handler is None:
+        return cppyy.gbl.pysystemc.report_reset_handler()
+    if not isinstance(handler, cppyy.gbl.pysystemc.report_handler_pointer):
+        raise TypeError("handler must be a native handler pointer token or None")
+    return cppyy.gbl.pysystemc.report_set_handler(handler)
+
+
+cppyy.gbl.sc_core.sc_report_handler.get_handler = staticmethod(_report_get_handler)
+cppyy.gbl.sc_core.sc_report_handler.set_handler = staticmethod(_report_set_handler)
+
+
+def default_str_hash_fn(key):
+    """Hash a string or borrowed native NUL-terminated key pointer.
+
+    Args:
+        key: Python str/bytes, or native pointer; a null pointer hashes to zero.
+
+    Returns:
+        Native unsigned string hash.
+
+    Raises:
+        TypeError: key cannot convert to the native parameter.
+
+    Pointer storage must survive the call. Call on the simulation thread with
+    the GIL held; no ownership transfers or callbacks occur.
+    """
+    if isinstance(key, (str, bytes)):
+        return cppyy.gbl.pysystemc.string_hash(key)
+    return cppyy.gbl.sc_core.default_str_hash_fn(key)
+
+
+def sc_strhash_kdup(key):
+    """Allocate a native copy of a nonnull NUL-terminated string key.
+
+    Args:
+        key: Python str/bytes or a borrowed valid native string pointer.
+
+    Returns:
+        Native void pointer owned by the caller. Free it exactly once using
+        sc_strhash_kfree; never use the pointer after freeing it.
+
+    Raises:
+        TypeError: key cannot convert to the native parameter.
+        Exception: Native allocation fails.
+
+    Call on the simulation thread with the GIL held; no callbacks occur.
+    """
+    if isinstance(key, (str, bytes)):
+        return cppyy.gbl.pysystemc.duplicate_string_key(key)
+    return cppyy.gbl.sc_core.sc_strhash_kdup(key)
+
+
+def sc_strhash_cmp(left, right):
+    """Compare two nonnull NUL-terminated string keys with native strcmp.
+
+    Args:
+        left: Python str/bytes or borrowed native string pointer.
+        right: Python str/bytes or borrowed native string pointer.
+
+    Returns:
+        Native integer whose sign indicates lexical ordering.
+
+    Raises:
+        TypeError: A key cannot convert to its native parameter.
+
+    Native pointer storage must survive the call. Call on the simulation thread
+    with the GIL held; no callbacks or ownership transfers occur.
+    """
+    if isinstance(left, (str, bytes)) or isinstance(right, (str, bytes)):
+        return cppyy.gbl.pysystemc.compare_string_keys(left, right)
+    return cppyy.gbl.sc_core.sc_strhash_cmp(left, right)
+
+
+def sc_gen_unique_name(basename, preserve_first=False):
+    """Generate a native unique name in the current module, process or context.
+
+    Args:
+        basename: Nonempty base name convertible to a native string.
+        preserve_first: Return the unchanged base on its first use when true.
+
+    Returns:
+        Python string copy. Counters belong to the current construction module,
+        otherwise the executing process, otherwise the current simulation context.
+
+    Raises:
+        TypeError: Arguments cannot convert to the native parameter types.
+        Exception: Native report handler rejects an empty or null basename.
+
+    Call from the simulation thread with the GIL held. Native scopes own counters;
+    returned strings survive subsequent calls and scope destruction. No callbacks
+    are retained by this function.
+    """
+    return cppyy.gbl.sc_core.sc_gen_unique_name(basename, preserve_first)
+
+
+def _iterate_hierarchy_vector(vector):
+    """Iterate borrowed pointers without cppyy's unsafe empty data() conversion."""
+    for index in range(vector.size()):
+        yield vector[index]
+
+
+for _element in ("sc_core::sc_object*", "sc_core::sc_event*"):
+    cppyy.gbl.std.vector[_element].__iter__ = _iterate_hierarchy_vector
+
+
+def sc_get_top_level_objects(context=None):
+    """Return the native vector of objects without a parent in a context.
+
+    Args:
+        context: Borrowed simulation context; None selects the current context.
+
+    Returns:
+        Borrowed, read-only native vector. The context and objects must remain
+        alive while using it; hierarchy changes can invalidate element views.
+
+    Raises:
+        TypeError: context cannot convert to a native simulation-context pointer.
+
+    Call from the simulation thread with the GIL held. No ownership transfers.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_get_top_level_objects(context)
+
+
+def sc_get_top_level_events(context=None):
+    """Return the native vector of events without a parent in a context.
+
+    Args:
+        context: Borrowed simulation context; None selects the current context.
+
+    Returns:
+        Borrowed, read-only native vector. The context and events must remain
+        alive while using it; hierarchy changes can invalidate element views.
+
+    Raises:
+        TypeError: context cannot convert to a native simulation-context pointer.
+
+    Call from the simulation thread with the GIL held. No ownership transfers.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_get_top_level_events(context)
+
+
+def sc_pending_activity_at_current_time(context=None) -> bool:
+    """Return whether work remains at the current simulation time.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native pending-work state without advancing simulation.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_pending_activity_at_current_time(context)
+
+
+def sc_pending_activity_at_future_time(context=None) -> bool:
+    """Return whether timed notifications remain in the selected context.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native future-activity state without advancing simulation.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_pending_activity_at_future_time(context)
+
+
+def sc_pending_activity(context=None) -> bool:
+    """Return whether current or future work remains in the selected context.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native pending-activity state without advancing simulation.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_pending_activity(context)
+
+
+def sc_time_to_pending_activity(context=None):
+    """Return the native interval until the next activity in a context.
+
+    Args:
+        context: Borrowed native context; None selects the current context.
+
+    Returns:
+        Native sc_time value: zero for current work, or the next notification
+        interval. With no work, native maximum time minus current time.
+
+    Raises:
+        TypeError: context cannot convert to a native context pointer.
+
+    Use on the simulation thread with the GIL held and a live context. The
+    returned time is a value, without borrowed context ownership.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_time_to_pending_activity(context)
 
 
 def sc_is_running(context=None) -> bool:
@@ -179,16 +545,61 @@ def __dir__():
     return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
 
 
-def sc_elab_and_sim() -> int:
-    """Enter native sc_main with sys.argv and return its integer exit status.
+def sc_argv() -> tuple[str, ...]:
+    """Copy the original native entry arguments into an immutable tuple.
 
-    This releases the GIL while native code runs and reacquires it for Python
-    callbacks. Invoke once per independent simulation process.
+    Returns:
+        Argument strings in native order, including argv[0]. The snapshot remains
+        valid after entry returns and is independent of the sc_main argument list.
+
+    Raises:
+        RuntimeError: Called outside an active native sc_main invocation.
+
+    Call on the entry/simulation thread with the GIL held. The native array is
+    borrowed only during entry; copying avoids exposing dangling pointers or
+    cppyy's pointer-address conversion. No native ownership transfers.
     """
-    log(f"sc_elab_and_sim({sys.argv})")
+    if not cppyy.gbl.sc_core.sc_in_action:
+        raise RuntimeError("native argv is only valid during sc_main")
+    return tuple(str(cppyy.gbl.sc_core.python_argv_at(index)) for index in range(cppyy.gbl.sc_core.sc_argc()))
 
-    argc = len(sys.argv)
-    argv = sys.argv
+
+def sc_elab_and_sim(argc=None, argv=None) -> int:
+    """Enter native sc_main with explicit arguments or the current sys.argv.
+
+    Args:
+        argc: Nonnegative native argument count. Omit both arguments to use sys.argv.
+        argv: List or tuple of strings containing at least argc entries; only
+            the first argc entries are passed, matching native count semantics.
+
+    Returns:
+        Native integer entry status, including nonzero callback failure status.
+
+    Raises:
+        TypeError: Arguments are incomplete or have invalid Python types.
+        ValueError: Count is negative, exceeds native int or available entries,
+            or a selected argument contains a NUL character.
+
+    The selected argument strings are copied for the duration of entry. This
+    releases the GIL while native code runs and reacquires it for Python callbacks.
+    Invoke once per independent simulation process; kernel state is not reset.
+    """
+    if argc is None and argv is None:
+        argv = list(sys.argv)
+        argc = len(argv)
+    elif argc is None or argv is None:
+        raise TypeError("argc and argv must be supplied together")
+    if isinstance(argc, bool) or not isinstance(argc, int):
+        raise TypeError("argc must be an integer")
+    if not isinstance(argv, (list, tuple)):
+        raise TypeError("argv must be a list or tuple of strings")
+    if argc < 0 or argc > 2**31 - 1 or argc > len(argv):
+        raise ValueError("argc must fit native int and the available argument entries")
+    argv = list(argv[:argc])
+    if any(not isinstance(value, str) for value in argv):
+        raise TypeError("argv entries must be strings")
+    if any("\0" in value for value in argv):
+        raise ValueError("argv entries must not contain NUL characters")
 
     log(f"Entering native simulation with {argc} arguments")
 
@@ -367,6 +778,7 @@ __all__ = sorted(
         "vcd_trace",
         "interface",
         "release_interface_callbacks",
+        "teardown_interfaces",
         "declare_interface",
         "channel_interface",
         "read_interface",

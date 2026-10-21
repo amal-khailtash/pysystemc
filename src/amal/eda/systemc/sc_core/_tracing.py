@@ -10,6 +10,39 @@ from typing import Any
 
 import cppyy
 
+_open_trace_files = {}
+
+
+def _trace_create(create):
+    """Retain Python-created native trace files until their matching close call."""
+
+    def wrapped(filename):
+        """Create a native trace and retain its address for teardown safety."""
+        trace = create(filename)
+        if trace:
+            _open_trace_files[cppyy.addressof(trace)] = trace
+        return trace
+
+    return wrapped
+
+
+def _trace_close(close):
+    """Forget a trace only after native closure succeeds."""
+
+    def wrapped(trace):
+        """Close borrowed native trace storage and release the open-file record."""
+        address = cppyy.addressof(trace)
+        close(trace)
+        _open_trace_files.pop(address, None)
+
+    return wrapped
+
+
+sc_create_vcd_trace_file = _trace_create(cppyy.gbl.sc_core.sc_create_vcd_trace_file)
+sc_create_wif_trace_file = _trace_create(cppyy.gbl.sc_core.sc_create_wif_trace_file)
+sc_close_vcd_trace_file = _trace_close(cppyy.gbl.sc_core.sc_close_vcd_trace_file)
+sc_close_wif_trace_file = _trace_close(cppyy.gbl.sc_core.sc_close_wif_trace_file)
+
 
 @contextmanager
 def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | None = None) -> Iterator[Any]:
@@ -33,7 +66,7 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
     trace_path = pathlib.Path(str(filename) + ".vcd")
     if not trace_path.parent.is_dir():
         raise RuntimeError(f"Cannot create VCD trace: directory does not exist: {trace_path.parent}")
-    trace = cppyy.gbl.sc_core.sc_create_vcd_trace_file(str(filename))
+    trace = sc_create_vcd_trace_file(str(filename))
     if not trace:
         raise RuntimeError(f"Cannot create VCD trace: {filename}")
     try:
@@ -41,7 +74,7 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
             trace.set_time_unit(*time_unit)
         yield trace
     finally:
-        cppyy.gbl.sc_core.sc_close_vcd_trace_file(trace)
+        sc_close_vcd_trace_file(trace)
 
 
 _native_sc_trace = cppyy.gbl.sc_core.sc_trace
@@ -62,6 +95,25 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
     """
     if hasattr(value, "read"):
         sample = value.read()
+        # Python float/int conversion loses the native signal specialization.
+        # Resolve the inherited native input interface before falling back to
+        # the callback value type (for wrappers lacking native class metadata).
         value_type = bool if isinstance(sample, bool) else type(sample)
+        for cls in type(value).__mro__:
+            native_name = getattr(cls, "__cpp_name__", "")
+            if native_name.startswith(
+                ("sc_core::sc_signal_in_if<", "sc_core::sc_signal_inout_if<", "sc_core::sc_signal<")
+            ):
+                arguments = native_name.split("<", 1)[1].removesuffix(">")
+                depth = 0
+                for index, char in enumerate(arguments):
+                    depth += (char == "<") - (char == ">")
+                    if char == "," and depth == 0:
+                        arguments = arguments[:index]
+                        break
+                value_type = arguments.strip()
+                break
+        if value_type == "long double":
+            raise TypeError("native SystemC tracing does not provide a long double overload")
         return cppyy.gbl.sc_core.trace_signal[value_type](file, value, name)
     return _native_sc_trace(file, value, name, *args)

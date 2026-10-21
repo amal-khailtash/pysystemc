@@ -53,6 +53,8 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     assert named("tlm_utils::tlm_quantumkeeper::compute_local_quantum")[0]["access"] == "protected"
     assert len(named("sc_core::sc_module::wait")) == 13
     assert named("tlm::TLM_READ_COMMAND")
+    assert named("sc_core::sc_name_gen::gen_unique_name")[0]["access"] == "public"
+    assert named("sc_core::sc_name_gen::gen_unique_name")[0]["signature"] == "const char *(const char *, bool)"
     assert not named("tlm::tlm_command::TLM_READ_COMMAND")
     assert named("sc_core::sc_event::DELTA")[0]["access"] == "private"
     assert named("sc_core::sc_sensitive::SC_METHOD_")[0]["access"] == "private"

@@ -119,6 +119,7 @@ assert cppyy.addressof(initiator_socket.get_base_interface()) == cppyy.addressof
 assert cppyy.addressof(target_socket.get_base_interface()) == cppyy.addressof(target)
 assert target_socket.size() == initiator_socket.size() == 1
 assert cppyy.addressof(target_socket[0]) == cppyy.addressof(initiator)
+trans.set_data_length(2**32 - 1)
 target.debug_result = 2**32 - 1
 assert fw.transport_dbg(trans) == 2**32 - 1
 for invalid in (-1, 2**32):

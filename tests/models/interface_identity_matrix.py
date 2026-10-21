@@ -201,6 +201,31 @@ for label, value_type in (("int", int), ("long_long", "long long"), ("wide137", 
     port(shared_owner)
     shared_type_ports.append((label, port))
 
+# Identical owners do not collapse incompatible native signal/TLM/compound types.
+separate_groups = []
+for contracts, owner in (
+    ((sc.sc_signal_in_if[int], sc.sc_signal_in_if["long long"], sc.sc_signal_in_if[wide_type]), SignalOwner(int, 17)),
+    ((tlm.tlm_get_peek_if[int], tlm.tlm_get_peek_if["long long"], tlm.tlm_get_peek_if[wide_type]), QueueOwner((17,))),
+):
+    views = []
+    for contract in contracts:
+        port = sc.sc_port[contract]()
+        port(owner)
+        views.append(port)
+    assert len({cppyy.gbl.interface_identity_address(port.get_interface()) for port in views}) == 3
+    separate_groups.append((owner, views))
+# Native objects cannot bind to incompatible specializations; rejection leaves
+# a port available for a subsequent compatible binding.
+invalid_port = sc.sc_port[sc.sc_signal_in_if["long long"]]()
+native_int_signal = sc.sc_signal[int]("native_int")
+try:
+    invalid_port(native_int_signal)
+except TypeError:
+    pass
+else:
+    raise AssertionError("incompatible native signal binding accepted")
+valid_long_signal = sc.sc_signal["long long"]("native_long")
+invalid_port(valid_long_signal)
 del name
 
 signal_callbacks = []

@@ -24,11 +24,61 @@ pass-through availability does not by itself establish tested support.
    Install a retained callback receiving a native report and integer action mask;
    no callback restores the native default handler.
 
+``sc_report``
+   Copy a borrowed callback report before retaining it. Copies own their message,
+   file, process name and timestamp. ``__assign__(source)`` copies fields into
+   an existing report; ``swap(other)`` exchanges them. ``valid()`` reflects native
+   process-name context and can be false for populated reports outside a process.
+   Legacy static methods ``register_id``, ``get_message``, ``is_suppressed``,
+   ``suppress_id``, ``suppress_infos``, ``suppress_warnings`` and
+   ``make_warnings_errors`` preserve native diagnostics and policy. These settings
+   persist in the singleton kernel; restore them when finished. Destruction
+   releases copy-owned fields. Borrowed views must not outlive their report.
+
+``sc_report_handler.stop_after(subject, ...)``
+   Select severity-wide, message-wide or message/severity limits using native
+   severity enums. An omitted limit is -1 and removes that selected limit.
+   This adapter avoids treating a severity enum as an integer message limit.
+
+``sc_report_handler.get_handler()`` / ``set_handler(token_or_none)``
+   Save and restore borrowed native handler pointer tokens. ``None`` restores
+   the native default. Tokens do not retain Python callbacks; use
+   ``set_report_handler`` for Python callables. A saved Python dispatcher token
+   requires its callback to remain retained and active before reinstalling it.
+   Report caches are borrowed and invalidate on replacement, clear or release;
+   copy reports first. Destroy copies before handler ``release()`` because message
+   definitions remain owned by native handler storage.
+
+``sc_attr_base`` / ``sc_attribute[T]`` / ``sc_attr_cltn``
+   Attribute templates remain native and accept any native-valid default/copy
+   constructible type. Attributes own their names and values. Collections borrow
+   pointers; collection copies share those pointers. Keep attributes alive while
+   either collection uses them. Removing an attribute or clearing/destroying a
+   collection does not delete attributes. Native removal swaps the final pointer
+   into the removed slot, so iteration order can change. Lookup returns a borrowed
+   pointer or a null proxy; iterators invalidate when the collection is modified.
+
 ``sc_trace(file, signal, name)``
    Record stable native signal storage. Keep signals alive until file closure.
 
 ``sc_status()``
    Query the native current status and convert it to ``ScStatus``.
+
+``sc_argc()`` / ``sc_argv()``
+   During ``sc_main``, read the native argument count and an immutable tuple of
+   original argument strings, including argument zero. The tuple copies native
+   storage and survives entry return. Mutating the Python ``sc_main`` argument
+   list does not change these original values. ``sc_argv()`` raises
+   ``RuntimeError`` outside active entry because native argument storage is
+   borrowed only during entry. Native C++ retains its pointer-array signature.
+
+``sc_elab_and_sim(argc=None, argv=None)``
+   Enter ``sc_main`` with ``sys.argv`` when both arguments are omitted, or pass
+   an explicit nonnegative native count and a list/tuple of strings. Only the
+   first ``argc`` entries are selected. Invalid counts, incomplete arguments,
+   nonstring selected entries and embedded NULs fail before native entry.
+   The native integer status is returned, including nonzero results. Use a
+   fresh process for each independent simulation; entry does not reset the kernel.
 
 Diagnostics
 -----------
@@ -250,3 +300,21 @@ FIFO debug ``used`` and ``size`` callbacks return signed native 32-bit integers.
 Bool, noninteger and out-of-range results raise ``TypeError``. Negative values
 remain representable for native sentinel semantics; the owner determines whether
 its counts are consistent with its FIFO state.
+
+TLM write and debug callback contracts
+--------------------------------------
+
+Structural owners may bind ``tlm_write_if[T]``, ``tlm_analysis_if[T]``,
+``tlm_delayed_write_if[T]`` and ``tlm_delayed_analysis_if[T]``. Implement
+``write(value)`` or ``write(value, delay)`` respectively and return ``None``.
+Values are copied before Python callback entry; delay is borrowed native time
+storage and must be copied if retained beyond the callback. Compatible
+write/analysis views share the same adapter. Keep owners and borrowers alive
+until stop and follow the structural teardown contract above.
+
+``transport_dbg(payload)`` must return a Python integer in the unsigned native
+range and no greater than ``payload.get_data_length()``. Invalid counts raise
+before native return conversion. Debug callbacks must not wait or notify events.
+Native enum metadata may be lost when cppyy converts a return to Python int;
+structural writer-policy callbacks must explicitly return ``sc_writer_policy``
+values, including when delegating to a native channel.

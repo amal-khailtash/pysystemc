@@ -8,6 +8,42 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+- Disambiguate report-handler stop_after severity/limit overloads and preserve native handler pointer round-trips with borrowed tokens; verify configuration, caching, logging and release against C++.
+- Complete the public sc_report family by restoring legacy static controls omitted by cppyy exception reflection and native report assignment, with full public-method native comparisons.
+- Release the GIL for native sc_initialize and verify pthread initialization/wait, free notify overload timing and pause/resume against C++.
+- Support explicit native argc/argv calls to sc_elab_and_sim alongside the default sys.argv helper, with pre-entry count/type/NUL validation and native status preservation.
+- Return immutable string snapshots from public Python sc_argv during native entry, reject reads outside entry, and verify original UTF-8 and empty arguments against native C++.
+- Support Python string and bytes inputs for native void-pointer string hash/compare/key-duplication helpers while preserving native pointer calls and explicit key allocation ownership.
+- Restore the default preserve-first argument for native unique-name generation and verify module, thread and global scope counters and native version function returns against C++.
+- Restore default-context pending-activity queries, verify both hierarchical name-registry overloads against C++, and include complete name-generator declarations in source extraction.
+- Restore default-context top-level object/event lookups and safe iteration of empty borrowed pointer vectors; expose the complete native name generator.
+- Expose native tracing report identifiers omitted by the SystemC umbrella header and verify public sc_core constants, bind proxies and CFT comparator callbacks.
+- Support plain/delayed TLM write and delayed analysis structural interfaces, and enforce debug transport payload-length bounds.
+- Audit every registered structural adapter family through callback release and native destruction.
+- Guard native FIFO, mutex and semaphore blocking calls against reset/kill unwind, including borrowed interfaces and FIFO convenience ports; reject teardown with suspended thread frames.
+- Preserve native signal template types in floating waveform registration and validate structural writer-policy enum types.
+- Release the GIL for arbitrary declared-interface native method entry and verify reset/kill callback cleanup.
+- Preserve multiword TLM1 transport response overloads and share FIFO debug/get/put and compound/custom-protocol interface adapters.
+- Reject structural teardown while Python-created traces are open.
+- Add stopped-kernel structural adapter teardown guarded against live native ports and exports.
+- Share complete standard-protocol TLM2 transport adapters across compatible partial-first bindings using native inheritance checks.
+- Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.
+
+### Tests
+- Complete sc_attr_base, sc_attr_cltn and sc_attribute family contracts with native constructor/copy/destructor, generic value, const/mutable collection, alias and borrowed ownership comparisons.
+- Complete the public sc_report_handler family with independent default-action comparisons for display/log/interrupt/throw/stop, action ordering, no-op behavior and isolated native abort termination.
+- Compare report copy ownership, getters, swap and composed messages against C++ for reports outside processes and from a pthread callback at 2 ns.
+- Compare native public time resolution/default-unit configuration and rejection recovery, maximum/simulation time, stop-mode settings and simulator status against C++.
+- Compare public process kind/raw/current/last-created queries and reset/kill unwind state against native method and pthread thread behavior, including construction-scope fallback.
+
+- Extend B3 reset/kill teardown to multiword and arbitrary-width types, and add independent native TLM get/peek lifecycle references.
+- Extend B3 teardown after reset/kill to nine guarded wait families across six paths, and compare native FIFO cleanup/deletion ordering.
+- Verify native teardown follows reset/kill cleanup and process termination across FIFO, TLM get/master/slave and transport callbacks.
+- Check master/slave and TLM1/TLM2 transport native teardown after end hooks, preserving callback owners until final reads.
+- Verify native teardown across seven scalar/wide signal, FIFO, TLM and analysis adapters, including retained-result collection and VCD closure.
+- Verify TLM put identity and copied scalar/wide values with delayed readiness callbacks and an independent native reference.
+
 ## [0.13.2](https://github.com/amal-khailtash/pysystemc/compare/v0.13.1...v0.13.2) (2026-10-20)
 
 

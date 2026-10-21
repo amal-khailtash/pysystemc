@@ -5,6 +5,12 @@ Features marked ☑ are complete for the scope described: runtime items are
 implemented and tested; inventory items record source contracts and explicit gaps.
 Items marked ☐ remain incomplete or untested.
 
+The frozen inventory below retains its original declaration identities. The
+downloadable CSV also contains four explicitly added declarations from
+``sysc/kernel/sc_name_gen.h``, which the original extraction omitted: the complete
+class, constructor, destructor and ``gen_unique_name`` method. These additions
+have native comparison evidence; they do not change the frozen inventory counts.
+
 See :doc:`../api/coverage` for tested combinations,
 :doc:`../api/bindings` for usage and lifetime rules, and
 :doc:`development` for future development.
@@ -112,95 +118,89 @@ All 33 native/Python baseline comparisons pass (performance FIFO uses a fixed se
 The remaining implementation work stays in the existing groups below; the local
 per-declaration inventory and example ledgers retain the detailed evidence.
 
-B. Custom interfaces and channels — partially implemented
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Remaining requirement completion gates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **B1** — Complete native signal/FIFO scalar/type/partial-interface/reset/error/reference matrices.
-* ☐ **B2** — Shared interface/event identity across different adapter specializations.
-* ☐ **B3** — Adapter teardown and release of retained callback owners before shutdown.
-* ☐ **B4** — Complete custom-channel error/reset/GIL/access-path matrix.
+The fixed checklist has 27 IDs: A1-A6 are closed for the pinned source inventory;
+21 implementation and verification requirements remain open. Work below belongs
+to these existing IDs. A passed test increment does not close its parent gate.
+B1–B4 and C1 are complete following the native declaration and retained-family
+audit. Detailed evidence and native limitations stay in :doc:`../api/coverage`.
 
-Recent validation contributes to B1-B4; it does not add or complete requirements.
-See :doc:`../api/coverage` for the tested matrices and their remaining limits.
-The reset/kill matrix currently checks 2,268 combinations across fourteen types,
-nine wait forms, and eighteen access paths. Interrupted caller-output overloads
-assert unchanged native output before propagating reset/kill unwind.
-An independent native FIFO/TLM reference checks these output overloads
-across all fourteen types with matching reset/kill times and termination.
-Compound TLM FIFO blocking get/peek adapters use native pair-return callbacks
-for multiword scalar dispatch; selected compound overloads are checked across
-int, long long, unsigned long long and long double.
-Compound FIFO checks additionally cover 128/137-bit high-bit preservation and
-integral callback rejection with unchanged outputs and endpoint recovery.
-Selected inherited TLM readiness-event
-identity is independently compared with native FIFO specializations.
-Signal/FIFO/TLM specialization identity now covers int, long long and
-sc_biguint137 in both combined-first and partial-first orders, with delayed
-event observers and shared state checks.
-Scalar signal endpoint and floating special-value checks now have independent
-native equivalence records, with callback rejection and sampled-value recovery.
+.. list-table:: Remaining work needed to close each requirement
+   :header-rows: 1
+   :widths: 10 90
 
-Implemented and tested: Structural ports/exports, explicit reference trampolines, signal/FIFO
-adapters, mutex/semaphore/event queues and callback result/copy contracts are implemented for tested
-cases. Wide references, scalar storage and timed native FIFO/synchronization comparisons pass.
-Floating signal read/get_data_ref callbacks reject nonnumeric values, preserve
-sampled storage on rejection and recover for float/double/long double.
-``release_interface_callbacks()`` releases structural owners and retained results
-after native stop; adapters remain alive and later callbacks reject access.
-Standalone get/peek readiness rejects post-release access, while failed native
-blocking and nonblocking get/peek calls preserve caller outputs. Full and
-standalone readiness callbacks reject access after cleanup. Adapter-owned readiness events
-retain their native addresses after owner cleanup. Native teardown remains open.
-Compound FIFO put/get and full master/slave owners are retained through final
-simulation hooks and collect after explicit stopped-kernel callback release;
-post-release output retention and event addresses are checked.
-Guarded structural FIFO read/write and TLM get/put/peek callbacks preserve
-reset/kill cleanup ordering in timed native-process tests.
-Each path covers timed, event, OR/AND, timed-event/list, cycle and counted-cycle
-guarded waits with explicit static clock sensitivity for int and 137-bit
-unsigned values; wide write/put callback arguments retain their high bits.
-Scalar/wide and TLM analysis owner collection, plus replaced-reference
-collection, are checked after final
-end-of-simulation reads; cleanup during a running process is rejected.
-Existing combined adapters are reused for compatible inherited signal/FIFO/TLM
-views. Scalar FIFO reads use native pair callbacks, including signed/unsigned
-64-bit results; integral range/type failures preserve native outputs and recover.
+   * - ID
+     - Completion gate still open
+   * - D1
+     - Complete independent native multi-socket references across remaining protocols and topologies.
+   * - D2
+     - Complete multi/passthrough hierarchy, conversion and native access-path comparisons.
+   * - D3
+     - Complete tagged custom-protocol callback error, reset and lifetime cases.
+   * - D4
+     - Reconcile socket overload/template declarations and callback-owner teardown.
+   * - E1
+     - Complete generic/aligned endian type and byte-enable native-reference matrices.
+   * - E2
+     - Complete extension clone/copy/free and payload memory-manager ownership cases.
+   * - E3
+     - Reconcile timing/extension/endian declarations and context/lifetime contracts.
+   * - F1
+     - Complete datatype, proxy, concatenation, conversion and overload audit.
+   * - F2
+     - Complete writer, port and fixed-point policy audit.
+   * - F3
+     - Complete tracing type/format and vector assembly audit.
+   * - F4
+     - Complete report, process-control and lifecycle error audit.
+   * - F5
+     - Resolve arbitrary throw_it, channel-internal reset and direct native waits through implementation and feasibility evidence.
+   * - F6
+     - Verify host/kernel lifetime and ownership release beyond structural adapters.
+   * - F7
+     - Run reconciled full regression and coverage after implementation gates close.
+   * - F8
+     - Review first-party adapters and validate final installed wheel and sdist.
+   * - F9
+     - Verify selected public contracts and obtain scope decisions for APIs proven unrepresentable.
 
-Still required: Complete type/conversion/tracing/reset/error coverage remains open, including plain
-char/floating policies. Shared owner events work, but cross-specialization interface identity and
-pre-shutdown owner/result release are incomplete.
-Complete signal/FIFO owners select combined adapters even when first bound
-through a partial interface. Complete TLM get/peek owners likewise select a
-combined adapter through partial-first bindings. Transport protocol mapping and
-complete cross-specialization/lifetime matrices remain open.
+B3's current teardown implementation checks stopped status, live ports/exports,
+Python-created open traces before mutation. Suspended native threads are rejected;
+method processes require no forced kill after stop. The earlier failed clock-kill approach is not used.
+Trace/process gates belong to safe teardown of borrowed adapter storage. They
+are not additional checklist requirements. Direct C++ traces and external
+borrowed proxies still require caller lifetime discipline and further audit.
 
-C. TLM interface families — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+B. Custom interfaces and channels — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
+* ☑ **B1** — Complete native signal/FIFO scalar/type/partial-interface/reset/error/reference matrices.
+* ☑ **B2** — Shared interface/event identity across different adapter specializations.
+* ☑ **B3** — Adapter teardown and release of retained callback owners before shutdown.
+* ☑ **B4** — Complete custom-channel error/reset/GIL/access-path matrix.
 
-Multiword get/peek validation contributes to C1; the full requirement remains open.
-Master/slave multiword blocking callbacks use native pair returns; twelve
-asymmetric blocking/full specializations have independent native value/output,
-copy, callback-count and timing checks.
-Master/slave reset/kill validation covers 720 type/family/wait/access combinations
-and an independent native output-unwind reference for 32 event-wait consumers.
-See :doc:`../api/coverage` for overload, event, lifetime, and native-reference evidence.
+Structural signal/FIFO adapters, callback validation, inherited interface reuse
+and guarded reset/kill are supported in tested cases. Stopped-kernel callback
+release and native adapter teardown are implemented; teardown requires all
+native ports/exports to be destroyed first.
 
-Implemented and tested: TLM1 put/get/peek/transport/analysis, combined/master/slave/FIFO families
-and TLM2 transport/debug/DMI adapters have selected semantic tests. Callback types/bounds, copied
-write values and failed get/peek output preservation are checked.
-Inherited get/peek views share their corresponding combined readiness events;
-delayed notification count/time matches an independent native reference.
-Standalone get/peek value and caller-output overloads, nonblocking copies and
-readiness, and inherited event identity match independent native FIFO checks
-for long long, unsigned long long, long double, sc_biguint<137>, sc_bigint<128>,
-and sc_biguint<128>. Signed and unsigned wide samples retain their high bits.
-This evidence covers selected get/peek cases; C1 remains incomplete.
+The native family/type/conversion/trace/identity/error/lifetime audit and targeted
+closure matrices pass. See :doc:`../api/coverage` for exact evidence, native
+limitations and teardown constraints. Arbitrary template types remain unrestricted.
 
-Still required: Reconcile every public overload, type, readiness event, lifetime and
-native-reference case. Adapter-owned readiness events and complete owner/type/reset matrices still
-require review.
+C. TLM interface families — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ☑ **C1** — Full public overload/type/event/lifetime and independent native reference matrices.
+
+TLM1 core/compound/FIFO/write/analysis/delayed interfaces and TLM2
+transport/debug/DMI contracts are reconciled with native declarations, generic
+adapters and executable native comparisons. Compatible inherited views share
+adapters; errors, reset/kill and teardown preserve callback lifetime. See
+:doc:`../api/coverage` for evidence and limitations. The broader per-declaration
+F9 audit and whole-project F7/F8 gates remain separate.
 
 D. Callable sockets — partial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -342,245 +342,250 @@ public feature list; all 3,077 retain source classification in the local audit.
 sc_core public families
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``sc_core::CFT`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::PHASH_DEFAULT_GROW_FACTOR`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::PHASH_DEFAULT_INIT_TABLE_SIZE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::PHASH_DEFAULT_MAX_DENSITY`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::PHASH_DEFAULT_REORDER_FLAG`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ABORT`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ALL_BOUND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_BEFORE_END_OF_ELABORATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_BEFORE_TIMESTEP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_BIND_PROXY_NIL`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_CACHE_REPORT`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_CTHREAD_PROC_`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DEBUG`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DEFAULT_CATCH_ACTIONS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DEFAULT_ERROR_ACTIONS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DEFAULT_FATAL_ACTIONS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DEFAULT_INFO_ACTIONS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DEFAULT_STACK_SIZE`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_DEFAULT_WARNING_ACTIONS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DISPLAY`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_DO_NOTHING`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ELABORATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_END_OF_ELABORATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_END_OF_INITIALIZATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_END_OF_SIMULATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_END_OF_UPDATE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ERROR`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_EXIT_ON_STARVATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_FATAL`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_FS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_FULL`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_HIERARCHY_CHAR`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_HIGH`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ID_ABORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_ASSERTION_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_ASSIGNMENT_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_ATTEMPT_TO_BIND_CLOCK_TO_OUTPUT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_ATTEMPT_TO_WRITE_TO_CLOCK_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_BACK_ON_EMPTY_LIST_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_BAD_SC_MODULE_CONSTRUCTOR_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_BIND_IF_TO_PORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_BIND_PORT_TO_PORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CANNOT_CONVERT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CLOCK_HIGH_TIME_ZERO_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CLOCK_LOW_TIME_ZERO_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CLOCK_PERIOD_ZERO_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_COMPLETE_BINDING_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CONTEXT_BEGIN_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CONTEXT_END_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CONVERSION_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_CYCLE_MISSES_EVENTS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_DEFAULT_TIME_UNIT_CHANGED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_DONT_INITIALIZE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_EMPTY_PROCESS_HANDLE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_END_MODULE_NOT_CALLED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_EVENT_LIST_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_EVENT_ON_NULL_PROCESS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_EXPORT_OUTSIDE_MODULE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_FIND_EVENT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_FRONT_ON_EMPTY_LIST_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_GEN_UNIQUE_NAME_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_GET_IF_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_HALT_NOT_ALLOWED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_HIER_NAME_INCORRECT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_IEEE_1666_DEPRECATION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_ILLEGAL_CHARACTERS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_IMMEDIATE_NOTIFICATION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INCOMPATIBLE_TYPES_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INCOMPATIBLE_VECTORS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INCONSISTENT_API_CONFIG_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INIT_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INSERT_EXPORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INSERT_MODULE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INSERT_PORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INSERT_PRIM_CHANNEL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INSTANCE_EXISTS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INTERNAL_ERROR_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_CTE_WL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_DIV_WL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_FIFO_SIZE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_FX_VALUE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_MAX_WL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_N_BITS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_O_MODE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_SEMAPHORE_VALUE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_INVALID_WL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_JOIN_ON_METHOD_HANDLE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_KILL_PROCESS_WHILE_UNITIALIZED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_LENGTH_MISMATCH_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_LOGIC_X_TO_BOOL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_LOGIC_Z_TO_BOOL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MAKE_SENSITIVE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MAKE_SENSITIVE_NEG_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MAKE_SENSITIVE_POS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_METHOD_TERMINATION_EVENT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MODULE_CTHREAD_AFTER_START_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MODULE_METHOD_AFTER_START_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MODULE_NAME_STACK_EMPTY_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MODULE_THREAD_AFTER_START_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MORE_THAN_ONE_FIFO_READER_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MORE_THAN_ONE_FIFO_WRITER_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NAME_EXISTS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NEXT_TRIGGER_NOT_ALLOWED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NOTIFY_DELAYED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NOT_EXPECTING_DYNAMIC_EVENT_NOTIFY_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NOT_IMPLEMENTED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_ASYNC_UPDATE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_BOOL_RETURNED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_DEFAULT_EVENT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_INT_RETURNED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_PROCESS_SEMANTICS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_SC_LOGIC_RETURNED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_NO_SC_START_ACTIVITY_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_OPERAND_NOT_BOOL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_OPERAND_NOT_SC_LOGIC_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_OPERATION_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_OPERATION_ON_NON_SPECIALIZED_SIGNAL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_OUT_OF_BOUNDS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_OUT_OF_RANGE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PHASE_CALLBACKS_UNSUPPORTED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PHASE_CALLBACK_FORBIDDEN_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PHASE_CALLBACK_NOT_IMPLEMENTED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PHASE_CALLBACK_REGISTER_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PORT_OUTSIDE_MODULE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PROCESS_ALREADY_UNWINDING_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_PROCESS_CONTROL_CORNER_CASE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+The constant/proxy/comparator/table audit verifies 249 declarations against
+independent native references. Remaining entries retain their declaration-level
+status; mutable-global write semantics and callable overload families are not
+inferred from namespace availability. See :doc:`../api/coverage`.
+
+* ☑ ``sc_core::CFT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::PHASH_DEFAULT_GROW_FACTOR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::PHASH_DEFAULT_INIT_TABLE_SIZE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::PHASH_DEFAULT_MAX_DENSITY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::PHASH_DEFAULT_REORDER_FLAG`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ABORT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ALL_BOUND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_BEFORE_END_OF_ELABORATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_BEFORE_TIMESTEP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_BIND_PROXY_NIL`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_CACHE_REPORT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_CTHREAD_PROC_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEBUG`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEFAULT_CATCH_ACTIONS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEFAULT_ERROR_ACTIONS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEFAULT_FATAL_ACTIONS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEFAULT_INFO_ACTIONS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEFAULT_STACK_SIZE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DEFAULT_WARNING_ACTIONS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DISPLAY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_DO_NOTHING`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ELABORATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_END_OF_ELABORATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_END_OF_INITIALIZATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_END_OF_SIMULATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_END_OF_UPDATE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ERROR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_EXIT_ON_STARVATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_FATAL`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_FS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_FULL`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_HIERARCHY_CHAR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_HIGH`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ABORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ASSERTION_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ASSIGNMENT_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ATTEMPT_TO_BIND_CLOCK_TO_OUTPUT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ATTEMPT_TO_WRITE_TO_CLOCK_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_BACK_ON_EMPTY_LIST_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_BAD_SC_MODULE_CONSTRUCTOR_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_BIND_IF_TO_PORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_BIND_PORT_TO_PORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CANNOT_CONVERT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CLOCK_HIGH_TIME_ZERO_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CLOCK_LOW_TIME_ZERO_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CLOCK_PERIOD_ZERO_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_COMPLETE_BINDING_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CONTEXT_BEGIN_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CONTEXT_END_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CONVERSION_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_CYCLE_MISSES_EVENTS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_DEFAULT_TIME_UNIT_CHANGED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_DONT_INITIALIZE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_EMPTY_PROCESS_HANDLE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_END_MODULE_NOT_CALLED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_EVENT_LIST_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_EVENT_ON_NULL_PROCESS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_EXPORT_OUTSIDE_MODULE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_FIND_EVENT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_FRONT_ON_EMPTY_LIST_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_GEN_UNIQUE_NAME_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_GET_IF_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_HALT_NOT_ALLOWED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_HIER_NAME_INCORRECT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_IEEE_1666_DEPRECATION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ILLEGAL_CHARACTERS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_IMMEDIATE_NOTIFICATION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INCOMPATIBLE_TYPES_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INCOMPATIBLE_VECTORS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INCONSISTENT_API_CONFIG_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INIT_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INSERT_EXPORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INSERT_MODULE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INSERT_PORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INSERT_PRIM_CHANNEL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INSTANCE_EXISTS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INTERNAL_ERROR_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_CTE_WL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_DIV_WL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_FIFO_SIZE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_FX_VALUE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_MAX_WL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_N_BITS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_O_MODE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_SEMAPHORE_VALUE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_INVALID_WL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_JOIN_ON_METHOD_HANDLE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_KILL_PROCESS_WHILE_UNITIALIZED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_LENGTH_MISMATCH_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_LOGIC_X_TO_BOOL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_LOGIC_Z_TO_BOOL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MAKE_SENSITIVE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MAKE_SENSITIVE_NEG_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MAKE_SENSITIVE_POS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_METHOD_TERMINATION_EVENT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MODULE_CTHREAD_AFTER_START_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MODULE_METHOD_AFTER_START_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MODULE_NAME_STACK_EMPTY_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MODULE_THREAD_AFTER_START_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MORE_THAN_ONE_FIFO_READER_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MORE_THAN_ONE_FIFO_WRITER_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NAME_EXISTS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NEXT_TRIGGER_NOT_ALLOWED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NOTIFY_DELAYED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NOT_EXPECTING_DYNAMIC_EVENT_NOTIFY_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NOT_IMPLEMENTED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_ASYNC_UPDATE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_BOOL_RETURNED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_DEFAULT_EVENT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_INT_RETURNED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_PROCESS_SEMANTICS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_SC_LOGIC_RETURNED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_NO_SC_START_ACTIVITY_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_OPERAND_NOT_BOOL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_OPERAND_NOT_SC_LOGIC_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_OPERATION_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_OPERATION_ON_NON_SPECIALIZED_SIGNAL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_OUT_OF_BOUNDS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_OUT_OF_RANGE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PHASE_CALLBACKS_UNSUPPORTED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PHASE_CALLBACK_FORBIDDEN_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PHASE_CALLBACK_NOT_IMPLEMENTED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PHASE_CALLBACK_REGISTER_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PORT_OUTSIDE_MODULE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PROCESS_ALREADY_UNWINDING_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_PROCESS_CONTROL_CORNER_CASE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::SC_ID_REGISTER_ID_FAILED_`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::SC_ID_REMOVE_MODULE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_REMOVE_PORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_REMOVE_PRIM_CHANNEL_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_RESET_PROCESS_WHILE_NOT_RUNNING_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_RESOLVED_PORT_NOT_BOUND_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_RETHROW_UNWINDING_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_BV_CANNOT_CONTAIN_X_AND_Z_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_EXPORT_ALREADY_BOUND_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_EXPORT_HAS_NO_INTERFACE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_EXPORT_NOT_BOUND_AFTER_CONSTRUCTION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_EXPORT_NOT_REGISTERED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_MODULE_NAME_REQUIRED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SC_MODULE_NAME_USE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SET_DEFAULT_TIME_UNIT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SET_STACK_SIZE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SET_TIME_RESOLUTION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SIMULATION_START_AFTER_ERROR_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SIMULATION_START_AFTER_STOP_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SIMULATION_START_UNEXPECTED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SIMULATION_STOP_CALLED_TWICE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SIMULATION_TIME_OVERFLOW_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_STACK_SETUP_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_STOP_MODE_AFTER_START_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_STRING_TOO_LONG_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_THROW_IT_IGNORED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_THROW_IT_WHILE_NOT_RUNNING_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TIME_CONVERSION_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_ALREADY_INITIALIZED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_CLOSE_EMPTY_FILE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_FOPEN_FAILED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_INVALID_ENUM_VALUE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_INVALID_TIMESCALE_UNIT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_OBJECT_IGNORED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_OBJECT_NAME_FILTERED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_REVERSED_TIME_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_TIMESCALE_DEFAULT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_TIMESCALE_UNIT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_VCD_DELTA_CYCLE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_TRACING_VCD_TIME_RESOLUTION_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_UNKNOWN_ERROR_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_UNKNOWN_PROCESS_TYPE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VALUE_NOT_VALID_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VC6_MAX_PROCESSES_EXCEEDED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VC6_PROCESS_HELPER_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VECTOR_BIND_EMPTY_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VECTOR_INIT_CALLED_TWICE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VECTOR_NONOBJECT_ELEMENTS_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VECTOR_TOO_LONG_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_VECTOR_TOO_SHORT_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WAIT_DURING_UNWINDING_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WAIT_NEGATIVE_CYCLES_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WAIT_NOT_ALLOWED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WAIT_N_INVALID_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WATCHING_NOT_ALLOWED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WITHOUT_MESSAGE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WRAP_SM_NOT_DEFINED_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_WRONG_VALUE_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_ID_ZERO_LENGTH_`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::SC_INCLUDE_DESCENDANTS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_INFO`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_INTERRUPT`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_INVALID_DESCENDANTS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_LOG`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_LOW`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_MANY_WRITERS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_MAX_SEVERITY`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_MEDIUM`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_METHOD_PROC_`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_MS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_NONE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_NO_DESCENDANTS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_NO_PROC_`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_NS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ONE_OR_MORE_BOUND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ONE_WRITER`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_PAUSED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_PS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_RUNNING`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_RUN_TO_TIME`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_SEC`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_SIM_ERROR`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_SIM_OK`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_SIM_USER_STOP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_START_OF_SIMULATION`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_STATUS_ANY`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_STATUS_LAST`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_STOP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_STOPPED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_STOP_FINISH_DELTA`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_STOP_IMMEDIATE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_THREAD_PROC_`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_THROW`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_UNCHECKED_WRITERS`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_UNITIALIZED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_UNSPECIFIED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_US`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_WARNING`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ZERO_OR_MORE_BOUND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::SC_ZERO_TIME`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::SC_ID_REMOVE_MODULE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_REMOVE_PORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_REMOVE_PRIM_CHANNEL_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_RESET_PROCESS_WHILE_NOT_RUNNING_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_RESOLVED_PORT_NOT_BOUND_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_RETHROW_UNWINDING_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_BV_CANNOT_CONTAIN_X_AND_Z_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_EXPORT_ALREADY_BOUND_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_EXPORT_HAS_NO_INTERFACE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_EXPORT_NOT_BOUND_AFTER_CONSTRUCTION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_EXPORT_NOT_REGISTERED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_MODULE_NAME_REQUIRED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SC_MODULE_NAME_USE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SET_DEFAULT_TIME_UNIT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SET_STACK_SIZE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SET_TIME_RESOLUTION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SIMULATION_START_AFTER_ERROR_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SIMULATION_START_AFTER_STOP_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SIMULATION_START_UNEXPECTED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SIMULATION_STOP_CALLED_TWICE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SIMULATION_TIME_OVERFLOW_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_STACK_SETUP_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_STOP_MODE_AFTER_START_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_STRING_TOO_LONG_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_THROW_IT_IGNORED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_THROW_IT_WHILE_NOT_RUNNING_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TIME_CONVERSION_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_ALREADY_INITIALIZED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_CLOSE_EMPTY_FILE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_FOPEN_FAILED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_INVALID_ENUM_VALUE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_INVALID_TIMESCALE_UNIT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_OBJECT_IGNORED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_OBJECT_NAME_FILTERED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_REVERSED_TIME_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_TIMESCALE_DEFAULT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_TIMESCALE_UNIT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_VCD_DELTA_CYCLE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_TRACING_VCD_TIME_RESOLUTION_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_UNKNOWN_ERROR_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_UNKNOWN_PROCESS_TYPE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VALUE_NOT_VALID_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VC6_MAX_PROCESSES_EXCEEDED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VC6_PROCESS_HELPER_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VECTOR_BIND_EMPTY_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VECTOR_INIT_CALLED_TWICE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VECTOR_NONOBJECT_ELEMENTS_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VECTOR_TOO_LONG_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_VECTOR_TOO_SHORT_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WAIT_DURING_UNWINDING_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WAIT_NEGATIVE_CYCLES_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WAIT_NOT_ALLOWED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WAIT_N_INVALID_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WATCHING_NOT_ALLOWED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WITHOUT_MESSAGE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WRAP_SM_NOT_DEFINED_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_WRONG_VALUE_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ID_ZERO_LENGTH_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_INCLUDE_DESCENDANTS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_INFO`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_INTERRUPT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_INVALID_DESCENDANTS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_LOG`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_LOW`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_MANY_WRITERS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_MAX_SEVERITY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_MEDIUM`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_METHOD_PROC_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_MS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_NONE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_NO_DESCENDANTS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_NO_PROC_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_NS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ONE_OR_MORE_BOUND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ONE_WRITER`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_PAUSED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_PS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_RUNNING`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_RUN_TO_TIME`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_SEC`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_SIM_ERROR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_SIM_OK`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_SIM_USER_STOP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_START_OF_SIMULATION`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_STATUS_ANY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_STATUS_LAST`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_STOP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_STOPPED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_STOP_FINISH_DELTA`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_STOP_IMMEDIATE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_THREAD_PROC_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_THROW`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_UNCHECKED_WRITERS`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_UNITIALIZED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_UNSPECIFIED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_US`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_WARNING`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ZERO_OR_MORE_BOUND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::SC_ZERO_TIME`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::at_negedge`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::at_posedge`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::default_int_hash_fn`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::default_ptr_hash_fn`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::default_int_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::default_ptr_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::halt`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::next_trigger`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
-* ☐ ``sc_core::notify`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
+* ☑ ``sc_core::notify`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☐ ``sc_core::operator!=`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::operator%`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::operator&`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
@@ -595,35 +600,35 @@ sc_core public families
 * ☐ ``sc_core::sc_abort`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_actions`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_allow_process_control_corners`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_argc`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_argv`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_argc`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_argv`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_assemble_vector`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_assertion_failed`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_attr_base`` — 5 declarations; runtime: 5 untested; mapping: 3 partial, 2 reviewed.
-* ☐ ``sc_core::sc_attr_cltn`` — 17 declarations; runtime: 17 untested; mapping: 3 partial, 14 reviewed.
-* ☐ ``sc_core::sc_attribute`` — 7 declarations; runtime: 7 untested; mapping: 4 partial, 3 reviewed.
+* ☑ ``sc_core::sc_attr_base`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``sc_core::sc_attr_cltn`` — 17 declarations; runtime: 17 supported; mapping: 17 reviewed.
+* ☑ ``sc_core::sc_attribute`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☐ ``sc_core::sc_behavior`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_bind_proxy`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
+* ☑ ``sc_core::sc_bind_proxy`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☐ ``sc_core::sc_buffer`` — 14 declarations; runtime: 14 untested; mapping: 6 partial, 8 reviewed.
 * ☐ ``sc_core::sc_byte_heap`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
 * ☐ ``sc_core::sc_channel`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_clock`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``sc_core::sc_close_vcd_trace_file`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_close_wif_trace_file`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_copyright`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_copyright_string`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_copyright`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_copyright_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_create_vcd_trace_file`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_create_wif_trace_file`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_cref`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::sc_curr_proc_kind`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_delta_count`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_delta_count_at_current_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_delta_count`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_delta_count_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_descendant_inclusion_info`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_direct_access`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
-* ☐ ``sc_core::sc_elab_and_sim`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_elab_and_sim`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_enable_name_checking`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 30 untested; mapping: 9 partial, 21 reviewed.
 * ☐ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 untested; mapping: 8 partial, 3 reviewed.
@@ -648,60 +653,60 @@ sc_core public families
 * ☐ ``sc_core::sc_fifo_nonblocking_out_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``sc_core::sc_fifo_out`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_fifo_out_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_core::sc_find_event`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_find_object`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_gen_unique_name`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_get_curr_process_handle`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_curr_process_kind`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_curr_simcontext`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_current_object`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_current_process_handle`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_get_default_time_unit`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_get_hierarchical_name`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_get_last_created_process_handle`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_parent`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_simulator_status`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_status`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_stop_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_time_resolution`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_get_top_level_events`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_get_top_level_objects`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_find_event`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_find_object`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_gen_unique_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_get_curr_process_handle`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_curr_process_kind`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_curr_simcontext`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_current_object`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_current_process_handle`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_get_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_get_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_get_last_created_process_handle`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_parent`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_simulator_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_get_top_level_events`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_get_top_level_objects`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_handle_exception`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_hierarchical_name_exists`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_hierarchical_name_exists`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_in`` — 130 declarations; runtime: 130 untested; mapping: 130 partial.
 * ☐ ``sc_core::sc_in_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_in_resolved`` — 20 declarations; runtime: 20 untested; mapping: 20 partial.
 * ☐ ``sc_core::sc_in_rv`` — 21 declarations; runtime: 21 untested; mapping: 21 partial.
-* ☐ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 untested; mapping: 124 partial.
 * ☐ ``sc_core::sc_inout_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
 * ☐ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
 * ☐ ``sc_core::sc_interface`` — 8 declarations; runtime: 8 untested; mapping: 2 partial, 6 reviewed.
-* ☐ ``sc_core::sc_is_prerelease`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_is_running`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_is_unwinding`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_is_running`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_is_unwinding`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_join`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
-* ☐ ``sc_core::sc_logic_resolution_tbl`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_logic_resolution_tbl`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_lv_resolve`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 untested; mapping: 4 partial, 5 reviewed.
 * ☐ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 untested; mapping: 1 partial, 4 reviewed.
-* ☐ ``sc_core::sc_name_gen`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
 * ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
 * ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
 * ☐ ``sc_core::sc_out_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 untested; mapping: 18 partial.
 * ☐ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
-* ☐ ``sc_core::sc_pending_activity`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_pending_activity_at_current_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_pending_activity_at_future_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_pending_activity_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_pending_activity_at_future_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_phash`` — 91 declarations; runtime: 91 untested; mapping: 91 partial.
 * ☐ ``sc_core::sc_phash_base`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
 * ☐ ``sc_core::sc_phash_base_iter`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
@@ -725,12 +730,12 @@ sc_core public families
 * ☐ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 untested; mapping: 3 partial, 1 reviewed.
 * ☐ ``sc_core::sc_pvector`` — 26 declarations; runtime: 26 untested; mapping: 26 partial.
 * ☐ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_register_hierarchical_name`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_release`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_report`` — 25 declarations; runtime: 25 untested; mapping: 2 partial, 23 reviewed.
-* ☐ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 untested; mapping: 32 reviewed.
+* ☑ ``sc_core::sc_register_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_release`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_report`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
+* ☑ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
 * ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 untested; mapping: 2 partial, 3 reviewed.
@@ -739,11 +744,11 @@ sc_core public families
 * ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
 * ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_set_random_seed`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_set_stack_size`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_severity`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_signal`` — 64 declarations; runtime: 64 untested; mapping: 64 partial.
 * ☐ ``sc_core::sc_signal_channel`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
@@ -754,44 +759,44 @@ sc_core public families
 * ☐ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 untested; mapping: 119 partial.
 * ☐ ``sc_core::sc_signal_write_if`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_simcontext`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
 * ☐ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 untested; mapping: 2 partial, 19 reviewed.
 * ☐ ``sc_core::sc_start`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_status`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
-* ☐ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_strhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
-* ☐ ``sc_core::sc_strhash_kdup`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_strhash_kdup`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_time`` — 34 declarations; runtime: 34 untested; mapping: 9 partial, 25 reviewed.
 * ☐ ``sc_core::sc_time_params`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
 * ☐ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_time_tuple`` — 10 declarations; runtime: 10 untested; mapping: 3 partial, 7 reviewed.
 * ☐ ``sc_core::sc_time_unit`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 untested; mapping: 66 partial.
 * ☐ ``sc_core::sc_trace_delta_cycles`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 untested; mapping: 36 partial.
-* ☐ ``sc_core::sc_unregister_hierarchical_name`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_unregister_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_unwind_exception`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``sc_core::sc_vector`` — 43 declarations; runtime: 43 untested; mapping: 5 partial, 38 reviewed.
 * ☐ ``sc_core::sc_vector_assembly`` — 50 declarations; runtime: 50 untested; mapping: 3 partial, 47 reviewed.
 * ☐ ``sc_core::sc_vector_base`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
 * ☐ ``sc_core::sc_vector_iter`` — 33 declarations; runtime: 33 untested; mapping: 19 partial, 14 reviewed.
 * ☐ ``sc_core::sc_verbosity`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_version`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_major`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_minor`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_originator`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_patch`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_prerelease`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_release_date`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_version_string`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_major`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_minor`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_originator`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_patch`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_release_date`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_version_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_vpool`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_write_comment`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_writer_policy`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
@@ -1156,10 +1161,3 @@ tlm_utils public families
 * ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
-
-Plain ``char`` signal/FIFO callbacks now require integer results within the
-native compiler range (including native signedness). Selected endpoint checks
-compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
-with an independent native reference. Invalid signal samples preserve sampled
-storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
-policy and reset matrices remain open.
