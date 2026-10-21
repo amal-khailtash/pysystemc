@@ -585,7 +585,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::halt`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::next_trigger`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
-* ☐ ``sc_core::notify`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
+* ☑ ``sc_core::notify`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☐ ``sc_core::operator!=`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::operator%`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::operator&`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
@@ -677,7 +677,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_in_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_in_resolved`` — 20 declarations; runtime: 20 untested; mapping: 20 partial.
 * ☐ ``sc_core::sc_in_rv`` — 21 declarations; runtime: 21 untested; mapping: 21 partial.
-* ☐ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 untested; mapping: 124 partial.
 * ☐ ``sc_core::sc_inout_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
@@ -701,7 +701,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_out_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 untested; mapping: 18 partial.
 * ☐ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
 * ☑ ``sc_core::sc_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.

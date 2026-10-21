@@ -41,6 +41,7 @@ for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp", "interfa
         cppyy.cppdef(_source.read())
 
 cppyy.gbl.sc_core.sc_start.__release_gil__ = True
+cppyy.gbl.sc_core.sc_initialize.__release_gil__ = True
 cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
 cppyy.gbl.sc_main.__release_gil__ = True
 

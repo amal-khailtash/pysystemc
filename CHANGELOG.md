@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Release the GIL for native sc_initialize and verify pthread initialization/wait, free notify overload timing and pause/resume against C++.
 - Support explicit native argc/argv calls to sc_elab_and_sim alongside the default sys.argv helper, with pre-entry count/type/NUL validation and native status preservation.
 - Return immutable string snapshots from public Python sc_argv during native entry, reject reads outside entry, and verify original UTF-8 and empty arguments against native C++.
 - Support Python string and bytes inputs for native void-pointer string hash/compare/key-duplication helpers while preserving native pointer calls and explicit key allocation ownership.
