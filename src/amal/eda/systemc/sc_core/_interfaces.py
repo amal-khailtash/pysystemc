@@ -16,6 +16,36 @@ _classes = {}
 _protocol_interfaces = {}
 
 
+def teardown_interfaces():
+    """Delete retained structural native adapters after all borrowers are destroyed.
+
+    Returns:
+        Number of native adapters destroyed; subsequent calls return zero.
+
+    Raises:
+        RuntimeError: Unless the kernel is stopped and every native port/export
+            has been destroyed. Rejection occurs before callback release.
+
+    Call with the GIL held after end hooks, trace closure and all final reads.
+    Destroy ports/exports first, including native-created borrowers. This
+    conservative gate rejects unrelated live ports too. Borrowed adapter,
+    event and result proxies become invalid and must never be used afterward.
+    Process callbacks and directly constructed channels are outside this API.
+    The stopped kernel is not reset or restarted.
+    """
+    try:
+        cppyy.gbl.pysystemc_interfaces.require_interface_teardown()
+    except cppyy.gbl.std.runtime_error as error:
+        raise RuntimeError(str(error)) from error
+    release_interface_callbacks()
+    count = len(_owners)
+    while _owners:
+        _, _, adapter = _owners[-1]
+        adapter.__destruct__()
+        _owners.pop()
+    return count
+
+
 def release_interface_callbacks():
     """Release structural callback owners after the kernel has stopped.
 

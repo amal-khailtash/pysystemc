@@ -1177,3 +1177,11 @@ payload/phase compatibility. Selected tests cover all five forward and three
 backward first-bind choices, shared virtual interface addresses and borrowed
 payload/phase/delay/DMI updates. Custom protocol promotion remains unimplemented;
 complete-first native reuse remains available. Full B2/C1 matrices remain open.
+
+B3 native teardown implementation: ``sc_core.teardown_interfaces()`` deletes
+retained structural adapters only after simulation stop and destruction of all
+native ports/exports, including native-created borrowers. The conservative
+hierarchy gate rejects before releasing callbacks. Close traces and finish all
+reference/event access before calling; borrowed proxies become invalid after
+deletion. Directly constructed channels and process callbacks are outside this
+API. Broader B3 lifetime/trace/family teardown validation remains open.

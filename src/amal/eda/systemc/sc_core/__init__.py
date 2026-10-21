@@ -28,13 +28,14 @@ from ._channel_interfaces import declare_interface as declare_interface
 from ._interfaces import PortTemplate as _PortTemplate
 from ._interfaces import interface as interface
 from ._interfaces import release_interface_callbacks as release_interface_callbacks
+from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
 
 # Compile first-party bridges before publishing native aliases or configuring
 # their methods. The parent package has already loaded SystemC and selected C++17.
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp"):
+for _bridge in ("sc_main.cpp", "native_entry.cpp", "sc_module_new.cpp", "interface_teardown.cpp"):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
 
