@@ -6,14 +6,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [Unreleased]
+
 ## [0.14.0](https://github.com/amal-khailtash/pysystemc/compare/v0.13.2...v0.14.0) (2026-10-21)
 
 
 ### Features
 
-* complete interface contracts and public SystemC API families ([#14](https://github.com/amal-khailtash/pysystemc/issues/14)) ([23ad13c](https://github.com/amal-khailtash/pysystemc/commit/23ad13c1aff417d5a8c3fa5cc93bbf279f342c8a))
+* complete interface contracts and selected public SystemC API families ([#14](https://github.com/amal-khailtash/pysystemc/issues/14)) ([23ad13c](https://github.com/amal-khailtash/pysystemc/commit/23ad13c1aff417d5a8c3fa5cc93bbf279f342c8a))
 
-## [Unreleased]
+Completed family groups: sc_report (25 declarations), sc_report_handler (32), sc_attr_base (5), sc_attr_cltn (17), and sc_attribute (7), plus interface contracts B1–B4/C1. Other public event, process, channel, vector and datatype families remain partial; alternate upstream example configurations remain open.
 
 ### Added
 - Disambiguate report-handler stop_after severity/limit overloads and preserve native handler pointer round-trips with borrowed tokens; verify configuration, caching, logging and release against C++.
@@ -43,7 +45,6 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Compare report copy ownership, getters, swap and composed messages against C++ for reports outside processes and from a pthread callback at 2 ns.
 - Compare native public time resolution/default-unit configuration and rejection recovery, maximum/simulation time, stop-mode settings and simulator status against C++.
 - Compare public process kind/raw/current/last-created queries and reset/kill unwind state against native method and pthread thread behavior, including construction-scope fallback.
-
 - Extend B3 reset/kill teardown to multiword and arbitrary-width types, and add independent native TLM get/peek lifecycle references.
 - Extend B3 teardown after reset/kill to nine guarded wait families across six paths, and compare native FIFO cleanup/deletion ordering.
 - Verify native teardown follows reset/kill cleanup and process termination across FIFO, TLM get/master/slave and transport callbacks.
