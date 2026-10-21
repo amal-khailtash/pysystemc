@@ -122,6 +122,56 @@ sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
 _read_interface_callbacks = []
 
 
+def _iterate_hierarchy_vector(vector):
+    """Iterate borrowed pointers without cppyy's unsafe empty data() conversion."""
+    for index in range(vector.size()):
+        yield vector[index]
+
+
+for _element in ("sc_core::sc_object*", "sc_core::sc_event*"):
+    cppyy.gbl.std.vector[_element].__iter__ = _iterate_hierarchy_vector
+
+
+def sc_get_top_level_objects(context=None):
+    """Return the native vector of objects without a parent in a context.
+
+    Args:
+        context: Borrowed simulation context; None selects the current context.
+
+    Returns:
+        Borrowed, read-only native vector. The context and objects must remain
+        alive while using it; hierarchy changes can invalidate element views.
+
+    Raises:
+        TypeError: context cannot convert to a native simulation-context pointer.
+
+    Call from the simulation thread with the GIL held. No ownership transfers.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_get_top_level_objects(context)
+
+
+def sc_get_top_level_events(context=None):
+    """Return the native vector of events without a parent in a context.
+
+    Args:
+        context: Borrowed simulation context; None selects the current context.
+
+    Returns:
+        Borrowed, read-only native vector. The context and events must remain
+        alive while using it; hierarchy changes can invalidate element views.
+
+    Raises:
+        TypeError: context cannot convert to a native simulation-context pointer.
+
+    Call from the simulation thread with the GIL held. No ownership transfers.
+    """
+    if context is None:
+        context = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    return cppyy.gbl.sc_core.sc_get_top_level_events(context)
+
+
 def sc_is_running(context=None) -> bool:
     """Return whether the native simulation is running in the selected context.
 
