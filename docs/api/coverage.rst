@@ -391,3 +391,10 @@ compare signal read/get_data_ref and blocking/nonblocking FIFO output overloads
 with an independent native reference. Invalid signal samples preserve sampled
 storage; invalid FIFO results preserve caller output. Full B1 type, tracing,
 policy and reset matrices remain open.
+
+Complete structural TLM put owners now share a combined adapter when first bound
+through blocking or nonblocking put interfaces. Selected checks cover int,
+long long and sc_biguint<137>, three binding orders, virtual interface/event
+identity, copied inputs, failed nonblocking puts and readiness at 1 ns. A native
+reference checks the same type/state/event semantics. B2 and C1 remain open for
+other families, specializations and lifecycle paths.

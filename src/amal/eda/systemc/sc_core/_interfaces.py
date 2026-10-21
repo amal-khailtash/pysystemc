@@ -303,6 +303,8 @@ def _adapt(interface, implementation, factory):
         if all(callable(getattr(implementation, method, None)) for method in required):
             return _adapt(getattr(cppyy.gbl.sc_core, combined)[value], implementation, factory)
     tlm_candidates = {
+        "tlm::tlm_blocking_put_if": "tlm_put_if",
+        "tlm::tlm_nonblocking_put_if": "tlm_put_if",
         "tlm::tlm_blocking_get_if": "tlm_get_peek_if",
         "tlm::tlm_nonblocking_get_if": "tlm_get_peek_if",
         "tlm::tlm_blocking_peek_if": "tlm_get_peek_if",

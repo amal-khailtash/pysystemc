@@ -8,6 +8,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+- Share complete TLM put adapters and readiness events across blocking-first, nonblocking-first and combined bindings.
+
+### Tests
+- Verify TLM put identity and copied scalar/wide values with delayed readiness callbacks and an independent native reference.
+
 ## [0.13.2](https://github.com/amal-khailtash/pysystemc/compare/v0.13.1...v0.13.2) (2026-10-20)
 
 
