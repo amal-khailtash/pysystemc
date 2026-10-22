@@ -6,6 +6,39 @@
 #include <string>
 #include <systemc>
 #include <vector>
+/** @brief Capture a failing semaphore constructor and print its full report.
+ *
+ * The native exception owns its report strings. Read them while the exception
+ * is alive; no callback or Python GIL state is involved in this reference.
+ */
+template <typename Constructor>
+bool check_invalid_semaphore(const char* form, Constructor constructor)
+{
+  try
+  {
+    constructor();
+  }
+  catch (const sc_core::sc_report& report)
+  {
+    const std::string type = report.get_msg_type();
+    const std::string message = report.get_msg();
+    const std::string description = report.what();
+    std::cout << "SYNC_INVALID_SEMAPHORE_REFERENCE\t" << form << '\t' << report.get_id() << '\t'
+              << static_cast<int>(report.get_severity()) << '\t' << type << '\t' << message << '\t' << description
+              << "\n";
+    const bool named_message = form == std::string("named")
+                                 ? message == "semaphore 'invalid'"
+                                 : message.find("semaphore 'semaphore_") == 0 && message.back() == '\'';
+    return report.get_id() == 119 && report.get_severity() == sc_core::SC_ERROR &&
+           type == "sc_semaphore requires an initial value >= 0" && named_message &&
+           description.find("(E119)") != std::string::npos && description.find(message) != std::string::npos;
+  }
+  catch (...)
+  {
+    return false;
+  }
+  return false;
+}
 /** @brief Own synchronization channels and native process callbacks. */
 struct Model : sc_core::sc_module
 {
@@ -49,6 +82,9 @@ struct Model : sc_core::sc_module
 /** @brief Check exact native return values and resume timestamps. */
 int sc_main(int, char**)
 {
+  if (!check_invalid_semaphore("positional", [] { sc_core::sc_semaphore invalid(-1); }) ||
+      !check_invalid_semaphore("named", [] { sc_core::sc_semaphore invalid("invalid", -1); }))
+    return 4;
   sc_core::sc_mutex generated_mutex;
   sc_core::sc_semaphore generated_semaphore(2);
   if (std::string(generated_mutex.basename()).find("mutex_") != 0 ||

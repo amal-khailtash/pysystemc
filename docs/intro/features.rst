@@ -103,7 +103,7 @@ A. Public declaration inventory and Python mapping — inventoried
 
 The source inventory is closed for pinned SystemC revision
 ``5fc1469339775b54b1fcc2020ac744a58be5b50e``: 15,778 declaration identities,
-including 12,701 public and 3,077 internal entries. Both modeling and compatibility
+including 12,698 public and 3,080 internal entries. Both modeling and compatibility
 configurations, recorded active/inactive macros, friends, aliases and inheritance
 links are accounted for. These checkmarks describe inventory completion.
 
@@ -326,10 +326,11 @@ count of working Python features. These are details of the existing A–F scope,
 not additional requirements discovered during implementation.
 
 Download :download:`the complete per-declaration inventory <../_static/public-api-inventory.csv>`
-for all 12,701 public entries, exact native signatures and Python candidate
+for all 12,698 public entries, exact native signatures and Python candidate
 spellings, ownership, GIL, errors, source evidence and individual statuses.
 The downloadable file is committed documentation, independent of local AI records.
-Four private event-expression constructors/aliases were removed from the public
+Four private event-expression constructors/aliases and the disabled private
+context copy constructors were removed from the public
 list; their identities and access-control rationale remain in
 :download:`the exclusion record <../_static/public-api-exclusions.csv>`.
 
@@ -868,7 +869,7 @@ sc_dt public families
 * ☐ ``sc_dt::nor_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
 * ☐ ``sc_dt::not_equal`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
 * ☐ ``sc_dt::operator!=`` — 291 declarations; runtime: 291 untested; mapping: 291 partial.
-* ☐ ``sc_dt::operator%`` — 69 declarations; runtime: 1 failing, 68 untested; mapping: 69 partial.
+* ☐ ``sc_dt::operator%`` — 69 declarations; runtime: 1 supported, 68 untested; mapping: 68 partial, 1 reviewed.
 * ☐ ``sc_dt::operator&`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
 * ☐ ``sc_dt::operator&=`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
 * ☐ ``sc_dt::operator*`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
@@ -877,12 +878,12 @@ sc_dt public families
 * ☐ ``sc_dt::operator-`` — 203 declarations; runtime: 203 untested; mapping: 203 partial.
 * ☐ ``sc_dt::operator/`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
 * ☐ ``sc_dt::operator<`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator<<`` — 67 declarations; runtime: 1 failing, 66 untested; mapping: 67 partial.
+* ☐ ``sc_dt::operator<<`` — 67 declarations; runtime: 1 supported, 66 untested; mapping: 66 partial, 1 reviewed.
 * ☐ ``sc_dt::operator<=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
 * ☐ ``sc_dt::operator==`` — 268 declarations; runtime: 268 untested; mapping: 268 partial.
 * ☐ ``sc_dt::operator>`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
 * ☐ ``sc_dt::operator>=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator>>`` — 68 declarations; runtime: 1 failing, 67 untested; mapping: 68 partial.
+* ☐ ``sc_dt::operator>>`` — 68 declarations; runtime: 1 supported, 67 untested; mapping: 67 partial, 1 reviewed.
 * ☐ ``sc_dt::operator^`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
 * ☐ ``sc_dt::operator^=`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``sc_dt::operator|`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
@@ -904,7 +905,7 @@ sc_dt public families
 * ☐ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 untested; mapping: 57 partial, 2 reviewed.
 * ☐ ``sc_dt::sc_concref`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
 * ☐ ``sc_dt::sc_concref_r`` — 20 declarations; runtime: 20 untested; mapping: 20 partial.
-* ☐ ``sc_dt::sc_context`` — 34 declarations; runtime: 2 failing, 32 untested; mapping: 34 partial.
+* ☐ ``sc_dt::sc_context`` — 31 declarations; runtime: 1 supported, 30 untested; mapping: 30 partial, 1 reviewed.
 * ☐ ``sc_dt::sc_context_begin`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_dt::sc_digit`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_dt::sc_enc`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.

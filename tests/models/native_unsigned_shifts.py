@@ -1,4 +1,4 @@
-"""Record unsigned value-shift mapping gaps and native width semantics."""
+"""Verify unsigned owning shifts and native width semantics."""
 
 from amal.eda.systemc import sc_dt
 import cppyy
@@ -24,13 +24,16 @@ void check() {
 cppyy.gbl.unsigned_width_audit.check()
 a = sc_dt.sc_unsigned(8)
 a.__assign__(12)
-for operation in (lambda: a << 2, lambda: a >> 2):
-    try:
-        operation()
-    except TypeError:
-        pass
-    else:
-        raise AssertionError("Reaudit unsigned value shift: expected recorded TypeError")
+left = a << 2
+right = a >> 2
+assert left.length() == 11 and left.to_uint() == 48
+assert right.length() == 9 and right.to_uint() == 3
+assert a.length() == 8 and a.to_uint() == 12
+for count in (0, -1):
+    assert (a << count).length() == 8 and (a >> count).to_uint() == 12
+a.__assign__(0)
+assert (a << 2).length() == 8 and (a >> 2).length() == 8
+a.__assign__(12)
 left = a.__ilshift__(2)
 assert left.length() == 8 and left.to_uint() == 48
 right = a.__irshift__(2)

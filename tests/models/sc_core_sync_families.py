@@ -1,8 +1,41 @@
-"""Compare public mutex/semaphore ownership, return values and blocking timing."""
+"""Compare public mutex/semaphore errors, ownership, return values and timing."""
 
 from amal.eda.systemc import sc_core as sc
 import cppyy
 
+
+def report_reference(form, report):
+    """Print the preserved native report fields for one invalid constructor."""
+    fields = (
+        form,
+        str(report.get_id()),
+        str(int(report.get_severity())),
+        report.get_msg_type(),
+        report.get_msg(),
+        report.what(),
+    )
+    print("SYNC_INVALID_SEMAPHORE_REFERENCE\t" + "\t".join(fields))
+
+
+for form, arguments in (("positional", (-1,)), ("named", ("invalid", -1))):
+    try:
+        sc.sc_semaphore(*arguments)
+    except sc.sc_report as error:
+        expected_message = error.get_msg()
+        if form == "positional":
+            prefix = "semaphore 'semaphore_"
+            assert expected_message.startswith(prefix) and expected_message.endswith("'")
+            assert expected_message[len(prefix) : -1].isdigit()
+        else:
+            assert expected_message == "semaphore 'invalid'"
+        assert error.get_id() == 119
+        assert error.get_severity() == sc.SC_ERROR
+        assert error.get_msg_type() == "sc_semaphore requires an initial value >= 0"
+        assert error.get_msg() == expected_message
+        assert "(E119)" in error.what() and expected_message in error.what()
+        report_reference(form, error)
+    else:
+        raise AssertionError(f"negative semaphore constructor accepted for {form} form")
 generated_mutex = sc.sc_mutex()
 generated_semaphore = sc.sc_semaphore(2)
 assert generated_mutex.basename().startswith("mutex_")

@@ -353,3 +353,20 @@ and ``tests/native/sc_core_event_destruction.cpp``. This unsupported native
 lifetime pattern is excluded from the passing regression suite. Pending events
 without active waiters can be destroyed: cancellation and registry removal have
 separate passing native comparisons.
+
+Datatype arithmetic and contexts
+--------------------------------
+
+Signed ``sc_signed % sc_signed`` and unsigned value shifts by Python integers
+use explicit native overload adapters. Results own independent native storage;
+widths and remainder signs follow SystemC. Other operand types retain cppyy's
+existing overload handling. Native zero-divisor behavior remains terminal.
+
+``sc_dt.sc_context[T]`` owns a native context as a member, since native contexts
+prohibit ordinary heap allocation. ``sc_fxtype_context`` and ``sc_fxcast_context``
+select the corresponding parameter types. The constructor copies its parameters;
+``SC_NOW`` activates immediately and ``SC_LATER`` activates on ``begin()``.
+``end()`` or destruction restores the preceding default. End or destroy nested
+contexts in reverse order, in the originating native process. References returned
+by ``value()`` and ``default_value()`` require their owning context to remain alive.
+Copying contexts is disabled by native SystemC.

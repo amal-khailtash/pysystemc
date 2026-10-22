@@ -19,3 +19,8 @@ def test_sc_core_sync_families(tmp_path):
     actual = [line for line in output.splitlines() if line.startswith("SYNC_FAMILY_REFERENCE")]
     expected = [line for line in native.stdout.splitlines() if line.startswith("SYNC_FAMILY_REFERENCE")]
     assert len(actual) == 2 and actual == expected
+    actual_reports = [line for line in output.splitlines() if line.startswith("SYNC_INVALID_SEMAPHORE_REFERENCE")]
+    expected_reports = [
+        line for line in native.stdout.splitlines() if line.startswith("SYNC_INVALID_SEMAPHORE_REFERENCE")
+    ]
+    assert len(actual_reports) == 2 and actual_reports == expected_reports
