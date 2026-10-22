@@ -7,6 +7,12 @@ errors = []
 name = sc.sc_module_name("events")
 model = sc.sc_module(name)
 event = sc.sc_event("event")
+try:
+    event.notify()
+except sc.sc_report as report:
+    assert report.get_msg_type() == sc.SC_ID_IMMEDIATE_NOTIFICATION_
+else:
+    raise AssertionError("immediate elaboration notification did not report")
 
 
 def observer():
@@ -18,6 +24,7 @@ def observer():
 def drive():
     """Exercise immediate/time/unit notification, earlier priority and cancellation."""
     sc.wait(1, sc.SC_NS)
+    event.notify(10, sc.SC_NS)
     event.notify()
     sc.wait(1, sc.SC_NS)
     event.notify(sc.sc_time(1, sc.SC_NS))

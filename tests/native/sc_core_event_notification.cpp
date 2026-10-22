@@ -32,6 +32,7 @@ struct Events : sc_core::sc_module
   {
     using namespace sc_core;
     wait(1, SC_NS);
+    event.notify(10, SC_NS);
     event.notify();
     wait(1, SC_NS);
     event.notify(sc_time(1, SC_NS));
@@ -81,6 +82,15 @@ struct Events : sc_core::sc_module
 int sc_main(int, char**)
 {
   Events model("events");
+  try
+  {
+    model.event.notify();
+    return 2;
+  }
+  catch (const sc_core::sc_report& report)
+  {
+    if (std::string(report.get_msg_type()) != sc_core::SC_ID_IMMEDIATE_NOTIFICATION_) return 3;
+  }
   sc_core::sc_start();
   if (model.errors != 3 || !model.valid ||
       model.records != std::vector<sc_dt::uint64>{1000, 3000, 5000, 8000, 11000, 12000, 15000, 17000})
