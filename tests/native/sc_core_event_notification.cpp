@@ -85,6 +85,19 @@ struct Events : sc_core::sc_module
 /** @brief Run and check every callback time rather than only kernel exit. */
 int sc_main(int, char**)
 {
+  if (sc_core::sc_event::none.triggered() || !sc_core::sc_event::none.in_hierarchy() ||
+      sc_core::sc_event::none.get_parent_object())
+    return 4;
+  const auto* sentinel = &sc_core::sc_event::none;
+  for (int mode = 0; mode < 2; ++mode)
+  {
+    const char* label = mode ? "discard_timed" : "discard_delta";
+    {
+      sc_core::sc_event discarded(label);
+      discarded.notify(mode ? sc_core::sc_time(1, sc_core::SC_NS) : sc_core::SC_ZERO_TIME);
+    }
+    if (sc_core::sc_find_event(label)) return 5;
+  }
   Events model("events");
   try
   {
@@ -96,6 +109,7 @@ int sc_main(int, char**)
     if (std::string(report.get_msg_type()) != sc_core::SC_ID_IMMEDIATE_NOTIFICATION_) return 3;
   }
   sc_core::sc_start();
+  if (&sc_core::sc_event::none != sentinel || sc_core::sc_event::none.triggered()) return 6;
   if (model.errors != 3 || !model.valid ||
       model.records != std::vector<sc_dt::uint64>{1000, 3000, 5000, 8000, 11000, 12000, 15000, 17000})
     return 1;

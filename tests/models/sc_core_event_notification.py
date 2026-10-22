@@ -1,8 +1,15 @@
 """Compare event member notification priority, cancellation and triggered state."""
 
 from amal.eda.systemc import sc_core as sc
+import cppyy
 
 records = []
+none_address = cppyy.addressof(sc.sc_event.none)
+assert not sc.sc_event.none.triggered()
+assert sc.sc_event.none.in_hierarchy()
+assert sc.sc_event.none.basename() == "$$$$kernel_event$$$$_none"
+assert not sc.sc_event.none.get_parent_object()
+
 errors = []
 name = sc.sc_module_name("events")
 model = sc.sc_module(name)
@@ -65,7 +72,15 @@ model.sensitive(event)
 model.dont_initialize()
 model.sc_thread("driver", drive)
 del name
+for label, delay in (("discard_delta", sc.SC_ZERO_TIME), ("discard_timed", sc.sc_time(1, sc.SC_NS))):
+    discarded = sc.sc_event(label)
+    assert sc.sc_find_event(label)
+    discarded.notify(delay)
+    discarded.__destruct__()
+    assert not sc.sc_find_event(label)
 sc.sc_start()
+assert not sc.sc_event.none.triggered()
+assert cppyy.addressof(sc.sc_event.none) == none_address
 assert records == [1000, 3000, 5000, 8000, 11000, 12000, 15000, 17000], records
 assert errors == [1, 1, 1]
 print("EVENT_NOTIFY_REFERENCE", *records)

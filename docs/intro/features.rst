@@ -632,7 +632,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_elab_and_sim`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_enable_name_checking`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☑ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 28 supported, 2 untested; mapping: 30 reviewed.
+* ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 29 supported, 1 untested; mapping: 30 reviewed.
 * ☑ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``sc_core::sc_event_expr`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
