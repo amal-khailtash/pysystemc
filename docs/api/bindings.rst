@@ -328,4 +328,6 @@ first-party adapter resolves cppyy's missing expression conversion. The list
 owns its storage and borrows its events; keep events alive through list use and
 all waiting processes. Construction runs with the GIL held on the kernel thread.
 Native errors propagate. Do not reuse a consumed expression or modify a list
-while a process waits on it; busy-list mutation error contracts remain untested.
+while a process waits on it; native assignment and swap report errors while busy, preserve waiters when the
+error is thrown, and permit mutation after all waiters resume. Event union
+operations retain native behavior, which does not enforce the same busy check.
