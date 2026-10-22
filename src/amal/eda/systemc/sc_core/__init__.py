@@ -44,6 +44,7 @@ for _bridge in (
     "hash_helpers.cpp",
     "report_legacy.cpp",
     "report_handler.cpp",
+    "event_lists.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
@@ -52,6 +53,49 @@ cppyy.gbl.sc_core.sc_start.__release_gil__ = True
 cppyy.gbl.sc_core.sc_initialize.__release_gil__ = True
 cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
 cppyy.gbl.sc_main.__release_gil__ = True
+
+
+def _event_list_constructor(list_type):
+    """Preserve native constructors while consuming matching event expressions."""
+    native_init = list_type.__init__
+    expression_type = cppyy.gbl.sc_core.sc_event_expr[list_type]
+
+    def initialize(self, *args):
+        """Construct a list from native arguments or a single-use expression.
+
+        Referenced events must outlive the list and any waiting processes.
+        Expressions are consumed once; other arguments retain native conversion
+        errors. Construction runs with the GIL held on the kernel thread.
+        """
+        if len(args) == 1 and isinstance(args[0], expression_type):
+            native_init(self)
+            cppyy.gbl.sc_core.python_assign_event_expression[list_type](self, args[0])
+        else:
+            native_init(self, *args)
+
+    list_type.__init__ = initialize
+
+
+for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
+    _event_list_constructor(_event_list_type)
+
+
+def _event_notify_delayed(self, *args):
+    """Notify a borrowed event with native no-argument, time or value/unit forms.
+
+    Native pending-notification reports propagate as sc_report. Keep the event
+    alive until delivery; call on the kernel thread with the GIL held.
+    """
+    if not args:
+        return cppyy.gbl.sc_core.python_event_notify_delayed(self)
+    if len(args) == 1:
+        return cppyy.gbl.sc_core.python_event_notify_delayed_time(self, args[0])
+    if len(args) == 2:
+        return cppyy.gbl.sc_core.python_event_notify_delayed_units(self, *args)
+    raise TypeError("notify_delayed expects zero, one or two arguments")
+
+
+cppyy.gbl.sc_core.sc_event.notify_delayed = _event_notify_delayed
 
 
 # cppyy's std::function conversion does not retain bound Python callables.

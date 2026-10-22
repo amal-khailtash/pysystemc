@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+- Repair signed remainder and unsigned owning shifts with explicit native overloads; expose generic owning fixed-point contexts with native scope restoration. Exclude the disabled private context copy constructor from the public inventory.
+
 ## [0.14.0](https://github.com/amal-khailtash/pysystemc/compare/v0.13.2...v0.14.0) (2026-10-21)
 
 

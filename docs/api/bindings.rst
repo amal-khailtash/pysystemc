@@ -318,3 +318,55 @@ before native return conversion. Debug callbacks must not wait or notify events.
 Native enum metadata may be lost when cppyy converts a return to Python int;
 structural writer-policy callbacks must explicitly return ``sc_writer_policy``
 values, including when delegating to a native channel.
+
+Event-list expression construction
+----------------------------------
+
+``sc_event_or_list(expression)`` and ``sc_event_and_list(expression)`` consume
+a matching native expression once, as native C++ list construction does. The
+first-party adapter resolves cppyy's missing expression conversion. The list
+owns its storage and borrows its events; keep events alive through list use and
+all waiting processes. Construction runs with the GIL held on the kernel thread.
+Native errors propagate. Do not reuse a consumed expression or modify a list
+while a process waits on it; native assignment and swap report errors while busy, preserve waiters when the
+error is thrown, and permit mutation after all waiters resume. Event union
+operations retain native behavior, which does not enforce the same busy check.
+
+Calling an event expression's ``release()`` transfers its automatic native list
+to the caller as a borrowed reference. Consume it immediately by copying into
+the matching owning OR/AND list. That copy deletes the automatic list; discard
+the borrowed proxy and never access it afterward. Release each expression once.
+
+The three native ``sc_event.notify_delayed`` signatures use explicit bridge calls
+so duplicate pending notifications raise native ``sc_report`` rather than a
+cppyy overload-resolution ``TypeError``. Deprecation diagnostics, scheduling and
+event lifetime requirements retain native semantics.
+
+Event destruction with active timed waiters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Retain event storage until every dynamic waiter has finished. Deleting an event
+while native timed thread/method waits still reference it crashes in both the
+Python model and independent native C++ reference on the pinned runtime.
+The isolated manual reproducers are ``tests/models/sc_core_event_destruction.py``
+and ``tests/native/sc_core_event_destruction.cpp``. This unsupported native
+lifetime pattern is excluded from the passing regression suite. Pending events
+without active waiters can be destroyed: cancellation and registry removal have
+separate passing native comparisons.
+
+Datatype arithmetic and contexts
+--------------------------------
+
+Signed ``sc_signed % sc_signed`` and unsigned value shifts by Python integers
+use explicit native overload adapters. Results own independent native storage;
+widths and remainder signs follow SystemC. Other operand types retain cppyy's
+existing overload handling. Native zero-divisor behavior remains terminal.
+
+``sc_dt.sc_context[T]`` owns a native context as a member, since native contexts
+prohibit ordinary heap allocation. ``sc_fxtype_context`` and ``sc_fxcast_context``
+select the corresponding parameter types. The constructor copies its parameters;
+``SC_NOW`` activates immediately and ``SC_LATER`` activates on ``begin()``.
+``end()`` or destruction restores the preceding default. End or destroy nested
+contexts in reverse order, in the originating native process. References returned
+by ``value()`` and ``default_value()`` require their owning context to remain alive.
+Copying contexts is disabled by native SystemC.

@@ -22,7 +22,7 @@ def test_native_bit_views_and_concatenation(tmp_path):
 
 
 def test_native_signed_remainder_audit(tmp_path):
-    """Keep the modulo mapping gap visible while checking native remainder values."""
+    """Verify repaired modulo mapping against native remainder values."""
     assert "NATIVE_SIGNED_REMAINDER_AUDIT_OK" in run_example(tmp_path, "tests/models/native_signed_remainder.py")
 
 
@@ -32,7 +32,7 @@ def test_native_signed_range_audit(tmp_path):
 
 
 def test_native_unsigned_shift_audit(tmp_path):
-    """Record value-shift failures and verify native widths and in-place values."""
+    """Verify repaired owning shifts, native widths and in-place values."""
     assert "NATIVE_UNSIGNED_SHIFTS_AUDIT_OK" in run_example(tmp_path, "tests/models/native_unsigned_shifts.py")
 
 
@@ -42,7 +42,7 @@ def test_native_fx_conversions_audit(tmp_path):
 
 
 def test_native_fx_context_audit(tmp_path):
-    """Record context construction failure and verify native copy/restoration."""
+    """Verify owning contexts preserve native copy and scope restoration."""
     assert "NATIVE_FX_CONTEXT_AUDIT_OK" in run_example(tmp_path, "tests/models/native_fx_context.py")
 
 

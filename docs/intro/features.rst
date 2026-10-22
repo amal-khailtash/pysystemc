@@ -103,7 +103,7 @@ A. Public declaration inventory and Python mapping — inventoried
 
 The source inventory is closed for pinned SystemC revision
 ``5fc1469339775b54b1fcc2020ac744a58be5b50e``: 15,778 declaration identities,
-including 12,701 public and 3,077 internal entries. Both modeling and compatibility
+including 12,698 public and 3,080 internal entries. Both modeling and compatibility
 configurations, recorded active/inactive macros, friends, aliases and inheritance
 links are accounted for. These checkmarks describe inventory completion.
 
@@ -326,9 +326,13 @@ count of working Python features. These are details of the existing A–F scope,
 not additional requirements discovered during implementation.
 
 Download :download:`the complete per-declaration inventory <../_static/public-api-inventory.csv>`
-for all 12,701 public entries, exact native signatures and Python candidate
+for all 12,698 public entries, exact native signatures and Python candidate
 spellings, ownership, GIL, errors, source evidence and individual statuses.
 The downloadable file is committed documentation, independent of local AI records.
+Four private event-expression constructors/aliases and the disabled private
+context copy constructors were removed from the public
+list; their identities and access-control rationale remain in
+:download:`the exclusion record <../_static/public-api-exclusions.csv>`.
 
 **Status rules:** ``untested`` means runtime semantics have not been verified for
 that declaration's complete scope. ``failing`` records a known binding failure.
@@ -629,17 +633,17 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_elab_and_sim`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_enable_name_checking`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☑ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 30 untested; mapping: 9 partial, 21 reviewed.
-* ☐ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 untested; mapping: 8 partial, 3 reviewed.
-* ☐ ``sc_core::sc_event_expr`` — 26 declarations; runtime: 26 untested; mapping: 26 partial.
+* ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 29 supported, 1 untested; mapping: 30 reviewed.
+* ☑ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``sc_core::sc_event_expr`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
 * ☐ ``sc_core::sc_event_finder`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_event_finder_t`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
-* ☐ ``sc_core::sc_event_list`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``sc_core::sc_event_or_expr`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_event_or_list`` — 11 declarations; runtime: 11 untested; mapping: 8 partial, 3 reviewed.
-* ☐ ``sc_core::sc_event_queue`` — 9 declarations; runtime: 9 untested; mapping: 2 partial, 7 reviewed.
-* ☐ ``sc_core::sc_event_queue_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
+* ☐ ``sc_core::sc_event_list`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.
+* ☑ ``sc_core::sc_event_or_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_event_or_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``sc_core::sc_event_queue`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
+* ☑ ``sc_core::sc_event_queue_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☐ ``sc_core::sc_event_queue_port`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_exception`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_export`` — 15 declarations; runtime: 15 untested; mapping: 7 partial, 8 reviewed.
@@ -693,8 +697,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 untested; mapping: 4 partial, 5 reviewed.
-* ☐ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 untested; mapping: 1 partial, 4 reviewed.
+* ☐ ``sc_core::sc_mutex`` — 9 declarations; runtime: 7 supported, 2 untested; mapping: 2 partial, 7 reviewed.
+* ☐ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.
 * ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
 * ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
 * ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
@@ -739,8 +743,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 untested; mapping: 2 partial, 3 reviewed.
-* ☐ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 untested; mapping: 4 partial, 6 reviewed.
-* ☐ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
+* ☐ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 6 supported, 4 untested; mapping: 4 partial, 6 reviewed.
+* ☐ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 5 supported, 1 untested; mapping: 1 partial, 5 reviewed.
 * ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
 * ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
@@ -777,7 +781,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_time_params`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
 * ☐ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☑ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_time_tuple`` — 10 declarations; runtime: 10 untested; mapping: 3 partial, 7 reviewed.
+* ☑ ``sc_core::sc_time_tuple`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☐ ``sc_core::sc_time_unit`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 untested; mapping: 66 partial.
 * ☐ ``sc_core::sc_trace_delta_cycles`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
@@ -865,7 +869,7 @@ sc_dt public families
 * ☐ ``sc_dt::nor_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
 * ☐ ``sc_dt::not_equal`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
 * ☐ ``sc_dt::operator!=`` — 291 declarations; runtime: 291 untested; mapping: 291 partial.
-* ☐ ``sc_dt::operator%`` — 69 declarations; runtime: 1 failing, 68 untested; mapping: 69 partial.
+* ☐ ``sc_dt::operator%`` — 69 declarations; runtime: 1 supported, 68 untested; mapping: 68 partial, 1 reviewed.
 * ☐ ``sc_dt::operator&`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
 * ☐ ``sc_dt::operator&=`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
 * ☐ ``sc_dt::operator*`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
@@ -874,12 +878,12 @@ sc_dt public families
 * ☐ ``sc_dt::operator-`` — 203 declarations; runtime: 203 untested; mapping: 203 partial.
 * ☐ ``sc_dt::operator/`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
 * ☐ ``sc_dt::operator<`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator<<`` — 67 declarations; runtime: 1 failing, 66 untested; mapping: 67 partial.
+* ☐ ``sc_dt::operator<<`` — 67 declarations; runtime: 1 supported, 66 untested; mapping: 66 partial, 1 reviewed.
 * ☐ ``sc_dt::operator<=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
 * ☐ ``sc_dt::operator==`` — 268 declarations; runtime: 268 untested; mapping: 268 partial.
 * ☐ ``sc_dt::operator>`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
 * ☐ ``sc_dt::operator>=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator>>`` — 68 declarations; runtime: 1 failing, 67 untested; mapping: 68 partial.
+* ☐ ``sc_dt::operator>>`` — 68 declarations; runtime: 1 supported, 67 untested; mapping: 67 partial, 1 reviewed.
 * ☐ ``sc_dt::operator^`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
 * ☐ ``sc_dt::operator^=`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``sc_dt::operator|`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
@@ -901,7 +905,7 @@ sc_dt public families
 * ☐ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 untested; mapping: 57 partial, 2 reviewed.
 * ☐ ``sc_dt::sc_concref`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
 * ☐ ``sc_dt::sc_concref_r`` — 20 declarations; runtime: 20 untested; mapping: 20 partial.
-* ☐ ``sc_dt::sc_context`` — 34 declarations; runtime: 2 failing, 32 untested; mapping: 34 partial.
+* ☐ ``sc_dt::sc_context`` — 31 declarations; runtime: 1 supported, 30 untested; mapping: 30 partial, 1 reviewed.
 * ☐ ``sc_dt::sc_context_begin`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_dt::sc_digit`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_dt::sc_enc`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
