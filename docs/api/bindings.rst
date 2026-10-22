@@ -318,3 +318,14 @@ before native return conversion. Debug callbacks must not wait or notify events.
 Native enum metadata may be lost when cppyy converts a return to Python int;
 structural writer-policy callbacks must explicitly return ``sc_writer_policy``
 values, including when delegating to a native channel.
+
+Event-list expression construction
+----------------------------------
+
+``sc_event_or_list(expression)`` and ``sc_event_and_list(expression)`` consume
+a matching native expression once, as native C++ list construction does. The
+first-party adapter resolves cppyy's missing expression conversion. The list
+owns its storage and borrows its events; keep events alive through list use and
+all waiting processes. Construction runs with the GIL held on the kernel thread.
+Native errors propagate. Do not reuse a consumed expression or modify a list
+while a process waits on it; busy-list mutation error contracts remain untested.

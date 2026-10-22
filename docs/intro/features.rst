@@ -631,13 +631,13 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 30 untested; mapping: 9 partial, 21 reviewed.
 * ☐ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 untested; mapping: 8 partial, 3 reviewed.
+* ☐ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 8 supported, 3 untested; mapping: 3 partial, 8 reviewed.
 * ☐ ``sc_core::sc_event_expr`` — 26 declarations; runtime: 26 untested; mapping: 26 partial.
 * ☐ ``sc_core::sc_event_finder`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_event_finder_t`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_event_list`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``sc_core::sc_event_or_expr`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_event_or_list`` — 11 declarations; runtime: 11 untested; mapping: 8 partial, 3 reviewed.
+* ☐ ``sc_core::sc_event_or_list`` — 11 declarations; runtime: 8 supported, 3 untested; mapping: 3 partial, 8 reviewed.
 * ☐ ``sc_core::sc_event_queue`` — 9 declarations; runtime: 9 untested; mapping: 2 partial, 7 reviewed.
 * ☐ ``sc_core::sc_event_queue_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
 * ☐ ``sc_core::sc_event_queue_port`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.

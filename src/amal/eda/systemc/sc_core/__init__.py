@@ -44,6 +44,7 @@ for _bridge in (
     "hash_helpers.cpp",
     "report_legacy.cpp",
     "report_handler.cpp",
+    "event_lists.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
@@ -52,6 +53,31 @@ cppyy.gbl.sc_core.sc_start.__release_gil__ = True
 cppyy.gbl.sc_core.sc_initialize.__release_gil__ = True
 cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
 cppyy.gbl.sc_main.__release_gil__ = True
+
+
+def _event_list_constructor(list_type):
+    """Preserve native constructors while consuming matching event expressions."""
+    native_init = list_type.__init__
+    expression_type = cppyy.gbl.sc_core.sc_event_expr[list_type]
+
+    def initialize(self, *args):
+        """Construct a list from native arguments or a single-use expression.
+
+        Referenced events must outlive the list and any waiting processes.
+        Expressions are consumed once; other arguments retain native conversion
+        errors. Construction runs with the GIL held on the kernel thread.
+        """
+        if len(args) == 1 and isinstance(args[0], expression_type):
+            native_init(self)
+            cppyy.gbl.sc_core.python_assign_event_expression[list_type](self, args[0])
+        else:
+            native_init(self, *args)
+
+    list_type.__init__ = initialize
+
+
+for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
+    _event_list_constructor(_event_list_type)
 
 
 # cppyy's std::function conversion does not retain bound Python callables.
