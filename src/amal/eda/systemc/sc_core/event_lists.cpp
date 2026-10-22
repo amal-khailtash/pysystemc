@@ -14,6 +14,6 @@ namespace sc_core
 template <typename List>
 void python_assign_event_expression(List& target, const sc_event_expr<List>& expression)
 {
-  target = expression.release();
+  target = static_cast<const List&>(expression);
 }
 }  // namespace sc_core

@@ -36,7 +36,9 @@ int exercise_or(const sc_core::sc_event& a, const sc_core::sc_event& b, const sc
   expression.push_back(c);
   expression.push_back(second);
   sc_event_or_expr moved(expression);
-  sc_event_or_list expanded(moved);
+  const sc_event_or_list& converted = moved;
+  if (converted.size() != 3) return 10;
+  sc_event_or_list expanded(converted);
   auto release_expression = first | second;
   const sc_event_or_list& released = release_expression.release();
   if (released.size() != 2) return 8;
@@ -88,7 +90,9 @@ int exercise_and(const sc_core::sc_event& a, const sc_core::sc_event& b, const s
   expression.push_back(c);
   expression.push_back(second);
   sc_event_and_expr moved(expression);
-  sc_event_and_list expanded(moved);
+  const sc_event_and_list& converted = moved;
+  if (converted.size() != 3) return 20;
+  sc_event_and_list expanded(converted);
   auto release_expression = first & second;
   const sc_event_and_list& released = release_expression.release();
   if (released.size() != 2) return 18;
