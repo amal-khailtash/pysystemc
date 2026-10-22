@@ -26,8 +26,15 @@ for cls, combine in ((sc.sc_event_or_list, "or"), (sc.sc_event_and_list, "and"))
     expression_event.push_back(events[2])
     expression_event.push_back(second)
     expression_type = sc.sc_event_expr[cls]
+    alias = sc.sc_event_or_expr if combine == "or" else sc.sc_event_and_expr
+    assert alias is expression_type
+    # Discarding an unconsumed expression frees only its automatic list.
+    discarded = first | events[2] if combine == "or" else first & events[2]
+    discarded.__destruct__()
+    assert first.size() == 2 and events[2].name() == "c"
     moved_expression = expression_type(expression_event)
     expanded = cls(moved_expression)
+    moved_expression.__destruct__()
     expression_event.__destruct__()
     # release() returns a temporary borrowed list; its copy consumes storage.
     released = expression_list.release()

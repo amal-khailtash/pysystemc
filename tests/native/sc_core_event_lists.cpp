@@ -5,6 +5,7 @@
  */
 #include <iostream>
 #include <systemc>
+#include <type_traits>
 #include <vector>
 
 /** @brief Exercise OR-list construction, union, copy, swap and assignment.
@@ -26,6 +27,11 @@ int exercise_or(const sc_core::sc_event& a, const sc_core::sc_event& b, const sc
   first |= second;  // Existing event from the right-hand list must be suppressed.
   if (first.size() != 2) return 2;
 
+  static_assert(std::is_same<sc_event_or_expr, sc_event_expr<sc_event_or_list>>::value);
+  {
+    auto discarded = first | c;
+  }
+  if (first.size() != 2 || std::string(c.name()) != "c") return 9;
   auto expression = first | c;
   expression.push_back(c);
   expression.push_back(second);
@@ -73,6 +79,11 @@ int exercise_and(const sc_core::sc_event& a, const sc_core::sc_event& b, const s
   first &= second;  // Existing event from the right-hand list must be suppressed.
   if (first.size() != 2) return 12;
 
+  static_assert(std::is_same<sc_event_and_expr, sc_event_expr<sc_event_and_list>>::value);
+  {
+    auto discarded = first & c;
+  }
+  if (first.size() != 2 || std::string(c.name()) != "c") return 19;
   auto expression = first & c;
   expression.push_back(c);
   expression.push_back(second);
