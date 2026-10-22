@@ -26,7 +26,11 @@ int exercise_or(const sc_core::sc_event& a, const sc_core::sc_event& b, const sc
   first |= second;  // Existing event from the right-hand list must be suppressed.
   if (first.size() != 2) return 2;
 
-  sc_event_or_list expanded(first | c);
+  auto expression = first | c;
+  expression.push_back(c);
+  expression.push_back(second);
+  sc_event_or_expr moved(expression);
+  sc_event_or_list expanded(moved);
   sc_event_or_list repeated(first | second);
   if (expanded.size() != 3 || repeated.size() != 2) return 3;
 
@@ -66,7 +70,11 @@ int exercise_and(const sc_core::sc_event& a, const sc_core::sc_event& b, const s
   first &= second;  // Existing event from the right-hand list must be suppressed.
   if (first.size() != 2) return 12;
 
-  sc_event_and_list expanded(first & c);
+  auto expression = first & c;
+  expression.push_back(c);
+  expression.push_back(second);
+  sc_event_and_expr moved(expression);
+  sc_event_and_list expanded(moved);
   sc_event_and_list repeated(first & second);
   if (expanded.size() != 3 || repeated.size() != 2) return 13;
 

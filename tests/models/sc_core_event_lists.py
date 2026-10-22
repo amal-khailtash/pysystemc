@@ -23,7 +23,12 @@ for cls, combine in ((sc.sc_event_or_list, "or"), (sc.sc_event_and_list, "and"))
         expression_event = first & events[2]
         expression_list = first & second
     assert first.size() == 2
-    expanded = cls(expression_event)
+    expression_event.push_back(events[2])
+    expression_event.push_back(second)
+    expression_type = sc.sc_event_expr[cls]
+    moved_expression = expression_type(expression_event)
+    expanded = cls(moved_expression)
+    expression_event.__destruct__()
     repeated = cls(expression_list)
     assert expanded.size() == 3 and repeated.size() == 2
     copied = cls(first)
