@@ -20,6 +20,12 @@ def test_sc_core_event_notification(tmp_path):
         timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
-    actual = [line for line in output.splitlines() if line.startswith(("EVENT_NOTIFY_REFERENCE", "EVENT_DELAYED_REFERENCE"))]
-    expected = [line for line in native.stdout.splitlines() if line.startswith(("EVENT_NOTIFY_REFERENCE", "EVENT_DELAYED_REFERENCE"))]
+    actual = [
+        line for line in output.splitlines() if line.startswith(("EVENT_NOTIFY_REFERENCE", "EVENT_DELAYED_REFERENCE"))
+    ]
+    expected = [
+        line
+        for line in native.stdout.splitlines()
+        if line.startswith(("EVENT_NOTIFY_REFERENCE", "EVENT_DELAYED_REFERENCE"))
+    ]
     assert len(actual) == 2 and actual == expected
