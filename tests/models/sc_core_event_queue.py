@@ -3,6 +3,9 @@
 from amal.eda.systemc import sc_core as sc
 import cppyy
 
+generated = sc.sc_event_queue()
+assert generated.basename().startswith("event_queue_")
+assert generated.kind() == "sc_event_queue"
 name = sc.sc_module_name("queues")
 model = sc.sc_module(name)
 queue = sc.sc_event_queue("queue")
@@ -39,5 +42,12 @@ queue.notify(sc.sc_time(1, sc.SC_NS))
 sc.sc_start(2, sc.SC_NS)
 assert [time for time, delta in records] == [1000, 1000, 2000, 7000]
 sc.sc_stop()
+queue.notify(1, sc.SC_NS)
+queue.__destruct__()
+assert not sc.sc_find_object("queues.queue")
+generated.notify(sc.sc_time(1, sc.SC_NS))
+generated_name = str(generated.name())
+generated.__destruct__()
+assert not sc.sc_find_object(generated_name)
 for time, delta in records:
     print("EVENT_QUEUE_REFERENCE", time, delta)

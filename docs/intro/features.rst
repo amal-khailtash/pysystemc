@@ -641,7 +641,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_event_list`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.
 * ☑ ``sc_core::sc_event_or_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_event_or_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
-* ☐ ``sc_core::sc_event_queue`` — 9 declarations; runtime: 7 supported, 2 untested; mapping: 2 partial, 7 reviewed.
+* ☑ ``sc_core::sc_event_queue`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☑ ``sc_core::sc_event_queue_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☐ ``sc_core::sc_event_queue_port`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_exception`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.

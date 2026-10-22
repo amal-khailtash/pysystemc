@@ -30,6 +30,8 @@ struct Model : sc_core::sc_module
 int sc_main(int, char**)
 {
   using namespace sc_core;
+  auto* generated = new sc_event_queue();
+  if (std::string(generated->basename()).find("event_queue_") != 0) return 5;
   Model model("queues");
   sc_event_queue_if& interface = model.queue;
   static_assert(std::is_same<sc_event_queue::SC_CURRENT_USER_MODULE, sc_event_queue>::value);
@@ -54,5 +56,9 @@ int sc_main(int, char**)
   if (model.records.size() != 4 || model.records.back().first != 7000) return 4;
   for (auto record : model.records)
     std::cout << "EVENT_QUEUE_REFERENCE " << record.first << " " << record.second << "\n";
+  generated->notify(sc_time(1, SC_NS));
+  std::string generated_name = generated->name();
+  delete generated;
+  if (sc_find_object(generated_name.c_str())) return 6;
   return 0;
 }
