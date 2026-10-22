@@ -17,7 +17,8 @@ vcd = sc.sc_create_vcd_trace_file("extended")
 wif = sc.sc_create_wif_trace_file("extended")
 try:
     for trace in (vcd, wif):
-        trace.set_time_unit(1, sc.SC_NS)
+        # Leave room for VCD pseudo-timestamps between nanosecond steps.
+        trace.set_time_unit(1, sc.SC_PS if trace is vcd else sc.SC_NS)
         sc.sc_trace(trace, logic, "top.child.resolved")
         sc.sc_trace(trace, fixed, "fixed")
         sc.sc_trace(trace, fast, "fast")
@@ -46,8 +47,11 @@ text = Path("extended.vcd").read_text()
 for name in ("resolved", "fixed", "fast", "time", "event", "signed_scalar"):
     assert any(name in line for line in text.splitlines() if line.startswith("$var")), text
 assert "$scope module top $end" in text and "$scope module child $end" in text, text
-assert "b11101111" in text and "b11011111" in text, text
-assert "#1" in text and "1aaaaa" in text, text
+assert "$timescale\n     1 ps\n$end" in text, text
+one_ns = text.split("#1000\n", 1)[1].split("\n#", 1)[0]
+assert "b11101111 aaaaf" in text, text
+assert "1aaaaa" in one_ns and "b11011111 aaaaf" in one_ns, text
+assert "\n#2000\n" in text, text
 text = Path("extended.awif").read_text()
 for name in ("resolved", "fixed", "fast"):
     assert name in text, text
