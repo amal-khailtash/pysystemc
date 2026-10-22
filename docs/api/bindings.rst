@@ -336,3 +336,8 @@ Calling an event expression's ``release()`` transfers its automatic native list
 to the caller as a borrowed reference. Consume it immediately by copying into
 the matching owning OR/AND list. That copy deletes the automatic list; discard
 the borrowed proxy and never access it afterward. Release each expression once.
+
+The three native ``sc_event.notify_delayed`` signatures use explicit bridge calls
+so duplicate pending notifications raise native ``sc_report`` rather than a
+cppyy overload-resolution ``TypeError``. Deprecation diagnostics, scheduling and
+event lifetime requirements retain native semantics.

@@ -2,6 +2,27 @@
 
 namespace sc_core
 {
+/** @brief Notify in the next delta; native reports propagate with the GIL held.
+ * The event is borrowed and must survive pending notifications on the kernel thread.
+ */
+void python_event_notify_delayed(sc_event& event)
+{
+  event.notify_delayed();
+}
+/** @brief Schedule a borrowed event after a native delay, preserving report exceptions.
+ * Call with the GIL held on the kernel thread; event storage must outlive delivery.
+ */
+void python_event_notify_delayed_time(sc_event& event, const sc_time& time)
+{
+  event.notify_delayed(time);
+}
+/** @brief Schedule a borrowed event using native time/unit semantics and reports.
+ * Call with the GIL held on the kernel thread; event storage must outlive delivery.
+ */
+void python_event_notify_delayed_units(sc_event& event, double value, sc_time_unit unit)
+{
+  event.notify_delayed(value, unit);
+}
 /**
  * @brief Consume an event expression into an existing, inactive native list.
  *

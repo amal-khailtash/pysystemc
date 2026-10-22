@@ -80,6 +80,24 @@ for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.s
     _event_list_constructor(_event_list_type)
 
 
+def _event_notify_delayed(self, *args):
+    """Notify a borrowed event with native no-argument, time or value/unit forms.
+
+    Native pending-notification reports propagate as sc_report. Keep the event
+    alive until delivery; call on the kernel thread with the GIL held.
+    """
+    if not args:
+        return cppyy.gbl.sc_core.python_event_notify_delayed(self)
+    if len(args) == 1:
+        return cppyy.gbl.sc_core.python_event_notify_delayed_time(self, args[0])
+    if len(args) == 2:
+        return cppyy.gbl.sc_core.python_event_notify_delayed_units(self, *args)
+    raise TypeError("notify_delayed expects zero, one or two arguments")
+
+
+cppyy.gbl.sc_core.sc_event.notify_delayed = _event_notify_delayed
+
+
 # cppyy's std::function conversion does not retain bound Python callables.
 # Keep them alive on their owning module for the native process lifetime.
 def _retain_process_callback(register):

@@ -12,6 +12,7 @@ struct Events : sc_core::sc_module
   sc_core::sc_event event;
   std::vector<sc_dt::uint64> records;
   bool valid = true;
+  int errors = 0;
   /** @brief Register native processes before starting simulation. */
   explicit Events(sc_core::sc_module_name name) : sc_module(name), event("event")
   {
@@ -49,6 +50,30 @@ struct Events : sc_core::sc_module
     event.notify(SC_ZERO_TIME);
     wait(1, SC_NS);
     if (event.triggered()) valid = false;
+    for (int mode = 0; mode < 3; ++mode)
+    {
+      auto notify = [&]()
+      {
+        if (mode == 0)
+          event.notify_delayed();
+        else if (mode == 1)
+          event.notify_delayed(sc_time(1, SC_NS));
+        else
+          event.notify_delayed(1, SC_NS);
+      };
+      notify();
+      try
+      {
+        notify();
+        valid = false;
+      }
+      catch (const sc_report& report)
+      {
+        if (std::string(report.get_msg_type()) != SC_ID_NOTIFY_DELAYED_) valid = false;
+        ++errors;
+      }
+      wait(2, SC_NS);
+    }
     sc_stop();
   }
 };
@@ -57,9 +82,12 @@ int sc_main(int, char**)
 {
   Events model("events");
   sc_core::sc_start();
-  if (!model.valid || model.records != std::vector<sc_dt::uint64>{1000, 3000, 5000, 8000, 11000}) return 1;
+  if (model.errors != 3 || !model.valid ||
+      model.records != std::vector<sc_dt::uint64>{1000, 3000, 5000, 8000, 11000, 12000, 15000, 17000})
+    return 1;
   std::cout << "EVENT_NOTIFY_REFERENCE";
   for (auto time : model.records) std::cout << " " << time;
   std::cout << "\n";
+  std::cout << "EVENT_DELAYED_REFERENCE " << model.errors << "\n";
   return 0;
 }

@@ -3,6 +3,7 @@
 from amal.eda.systemc import sc_core as sc
 
 records = []
+errors = []
 name = sc.sc_module_name("events")
 model = sc.sc_module(name)
 event = sc.sc_event("event")
@@ -35,6 +36,16 @@ def drive():
     event.notify(sc.SC_ZERO_TIME)
     sc.wait(1, sc.SC_NS)
     assert not event.triggered()
+    for args in ((), (sc.sc_time(1, sc.SC_NS),), (1, sc.SC_NS)):
+        event.notify_delayed(*args)
+        try:
+            event.notify_delayed(*args)
+        except sc.sc_report as report:
+            assert report.get_msg_type() == sc.SC_ID_NOTIFY_DELAYED_
+            errors.append(1)
+        else:
+            raise AssertionError("duplicate delayed notification did not report")
+        sc.wait(2, sc.SC_NS)
     sc.sc_stop()
 
 
@@ -44,5 +55,7 @@ model.dont_initialize()
 model.sc_thread("driver", drive)
 del name
 sc.sc_start()
-assert records == [1000, 3000, 5000, 8000, 11000], records
+assert records == [1000, 3000, 5000, 8000, 11000, 12000, 15000, 17000], records
+assert errors == [1, 1, 1]
 print("EVENT_NOTIFY_REFERENCE", *records)
+print("EVENT_DELAYED_REFERENCE", len(errors))
