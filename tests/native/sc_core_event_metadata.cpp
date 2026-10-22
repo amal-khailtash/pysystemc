@@ -20,6 +20,23 @@ int sc_main(int, char**)
   if (std::string(outside.name()) != "outside" || std::string(outside.basename()) != "outside" ||
       !outside.in_hierarchy() || outside.get_parent_object())
     return 1;
+  sc_event generated;
+  if (!generated.in_hierarchy() || std::string(generated.name()).find("event_") != 0 || generated.get_parent_object())
+    return 4;
+  if (sc_event::none.triggered()) return 5;
+  sc_event_or_list or_source(outside);
+  sc_event_and_list and_source(outside);
+  sc_event_or_list or_combined(generated | or_source);
+  sc_event_and_list and_combined(generated & and_source);
+  sc_event_or_list or_direct(outside | generated);
+  sc_event_and_list and_direct(outside & generated);
+  if (or_combined.size() != 2 || and_combined.size() != 2 || or_source.size() != 1 || and_source.size() != 1 ||
+      or_direct.size() != 2 || and_direct.size() != 2)
+    return 6;
+  {
+    sc_event pending("pending");
+    pending.notify(sc_time(1, SC_NS));
+  }
   sc_module_name name("owner");
   Owner owner(name);
   std::string snapshot;
