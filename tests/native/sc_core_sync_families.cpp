@@ -26,7 +26,9 @@ struct Model : sc_core::sc_module
     using namespace sc_core;
     if (mutex.lock() != 0 || mutex.trylock() != 0 || mutex.lock() != 0) valid = false;
     wait(2, SC_NS);
-    if (mutex.unlock() != 0 || semaphore.post() != 0 || semaphore.get_value() != 1) valid = false;
+    if (mutex.unlock() != 0) valid = false;
+    wait(1, SC_NS);
+    if (semaphore.post() != 0 || semaphore.get_value() != 1) valid = false;
   }
   /** @brief Verify foreign-owner failure and blocking acquisition via interfaces. */
   void contender()
@@ -47,10 +49,15 @@ struct Model : sc_core::sc_module
 /** @brief Check exact native return values and resume timestamps. */
 int sc_main(int, char**)
 {
+  sc_core::sc_mutex generated_mutex;
+  sc_core::sc_semaphore generated_semaphore(2);
+  if (std::string(generated_mutex.basename()).find("mutex_") != 0 ||
+      std::string(generated_semaphore.basename()).find("semaphore_") != 0 || generated_semaphore.get_value() != 2)
+    return 3;
   Model model("sync");
   if (std::string(model.mutex.kind()) != "sc_mutex" || std::string(model.semaphore.kind()) != "sc_semaphore") return 1;
   sc_core::sc_start();
-  if (!model.valid || model.records != std::vector<std::string>{"mutex 2000", "semaphore 2000"}) return 2;
+  if (!model.valid || model.records != std::vector<std::string>{"mutex 2000", "semaphore 3000"}) return 2;
   for (const auto& record : model.records) std::cout << "SYNC_FAMILY_REFERENCE " << record << "\n";
   return 0;
 }

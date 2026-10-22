@@ -3,6 +3,11 @@
 from amal.eda.systemc import sc_core as sc
 import cppyy
 
+generated_mutex = sc.sc_mutex()
+generated_semaphore = sc.sc_semaphore(2)
+assert generated_mutex.basename().startswith("mutex_")
+assert generated_semaphore.basename().startswith("semaphore_")
+assert generated_semaphore.get_value() == 2
 name = sc.sc_module_name("sync")
 model = sc.sc_module(name)
 mutex = sc.sc_mutex("mutex")
@@ -19,6 +24,7 @@ def holder():
     assert mutex.lock() == 0 and mutex.trylock() == 0 and mutex.lock() == 0
     sc.wait(2, sc.SC_NS)
     assert mutex.unlock() == 0
+    sc.wait(1, sc.SC_NS)
     assert semaphore.post() == 0 and semaphore.get_value() == 1
 
 
@@ -41,6 +47,6 @@ model.sc_thread("holder", holder)
 model.sc_thread("contender", contender)
 del name
 sc.sc_start()
-assert records == [("mutex", 2000), ("semaphore", 2000)]
+assert records == [("mutex", 2000), ("semaphore", 3000)]
 for kind, time in records:
     print("SYNC_FAMILY_REFERENCE", kind, time)

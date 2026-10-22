@@ -696,7 +696,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``sc_core::sc_mutex`` — 9 declarations; runtime: 5 supported, 4 untested; mapping: 4 partial, 5 reviewed.
+* ☐ ``sc_core::sc_mutex`` — 9 declarations; runtime: 7 supported, 2 untested; mapping: 2 partial, 7 reviewed.
 * ☐ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.
 * ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
 * ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
@@ -742,8 +742,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 untested; mapping: 2 partial, 3 reviewed.
-* ☐ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 5 supported, 5 untested; mapping: 4 partial, 6 reviewed.
-* ☐ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 4 supported, 2 untested; mapping: 1 partial, 5 reviewed.
+* ☐ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 6 supported, 4 untested; mapping: 4 partial, 6 reviewed.
+* ☐ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 5 supported, 1 untested; mapping: 1 partial, 5 reviewed.
 * ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
 * ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
