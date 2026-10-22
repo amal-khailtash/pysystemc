@@ -329,6 +329,9 @@ Download :download:`the complete per-declaration inventory <../_static/public-ap
 for all 12,701 public entries, exact native signatures and Python candidate
 spellings, ownership, GIL, errors, source evidence and individual statuses.
 The downloadable file is committed documentation, independent of local AI records.
+Four private event-expression constructors/aliases were removed from the public
+list; their identities and access-control rationale remain in
+:download:`the exclusion record <../_static/public-api-exclusions.csv>`.
 
 **Status rules:** ``untested`` means runtime semantics have not been verified for
 that declaration's complete scope. ``failing`` records a known binding failure.
@@ -632,7 +635,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_event`` — 30 declarations; runtime: 30 untested; mapping: 9 partial, 21 reviewed.
 * ☑ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
-* ☐ ``sc_core::sc_event_expr`` — 26 declarations; runtime: 22 supported, 4 untested; mapping: 4 partial, 22 reviewed.
+* ☑ ``sc_core::sc_event_expr`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
 * ☐ ``sc_core::sc_event_finder`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_event_finder_t`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_event_list`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.

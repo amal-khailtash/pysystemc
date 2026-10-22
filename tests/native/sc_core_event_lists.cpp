@@ -28,6 +28,7 @@ int exercise_or(const sc_core::sc_event& a, const sc_core::sc_event& b, const sc
   if (first.size() != 2) return 2;
 
   static_assert(std::is_same<sc_event_or_expr, sc_event_expr<sc_event_or_list>>::value);
+  static_assert(!std::is_default_constructible<sc_event_or_expr>::value);
   {
     auto discarded = first | c;
   }
@@ -82,6 +83,7 @@ int exercise_and(const sc_core::sc_event& a, const sc_core::sc_event& b, const s
   if (first.size() != 2) return 12;
 
   static_assert(std::is_same<sc_event_and_expr, sc_event_expr<sc_event_and_list>>::value);
+  static_assert(!std::is_default_constructible<sc_event_and_expr>::value);
   {
     auto discarded = first & c;
   }
