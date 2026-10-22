@@ -341,3 +341,15 @@ The three native ``sc_event.notify_delayed`` signatures use explicit bridge call
 so duplicate pending notifications raise native ``sc_report`` rather than a
 cppyy overload-resolution ``TypeError``. Deprecation diagnostics, scheduling and
 event lifetime requirements retain native semantics.
+
+Event destruction with active timed waiters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Retain event storage until every dynamic waiter has finished. Deleting an event
+while native timed thread/method waits still reference it crashes in both the
+Python model and independent native C++ reference on the pinned runtime.
+The isolated manual reproducers are ``tests/models/sc_core_event_destruction.py``
+and ``tests/native/sc_core_event_destruction.cpp``. This unsupported native
+lifetime pattern is excluded from the passing regression suite. Pending events
+without active waiters can be destroyed: cancellation and registry removal have
+separate passing native comparisons.
