@@ -48,7 +48,11 @@ struct Events : sc_core::sc_module
     event.cancel();
     wait(2, SC_NS);
     if (event.triggered()) valid = false;
+    event.notify(5, SC_NS);
     event.notify(SC_ZERO_TIME);
+    event.notify(SC_ZERO_TIME);
+    event.notify(sc_time(2, SC_NS));
+    event.notify(3, SC_NS);
     wait(1, SC_NS);
     if (event.triggered()) valid = false;
     for (int mode = 0; mode < 3; ++mode)

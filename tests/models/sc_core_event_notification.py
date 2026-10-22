@@ -40,7 +40,11 @@ def drive():
     event.cancel()
     sc.wait(2, sc.SC_NS)
     assert not event.triggered()
+    event.notify(5, sc.SC_NS)
     event.notify(sc.SC_ZERO_TIME)
+    event.notify(sc.SC_ZERO_TIME)
+    event.notify(sc.sc_time(2, sc.SC_NS))
+    event.notify(3, sc.SC_NS)
     sc.wait(1, sc.SC_NS)
     assert not event.triggered()
     for args in ((), (sc.sc_time(1, sc.SC_NS),), (1, sc.SC_NS)):
