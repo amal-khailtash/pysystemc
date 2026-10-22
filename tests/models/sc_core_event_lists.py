@@ -29,7 +29,13 @@ for cls, combine in ((sc.sc_event_or_list, "or"), (sc.sc_event_and_list, "and"))
     moved_expression = expression_type(expression_event)
     expanded = cls(moved_expression)
     expression_event.__destruct__()
-    repeated = cls(expression_list)
+    # release() returns a temporary borrowed list; its copy consumes storage.
+    released = expression_list.release()
+    assert released.size() == 2
+    repeated = cls(released)
+    # The borrowed proxy is now invalid: do not access or destroy it.
+    del released
+    expression_list.__destruct__()
     assert expanded.size() == 3 and repeated.size() == 2
     copied = cls(first)
     assert copied.size() == 2

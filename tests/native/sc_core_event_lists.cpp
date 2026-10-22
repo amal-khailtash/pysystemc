@@ -31,7 +31,10 @@ int exercise_or(const sc_core::sc_event& a, const sc_core::sc_event& b, const sc
   expression.push_back(second);
   sc_event_or_expr moved(expression);
   sc_event_or_list expanded(moved);
-  sc_event_or_list repeated(first | second);
+  auto release_expression = first | second;
+  const sc_event_or_list& released = release_expression.release();
+  if (released.size() != 2) return 8;
+  sc_event_or_list repeated(released);
   if (expanded.size() != 3 || repeated.size() != 2) return 3;
 
   sc_event_or_list copied(first);  // Uses the implicit derived copy constructor.
@@ -75,7 +78,10 @@ int exercise_and(const sc_core::sc_event& a, const sc_core::sc_event& b, const s
   expression.push_back(second);
   sc_event_and_expr moved(expression);
   sc_event_and_list expanded(moved);
-  sc_event_and_list repeated(first & second);
+  auto release_expression = first & second;
+  const sc_event_and_list& released = release_expression.release();
+  if (released.size() != 2) return 18;
+  sc_event_and_list repeated(released);
   if (expanded.size() != 3 || repeated.size() != 2) return 13;
 
   sc_event_and_list copied(first);  // Uses the implicit derived copy constructor.

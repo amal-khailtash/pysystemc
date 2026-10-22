@@ -331,3 +331,8 @@ Native errors propagate. Do not reuse a consumed expression or modify a list
 while a process waits on it; native assignment and swap report errors while busy, preserve waiters when the
 error is thrown, and permit mutation after all waiters resume. Event union
 operations retain native behavior, which does not enforce the same busy check.
+
+Calling an event expression's ``release()`` transfers its automatic native list
+to the caller as a borrowed reference. Consume it immediately by copying into
+the matching owning OR/AND list. That copy deletes the automatic list; discard
+the borrowed proxy and never access it afterward. Release each expression once.
