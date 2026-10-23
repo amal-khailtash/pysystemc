@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Preserve clocked-thread `halt` suspension and Python cleanup on normal termination, reset and kill; accept native thread pointers or process handles for stack-size configuration.
+- Support native priority queues with arbitrary pointer types and retain Python comparators for the queue lifetime.
+- Support concrete buffer and resolved-signal constructors, assignments and native update hooks, including custom buffer payloads and 137-bit resolved vectors.
 - Support mutable byte views from `sc_byte_heap.allocate`, preserving native alignment and storage reuse.
 - Support formatted trace comments with C printf conversions, numeric length modifiers, positional arguments and dynamically sized buffers.
 - Preserve Python reset/kill cleanup and release the GIL for both event-based and clocked `sc_join` waits.
@@ -17,6 +20,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Preserve starvation policies for all four `sc_start` overloads and propagate callback errors without restarting simulation.
 
 ### Fixed
+- Preserve explicit simulation contexts for guarded waits and native event-expression ownership for timed dynamic sensitivity.
+- Support native stream insertion for times, statuses, signal channels and arbitrary input/inout port types, preserving chaining and I/O diagnostics.
 - Support scalar multiplication on the left of `sc_time` with native rounding.
 - Avoid adding refresh processes when tracing native signals, preserving native delta-cycle timing and WIF output.
 - Accept null trace-file closure through either `None` or a native null pointer.

@@ -49,6 +49,7 @@ for _bridge in (
     "trace_printf.cpp",
     "time_operations.cpp",
     "byte_heap.cpp",
+    "process_utilities.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
@@ -814,13 +815,23 @@ def next_trigger(*args: Any) -> Any:
 
     Args:
         *args: Native next_trigger time/event arguments. Expressions are consumed
-            once; referenced events must outlive the scheduled invocation.
+            once; referenced events must outlive the scheduled invocation. An
+            optional native simulation context follows the sensitivity arguments.
+
+    Returns:
+        None after configuring the next method invocation.
+
+    Raises:
+        sc_report: The native process context does not permit dynamic sensitivity.
+        TypeError: Arguments do not match a native sensitivity overload, or cppyy
+            wraps an invalid-process native report; its diagnostic is retained.
     """
-    if len(args) == 1 and any(
-        isinstance(args[0], cppyy.gbl.sc_core.sc_event_expr[list_type])
+    if any(
+        isinstance(value, cppyy.gbl.sc_core.sc_event_expr[list_type])
+        for value in args
         for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
     ):
-        return cppyy.gbl.sc_core.python_next_trigger(args[0])
+        return cppyy.gbl.sc_core.python_next_trigger(*args)
     return _native_next_trigger(*args)
 
 
@@ -875,7 +886,15 @@ def wait(*args: Any) -> None:
     """Suspend a native thread with cycle, time, event or event-list sensitivity.
 
     Args:
-        *args: Native wait arguments, including event OR/AND expressions.
+        *args: Native wait arguments, including event OR/AND expressions and an
+            optional trailing borrowed simulation context.
+
+    Returns:
+        None when the native wait completes normally.
+
+    Raises:
+        sc_report: The native process context does not permit the selected wait.
+        TypeError: Arguments do not match a native wait overload.
 
     Reset and kill unwind Python frames, execute finally blocks, and then restore
     the original native scheduler exception. Do not suppress BaseException or
@@ -900,6 +919,71 @@ cppyy.gbl.sc_core.sc_time.__rmul__ = _time_left_multiply
 from ._byte_heap import allocate as _byte_heap_allocate
 
 cppyy.gbl.sc_core.sc_byte_heap.allocate = _byte_heap_allocate
+
+
+def halt(simc=None):
+    """Halt the current clocked thread with native scheduling and Python cleanup.
+
+    Args:
+        simc: Borrowed native context; defaults to the current simulation context.
+
+    Returns:
+        Does not return normally; the native thread terminates after suspension.
+
+    Raises:
+        sc_report: Called outside a clocked thread.
+
+    The call releases GIL, executes Python finally blocks, and restores native
+    halt/reset/kill control flow. Do not suppress the cleanup exception or wait
+    during cleanup. Keep the context alive through the suspended call.
+    """
+    operation = cppyy.gbl.sc_core.python_halt
+    operation.__release_gil__ = True
+    if simc is None:
+        simc = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    if not operation(simc):
+        raise _ProcessUnwind()
+
+
+def sc_set_stack_size(thread_h, size):
+    """Set native thread stack size before its first execution.
+
+    Args:
+        thread_h: Borrowed native thread pointer or thread/clocked-thread handle.
+        size: Positive native byte count.
+
+    Returns:
+        None after native stack configuration.
+
+    Raises:
+        TypeError: Size or thread argument has an incompatible type.
+        ValueError: Size is not positive or the selected handle/pointer is invalid.
+        sc_report: Native stack configuration report.
+
+    The GIL remains held; this does not advance simulation. Retain the thread
+    through configuration. Changing an already prepared coroutine's stack does
+    not resize its active native stack.
+    """
+    if isinstance(size, bool) or not isinstance(size, int):
+        raise TypeError("stack size must be an integer")
+    if size <= 0:
+        raise ValueError("stack size must be positive")
+    if isinstance(thread_h, cppyy.gbl.sc_core.sc_process_handle):
+        if not thread_h.valid() or thread_h.proc_kind() not in (
+            cppyy.gbl.sc_core.SC_THREAD_PROC_,
+            cppyy.gbl.sc_core.SC_CTHREAD_PROC_,
+        ):
+            raise ValueError("stack size requires a thread or clocked-thread handle")
+    elif thread_h is None or thread_h is cppyy.nullptr:
+        raise ValueError("stack size requires a live thread pointer")
+    native = cppyy.gbl.pysystemc_public
+    operation = (
+        native.set_stack_size_handle
+        if isinstance(thread_h, cppyy.gbl.sc_core.sc_process_handle)
+        else native.set_stack_size_pointer
+    )
+    return operation(thread_h, size)
+
 
 from ._trace_printf import tprintf as tprintf
 

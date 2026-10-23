@@ -50,6 +50,14 @@ run in fresh subprocesses. Reset/kill requires a running SystemC process;
 guarded Python waits preserve scheduler unwind. Python cleanup must propagate
 unwind and must not wait again. Restarting a stopped kernel is not supported.
 
+Guarded ``wait`` and ``next_trigger`` accept an explicit native simulation
+context in their usual trailing argument position. Event expressions are
+consumed once; referenced events must survive the scheduled invocation.
+``halt`` suspends a clocked thread until its next edge and preserves Python
+cleanup before native termination, reset or kill. ``sc_set_stack_size`` accepts
+a native thread pointer or process handle and a positive byte count; configure
+the stack before the thread's first execution.
+
 Channels, ports and modeling utilities
 --------------------------------------
 
@@ -64,6 +72,24 @@ Channels, ports and modeling utilities
 * ☑ Report handlers, action masks, severity/id precedence, suppression and forcing.
 * ☑ Hierarchy traversal, status/version/time introspection and namespace help.
 * ☐ Complete channel, port-policy, vector, report and event overload/type/error audits.
+
+Native ``sc_ppq`` queues accept arbitrary pointer specializations and retain a
+Python comparator until queue destruction. The queue owns its pointer array;
+callers retain the pointed-to objects. The ``sc_event_timed*`` specialization
+is checked with null entries only; nonnull kernel timed-event lifetime and
+comparison are untested.
+
+Character output streams accept native times, statuses, signal channels,
+input/inout ports and FIFOs through ``stream << value``. Insertion returns the
+original stream for chaining, preserves FIFO contents and maps native I/O
+failures to ``OSError``. Port and channel storage must remain alive during
+printing.
+
+``sc_buffer`` notifies on repeated writes of the same value, while ordinary
+signals notify on value changes. Resolved scalar and vector signals combine
+values from distinct running driver processes using native four-state
+resolution. Constructors, assignment forms and update hooks are checked for
+these concrete channels, including custom buffer payloads and 137-bit vectors.
 
 Datatypes and tracing
 ---------------------
@@ -587,19 +613,19 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::default_int_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::default_ptr_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::halt`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::next_trigger`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
+* ☑ ``sc_core::halt`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::next_trigger`` — 12 declarations; runtime: 12 supported; mapping: 12 reviewed.
 * ☑ ``sc_core::notify`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☐ ``sc_core::operator!=`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::operator!=`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::operator%`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::operator&`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☑ ``sc_core::operator*`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::operator+`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::operator-`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::operator/`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_core::operator<`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::operator<<`` — 8 declarations; runtime: 2 supported, 6 untested; mapping: 6 partial, 2 reviewed.
-* ☐ ``sc_core::operator==`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::operator<`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::operator<<`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``sc_core::operator==`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::operator|`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::sc_abort`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☑ ``sc_core::sc_actions`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -614,7 +640,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_behavior`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☑ ``sc_core::sc_bind_proxy`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
-* ☐ ``sc_core::sc_buffer`` — 14 declarations; runtime: 14 untested; mapping: 6 partial, 8 reviewed.
+* ☑ ``sc_core::sc_buffer`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_byte_heap`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_core::sc_channel`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_clock`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
@@ -726,8 +752,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 untested; mapping: 30 partial, 97 reviewed.
 * ☐ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 untested; mapping: 4 partial, 17 reviewed.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
-* ☐ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 untested; mapping: 9 partial.
+* ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
+* ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☐ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 untested; mapping: 28 partial, 13 reviewed.
 * ☐ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
 * ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 34 supported, 4 untested; mapping: 2 partial, 36 reviewed.
@@ -750,7 +776,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☑ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_set_random_seed`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_set_stack_size`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_set_stack_size`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_severity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -758,8 +784,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_signal_channel`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
 * ☐ ``sc_core::sc_signal_in_if`` — 37 declarations; runtime: 37 untested; mapping: 37 partial.
 * ☐ ``sc_core::sc_signal_inout_if`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_core::sc_signal_resolved`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``sc_core::sc_signal_rv`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
+* ☑ ``sc_core::sc_signal_resolved`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``sc_core::sc_signal_rv`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
 * ☐ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 untested; mapping: 119 partial.
 * ☐ ``sc_core::sc_signal_write_if`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☐ ``sc_core::sc_simcontext`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
@@ -769,8 +795,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_start`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_status`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
 * ☑ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -779,7 +805,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_time`` — 34 declarations; runtime: 34 untested; mapping: 9 partial, 25 reviewed.
 * ☑ ``sc_core::sc_time_params`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☐ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_time_tuple`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_time_unit`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -806,7 +832,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_writer_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::timed_out`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::tprintf`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::wait`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
+* ☑ ``sc_core::wait`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 
 sc_dt public families
 ~~~~~~~~~~~~~~~~~~~~~

@@ -182,6 +182,27 @@ bool python_guarded_operation(const std::function<void()>& operation)
   }
 }
 
+/** @brief Halt a clocked thread while preserving Python cleanup and native control flow.
+ * @param context Borrowed current simulation context, retained by the caller.
+ * @return False requests Python cleanup and native halt/reset/kill restoration.
+ * @details Caller releases GIL across the native suspension. A halt resumes at
+ * the next clock edge and throws sc_halt; reset/kill retains its original unwind.
+ * Other native reports propagate. No borrowed context or exception escapes its
+ * process lifetime; callback dispatch consumes and clears pending control state.
+ */
+bool python_halt(sc_simcontext* context)
+{
+  try
+  {
+    return python_guarded_operation([&] { halt(context); });
+  }
+  catch (const sc_halt&)
+  {
+    python_unwind = std::current_exception();
+    return false;
+  }
+}
+
 /** @brief Query native timeout state in a live selected process context.
  * @param context Borrowed context, retained by the caller.
  * @return Native timeout flag without advancing the kernel or releasing GIL.
@@ -379,6 +400,30 @@ struct python_fifo_stream
   }
 };
 
+/** @brief Select native SystemC ostream insertion for a borrowed public value.
+ * @tparam T Native time/status, signal channel, or arbitrary input/inout port type.
+ * @details Caller retains value and stream; GIL remains held. Result preserves
+ * native sample printing without consuming channel storage. Native I/O failures
+ * return their diagnostic to Python OSError; other native exceptions propagate.
+ */
+template <class T>
+struct python_public_stream
+{
+  /** @brief Invoke the native nonmember overload once, preserving I/O diagnostics. */
+  static std::pair<bool, std::string> insert(std::ostream& stream, const T& value)
+  {
+    try
+    {
+      sc_core::operator<<(stream, value);
+      return {true, {}};
+    }
+    catch (const std::ios_base::failure& error)
+    {
+      return {false, error.what()};
+    }
+  }
+};
+
 /** @brief Select mutable export arrow access without cppyy overload fallback.
  * @tparam IF Arbitrary native interface implemented by the exported channel.
  * @details Returned interface borrows the bound channel; retain it through export
@@ -455,16 +500,64 @@ bool python_suspend(sc_process_handle& handle, sc_descendant_inclusion_info desc
   return guarded_wait([&]() { handle.suspend(descendants); });
 }
 
-/** @brief Set the next method trigger from an OR expression, consuming its native auto-delete list. */
-void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression)
+/** @brief Consume a native OR expression for dynamic method sensitivity.
+ * @details Expression lists become kernel-owned until trigger completion; caller
+ * retains all events. Context is borrowed, GIL remains held, native reports propagate.
+ */
+void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression,
+                         sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(expression.release());
+  next_trigger(expression.release(), context);
 }
 
-/** @brief Set the next method trigger from an AND expression, consuming its native auto-delete list. */
-void python_next_trigger(const sc_event_expr<sc_event_and_list>& expression)
+/** @brief Consume a native OR expression for dynamic method sensitivity.
+ * @details Expression lists become kernel-owned until trigger completion; caller
+ * retains all events. Context is borrowed, GIL remains held, native reports propagate.
+ */
+void python_next_trigger(const sc_time& time, const sc_event_expr<sc_event_or_list>& expression,
+                         sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(expression.release());
+  next_trigger(time, expression.release(), context);
+}
+
+/** @brief Consume a native OR expression for dynamic method sensitivity.
+ * @details Expression lists become kernel-owned until trigger completion; caller
+ * retains all events. Context is borrowed, GIL remains held, native reports propagate.
+ */
+void python_next_trigger(double value, sc_time_unit unit, const sc_event_expr<sc_event_or_list>& expression,
+                         sc_simcontext* context = sc_get_curr_simcontext())
+{
+  next_trigger(value, unit, expression.release(), context);
+}
+
+/** @brief Consume a native AND expression for dynamic method sensitivity.
+ * @details Expression lists become kernel-owned until trigger completion; caller
+ * retains all events. Context is borrowed, GIL remains held, native reports propagate.
+ */
+void python_next_trigger(const sc_event_expr<sc_event_and_list>& expression,
+                         sc_simcontext* context = sc_get_curr_simcontext())
+{
+  next_trigger(expression.release(), context);
+}
+
+/** @brief Consume a native AND expression for dynamic method sensitivity.
+ * @details Expression lists become kernel-owned until trigger completion; caller
+ * retains all events. Context is borrowed, GIL remains held, native reports propagate.
+ */
+void python_next_trigger(const sc_time& time, const sc_event_expr<sc_event_and_list>& expression,
+                         sc_simcontext* context = sc_get_curr_simcontext())
+{
+  next_trigger(time, expression.release(), context);
+}
+
+/** @brief Consume a native AND expression for dynamic method sensitivity.
+ * @details Expression lists become kernel-owned until trigger completion; caller
+ * retains all events. Context is borrowed, GIL remains held, native reports propagate.
+ */
+void python_next_trigger(double value, sc_time_unit unit, const sc_event_expr<sc_event_and_list>& expression,
+                         sc_simcontext* context = sc_get_curr_simcontext())
+{
+  next_trigger(value, unit, expression.release(), context);
 }
 
 /**
@@ -497,117 +590,124 @@ void dispatch_python(const std::function<void()>& callback)
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait()
+bool python_wait(sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(); });
+  return guarded_wait([&]() { wait(context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(int cycles)
+bool python_wait(int cycles, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(cycles); });
+  return guarded_wait([&]() { wait(cycles, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_time& time)
+bool python_wait(const sc_time& time, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time); });
+  return guarded_wait([&]() { wait(time, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(double value, sc_time_unit unit)
+bool python_wait(double value, sc_time_unit unit, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit); });
+  return guarded_wait([&]() { wait(value, unit, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_event& event)
+bool python_wait(const sc_event& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event); });
+  return guarded_wait([&]() { wait(event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_time& time, const sc_event& event)
+bool python_wait(const sc_time& time, const sc_event& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event); });
+  return guarded_wait([&]() { wait(time, event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(double value, sc_time_unit unit, const sc_event& event)
+bool python_wait(double value, sc_time_unit unit, const sc_event& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event); });
+  return guarded_wait([&]() { wait(value, unit, event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_event_or_list& event)
+bool python_wait(const sc_event_or_list& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event); });
+  return guarded_wait([&]() { wait(event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_time& time, const sc_event_or_list& event)
+bool python_wait(const sc_time& time, const sc_event_or_list& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event); });
+  return guarded_wait([&]() { wait(time, event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(double value, sc_time_unit unit, const sc_event_or_list& event)
+bool python_wait(double value, sc_time_unit unit, const sc_event_or_list& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event); });
+  return guarded_wait([&]() { wait(value, unit, event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_event_and_list& event)
+bool python_wait(const sc_event_and_list& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event); });
+  return guarded_wait([&]() { wait(event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_time& time, const sc_event_and_list& event)
+bool python_wait(const sc_time& time, const sc_event_and_list& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event); });
+  return guarded_wait([&]() { wait(time, event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(double value, sc_time_unit unit, const sc_event_and_list& event)
+bool python_wait(double value, sc_time_unit unit, const sc_event_and_list& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event); });
+  return guarded_wait([&]() { wait(value, unit, event, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_event_expr<sc_event_or_list>& event)
+bool python_wait(const sc_event_expr<sc_event_or_list>& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event.release()); });
+  return guarded_wait([&]() { wait(event.release(), context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_time& time, const sc_event_expr<sc_event_or_list>& event)
+bool python_wait(const sc_time& time, const sc_event_expr<sc_event_or_list>& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event.release()); });
+  return guarded_wait([&]() { wait(time, event.release(), context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(double value, sc_time_unit unit, const sc_event_expr<sc_event_or_list>& event)
+bool python_wait(double value, sc_time_unit unit, const sc_event_expr<sc_event_or_list>& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event.release()); });
+  return guarded_wait([&]() { wait(value, unit, event.release(), context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_event_expr<sc_event_and_list>& event)
+bool python_wait(const sc_event_expr<sc_event_and_list>& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event.release()); });
+  return guarded_wait([&]() { wait(event.release(), context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(const sc_time& time, const sc_event_expr<sc_event_and_list>& event)
+bool python_wait(const sc_time& time, const sc_event_expr<sc_event_and_list>& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event.release()); });
+  return guarded_wait([&]() { wait(time, event.release(), context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
-bool python_wait(double value, sc_time_unit unit, const sc_event_expr<sc_event_and_list>& event)
+bool python_wait(double value, sc_time_unit unit, const sc_event_expr<sc_event_and_list>& event,
+                 sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event.release()); });
+  return guarded_wait([&]() { wait(value, unit, event.release(), context); });
 }
 
 /**
