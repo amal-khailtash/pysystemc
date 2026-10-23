@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Add the `pysystemc` CLI with version/help commands and a Python SystemC playground featuring syntax highlighting, completion, line editing, multiline input and persistent history.
 - Preserve clocked-thread `halt` suspension and Python cleanup on normal termination, reset and kill; accept native thread pointers or process handles for stack-size configuration.
 - Support native priority queues with arbitrary pointer types and retain Python comparators for the queue lifetime.
 - Support concrete buffer and resolved-signal constructors, assignments and native update hooks, including custom buffer payloads and 137-bit resolved vectors.

@@ -79,6 +79,15 @@ Detailed setup, validation, and logging instructions are in the
 
 ## Examples
 
+Use `uv run pysystemc --version` for the installed version and
+`uv run pysystemc --help` for command help. Start an interactive Python
+playground with `uv run pysystemc repl`; it preloads `sc_core`, `sc_dt`, TLM,
+cppyy and the public kernel names. The prompt supports syntax highlighting,
+tab completion, multiline definitions, line editing and persistent history.
+Use `pysystemc help repl` for history options.
+The Makefile provides `make cli`, `make cli ARGS=version` and `make repl`;
+both targets forward `ARGS` for additional command options.
+
 `uv run pysystemc-cpp model.cpp -- --cycles 20` compiles native C++ sources
 and forwards arguments after `--` to `sc_main`. The compatibility script
 `examples/run_sysc_cpp.py` uses the same packaged runner.

@@ -29,7 +29,11 @@ SYSTEMC_VERSION := 2.3.4
 BUILD_JOBS ?= 8
 
 FMT_VERSION := 11.2.0
+ifneq ($(wildcard $(MAKEFILE_DIR)/src/amal/eda/systemc/_native/include/fmt/format.h),)
+FMT_HOME ?= $(if $(wildcard $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION)/include/fmt/format.h),$(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION),$(MAKEFILE_DIR)/src/amal/eda/systemc/_native)
+else
 FMT_HOME ?= $(MAKEFILE_DIR)/build/deps/fmt-$(FMT_VERSION)
+endif
 export FMT_HOME
 SPDLOG_VERSION := 1.15.3
 SPDLOG_HOME ?= $(MAKEFILE_DIR)/build/deps/spdlog-$(SPDLOG_VERSION)
@@ -42,6 +46,23 @@ test    := $(run) pytest
 pyright := $(run) pyright
 black   := $(run) black
 ruff    := $(run) ruff
+
+# Forward command options with: make cli ARGS=version or make repl ARGS=--no-history.
+ARGS ?=
+
+# ----------------------------------------------------------------------------------------------------------------------
+# cli: ## Run the pysystemc CLI (ARGS selects a command or options; default: help)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: cli
+cli:
+	$(run) pysystemc $(ARGS)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# repl: ## Start the SystemC Python playground (optional ARGS)
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: repl
+repl:
+	$(run) pysystemc repl $(ARGS)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
