@@ -46,6 +46,9 @@ for _bridge in (
     "report_handler.cpp",
     "event_lists.cpp",
     "event_finders.cpp",
+    "trace_printf.cpp",
+    "time_operations.cpp",
+    "byte_heap.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
@@ -729,7 +732,32 @@ def sc_status() -> ScStatus:
 # Native waits suspend an OS thread. Release the GIL for every overload so
 # other Python SystemC processes can acquire it while this process waits.
 cppyy.gbl.sc_core.wait.__release_gil__ = True
-cppyy.gbl.sc_core.sc_join.wait.__release_gil__ = True
+
+
+def _join_wait(join, clocked=False):
+    """Wait on a borrowed join, releasing GIL and preserving reset/kill cleanup.
+
+    Keep the join alive until all monitored processes exit, including after a
+    waiter is reset or killed. Clocked waits require static sensitivity and
+    always wait at least one cycle. Native process/wait reports propagate.
+    """
+    operation = cppyy.gbl.sc_core.python_join_wait
+    operation.__release_gil__ = True
+    if not operation(join, clocked):
+        raise _ProcessUnwind()
+
+
+def _join_wait_clocked(join):
+    """Wait using native static sensitivity and guarded scheduler unwind.
+
+    Join storage and monitored processes remain borrowed for the entire wait.
+    The call releases GIL; invalid native waiting context reports propagate.
+    """
+    return _join_wait(join, True)
+
+
+cppyy.gbl.sc_core.sc_join.wait = _join_wait
+cppyy.gbl.sc_core.sc_join.wait_clocked = _join_wait_clocked
 _spawn_callbacks = []
 
 
@@ -857,6 +885,23 @@ def wait(*args: Any) -> None:
     if not cppyy.gbl.sc_core.python_wait(*args):
         raise _ProcessUnwind()
 
+
+def _time_left_multiply(time, factor):
+    """Return native factor * time, preserving rounding and leaving time unchanged.
+
+    The time is borrowed for this non-suspending call with GIL held. The result
+    owns independent native storage; invalid numeric conversion raises TypeError.
+    """
+    return cppyy.gbl.pysystemc_public.time_left_multiply(factor, time)
+
+
+cppyy.gbl.sc_core.sc_time.__rmul__ = _time_left_multiply
+
+from ._byte_heap import allocate as _byte_heap_allocate
+
+cppyy.gbl.sc_core.sc_byte_heap.allocate = _byte_heap_allocate
+
+from ._trace_printf import tprintf as tprintf
 
 from ._scheduler import sc_start as sc_start, at_posedge as at_posedge, at_negedge as at_negedge, timed_out as timed_out
 

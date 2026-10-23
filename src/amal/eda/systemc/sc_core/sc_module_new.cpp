@@ -243,6 +243,26 @@ struct python_start
   }
 };
 
+/** @brief Suspend on a borrowed native join using guarded scheduler unwind.
+ * @param join Join retained by the caller until all monitored threads exit.
+ * @param clocked Select static-sensitivity clocked wait instead of event wait.
+ * @return False requests Python cleanup followed by native reset/kill rethrow.
+ * @details Caller releases GIL; native callbacks reacquire through dispatch.
+ * No monitors are removed by resetting a waiter; join must outlive its workers.
+ * Other native errors propagate without changing the join's ownership.
+ */
+bool python_join_wait(sc_join& join, bool clocked)
+{
+  return python_guarded_operation(
+    [&]
+    {
+      if (clocked)
+        join.wait_clocked();
+      else
+        join.wait();
+    });
+}
+
 /** @brief Guard native sampled-edge waits for bool and logic interface types.
  * @tparam T Native bool or sc_logic, retaining their distinct edge semantics.
  * @details Interface/context are borrowed and must survive suspension. Release
@@ -639,13 +659,16 @@ sc_process_handle spawn_callback(std::function<void()> callback, const char* nam
  * @param file Open native trace file.
  * @param signal Signal retained by the caller for the simulation lifetime.
  * @details A native method refreshes structural scalar reference storage on
- * value changes; callbacks acquire GIL. Signal must outlive that method.
+ * value changes only for structural interfaces; callbacks acquire GIL. Native
+ * signal channels update storage directly without adding simulation processes.
+ * Structural signals must outlive the refresh method.
  * @param name Waveform variable name.
  */
 template <class T>
 void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const std::string& name)
 {
   sc_trace(file, signal.read(), name);
+  if (!file || dynamic_cast<const sc_signal_channel*>(&signal)) return;
   // Structural scalar references are refreshed by read(), unlike sc_signal
   // storage which is updated directly by the primitive channel.
   sc_spawn_options options;

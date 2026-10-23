@@ -106,6 +106,55 @@ pass-through availability does not by itself establish tested support.
    referent until wrapper destruction. Native consumers preserve mutable/const
    contracts. Keep the wrapper alive while using borrowed ``get()`` results.
 
+Time arithmetic and temporary storage
+-------------------------------------
+
+Native ``sc_time`` arithmetic supports addition, subtraction, modulo, scalar
+multiplication in either order, scalar division and time/time ratios. Results
+preserve native tick rounding and leave their operands unchanged. A product of
+two times is not defined; divisors must satisfy the native nonzero contract.
+
+``sc_byte_heap.allocate(bytes_n)`` returns a mutable borrowed byte view instead
+of a copied string. The view has exactly the requested length, and allocations
+retain native eight-byte alignment and wrapping reuse. Keep the heap alive while
+accessing a view. Reinitializing or destroying the heap invalidates existing
+views; wrapping allocations can overwrite their contents. An uninitialized heap,
+a negative request or an aligned request larger than capacity raises
+``ValueError``. Noninteger sizes raise ``TypeError``.
+
+Trace comments and file ownership
+---------------------------------
+
+``tprintf(file, format, *args)`` writes a C printf formatted trace comment.
+Numeric length modifiers, dynamic width/precision, positional arguments, string,
+character, hexadecimal-float and pointer conversions follow native formatting.
+For ``%n``, supply a compatible writable native pointer or buffer. Arguments
+remain alive during the call; invalid formats or argument conversions raise
+``ValueError`` or ``TypeError``. Comment buffers grow to the required size.
+``sc_write_comment(file, text)`` writes unformatted text.
+
+``sc_trace_delta_cycles(file, on=True)`` selects native delta-cycle tracing.
+Native signal tracing does not add simulation processes or change delta timing.
+Structural reference interfaces retain their value-refresh behavior.
+
+Files returned by ``sc_create_vcd_trace_file`` and ``sc_create_wif_trace_file``
+remain open until their matching close helper is called. Close each non-null
+file exactly once after tracing ends, keeping traced values alive until then.
+Closing invalidates all file aliases and flushes output. Both close helpers
+accept ``None`` as a null no-op; native file opening can be deferred until the
+first traced cycle.
+
+Process joins
+-------------
+
+``sc_join.wait()`` waits for its registered threads to terminate.
+``wait_clocked()`` uses static sensitivity and always waits at least one cycle.
+Both waits release the GIL and run Python cleanup when their waiter is reset or
+killed. Keep the join alive until all registered threads terminate, even if its
+waiter has exited. Register threads before they terminate: adding an already
+terminated handle leaves its join count pending. Method handles are rejected by
+the native join report.
+
 Diagnostics
 -----------
 

@@ -9,11 +9,17 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
-- Expose the global `sc_main` bridge with shared argument validation and native status preservation; verify direct and `sc_elab_and_sim` callback lifecycle, failure cleanup and pthread simulation against C++.
-- Complete `sc_module_name`, sampled bool/logic edge waits, timeout queries and mutable/const reference-wrapper families with native comparisons and referent retention.
-- Select all four native `sc_start` overloads explicitly, preserving starvation policies and preventing simulation retries after callback failures.
+- Support mutable byte views from `sc_byte_heap.allocate`, preserving native alignment and storage reuse.
+- Support formatted trace comments with C printf conversions, numeric length modifiers, positional arguments and dynamically sized buffers.
+- Preserve Python reset/kill cleanup and release the GIL for both event-based and clocked `sc_join` waits.
+- Expose package-level `sc_main` and `sc_elab_and_sim` with argument validation, copied arguments and native return statuses.
+- Preserve native module-name hierarchy, sampled bool/logic edge waits and timeout queries; retain referents in mutable and const reference wrappers.
+- Preserve starvation policies for all four `sc_start` overloads and propagate callback errors without restarting simulation.
 
 ### Fixed
+- Support scalar multiplication on the left of `sc_time` with native rounding.
+- Avoid adding refresh processes when tracing native signals, preserving native delta-cycle timing and WIF output.
+- Accept null trace-file closure through either `None` or a native null pointer.
 - Route `stream << fifo` to native FIFO sample printing for unrestricted element types and stream subclasses, preserving chaining and queue contents and reporting native I/O failures as `OSError`.
 
 ## [0.15.0](https://github.com/amal-khailtash/pysystemc/compare/v0.14.0...v0.15.0) (2026-10-22)
