@@ -262,6 +262,21 @@ bool python_reset(sc_process_handle& handle, sc_descendant_inclusion_info descen
   return guarded_wait([&]() { handle.reset(descendants); });
 }
 
+/** @brief Suspend a retained process, including the current Python process.
+ * @param handle Borrowed handle retained throughout suspension.
+ * @param descendants Native descendant inclusion policy.
+ * @return False when native reset/kill requires Python frame cleanup.
+ * @details Caller releases the GIL. Current-process suspension may switch pthreads;
+ * guarded_wait preserves native unwind after the Python callback stack returns.
+ * Native reports propagate. Called only from a running scheduler process.
+ */
+bool python_suspend(sc_process_handle& handle, sc_descendant_inclusion_info descendants = SC_NO_DESCENDANTS)
+{
+  if (!sc_get_current_process_handle().valid() || sc_get_status() != SC_RUNNING)
+    throw std::runtime_error("process suspension requires a running SystemC process");
+  return guarded_wait([&]() { handle.suspend(descendants); });
+}
+
 /** @brief Set the next method trigger from an OR expression, consuming its native auto-delete list. */
 void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression)
 {

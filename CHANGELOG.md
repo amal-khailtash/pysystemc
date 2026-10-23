@@ -15,6 +15,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+- Complete event-finder, base-interface, mutex and semaphore public families with native reference checks; add generic reflected event-member constructors and owning finder-cache slots.
+- Validate process-handle ownership, metadata, hierarchy views, typed conversions and descendant controls; support guarded self-suspension with native reset/kill cleanup and event delivery.
+
 ### Fixed
 - Repair signed remainder and unsigned owning shifts with explicit native overloads; expose generic owning fixed-point contexts with native scope restoration. Exclude the disabled private context copy constructor from the public inventory.
 

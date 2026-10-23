@@ -370,3 +370,41 @@ select the corresponding parameter types. The constructor copies its parameters;
 contexts in reverse order, in the originating native process. References returned
 by ``value()`` and ``default_value()`` require their owning context to remain alive.
 Copying contexts is disabled by native SystemC.
+
+Public event finders and process suspension
+--------------------------------------------
+
+``sc_event_finder_t[IF](port, IF.event_method)`` constructs an owning native finder
+for arbitrary native interface types. Reflected event methods avoid cppyy's
+member-function-pointer conversion limitation. Overloaded and inherited methods
+select the exact zero-argument const event signature. For example::
+
+   IF = sc_core.sc_signal_in_if[sc_dt.sc_biguint[137]]
+   finder = sc_core.sc_event_finder_t[IF](port, IF.value_changed_event)
+   event = finder.find_event()
+
+The finder borrows its port, interface and returned event. Keep those objects
+alive through all sensitivity/wait consumers. Explicit interface lookup retains
+native dynamic-cast checks; an incompatible or unbound interface reports E118.
+If the report handler continues, the result is ``sc_event.none``.
+
+``sc_event_finder_cache()`` supplies an owning pointer slot for
+``sc_event_finder.cached_create[IF](cache, port, IF.event_method)``. Calls allocate
+once and reuse the same finder, retaining the first event method. All uses of a
+cache must reference the same port, as required by the native assertion. Returned
+finder proxies borrow and retain the cache; destroy consumers before releasing
+its native storage.
+
+A running Python thread may suspend itself with
+``sc_get_current_process_handle().suspend()``. The bridge releases the GIL while
+the native kernel switches pthreads, then preserves reset/kill unwind and Python
+cleanup. Resume, reset and kill during suspension match native timing, including
+reset and termination event delivery. Suspension before simulation or while
+paused retains native behavior. Descendant inclusion policies preserve native
+control propagation. Sticky synchronous reset and arbitrary ``throw_it`` remain
+untested in the process-handle family.
+
+The base interface and mutex/semaphore families now have complete declaration
+checks, including protected construction/state/report members exercised through
+native-derived models. Ports borrow interfaces and channels; retain their Python
+callback and event owners until consumers stop and release their views.

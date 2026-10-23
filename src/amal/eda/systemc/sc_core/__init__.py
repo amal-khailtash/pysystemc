@@ -45,9 +45,19 @@ for _bridge in (
     "report_legacy.cpp",
     "report_handler.cpp",
     "event_lists.cpp",
+    "event_finders.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
+
+from ._event_finders import (
+    EventFinderTemplate as _EventFinderTemplate,
+    CachedFinderCreator as _CachedFinderCreator,
+)
+
+sc_event_finder_t = _EventFinderTemplate()
+sc_event_finder_cache = cppyy.gbl.pysystemc_public.event_finder_cache
+cppyy.gbl.sc_core.sc_event_finder.cached_create = _CachedFinderCreator()
 
 cppyy.gbl.sc_core.sc_start.__release_gil__ = True
 cppyy.gbl.sc_core.sc_initialize.__release_gil__ = True
@@ -782,6 +792,28 @@ def _process_control(adapter):
 
 cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
 cppyy.gbl.sc_core.sc_process_handle.reset = _process_control(cppyy.gbl.sc_core.python_reset)
+
+_native_process_suspend = cppyy.gbl.sc_core.sc_process_handle.suspend
+_running_process_suspend = _process_control(cppyy.gbl.sc_core.python_suspend)
+
+
+def _process_suspend(self, *args):
+    """Suspend a process using native descendant inclusion semantics.
+
+    Args:
+        *args: Optional native descendant inclusion policy.
+
+    Suspension before simulation or while paused retains native behavior.
+    Self-suspension from a running callback releases the GIL and preserves native
+    reset/kill unwind. Retain this handle and callback dependencies until resumed
+    or terminated. Native report/conversion errors propagate.
+    """
+    if cppyy.gbl.sc_core.sc_get_status() == cppyy.gbl.sc_core.SC_RUNNING:
+        return _running_process_suspend(self, *args)
+    return _native_process_suspend(self, *args)
+
+
+cppyy.gbl.sc_core.sc_process_handle.suspend = _process_suspend
 
 
 cppyy.gbl.sc_core.python_wait.__release_gil__ = True

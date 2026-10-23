@@ -107,7 +107,7 @@ including 12,698 public and 3,080 internal entries. Both modeling and compatibil
 configurations, recorded active/inactive macros, friends, aliases and inheritance
 links are accounted for. These checkmarks describe inventory completion.
 
-Python contracts preserve 11,642 partial mappings and 1,059 reviewed mappings;
+Python contracts preserve 11,283 partial mappings and 1,415 reviewed mappings;
 partial means exact binding behavior remains unverified. Source evidence and
 candidate Python syntax do not establish runtime support. Template instantiations,
 ADL, inherited access/ambiguity, callback retention, GIL and error behavior still
@@ -340,8 +340,8 @@ that declaration's complete scope. ``failing`` records a known binding failure.
 a source/call-form review and does not establish runtime support. Representative
 supported combinations appear earlier on this page and in :doc:`../api/coverage`.
 The conservative declaration statuses deliberately avoid promoting representative
-tests to support for every overload. Internal entries are excluded from this
-public feature list; all 3,077 retain source classification in the local audit.
+tests to support for every overload. The source inventory classifies 3,080 declarations as internal; these are
+excluded from the public feature list.
 
 sc_core public families
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,8 +637,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_event_and_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_event_and_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``sc_core::sc_event_expr`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
-* ☐ ``sc_core::sc_event_finder`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
-* ☐ ``sc_core::sc_event_finder_t`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
+* ☑ ``sc_core::sc_event_finder`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
+* ☑ ``sc_core::sc_event_finder_t`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☐ ``sc_core::sc_event_list`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.
 * ☑ ``sc_core::sc_event_or_expr`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_event_or_list`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
@@ -686,7 +686,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_inout_clk`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
 * ☐ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
-* ☐ ``sc_core::sc_interface`` — 8 declarations; runtime: 8 untested; mapping: 2 partial, 6 reviewed.
+* ☑ ``sc_core::sc_interface`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
 * ☑ ``sc_core::sc_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_is_running`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_is_unwinding`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -697,8 +697,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``sc_core::sc_mutex`` — 9 declarations; runtime: 7 supported, 2 untested; mapping: 2 partial, 7 reviewed.
-* ☐ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 4 supported, 1 untested; mapping: 1 partial, 4 reviewed.
+* ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
+* ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
 * ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
 * ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
@@ -730,7 +730,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 untested; mapping: 9 partial.
 * ☐ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 untested; mapping: 28 partial, 13 reviewed.
 * ☐ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 38 untested; mapping: 12 partial, 26 reviewed.
+* ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 34 supported, 4 untested; mapping: 2 partial, 36 reviewed.
 * ☐ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 untested; mapping: 3 partial, 1 reviewed.
 * ☐ ``sc_core::sc_pvector`` — 26 declarations; runtime: 26 untested; mapping: 26 partial.
 * ☐ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
@@ -743,8 +743,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 untested; mapping: 2 partial, 3 reviewed.
-* ☐ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 6 supported, 4 untested; mapping: 4 partial, 6 reviewed.
-* ☐ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 5 supported, 1 untested; mapping: 1 partial, 5 reviewed.
+* ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
+* ☑ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
 * ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
 * ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
