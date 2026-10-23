@@ -126,3 +126,5 @@ Scripting Languages](https://dvcon-proceedings.org/wp-content/uploads/transparen
   * [CFFI](https://cffi.readthedocs.io/en/stable/)
   * [Boost.Python](https://www.boost.org/doc/libs/1_86_0/libs/python/doc/html/index.html)
   * [Shiboken](https://doc.qt.io/qtforpython-6/shiboken6/index.html)
+
+The CLI also runs as `python -m amal.eda.cli`; help and version commands do not load the native kernel.

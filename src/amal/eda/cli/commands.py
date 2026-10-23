@@ -78,7 +78,3 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     parser.error("no command selected")
     return 2
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

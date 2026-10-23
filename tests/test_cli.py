@@ -14,7 +14,7 @@ def run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
         Captured child process output and status.
     """
     return subprocess.run(
-        [sys.executable, "-m", "amal.eda.pysystemc_cli", *arguments],
+        [sys.executable, "-m", "amal.eda.cli", *arguments],
         capture_output=True,
         text=True,
         timeout=30,
@@ -48,7 +48,7 @@ def test_cli_metadata_commands_do_not_import_native_runtime() -> None:
     """Importing or running version metadata leaves SystemC unloaded."""
     script = """
 import sys
-from amal.eda.pysystemc_cli import main
+from amal.eda.cli import main
 assert 'amal.eda.systemc' not in sys.modules
 try:
     main(['--version'])

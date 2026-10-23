@@ -51,3 +51,6 @@ Each process has one native SystemC kernel. Further ``sc_start`` calls advance
 the same design. Retain modules, channels and callback dependencies while the
 kernel uses them. After ``sc_stop`` or a terminal simulation error, start a new
 playground process for another simulation.
+
+The CLI also runs as ``python -m amal.eda.cli``. Help and version commands
+do not load the native kernel.

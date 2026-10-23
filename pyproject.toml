@@ -23,7 +23,7 @@ Documentation = "https://pysystemc.readthedocs.io/"
 Issues = "https://github.com/amal-khailtash/pysystemc/issues"
 
 [project.scripts]
-pysystemc = "amal.eda.pysystemc_cli:main"
+pysystemc = "amal.eda.cli:main"
 pysystemc-cpp = "amal.eda.systemc._runner:main"
 
 [tool.uv.build-backend]
