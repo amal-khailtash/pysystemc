@@ -80,6 +80,32 @@ pass-through availability does not by itself establish tested support.
    The native integer status is returned, including nonzero results. Use a
    fresh process for each independent simulation; entry does not reset the kernel.
 
+``amal.eda.systemc.sc_main(argc=None, argv=None)``
+   Call the global native callback bridge directly with the same argument
+   validation as ``sc_elab_and_sim``. Define ``__main__.sc_main(argv)`` first.
+   The bridge preserves native integer returns and returns -1 for missing,
+   noncallable or invalid callbacks, invalid return values, and ``SystemExit``.
+   It releases the GIL during native execution and reacquires it for callbacks.
+   Direct calls do not activate the native ``sc_argc``/``sc_argv`` snapshot;
+   ``sc_elab_and_sim`` manages that entry lifecycle and native exception handling.
+
+``sc_start(duration, unit, p)``
+   Select the native time, integer or double overload once, preserving the
+   starvation policy and avoiding overload retries after simulation errors.
+   Omit all arguments for unbounded simulation. Events exactly at a bounded
+   run's end execute on the next simulation call, matching native SystemC.
+
+``at_posedge(signal, simc=None)`` / ``at_negedge(signal, simc=None)``
+   Use native sampled-edge waits for bool or logic input interfaces inside a
+   SystemC thread. Waits release the GIL and preserve Python cleanup during
+   native reset/kill. ``timed_out(simc=None)`` reads the current process timeout
+   flag; calling it outside a running process raises ``RuntimeError``.
+
+``sc_ref(value)`` / ``sc_cref(value)``
+   Infer unrestricted native reference-wrapper templates and retain the Python
+   referent until wrapper destruction. Native consumers preserve mutable/const
+   contracts. Keep the wrapper alive while using borrowed ``get()`` results.
+
 Diagnostics
 -----------
 
@@ -242,9 +268,10 @@ Reset/kill during a blocked operation runs Python cleanup before native unwind.
 FIFO ``trace`` retains the header's ``DEBUG_SYSTEMC`` behavior: without that
 compile-time flag, it emits no buffer declarations. Trace signals or retained
 sample values separately when a waveform is needed in that configuration.
-FIFO insertion with ``stream << fifo`` currently selects proxy-address output in
-cppyy instead of queued samples. Use ``fifo.print(stream)`` or ``fifo.dump(stream)``;
-this free-function overload remains a failing mapping in the public inventory.
+FIFO insertion with ``stream << fifo`` selects native sample printing for
+arbitrary element types and future native stream subclasses. It returns the
+original stream for chaining and leaves the queue unchanged. Native stream I/O
+failures raise ``OSError`` with the native diagnostic.
 
 Events returned by different adapter specializations retain the owner's event
 identity. Each specialization remains a distinct native interface/module.

@@ -582,8 +582,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::SC_WARNING`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::SC_ZERO_OR_MORE_BOUND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::SC_ZERO_TIME`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::at_negedge`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::at_posedge`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::at_negedge`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_core::at_posedge`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::default_int_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::default_ptr_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::default_str_hash_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -598,7 +598,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::operator-`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::operator/`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::operator<`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::operator<<`` — 8 declarations; runtime: 2 failing, 6 untested; mapping: 6 partial, 2 reviewed.
+* ☐ ``sc_core::operator<<`` — 8 declarations; runtime: 2 supported, 6 untested; mapping: 6 partial, 2 reviewed.
 * ☐ ``sc_core::operator==`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::operator|`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::sc_abort`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
@@ -624,7 +624,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_copyright_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_create_vcd_trace_file`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_create_wif_trace_file`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_cref`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_cref`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::sc_curr_proc_kind`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☑ ``sc_core::sc_delta_count`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_delta_count_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -696,7 +696,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
-* ☐ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
+* ☑ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
@@ -733,7 +733,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 34 supported, 4 untested; mapping: 2 partial, 36 reviewed.
 * ☐ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 untested; mapping: 3 partial, 1 reviewed.
 * ☐ ``sc_core::sc_pvector`` — 26 declarations; runtime: 26 untested; mapping: 26 partial.
-* ☐ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_register_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_release`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
@@ -766,7 +766,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
 * ☐ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 untested; mapping: 2 partial, 19 reviewed.
-* ☐ ``sc_core::sc_start`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
+* ☑ ``sc_core::sc_start`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_status`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
@@ -804,7 +804,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_vpool`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☐ ``sc_core::sc_write_comment`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::sc_writer_policy`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::timed_out`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::timed_out`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``sc_core::tprintf`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::wait`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 
@@ -994,12 +994,12 @@ sc_dt public families
 sc_elab_and_sim public families
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``sc_elab_and_sim`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_elab_and_sim`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 
 sc_main public families
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``sc_main`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_main`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 
 tlm public families
 ~~~~~~~~~~~~~~~~~~~

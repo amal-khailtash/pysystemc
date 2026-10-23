@@ -6,6 +6,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [Unreleased]
+
+### Added
+- Expose the global `sc_main` bridge with shared argument validation and native status preservation; verify direct and `sc_elab_and_sim` callback lifecycle, failure cleanup and pthread simulation against C++.
+- Complete `sc_module_name`, sampled bool/logic edge waits, timeout queries and mutable/const reference-wrapper families with native comparisons and referent retention.
+- Select all four native `sc_start` overloads explicitly, preserving starvation policies and preventing simulation retries after callback failures.
+
+### Fixed
+- Route `stream << fifo` to native FIFO sample printing for unrestricted element types and stream subclasses, preserving chaining and queue contents and reporting native I/O failures as `OSError`.
+
 ## [0.15.0](https://github.com/amal-khailtash/pysystemc/compare/v0.14.0...v0.15.0) (2026-10-22)
 
 

@@ -84,6 +84,16 @@ def guard_fifo_class(native, datatype):
             """Consume one sample through the guarded native conversion operator."""
             return read(self)
 
+        stream_bridge = cppyy.gbl.sc_core.python_fifo_stream[value].insert
+
+        def stream_insert(self, stream):
+            """Print queued samples to a borrowed stream without consuming them."""
+            result = stream_bridge(stream, self)
+            if not result.first:
+                raise OSError(str(result.second))
+            return stream
+
+        native._fifo_stream_insert = stream_insert
         native.__assign__ = assign
         setattr(native, "operator " + value, convert)
         if value in (

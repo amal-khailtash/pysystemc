@@ -175,6 +175,9 @@ from ._fifo import FifoTemplate as _FifoTemplate
 fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
 from ._exports import ExportTemplate as _ExportTemplate
 
+from ._streams import install_fifo_streams as _install_fifo_streams
+
+_install_fifo_streams()
 sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
 sc_fifo_in = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in)
 sc_fifo_out = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out)
@@ -628,6 +631,28 @@ def sc_argv() -> tuple[str, ...]:
     return tuple(str(cppyy.gbl.sc_core.python_argv_at(index)) for index in range(cppyy.gbl.sc_core.sc_argc()))
 
 
+def _prepare_entry_arguments(argc, argv):
+    """Validate and own the selected strings before entering a native callback."""
+    if argc is None and argv is None:
+        argv = list(sys.argv)
+        argc = len(argv)
+    elif argc is None or argv is None:
+        raise TypeError("argc and argv must be supplied together")
+    if isinstance(argc, bool) or not isinstance(argc, int):
+        raise TypeError("argc must be an integer")
+    if not isinstance(argv, (list, tuple)):
+        raise TypeError("argv must be a list or tuple of strings")
+    if argc < 0 or argc > 2**31 - 1 or argc > len(argv):
+        raise ValueError("argc must fit native int and the available argument entries")
+    argv = list(argv[:argc])
+    if any(not isinstance(value, str) for value in argv):
+        raise TypeError("argv entries must be strings")
+    if any("\0" in value for value in argv):
+        raise ValueError("argv entries must not contain NUL characters")
+
+    return argc, argv
+
+
 def sc_elab_and_sim(argc=None, argv=None) -> int:
     """Enter native sc_main with explicit arguments or the current sys.argv.
 
@@ -648,22 +673,7 @@ def sc_elab_and_sim(argc=None, argv=None) -> int:
     releases the GIL while native code runs and reacquires it for Python callbacks.
     Invoke once per independent simulation process; kernel state is not reset.
     """
-    if argc is None and argv is None:
-        argv = list(sys.argv)
-        argc = len(argv)
-    elif argc is None or argv is None:
-        raise TypeError("argc and argv must be supplied together")
-    if isinstance(argc, bool) or not isinstance(argc, int):
-        raise TypeError("argc must be an integer")
-    if not isinstance(argv, (list, tuple)):
-        raise TypeError("argv must be a list or tuple of strings")
-    if argc < 0 or argc > 2**31 - 1 or argc > len(argv):
-        raise ValueError("argc must fit native int and the available argument entries")
-    argv = list(argv[:argc])
-    if any(not isinstance(value, str) for value in argv):
-        raise TypeError("argv entries must be strings")
-    if any("\0" in value for value in argv):
-        raise ValueError("argv entries must not contain NUL characters")
+    argc, argv = _prepare_entry_arguments(argc, argv)
 
     log(f"Entering native simulation with {argc} arguments")
 
@@ -848,7 +858,11 @@ def wait(*args: Any) -> None:
         raise _ProcessUnwind()
 
 
+from ._scheduler import sc_start as sc_start, at_posedge as at_posedge, at_negedge as at_negedge, timed_out as timed_out
+
 # Publish native classes/enums and Python adapters for wildcard imports.
+
+from ._references import sc_ref as sc_ref, sc_cref as sc_cref
 
 __all__ = sorted(
     set(_public_names(cppyy.gbl.sc_core))

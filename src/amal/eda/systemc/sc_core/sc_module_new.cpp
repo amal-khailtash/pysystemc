@@ -9,6 +9,7 @@
 #include <exception>
 #include <functional>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <systemc>
@@ -181,6 +182,87 @@ bool python_guarded_operation(const std::function<void()>& operation)
   }
 }
 
+/** @brief Query native timeout state in a live selected process context.
+ * @param context Borrowed context, retained by the caller.
+ * @return Native timeout flag without advancing the kernel or releasing GIL.
+ * @throws std::runtime_error If no current process exists in the selected context.
+ */
+bool python_timed_out(sc_simcontext* context)
+{
+  if (!context || !context->get_curr_proc_info()->process_handle)
+    throw std::runtime_error("timed_out requires a running SystemC process");
+  return timed_out(context);
+}
+
+/** @brief Select each native sc_start overload without retrying scheduler entry.
+ * @details Calls borrow duration values, release the GIL and propagate the first
+ * native report. Python process callbacks reacquire GIL through existing dispatch.
+ */
+struct python_start
+{
+  /** @brief Return an owning report address, deferring throwing until Python regains GIL. */
+  static std::uintptr_t invoke(const std::function<void()>& operation)
+  {
+    try
+    {
+      operation();
+      return 0;
+    }
+    catch (const sc_report& report)
+    {
+      return reinterpret_cast<std::uintptr_t>(new sc_report(report));
+    }
+  }
+  /** @brief Consume an owning report address and throw its copy with GIL held.
+   * @details Releases the original allocation on every exit, including exception propagation.
+   */
+  static void throw_report(std::uintptr_t address)
+  {
+    std::unique_ptr<sc_report> report(reinterpret_cast<sc_report*>(address));
+    throw sc_report(*report);
+  }
+  /** @brief Run until starvation or an explicit native stop. */
+  static std::uintptr_t start_default()
+  {
+    return invoke([] { sc_start(); });
+  }
+  /** @brief Run a borrowed native duration with the selected starvation policy. */
+  static std::uintptr_t start_time(const sc_time& duration, sc_starvation_policy policy)
+  {
+    return invoke([&] { sc_start(duration, policy); });
+  }
+  /** @brief Select the native integer-duration overload explicitly. */
+  static std::uintptr_t start_int(int duration, sc_time_unit unit, sc_starvation_policy policy)
+  {
+    return invoke([&] { sc_start(duration, unit, policy); });
+  }
+  /** @brief Select the native floating-duration overload explicitly. */
+  static std::uintptr_t start_double(double duration, sc_time_unit unit, sc_starvation_policy policy)
+  {
+    return invoke([&] { sc_start(duration, unit, policy); });
+  }
+};
+
+/** @brief Guard native sampled-edge waits for bool and logic interface types.
+ * @tparam T Native bool or sc_logic, retaining their distinct edge semantics.
+ * @details Interface/context are borrowed and must survive suspension. Release
+ * GIL before calls; false completion requires Python cleanup and kernel rethrow.
+ */
+template <class T>
+struct python_edge_wait
+{
+  /** @brief Wait for native positive-edge sampling, preserving reset/kill. */
+  static bool positive(const sc_signal_in_if<T>& signal, sc_simcontext* context)
+  {
+    return python_guarded_operation([&] { at_posedge(signal, context); });
+  }
+  /** @brief Wait for native negative-edge sampling, preserving reset/kill. */
+  static bool negative(const sc_signal_in_if<T>& signal, sc_simcontext* context)
+  {
+    return python_guarded_operation([&] { at_negedge(signal, context); });
+  }
+};
+
 /**
  * @brief Run a wait without allowing cppyy to consume scheduler unwind.
  * @details Call with GIL released. False tells Python to unwind its frames; the original exception stays owned here.
@@ -231,6 +313,51 @@ std::pair<int, bool> python_mutex_lock(sc_mutex_if& channel)
   bool complete = python_guarded_operation([&] { result = channel.lock(); });
   return {result, complete};
 }
+
+/** @brief Select character stream insertion without member-overload fallback.
+ * @details Stream/value are borrowed for this call; no callbacks or GIL release.
+ * Native formatting is unchanged; ios failures return their diagnostic for Python OSError.
+ */
+struct python_stream_access
+{
+  /** @brief Write a borrowed string using the native nonmember overload. */
+  static std::pair<bool, std::string> text(std::ostream& stream, const std::string& value)
+  {
+    try
+    {
+      stream << value;
+      return {true, {}};
+    }
+    catch (const std::ios_base::failure& error)
+    {
+      return {false, error.what()};
+    }
+  }
+};
+
+/** @brief Select native FIFO insertion for any native-valid sample type.
+ * @tparam T Native FIFO sample type; its native print contract is unchanged.
+ * @details Stream and FIFO are borrowed through the call. No callback or GIL
+ * release is needed; ios failures return their diagnostic for Python OSError.
+ * Other exceptions propagate without consuming queue data.
+ */
+template <class T>
+struct python_fifo_stream
+{
+  /** @brief Insert queue samples; report ios failure text without cppyy slicing. */
+  static std::pair<bool, std::string> insert(std::ostream& stream, const sc_fifo<T>& fifo)
+  {
+    try
+    {
+      sc_core::operator<<(stream, fifo);
+      return {true, {}};
+    }
+    catch (const std::ios_base::failure& error)
+    {
+      return {false, error.what()};
+    }
+  }
+};
 
 /** @brief Select mutable export arrow access without cppyy overload fallback.
  * @tparam IF Arbitrary native interface implemented by the exported channel.

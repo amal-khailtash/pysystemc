@@ -44,9 +44,9 @@ def test_sc_core_fifo_public_matches_native_and_traces_values(tmp_path):
     python_text = next(line for line in python_output.splitlines() if line.startswith("FIFO_TEXT "))
     native_text = next(line for line in native_output.splitlines() if line.startswith("FIFO_TEXT "))
     assert python_text == native_text
-    python_stream = next(line for line in python_output.splitlines() if line.startswith("FIFO_STREAM_MAPPING "))
+    python_stream = next(line for line in python_output.splitlines() if line.startswith("FIFO_STREAM "))
     native_stream = next(line for line in native_output.splitlines() if line.startswith("FIFO_STREAM "))
-    assert python_stream == "FIFO_STREAM_MAPPING unsupported pointer_insertion"
+    assert python_stream == native_stream
     assert native_stream == "FIFO_STREAM 51|61"
     python_processes = next(line for line in python_output.splitlines() if line.startswith("FIFO_PROCESSES "))
     native_processes = next(line for line in native_output.splitlines() if line.startswith("FIFO_PROCESSES "))

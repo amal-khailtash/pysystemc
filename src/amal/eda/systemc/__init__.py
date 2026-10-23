@@ -116,6 +116,33 @@ def print_hierarchy(all_modules: bool = False) -> None:
     print("=" * 80)
 
 
+def sc_main(argc=None, argv=None) -> int:
+    """Invoke the global native sc_main bridge directly.
+
+    Args:
+        argc: Native argument count; omit both arguments to use sys.argv.
+        argv: List/tuple of strings with at least argc entries; selected entries
+            are copied and retained until the native call returns.
+
+    Returns:
+        Callback integer status, or -1 after reporting a Python callback error.
+
+    Raises:
+        TypeError: Argument count/array types are invalid or incomplete.
+        ValueError: Count is outside native bounds or an argument contains NUL.
+
+    Define ``__main__.sc_main(argv)`` before invocation. The bridge releases GIL
+    for native execution and acquires it for Python dispatch, releasing temporary
+    references on every exit. Direct entry does not establish the sc_argc/sc_argv
+    snapshot or catch escaping native model exceptions; use sc_elab_and_sim for
+    that wrapper lifecycle. Invoke once per independent simulation process.
+    """
+    from .sc_core import _prepare_entry_arguments
+
+    argc, argv = _prepare_entry_arguments(argc, argv)
+    return cppyy.gbl.sc_main(argc, argv)
+
+
 def main() -> None:
     """Invoke __main__.sc_main(argv) through the native SystemC entry point.
 
@@ -135,10 +162,13 @@ def main() -> None:
         sys.exit(1)  # Exit with a general error code
 
 
+sc_elab_and_sim = sc_core.sc_elab_and_sim
+
 all = (
     "SYSTEMC_HOME",
     "main",
     "sc_main",
+    "sc_elab_and_sim",
     "sc_start",
     "sc_stop",
     "sc_time_stamp",

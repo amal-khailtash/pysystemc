@@ -222,7 +222,7 @@ int_print = str(int_stream.str())
 insert_stream = cppyy.gbl.std.ostringstream()
 insert_stream << model.text_fifo
 stream_insertion = str(insert_stream.str())
-assert stream_insertion != int_print, "cppyy unexpectedly changed the known operator<< mapping"
+assert stream_insertion == int_print
 int_stream.str("")
 model.text_fifo.dump(int_stream)
 int_dump = str(int_stream.str())
@@ -245,7 +245,7 @@ print("FIFO_PROCESSES", "int_producer=0 s", "int_consumer=0 s", "wide_producer=1
 print("FIFO_ASSIGNMENT_CONVERSION", 73, "174224571863520493293247799005065324269")
 print("FIFO_SCALAR_CONVERSIONS", *model.scalar_conversions)
 print("FIFO_TEXT", int_print.replace("\n", "|").rstrip("|"), int_dump.replace("\n", "|").rstrip("|"))
-print("FIFO_STREAM_MAPPING", "unsupported pointer_insertion")
+print("FIFO_STREAM", stream_insertion.replace("\n", "|").rstrip("|"))
 print("FIFO_EVENTS", model.named_fifo.data_read_event().name(), model.named_fifo.data_written_event().name())
 
 sc.sc_stop()
