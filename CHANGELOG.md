@@ -6,6 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [0.15.0](https://github.com/amal-khailtash/pysystemc/compare/v0.14.0...v0.15.0) (2026-10-22)
+
+
+### Features
+
+* expand public event and synchronization families and repair datatypes ([#16](https://github.com/amal-khailtash/pysystemc/issues/16)) ([07771a2](https://github.com/amal-khailtash/pysystemc/commit/07771a2772a04c5b038fd3dc64153d0d5188a890))
+
 ## [Unreleased]
 
 ### Fixed
