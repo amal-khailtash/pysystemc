@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support typed signal input/output interfaces with native edge flags, borrowed value references and default writer policies.
+- Support resolved scalar/vector input-port constructor forms, aliases, elaboration checks and virtual destruction, including 137-bit vectors.
+- Support native pointer-list and iterator families with arbitrary payload pointers and Python `None` insertion handles.
 - Preserve clocked-thread `halt` suspension and Python cleanup on normal termination, reset and kill; accept native thread pointers or process handles for stack-size configuration.
 - Support native priority queues with arbitrary pointer types and retain Python comparators for the queue lifetime.
 - Support concrete buffer and resolved-signal constructors, assignments and native update hooks, including custom buffer payloads and 137-bit resolved vectors.
@@ -20,6 +23,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Preserve starvation policies for all four `sc_start` overloads and propagate callback errors without restarting simulation.
 
 ### Fixed
+- Preserve native kernel flag storage when assigning `sc_enable_name_checking` or `sc_allow_process_control_corners` through the `sc_core` module.
+- Support chained OR/AND event expressions with event or matching-list operands, preserving native single-use ownership.
+- Preserve the duty cycle and zero start time of numeric/unit clock constructors by explicitly selecting the native overload.
+- Adapt arbitrary pointer-vector slot reads, assignment and fetch without cppyy pointer-reference conversion failures, preserving native growth and null initialization.
 - Preserve explicit simulation contexts for guarded waits and native event-expression ownership for timed dynamic sensitivity.
 - Support native stream insertion for times, statuses, signal channels and arbitrary input/inout port types, preserving chaining and I/O diagnostics.
 - Support scalar multiplication on the left of `sc_time` with native rounding.
