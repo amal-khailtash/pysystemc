@@ -16,6 +16,23 @@ if port_mode:
     port = sc.sc_port[sc.sc_fifo_out_if[int] if write_mode else sc.sc_fifo_in_if[int]]()
     port(fifo)
     target = port.get_interface()
+elif access in ("borrowed", "blocking"):
+    import cppyy
+
+    template = (
+        (sc.sc_fifo_blocking_out_if if write_mode else sc.sc_fifo_blocking_in_if)
+        if access == "blocking"
+        else (sc.sc_fifo_out_if if write_mode else sc.sc_fifo_in_if)
+    )
+    interface = template[int]
+    cppyy.cppdef(f"""
+    /** Return adjusted borrowed FIFO interface address; channel outlives view. */
+    std::uintptr_t fifo_reset_interface(sc_core::sc_fifo<int>& channel) {{
+      return reinterpret_cast<std::uintptr_t>(static_cast<{interface.__cpp_name__}*>(&channel));
+    }}
+    """)
+    target = cppyy.bind_object(cppyy.gbl.fifo_reset_interface(fifo), interface)
+    target.__python_owns__ = False
 elif access == "convenience":
     port = (sc.sc_fifo_out[int] if write_mode else sc.sc_fifo_in[int])("port")
     port(fifo)
@@ -31,7 +48,14 @@ def worker():
     """Block inside native FIFO storage with caller-owned output."""
     records.append(("start", str(sc.sc_time_stamp())))
     try:
-        target.write(23) if write_mode else target.read(output)
+        if access == "assignment":
+            target.__assign__(23)
+        elif access == "conversion":
+            int(target)
+        elif write_mode:
+            target.write(23)
+        else:
+            target.read(output)
         raise AssertionError("empty read returned")
     finally:
         assert output.value == 71

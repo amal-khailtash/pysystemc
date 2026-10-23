@@ -168,6 +168,26 @@ Python module exports and ports. Keep ``sc_module_name`` alive throughout each
 module constructor. Use ``export.get_interface()`` when binding a port or another
 export: cppyy does not provide SystemC's implicit export/interface conversion.
 
+Native ``sc_export[IF]`` supports default/named construction, ``bind(interface)``
+and call-style binding. Interface access borrows the bound channel, which must
+survive the export and its consumers. Const and mutable access preserve the same
+native interface and type identity. Duplicate binding, unbound arrow access and
+unbound elaboration retain native reports. Protected export-base lifecycle hooks
+and reporting are available to native derived modeling classes.
+
+Scoped locks
+------------
+
+``sc_core.sc_scoped_lock(mutex)`` constructs an owning native lock through a
+GIL-released scheduler guard. It retains the mutex until lock destruction.
+``lock.release()`` unlocks once and returns ``True``; subsequent calls return
+``False``. Native destruction also releases an active lock. Retain the lock in a
+local variable for the critical section and release it in ``finally`` when prompt
+cleanup matters. Construction can block and must then run in a SystemC thread;
+reset/kill during acquisition unwinds Python frames before the kernel resumes.
+The factory returns a native ``sc_scoped_lock`` proxy, usable by native consumers,
+and exposes the native ``lockable_type`` alias.
+
 Runtime initialization
 ----------------------
 
@@ -214,6 +234,17 @@ semantics; the adapter does not schedule signal writes for them.
 and ``data_read_event``. Native read overloads return a value or assign an output;
 a failed nonblocking read preserves the output. Write callbacks receive copies.
 Blocking calls release the GIL and callbacks must use guarded waits.
+
+Native ``sc_fifo[T]`` blocking reads, writes, assignment and conversion use the
+same guarded scheduler path. ``fifo.__assign__(value)`` writes and returns the
+FIFO; fundamental numeric conversions such as ``int(fifo)`` consume one sample.
+Reset/kill during a blocked operation runs Python cleanup before native unwind.
+FIFO ``trace`` retains the header's ``DEBUG_SYSTEMC`` behavior: without that
+compile-time flag, it emits no buffer declarations. Trace signals or retained
+sample values separately when a waveform is needed in that configuration.
+FIFO insertion with ``stream << fifo`` currently selects proxy-address output in
+cppyy instead of queued samples. Use ``fifo.print(stream)`` or ``fifo.dump(stream)``;
+this free-function overload remains a failing mapping in the public inventory.
 
 Events returned by different adapter specializations retain the owner's event
 identity. Each specialization remains a distinct native interface/module.

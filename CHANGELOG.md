@@ -16,10 +16,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Complete FIFO channel, input/output port, six FIFO interface, export/base-export and scoped-lock public families with native value, event, lifetime and error comparisons, including arbitrary-width types.
 - Complete event-finder, base-interface, mutex and semaphore public families with native reference checks; add generic reflected event-member constructors and owning finder-cache slots.
 - Validate process-handle ownership, metadata, hierarchy views, typed conversions and descendant controls; support guarded self-suspension with native reset/kill cleanup and event delivery.
 
 ### Fixed
+- Guard scoped-lock construction and FIFO assignment/conversion against blocking reset/kill unwind; retain mutex ownership and preserve native export arrow exception fields.
 - Repair signed remainder and unsigned owning shifts with explicit native overloads; expose generic owning fixed-point contexts with native scope restoration. Exclude the disabled private context copy constructor from the public inventory.
 
 ## [0.14.0](https://github.com/amal-khailtash/pysystemc/compare/v0.13.2...v0.14.0) (2026-10-21)

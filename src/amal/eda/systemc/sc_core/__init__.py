@@ -173,15 +173,25 @@ signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
 from ._fifo import FifoTemplate as _FifoTemplate
 
 fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
+from ._exports import ExportTemplate as _ExportTemplate
+
 sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
 sc_fifo_in = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in)
 sc_fifo_out = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out)
+sc_fifo_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in_if)
+sc_fifo_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out_if)
+sc_fifo_blocking_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_in_if)
+sc_fifo_blocking_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_out_if)
 from ._blocking import guard_native_channels as _guard_native_channels
 
 _guard_native_channels()
+from ._blocking import ScopedLock as _ScopedLock
+
+sc_scoped_lock = _ScopedLock
+
 # Keep the public port specialization native; only Python bind gains adaptation.
 sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
-sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
+sc_export = _ExportTemplate(_PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface))
 _read_interface_callbacks = []
 
 

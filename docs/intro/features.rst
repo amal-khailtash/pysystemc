@@ -598,7 +598,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::operator-`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
 * ☐ ``sc_core::operator/`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::operator<`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_core::operator<<`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
+* ☐ ``sc_core::operator<<`` — 8 declarations; runtime: 2 failing, 6 untested; mapping: 6 partial, 2 reviewed.
 * ☐ ``sc_core::operator==`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::operator|`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``sc_core::sc_abort`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
@@ -646,17 +646,17 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_event_queue_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☐ ``sc_core::sc_event_queue_port`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_exception`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_export`` — 15 declarations; runtime: 15 untested; mapping: 7 partial, 8 reviewed.
-* ☐ ``sc_core::sc_export_base`` — 13 declarations; runtime: 13 untested; mapping: 3 partial, 10 reviewed.
-* ☐ ``sc_core::sc_fifo`` — 23 declarations; runtime: 23 untested; mapping: 5 partial, 18 reviewed.
-* ☐ ``sc_core::sc_fifo_blocking_in_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_core::sc_fifo_blocking_out_if`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_core::sc_fifo_in`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_core::sc_fifo_in_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_core::sc_fifo_nonblocking_in_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_core::sc_fifo_nonblocking_out_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_core::sc_fifo_out`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_fifo_out_if`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
+* ☑ ``sc_core::sc_export`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
+* ☑ ``sc_core::sc_export_base`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
+* ☑ ``sc_core::sc_fifo`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_core::sc_fifo_blocking_in_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_core::sc_fifo_blocking_out_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``sc_core::sc_fifo_in`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_core::sc_fifo_in_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_core::sc_fifo_nonblocking_in_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_core::sc_fifo_nonblocking_out_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_core::sc_fifo_out`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_core::sc_fifo_out_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_find_event`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_find_object`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_gen_unique_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
@@ -742,7 +742,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
 * ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 untested; mapping: 2 partial, 3 reviewed.
+* ☑ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.

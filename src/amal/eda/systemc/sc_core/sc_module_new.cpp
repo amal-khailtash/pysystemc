@@ -5,6 +5,7 @@
  * exceptions propagate through the simulation boundary. Guarded waits preserve reset/kill scheduler unwind.
  */
 #define SC_INCLUDE_DYNAMIC_PROCESSES
+#include <cstdint>
 #include <exception>
 #include <functional>
 #include <map>
@@ -229,6 +230,36 @@ std::pair<int, bool> python_mutex_lock(sc_mutex_if& channel)
   int result = -1;
   bool complete = python_guarded_operation([&] { result = channel.lock(); });
   return {result, complete};
+}
+
+/** @brief Select mutable export arrow access without cppyy overload fallback.
+ * @tparam IF Arbitrary native interface implemented by the exported channel.
+ * @details Returned interface borrows the bound channel; retain it through export
+ * consumer lifetime. GIL stays held; native unbound-access reports propagate.
+ */
+template <class IF>
+struct python_export_access
+{
+  /** @brief Borrow the bound interface, preserving the original native report. */
+  static IF* arrow(sc_export<IF>& channel)
+  {
+    return channel.operator->();
+  }
+};
+
+/** @brief Allocate an owning scoped lock while guarding scheduler unwind.
+ * @param channel Borrowed mutex interface retained by the Python owner.
+ * @return Allocation address and completion flag; zero address on reset/kill.
+ * @details Caller releases GIL and retains the mutex throughout construction and
+ * the returned lock's lifetime. On completion Python must take pointer ownership;
+ * reset/kill returns a zero address and requires Python frame unwind before kernel rethrow.
+ * Ordinary exceptions propagate. No second lock operation is performed.
+ */
+std::pair<std::uintptr_t, bool> python_scoped_lock(sc_mutex_if& channel)
+{
+  sc_scoped_lock* result = nullptr;
+  bool complete = python_guarded_operation([&] { result = new sc_scoped_lock(channel); });
+  return {reinterpret_cast<std::uintptr_t>(result), complete};
 }
 
 /** @brief Guard a borrowed semaphore wait with the same lifetime/GIL contract.
