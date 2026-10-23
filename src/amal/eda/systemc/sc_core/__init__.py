@@ -50,6 +50,8 @@ for _bridge in (
     "time_operations.cpp",
     "byte_heap.cpp",
     "process_utilities.cpp",
+    "event_expressions.cpp",
+    "pvector_access.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
@@ -92,6 +94,18 @@ def _event_list_constructor(list_type):
 
 for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
     _event_list_constructor(_event_list_type)
+
+from ._event_expressions import install as _install_event_expressions
+
+_install_event_expressions()
+
+from ._clock import install as _install_clock
+from ._pvector import install as _install_pvector
+from ._list_handles import install as _install_list_handles
+
+_install_clock()
+_install_pvector()
+_install_list_handles()
 
 
 def _event_notify_delayed(self, *args):
@@ -1017,3 +1031,7 @@ __all__ = sorted(
 )
 
 __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
+
+from ._kernel_flags import install as _install_kernel_flags
+
+_install_kernel_flags(sys.modules[__name__])
