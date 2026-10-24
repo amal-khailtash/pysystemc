@@ -1068,75 +1068,75 @@ sc_main public families
 tlm public families
 ~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``tlm::BEGIN_REQ`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::BEGIN_RESP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::END_REQ`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::END_RESP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_ACCEPTED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_ADDRESS_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_BIG_ENDIAN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_BURST_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_COMMAND_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_COMPLETED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_FULL_PAYLOAD`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_FULL_PAYLOAD_ACCEPTED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_GENERIC_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_IGNORE_COMMAND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_INCOMPLETE_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_LITTLE_ENDIAN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MIN_PAYLOAD`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MULTI_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MULTI_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MULTI_TARGET_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_OK_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_READ_COMMAND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_TARGET_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_UNKNOWN_ENDIAN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_UNKNOWN_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_UPDATED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_WRITE_COMMAND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::UNINITIALIZED_PHASE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::get_host_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::has_host_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::host_has_little_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::max_num_extensions`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::operator<<`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``tlm::BEGIN_REQ`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::BEGIN_RESP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::END_REQ`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::END_RESP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_ACCEPTED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_ADDRESS_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_BIG_ENDIAN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_BURST_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_COMMAND_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_COMPLETED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_FULL_PAYLOAD`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_FULL_PAYLOAD_ACCEPTED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_GENERIC_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_IGNORE_COMMAND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_INCOMPLETE_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_LITTLE_ENDIAN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MIN_PAYLOAD`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MULTI_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MULTI_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MULTI_TARGET_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_OK_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_READ_COMMAND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_TARGET_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_UNKNOWN_ENDIAN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_UNKNOWN_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_UPDATED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_WRITE_COMMAND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::UNINITIALIZED_PHASE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::get_host_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::has_host_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::host_has_little_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::max_num_extensions`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::operator<<`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_analysis_fifo`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``tlm::tlm_analysis_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_analysis_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_analysis_port`` — 8 declarations; runtime: 8 untested; mapping: 2 partial, 6 reviewed.
 * ☐ ``tlm::tlm_analysis_triple`` — 10 declarations; runtime: 10 untested; mapping: 5 partial, 5 reviewed.
-* ☐ ``tlm::tlm_array`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``tlm::tlm_array`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_base_initiator_socket`` — 29 declarations; runtime: 29 untested; mapping: 9 partial, 20 reviewed.
 * ☐ ``tlm::tlm_base_initiator_socket_b`` — 11 declarations; runtime: 11 untested; mapping: 1 partial, 10 reviewed.
-* ☐ ``tlm::tlm_base_protocol_types`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_base_protocol_types`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☐ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 11 untested; mapping: 1 partial, 10 reviewed.
 * ☐ ``tlm::tlm_base_target_socket`` — 32 declarations; runtime: 32 untested; mapping: 11 partial, 21 reviewed.
 * ☐ ``tlm::tlm_base_target_socket_b`` — 11 declarations; runtime: 11 untested; mapping: 1 partial, 10 reviewed.
-* ☐ ``tlm::tlm_blocking_get_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_blocking_get_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_blocking_get_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_blocking_get_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_blocking_master_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_blocking_peek_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_blocking_peek_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☐ ``tlm::tlm_blocking_put_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
 * ☐ ``tlm::tlm_blocking_slave_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_blocking_transport_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_bw_direct_mem_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_bw_nonblocking_transport_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_bw_transport_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_command`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_copyright`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_copyright_string`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_delayed_analysis_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_delayed_write_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_dmi`` — 28 declarations; runtime: 28 untested; mapping: 28 reviewed.
-* ☐ ``tlm::tlm_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``tlm::tlm_blocking_transport_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_bw_direct_mem_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_bw_nonblocking_transport_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_bw_transport_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_command`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_copyright`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_copyright_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_delayed_analysis_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_delayed_write_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_dmi`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.
+* ☑ ``tlm::tlm_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_event_finder_t`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``tlm::tlm_extension`` — 16 declarations; runtime: 16 untested; mapping: 3 partial, 13 reviewed.
 * ☐ ``tlm::tlm_extension_base`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
 * ☐ ``tlm::tlm_fifo`` — 45 declarations; runtime: 45 untested; mapping: 45 partial.
-* ☐ ``tlm::tlm_fifo_config_size_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_fifo_debug_if`` — 7 declarations; runtime: 7 untested; mapping: 7 reviewed.
+* ☑ ``tlm::tlm_fifo_config_size_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_fifo_debug_if`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☐ ``tlm::tlm_fifo_get_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_fifo_put_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_from_hostendian`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
@@ -1144,58 +1144,58 @@ tlm public families
 * ☐ ``tlm::tlm_from_hostendian_generic`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``tlm::tlm_from_hostendian_single`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``tlm::tlm_from_hostendian_word`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_fw_direct_mem_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_fw_nonblocking_transport_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_fw_transport_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_fw_direct_mem_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_fw_nonblocking_transport_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_fw_transport_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☐ ``tlm::tlm_generic_payload`` — 60 declarations; runtime: 60 untested; mapping: 1 partial, 59 reviewed.
-* ☐ ``tlm::tlm_get_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_get_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_global_quantum`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
-* ☐ ``tlm::tlm_gp_option`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_get_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_get_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_global_quantum`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``tlm::tlm_gp_option`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_initiator_socket`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_is_prerelease`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``tlm::tlm_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_master_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_mm_interface`` — 3 declarations; runtime: 3 untested; mapping: 1 partial, 2 reviewed.
-* ☐ ``tlm::tlm_nonblocking_get_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_nonblocking_get_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_nonblocking_get_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_get_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_nonblocking_get_port`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``tlm::tlm_nonblocking_master_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_nonblocking_peek_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_peek_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☐ ``tlm::tlm_nonblocking_peek_port`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``tlm::tlm_nonblocking_put_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
 * ☐ ``tlm::tlm_nonblocking_put_port`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
 * ☐ ``tlm::tlm_nonblocking_slave_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_phase`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``tlm::tlm_phase_enum`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``tlm::tlm_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_phase`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``tlm::tlm_phase_enum`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_put_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_release`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``tlm::tlm_release`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_req_rsp_channel`` — 10 declarations; runtime: 10 untested; mapping: 10 partial.
-* ☐ ``tlm::tlm_response_status`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_response_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``tlm::tlm_slave_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_slave_to_transport`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``tlm::tlm_socket_category`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_sync_enum`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_tag`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_socket_category`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_sync_enum`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_tag`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☐ ``tlm::tlm_target_socket`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
 * ☐ ``tlm::tlm_to_hostendian_aligned`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``tlm::tlm_to_hostendian_generic`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``tlm::tlm_to_hostendian_single`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``tlm::tlm_to_hostendian_word`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
 * ☐ ``tlm::tlm_transport_channel`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``tlm::tlm_transport_dbg_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_transport_dbg_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☐ ``tlm::tlm_transport_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
 * ☐ ``tlm::tlm_transport_to_master`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``tlm::tlm_version`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_major`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_minor`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_originator`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_patch`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_prerelease`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_release_date`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_string`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_string_2`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_write_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_version`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_major`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_minor`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_originator`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_patch`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_release_date`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_string_2`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_write_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 
 tlm_utils public families
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1214,8 +1214,8 @@ tlm_utils public families
 * ☐ ``tlm_utils::passthrough_target_socket_tagged`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::passthrough_target_socket_tagged_b`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
 * ☐ ``tlm_utils::passthrough_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::peq_with_cb_and_phase`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``tlm_utils::peq_with_get`` — 10 declarations; runtime: 10 untested; mapping: 1 partial, 9 reviewed.
+* ☑ ``tlm_utils::peq_with_cb_and_phase`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``tlm_utils::peq_with_get`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☐ ``tlm_utils::simple_initiator_socket`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::simple_initiator_socket_b`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
 * ☐ ``tlm_utils::simple_initiator_socket_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
@@ -1228,4 +1228,4 @@ tlm_utils public families
 * ☐ ``tlm_utils::simple_target_socket_tagged`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
 * ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
+* ☑ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.

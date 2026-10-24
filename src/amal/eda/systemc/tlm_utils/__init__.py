@@ -31,6 +31,20 @@ _callback_queues = []
 _callback_sockets = []
 
 
+def _pythonize_get_queue(queue_type, name):
+    """Expose the native queue's public pair alias omitted by cppyy reflection.
+
+    The pair stores a time value and a borrowed payload pointer. Instantiating
+    this alias does not transfer payload ownership or enter the scheduler.
+    """
+    if name.startswith("peq_with_get<"):
+        payload = queue_type.transaction_type.__cpp_name__
+        queue_type.pair_type = cppyy.gbl.std.pair["const sc_core::sc_time", payload + "*"]
+
+
+cppyy.py.add_pythonization(_pythonize_get_queue, "tlm_utils")
+
+
 def _checked_socket_callback(method, callback):
     """Validate Python callback results before std::function native conversion.
 

@@ -6,6 +6,7 @@ Namespace availability does not establish Python transport callback support.
 """
 
 import cppyy
+from . import _interfaces  # noqa: F401
 from .._namespace import (
     public_names as _public_names,
     document_member as _document_member,

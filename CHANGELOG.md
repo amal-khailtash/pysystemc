@@ -9,6 +9,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support native TLM enums, version metadata, host-endianness predicates, extension registration and extension-pointer arrays.
+- Support DMI address ranges, permissions, borrowed byte buffers and latency values, registered phase names and quantumkeeper synchronization with reset/kill cleanup.
+- Support payload event queue aliases and custom protocol notifications, cancellation and native callback-owner constructors.
+- Support TLM get/peek, analysis/write, FIFO debug/configuration and forward/backward transport interface families with arbitrary native value types.
 - Expose guarded module and primitive-channel member waits and dynamic sensitivity, sampled edge waits and clocked halt with Python reset/kill cleanup.
 - Add automatically named primitive-channel construction and preserve native update coalescing, asynchronous requests and lifecycle callbacks.
 - Support ordinary signal, input, inout and output port families, generic port operations and native signal implementation members across writer policies and arbitrary datatype widths.
@@ -26,6 +30,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Expose `peq_with_get[Payload].pair_type` as its native time-and-payload-pointer pair without restricting payload types.
+- Preserve non-consuming `peek(output)` dispatch across combined TLM interfaces instead of selecting the get overload.
 - Preserve explicit integer signal trace widths and reject widths without a native signal overload.
 - Classify private typedefs in class template specializations correctly in the public API inventory.
 - Preserve null trace-file closure when releasing registered trace-value owners.
