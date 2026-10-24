@@ -6,6 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [0.16.0](https://github.com/amal-khailtash/pysystemc/compare/v0.15.0...v0.16.0) (2026-10-24)
+
+
+### Features
+
+* expand public SystemC families and add CLI playground ([#18](https://github.com/amal-khailtash/pysystemc/issues/18)) ([d4201e0](https://github.com/amal-khailtash/pysystemc/commit/d4201e0a076b3a0815f7401b2b660c60ccc9fed4))
+
 ## [Unreleased]
 
 ### Added
