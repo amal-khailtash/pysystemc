@@ -764,7 +764,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_name_gen`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
-* ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
+* ☑ ``sc_core::sc_object`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
 * ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
 * ☑ ``sc_core::sc_out_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
@@ -775,11 +775,11 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_pending_activity_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_pending_activity_at_future_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_phash`` — 91 declarations; runtime: 91 untested; mapping: 91 partial.
+* ☑ ``sc_core::sc_phash`` — 91 declarations; runtime: 91 supported; mapping: 91 reviewed.
 * ☑ ``sc_core::sc_phash_base`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
 * ☑ ``sc_core::sc_phash_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_phash_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; node fields and ownership are outside this scope.
-* ☐ ``sc_core::sc_phash_iter`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
+* ☑ ``sc_core::sc_phash_iter`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_plist`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
 * ☑ ``sc_core::sc_plist_base`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
 * ☑ ``sc_core::sc_plist_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
@@ -788,7 +788,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_plist_map_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_port`` — 77 declarations; runtime: 77 untested; mapping: 54 partial, 23 reviewed.
 * ☐ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 untested; mapping: 30 partial, 97 reviewed.
-* ☐ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 untested; mapping: 4 partial, 17 reviewed.
+* ☑ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
 * ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
@@ -849,7 +849,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_time_unit`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 untested; mapping: 66 partial.
 * ☑ ``sc_core::sc_trace_delta_cycles`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 untested; mapping: 36 partial.
+* ☑ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 supported; mapping: 36 reviewed.
 * ☑ ``sc_core::sc_unregister_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_unwind_exception`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_vector`` — 43 declarations; runtime: 43 supported; mapping: 43 reviewed.
@@ -865,7 +865,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_version_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version_release_date`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_vpool`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
+* ☑ ``sc_core::sc_vpool`` — 62 declarations; runtime: 62 supported; mapping: 62 reviewed.
 * ☑ ``sc_core::sc_write_comment`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_writer_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::timed_out`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.

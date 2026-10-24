@@ -180,6 +180,59 @@ Closing invalidates all file aliases and flushes output. Both close helpers
 accept ``None`` as a null no-op; native file opening can be deferred until the
 first traced cycle.
 
+Stable trace values and native trace-file methods
+-------------------------------------------------
+
+``sc_trace_value[Type](initial)`` owns mutable native storage with its exact
+C++ type. Use it when tracing scalar values that cppyy otherwise converts to
+Python numbers::
+
+    value = sc_core.sc_trace_value["float"](1.5)
+    file.trace(value, "sample")
+    value.value = 2.75
+
+Both ``file.trace`` and ``sc_trace(file, value, name)`` accept these holders,
+with an optional native integer width. Enumeration tracing accepts an
+``unsigned int`` holder and a sequence of string labels, optionally terminated
+by ``None``. The file retains holders and copied enumeration labels until its
+matching close helper succeeds. Types and template widths are instantiated on
+demand. Ordinary native reference arguments remain caller-owned; Python scalar
+temporaries do not provide persistent waveform storage.
+
+``sc_trace_file`` is abstract, with a public constructor and protected virtual
+destructor. Native-derived files expose all native trace overloads, comment,
+space, delta-cycle and time-unit methods; native-derived bridges can implement
+the protected cycle hook. This does not provide Python virtual subclassing.
+Direct native destruction requires caller-managed holder lifetimes.
+
+Objects, port bases and temporary pools
+---------------------------------------
+
+``sc_object`` exposes hierarchy, attributes, printing, context and phase-mask
+operations. Its native assignment deliberately returns the destination without
+changing its name, attributes or children. Hierarchy and attribute views borrow
+their native owners. Protected construction and phase hooks require a native
+subclass; keep objects alive while any borrowed views are used.
+
+``sc_port_base`` exposes interface access, type information, binding counts and
+native binding operations. Construct ports inside an active module hierarchy,
+respect their binding policy and keep bound interfaces and parent ports alive.
+Protected constructors, sensitivity helpers and lifecycle hooks require native
+derived access and preserve native report behavior.
+
+``sc_vpool[Type]`` allocates native temporary-array slots, wraps at its capacity
+and resets the allocation index without destroying values. Its native destructor
+does not free default-allocated storage. An external array must contain live
+values and outlive the pool and its borrowed slot views. Reused slots can
+replace prior temporary values; reference-proxy slots require native setup
+before dereferencing. Allocation, reset and size operations support arbitrary
+native types, including the native datatype-proxy specializations.
+
+``sc_phash[Key, Contents]`` and its iterators preserve native typed output slots,
+copy and removal overloads. Tables borrow pointer contents; duplicated-key
+callbacks control key copying and release. Keep contents and callback state
+alive for every native use, and discard iterators after invalidating mutations.
+
 Process joins
 -------------
 

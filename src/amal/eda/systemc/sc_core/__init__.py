@@ -51,6 +51,7 @@ for _bridge in (
     "event_lists.cpp",
     "event_finders.cpp",
     "trace_printf.cpp",
+    "trace_values.cpp",
     "time_operations.cpp",
     "byte_heap.cpp",
     "process_utilities.cpp",
@@ -59,6 +60,11 @@ for _bridge in (
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
+
+from ._trace_values import install as _install_trace_values
+
+_install_trace_values()
+sc_trace_value = cppyy.gbl.pysystemc_tracing.trace_value
 
 from ._event_finders import (
     EventFinderTemplate as _EventFinderTemplate,
@@ -1191,6 +1197,7 @@ __all__ = sorted(
         "sc_spawn",
         "sc_bind",
         "sc_placeholder",
+        "sc_trace_value",
         "sc_assemble_vector",
         "sc_member_access",
         "wait",

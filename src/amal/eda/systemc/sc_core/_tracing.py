@@ -64,6 +64,8 @@ def _trace_close(close):
         address = 0 if trace is None else cppyy.addressof(trace)
         close(cppyy.nullptr if trace is None else trace)
         _open_trace_files.pop(address, None)
+        if address:
+            trace.__dict__.pop("_trace_value_owners", None)
 
     return wrapped
 
@@ -115,14 +117,27 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
 
     Args:
         file: Open SystemC trace file.
-        value: Native signal/interface or scalar accepted by SystemC.
+        value: Native signal/interface, sc_trace_value[Type] holder, or native
+            scalar reference accepted by SystemC.
         name: Name to record in the waveform.
-        *args: Additional native scalar tracing arguments.
+        *args: Optional native width or holder enumeration label sequence.
 
-    Signal template types are instantiated on demand. Keep the traced object
-    alive until the trace file closes; Python scalar temporaries are unsuitable
-    for tracking mutable native state.
+    Returns:
+        None after native registration.
+
+    Raises:
+        TypeError: Arguments lack a compatible native tracing overload.
+        sc_report: Native tracing rejects registration.
+
+    Calls hold the GIL. Signal and holder types are instantiated on demand.
+    Holders and copied enum labels are retained until matching closure. Keep
+    ordinary traced objects alive until closure; Python scalar temporaries are
+    unsuitable for tracking mutable native state.
     """
+    from ._trace_values import register, value_type
+
+    if value_type(value) is not None:
+        return register(file, value, name, *args)
     if hasattr(value, "read"):
         sample = value.read()
         # Python float/int conversion loses the native signal specialization.
