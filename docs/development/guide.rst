@@ -39,11 +39,15 @@ Run the regression suite in independent native simulation processes::
    make test
    make test-verbose
    make coverage
+   make test-parallel TEST_WORKERS=4
+   make coverage-parallel TEST_WORKERS=4
    make docs
 
 The coverage target prints a terminal summary and writes an HTML report to
 ``build/coverage/html/index.html``. Open that file in a browser to inspect
-coverage by module and line.
+coverage by module and line. Parallel coverage combines worker and simulation
+subprocess data; each simulation remains isolated. See :doc:`releases` for CI
+validation, publication ordering and recovery.
 
 Tests verify callbacks, lifecycle, sensitivity, integer wraparound and VCD
 transitions. Upstream fork/join, report and barrier ports are compared with native

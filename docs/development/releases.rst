@@ -4,160 +4,133 @@ Pull requests and releases
 Workflow order
 --------------
 
-Both repositories use the same four Actions workflow names. The numbers make
-navigation consistent; jobs run according to their triggers and dependencies.
+The workflows separate code validation from package publication:
 
-* **01. PR title** (``pr-title.yml``) checks Conventional Commit PR titles using
-  metadata only.
-* **02. CI** (``ci.yml``) tests, checks distributions, and builds documentation
-  for PRs and main. The publisher calls the same CI against the release tag.
-* **03. Release Please** (``release-please.yml``) collects merged changes into a
-  release PR. Merging that PR creates the immutable tag and GitHub release and
-  dispatches the publisher from main so its trusted publisher identity matches.
-* **04. Publish** (``publish.yml``) verifies the tag/version and main ancestry,
-  publishes the distributions produced by release CI, then triggers released
-  documentation on Read the Docs. Manual dispatch accepts an existing tag and
-  a ``pypi`` or ``testpypi`` destination for recovery or testing.
+* **01. PR title** checks Conventional Commit titles using metadata only.
+* **02. CI** runs full tests, coverage, distribution checks and documentation
+  checks on feature PRs. Release Please PRs receive focused release-metadata
+  validation instead. Merging into main does not repeat full CI.
+* **03. Release Please** prepares a release PR and synchronizes its lockfile.
+  Merging the release PR creates an immutable tag and a **draft** GitHub release,
+  then dispatches publication from main.
+* **04. Publish** builds the tagged distributions once, checks the installed
+  wheel, uploads those same files and verifies their availability and SHA-256
+  hashes on PyPI. Only then does it publish the GitHub release and activate
+  released documentation.
 
-Read the Docs handles PR previews and development ``latest`` docs through its
-GitHub integration. CI's documentation build validates HTML; it does not deploy
-it. Disable independent automatic tag builds in Read the Docs when strict
-PyPI-before-release-docs ordering is required. Keep tag versions discoverable
-and active so the post-publication API trigger can build them. A successful
-trigger means the build was queued; inspect Read the Docs for its final result.
-GitHub Pages and the separate TestPyPI workflow are removed.
+``distributions.yml`` is a reusable build job called by feature CI and the
+publisher. It has no independent trigger. A feature packaging check validates
+that changes can be packaged; publication builds again because the final release
+version differs from the feature PR. The complete source test suite is not
+repeated during publication.
 
-Branch naming
--------------
+Read the Docs PR previews and development ``latest`` documentation remain
+independent of package publication. CI builds documentation to detect errors;
+that build does not activate a released version. Disable automatic tag builds
+and automatic activation of new release versions in Read the Docs if strict
+PyPI-before-release-documentation ordering is required. Keep tag versions
+available for discovery; the publisher activates them after verification.
 
-Both projects use ``<type>/<short-description>``. Choose a prefix describing the
-work and lowercase words separated by hyphens:
+Contributor branches
+--------------------
 
-.. list-table:: Contributor branch examples
-   :header-rows: 1
-   :widths: 15 40 45
-
-   * - Prefix
-     - Example
-     - Purpose
-   * - ``feat``
-     - ``feat/custom-interfaces``
-     - New public behavior
-   * - ``fix``
-     - ``fix/version-validation``
-     - Correct existing behavior
-   * - ``ci``
-     - ``ci/consolidate-workflows``
-     - Automation and workflow changes
-   * - ``docs``
-     - ``docs/development-workflow``
-     - Documentation changes
-   * - ``test``
-     - ``test/interface-lifetime``
-     - Test coverage
-
-Use ``build``, ``perf``, or ``refactor`` when those Conventional Commit types
-better describe the change. Branch names organize work; the squash commit's PR
-title determines release impact. For example, ``ci/consolidate-workflows`` with
-PR title ``ci: consolidate numbered release workflows`` requests no release.
-
-Create branches from current ``main`` and target PRs at ``main``. For changes
-spanning both repositories, use the same branch name in each, but open a separate
-PR in each repository: the branches and merges remain independent. For example::
+Create branches from current main using ``<type>/<short-description>``::
 
    git switch main
    git pull --ff-only
-   git switch -c ci/consolidate-workflows
+   git switch -c feat/custom-interfaces
 
-Release Please manages ``release-please--branches--main--components--<package>``;
-``<package>`` is ``pysystemc`` or ``pyipxact-de``. These generated release PR
-branches have different component suffixes because they release different
-packages. Contributors do not create manual version/release branches or tags.
+Use ``feat``, ``fix``, ``ci``, ``docs``, ``test``, ``build``, ``perf`` or
+``refactor`` according to the change. The squash commit's PR title determines
+release impact. CI, documentation, tests and chores alone do not request a
+release. Contributors do not create manual version branches or release tags.
 
-PR workflow
------------
+Feature PR validation
+---------------------
 
-1. Implement and validate the change on its contributor branch. Update relevant
-   docs and changelog notes, commit, push, and open a PR with a Conventional
-   Commit title, such as ``feat: support custom interfaces``.
-2. ``01. PR title`` checks the title; ``02. CI`` runs tests, builds distributions,
-   and validates docs. Read the Docs supplies a separate PR preview.
-3. Review the result and wait for title, Tests and coverage, Build distributions,
-   and Build documentation checks to pass. Require these checks in main
-   protection. A sole maintainer may use zero required reviews; require a review
-   when another reviewer is available.
-4. Squash-merge using the PR title. Main receives one commit containing the PR's
-   changes. Individual branch commit IDs are replaced by the squash commit ID;
-   this is expected and does not remove the merged files.
-5. GitHub deletes the merged remote branch when automatic deletion is enabled.
-   Update local main and delete the completed local branch after confirming its
-   changes are present. Squash commits may prevent ``git branch -d`` from
-   recognizing ancestry; inspect the merged PR before using ``git branch -D``.
+1. Implement and validate on the contributor branch, update relevant docs and
+   changelog notes, commit, push and open a PR against main.
+2. Full CI runs tests and subprocess coverage in four pytest workers using work
+   stealing, checks distributions and builds documentation. The job reports its
+   15 slowest tests. Every simulation still uses a fresh native process.
+3. Review the title, validation selection, tests, distributions and documentation
+   results before merging. Configure required checks to match this workflow;
+   skipped full jobs on a validated release-metadata PR are intentional.
+4. Squash-merge using the Conventional Commit PR title. Update local main and
+   delete the merged contributor branch. Squash history can require checking
+   the merged PR before deleting a branch with ``git branch -D``.
 
-Release workflow
-----------------
+Use ``make test-parallel TEST_WORKERS=4`` or
+``make coverage-parallel TEST_WORKERS=4`` locally. The Makefile defaults remain
+at two workers for machines with fewer resources. CI can also be dispatched
+manually for full validation without a PR.
 
-1. A merge into main runs ``03. Release Please``, which collects release-worthy
-   squash commits into a generated release PR. ``fix:`` and ``perf:`` request a
-   patch, ``feat:`` requests a minor, and ``feat!:`` or a ``BREAKING CHANGE:``
-   footer requests a major, including below 1.0. CI, docs, tests, and chores alone
-   do not request releases.
-2. Release Please updates ``pyproject.toml``, ``uv.lock``, its manifest, and
-   ``CHANGELOG.md``. Other open feature PRs are excluded until merged. Review
-   the proposed version and wait for the release PR's CI to pass.
-3. Merge the release PR only when ready to publish. Leaving it open defers the
-   release while ordinary contributor PRs can continue merging. Its squash merge
-   creates the tag and GitHub release and dispatches ``04. Publish`` from main.
-4. The publisher runs CI against the immutable tag, verifies tag/version and
-   main ancestry, and uses those CI distribution artifacts. Project-specific
-   checks below run before uploading to PyPI.
-5. After a successful PyPI upload, trigger released docs on Read the Docs. A
-   TestPyPI dispatch uses the same publication flow but does not trigger release
-   docs. Inspect the final Read the Docs build as well as the Actions result.
+Release validation and publication
+----------------------------------
 
-Publication recovery
---------------------
+1. Release Please collects release-worthy merged changes. ``fix`` and ``perf``
+   request a patch, ``feat`` requests a minor, and breaking changes request a
+   major, including below 1.0.
+2. The generated PR updates the project version, manifest and changelog. A
+   follow-up automation runs ``uv lock``, moves pending ``Unreleased`` changelog
+   details into the new release section, and commits changed metadata to the same
+   PR. It leaves exactly one empty ``Unreleased`` section at the top. This may
+   restart the short metadata check. Write user-visible changes under that one
+   pending section while developing; release summaries and detailed notes remain
+   together after publication.
+3. The metadata check compares the actual Git trees. Only ``pyproject.toml``,
+   ``uv.lock``, the release manifest and ``CHANGELOG.md`` may change. Project
+   settings and dependency records must remain identical apart from the local
+   package version. Versions must agree and the changelog must contain the new
+   version. Unexpected changes fail validation instead of bypassing source CI.
+4. Review and merge the release PR when ready to publish. Its tag identifies the
+   source exactly; the GitHub release remains a draft during publication.
+5. The publisher builds and repairs native manylinux wheels, checks distribution
+   metadata, verifies the tag/version and main ancestry, and tests the installed
+   wheel outside the build container. Native resources, runtime compilation,
+   pthread waits, simulation time and bundled examples are checked before upload.
+6. Trusted publishing uploads the saved artifacts to PyPI. The index must expose
+   every wheel and source distribution with matching SHA-256 hashes and no
+   yanked file. Bounded retries allow for index propagation.
+7. After verified publication, independent jobs attach the distributions and
+   publish the GitHub release, and activate/build the version on Read the Docs.
+   A TestPyPI dispatch verifies its uploaded artifacts but does not announce a
+   GitHub release or activate release documentation.
 
-PyPI versions and tags are immutable. Inspect uploaded files before retrying a
-partial publication. Run ``04. Publish`` manually from main with the existing
-tag and destination to use workflow repairs without changing released source.
-No new version or tag is needed for a workflow-only repair. This manual dispatch
-publishes a package; use it only when publication is intended. Merging a CI or
-documentation contributor PR alone does not authorize or initiate a release.
+Failure and retry behavior
+--------------------------
 
-Service setup
--------------
+A build, installed-wheel or upload/availability failure leaves the GitHub release
+as a draft and does not activate released documentation. Coverage results from
+feature validation remain available; they describe tested code, not publication.
+
+If PyPI succeeds but GitHub or documentation fails, the package is already
+published. Re-run the failed announcement job without uploading again. The docs
+job queues a Read the Docs build; inspect that service for the final build result.
+
+Artifacts are retained for 30 days. Prefer re-running failed jobs in the original
+publication run so recovery uses the same distribution files. PyPI versions and
+release tags are immutable. Inspect a partial upload before retrying; verification
+rejects files whose index hashes differ from the saved artifacts.
+
+For a workflow repair or expired artifacts, manually dispatch ``04. Publish``
+from main with the existing tag and ``pypi`` or ``testpypi`` destination. This
+rebuilds from the tag and verifies uploaded bytes. It cannot silently replace an
+existing PyPI file with different bytes. Publication verification tooling comes
+from the workflow revision, allowing fixes without changing released source.
+
+Service configuration
+---------------------
 
 * Enable Actions PR creation and configure ``RELEASE_PLEASE_TOKEN`` with contents
-  and pull-request write access. Its PRs must trigger normal CI.
-* Configure trusted publishers for this repository's ``publish.yml`` and the
-  ``pypi`` / ``testpypi`` environments. Replace any TestPyPI publisher entry that
-  still names the removed ``publish-testpypi.yml``. Workflow filenames remain
-  stable even though their display names are numbered.
-* Configure ``CODECOV_TOKEN`` and the Read the Docs GitHub integration for
-  coverage and PR previews.
-* Configure ``READTHEDOCS_TOKEN`` with permission to trigger this project's
-  released version builds. The publisher uses it only after a successful PyPI
-  upload; TestPyPI does not trigger released docs.
+  and pull-request write access. Generated PR and lockfile commits must trigger
+  metadata checks; draft release publication uses this token too.
+* Configure PyPI and TestPyPI trusted publishers for ``publish.yml`` and its
+  respective ``pypi`` / ``testpypi`` environments. These identities are unchanged.
+* Configure ``CODECOV_TOKEN`` for feature-PR coverage and the Read the Docs GitHub
+  integration for PR previews and development docs.
+* Configure ``READTHEDOCS_TOKEN`` with released-version activation and build
+  permissions, and disable independent automatic release-version activation.
 
-Project-specific validation
----------------------------
-
-pysystemc builds and repairs native manylinux wheels with auditwheel. Before
-upload it checks native resources, runtime compilation, pthread waits, simulation
-time, console arguments, and tutorials using the installed wheel outside the
-build container. Python 3.14 remains required.
-
-Shared publication configuration
---------------------------------
-
-Both projects dispatch publication from main, reuse the release CI distribution
-artifacts, generate PEP 740 attestations, and upload with ``uv publish`` using
-trusted publishing. Released documentation is synchronized and activated on
-Read the Docs after a successful upload. Dependency Graph is generated by
-GitHub repository settings; it is shared security infrastructure, not a fifth
-repository workflow file.
-
-CI validation remains specific to each package: pysystemc requires Python 3.14,
-native manylinux repair, and installed-wheel simulation checks; pyipxact-de
-requires its XML tooling and schema/application tests.
+These workflows describe this repository. Related projects may use different
+release triggers and must be updated independently.

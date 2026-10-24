@@ -23,13 +23,15 @@ concurrency:
   group: publish-${{ inputs.tag }}
   cancel-in-progress: false
 jobs:
-  tests:
-    uses: ./.github/workflows/ci.yml
+  build:
+    name: Build tagged distributions
+    uses: ./.github/workflows/distributions.yml
     with:
       ref: ${{ inputs.tag }}
-    secrets: inherit
   verify:
-    needs: tests
+    needs: build
+    outputs:
+      project: ${{ steps.metadata.outputs.project }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -41,12 +43,14 @@ jobs:
         with:
           python-version: '3.14'
       - name: Verify immutable tag and package version
+        id: metadata
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           git -c safe.directory="$PWD" show-ref --verify "refs/tags/$RELEASE_TAG"
           git -c safe.directory="$PWD" merge-base --is-ancestor HEAD origin/main
           uv run --no-project python -c 'import os, tomllib; from pathlib import Path; version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]; assert os.environ["RELEASE_TAG"] == "v" + version, "Release tag must match pyproject.toml version"'
+          uv run --no-project python -c 'import os, tomllib; from pathlib import Path; name = tomllib.loads(Path("pyproject.toml").read_text())["project"]["name"]; print("project=" + name, file=open(os.environ["GITHUB_OUTPUT"], "a"))'
       - uses: actions/download-artifact@v7
         with:
           name: ci-distributions
@@ -63,17 +67,24 @@ jobs:
           uv run --no-project --with "$wheel" python -c "import subprocess, sys; subprocess.run([sys.executable, sys.argv[1]], check=True, timeout=120)" "$check"
           uv run --no-project --with "$wheel" python "$examples_check"
   publish:
+    name: Publish and verify package index
     needs: verify
     runs-on: ubuntu-latest
     environment: ${{ inputs.repository || 'pypi' }}
     permissions:
       id-token: write
+      contents: read
     steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.workflow_sha }}
       - uses: actions/download-artifact@v7
         with:
           name: ci-distributions
           path: dist/
       - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
       - name: Generate PEP 740 attestations
         uses: astral-sh/attest-action@f589a42a7efb6fe400b4f400de60b4bc90390027 # v0.0.6
       - name: Publish with uv trusted publishing
@@ -82,7 +93,37 @@ jobs:
       - name: Publish to TestPyPI with uv trusted publishing
         if: inputs.repository == 'testpypi'
         run: uv publish --trusted-publishing always --publish-url https://test.pypi.org/legacy/ --check-url https://test.pypi.org/simple/
+      - name: Verify published versions and artifact hashes
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          REPOSITORY: ${{ inputs.repository || 'pypi' }}
+          PROJECT: ${{ needs.verify.outputs.project }}
+        run: |
+          uv run --no-project python tools/verify_publication.py --project "$PROJECT" --version "${RELEASE_TAG#v}" --repository "$REPOSITORY"
+  announcement:
+    name: Publish GitHub release after PyPI
+    needs: publish
+    if: inputs.repository != 'testpypi'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: ci-distributions
+          path: dist/
+      - name: Attach verified distributions and publish draft
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          gh release upload "$RELEASE_TAG" dist/* --clobber
+          if [ "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = true ]; then
+            gh release edit "$RELEASE_TAG" --draft=false
+          fi
   documentation:
+    name: Activate release documentation after PyPI
     timeout-minutes: 10
     needs: publish
     if: inputs.repository != 'testpypi'

@@ -15,14 +15,41 @@ jobs:
     outputs:
       created: ${{ steps.release.outputs.release_created }}
       tag: ${{ steps.release.outputs.tag_name }}
+      pr: ${{ steps.release.outputs.pr }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          # A personal/App token makes the release PR trigger normal PR CI.
+          # A personal/App token lets generated release PRs trigger metadata checks.
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+  lockfile:
+    name: Prepare release metadata
+    needs: release
+    if: needs.release.outputs.pr != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ fromJSON(needs.release.outputs.pr).headBranchName }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+      - name: Update lockfile and roll over changelog
+        env:
+          RELEASE_BRANCH: ${{ fromJSON(needs.release.outputs.pr).headBranchName }}
+        run: |
+          uv lock
+          uv run --no-project python tools/prepare_release_notes.py
+          if ! git diff --quiet -- uv.lock CHANGELOG.md; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add uv.lock CHANGELOG.md
+            git commit -m 'chore: synchronize release metadata and changelog'
+            git push origin "HEAD:$RELEASE_BRANCH"
+          fi
   publish:
     needs: release
     if: needs.release.outputs.created == 'true'

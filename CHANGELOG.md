@@ -6,14 +6,17 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
-## [0.16.0](https://github.com/amal-khailtash/pysystemc/compare/v0.15.0...v0.16.0) (2026-10-24)
+## [Unreleased]
 
+### CI
+- Run feature-PR tests and coverage with four workers; validate release-only metadata without repeating full CI on main merges or publication.
+- Verify published PyPI distribution hashes before announcing GitHub releases and activating versioned documentation.
+
+## [0.16.0](https://github.com/amal-khailtash/pysystemc/compare/v0.15.0...v0.16.0) (2026-10-24)
 
 ### Features
 
 * expand public SystemC families and add CLI playground ([#18](https://github.com/amal-khailtash/pysystemc/issues/18)) ([d4201e0](https://github.com/amal-khailtash/pysystemc/commit/d4201e0a076b3a0815f7401b2b660c60ccc9fed4))
-
-## [Unreleased]
 
 ### Added
 - Add the `pysystemc` CLI with version/help commands and a Python SystemC playground featuring syntax highlighting, completion, line editing, multiline input and persistent history.
@@ -29,6 +32,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Expose package-level `sc_main` and `sc_elab_and_sim` with argument validation, copied arguments and native return statuses.
 - Preserve native module-name hierarchy, sampled bool/logic edge waits and timeout queries; retain referents in mutable and const reference wrappers.
 - Preserve starvation policies for all four `sc_start` overloads and propagate callback errors without restarting simulation.
+- Complete FIFO channel, input/output port, six FIFO interface, export/base-export and scoped-lock public families with native value, event, lifetime and error comparisons, including arbitrary-width types.
+- Complete event-finder, base-interface, mutex and semaphore public families with native reference checks; add generic reflected event-member constructors and owning finder-cache slots.
+- Validate process-handle ownership, metadata, hierarchy views, typed conversions and descendant controls; support guarded self-suspension with native reset/kill cleanup and event delivery.
 
 ### Fixed
 - Preserve native callback reports when Python coverage monitoring is enabled; select count and event-list waits without retrying an invalid overload after a native diagnostic.
@@ -42,24 +48,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Avoid adding refresh processes when tracing native signals, preserving native delta-cycle timing and WIF output.
 - Accept null trace-file closure through either `None` or a native null pointer.
 - Route `stream << fifo` to native FIFO sample printing for unrestricted element types and stream subclasses, preserving chaining and queue contents and reporting native I/O failures as `OSError`.
+- Guard scoped-lock construction and FIFO assignment/conversion against blocking reset/kill unwind; retain mutex ownership and preserve native export arrow exception fields.
 
 ## [0.15.0](https://github.com/amal-khailtash/pysystemc/compare/v0.14.0...v0.15.0) (2026-10-22)
-
 
 ### Features
 
 * expand public event and synchronization families and repair datatypes ([#16](https://github.com/amal-khailtash/pysystemc/issues/16)) ([07771a2](https://github.com/amal-khailtash/pysystemc/commit/07771a2772a04c5b038fd3dc64153d0d5188a890))
 
-## [Unreleased]
-
-### Added
-- Complete FIFO channel, input/output port, six FIFO interface, export/base-export and scoped-lock public families with native value, event, lifetime and error comparisons, including arbitrary-width types.
-- Complete event-finder, base-interface, mutex and semaphore public families with native reference checks; add generic reflected event-member constructors and owning finder-cache slots.
-- Validate process-handle ownership, metadata, hierarchy views, typed conversions and descendant controls; support guarded self-suspension with native reset/kill cleanup and event delivery.
-
 ### Fixed
-- Guard scoped-lock construction and FIFO assignment/conversion against blocking reset/kill unwind; retain mutex ownership and preserve native export arrow exception fields.
-- Repair signed remainder and unsigned owning shifts with explicit native overloads; expose generic owning fixed-point contexts with native scope restoration. Exclude the disabled private context copy constructor from the public inventory.
+- Repair signed remainder and unsigned owning shifts with explicit native overloads; expose generic owning fixed-point contexts with native scope restoration.
 
 ## [0.14.0](https://github.com/amal-khailtash/pysystemc/compare/v0.13.2...v0.14.0) (2026-10-21)
 
