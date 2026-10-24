@@ -2,8 +2,8 @@
 
 Callbacks are retained for their native process lifetime. Blocking scheduler
 operations release the GIL. Guarded Python waits preserve native reset/kill
-unwind in tested cases; direct native waits and arbitrary throw_it require
-further compatibility validation.
+unwind in tested cases. User-exception injection accepts native copyable
+exception values; targets must catch them before returning to the kernel.
 """
 
 import atexit
@@ -100,6 +100,17 @@ from ._event_expressions import install as _install_event_expressions
 _install_event_expressions()
 
 from ._clock import install as _install_clock
+
+cppyy.include(str(pathlib.Path(__file__).with_name("vector_creator.cpp")))
+from ._vectors import install as _install_vectors, assemble_vector as _assemble_vector
+
+_install_vectors()
+cppyy.include(str(pathlib.Path(__file__).with_name("vector_policies.cpp")))
+from ._vector_policies import install as _install_vector_policies, MemberAccessTemplate as _MemberAccessTemplate
+
+_install_vector_policies()
+
+
 from ._pvector import install as _install_pvector
 from ._list_handles import install as _install_list_handles
 
@@ -776,6 +787,49 @@ cppyy.gbl.sc_core.sc_join.wait_clocked = _join_wait_clocked
 _spawn_callbacks = []
 
 
+cppyy.include(str(pathlib.Path(__file__).with_name("bind.cpp")))
+sc_placeholder = cppyy.gbl.sc_core.python_placeholder
+_bind_owners = []
+
+
+def sc_bind(callback: Any, *arguments: Any) -> Any:
+    """Bind native callable arguments with copying, references and placeholders.
+
+    Args:
+        callback: Native functor, function pointer or typed std::function proxy.
+        *arguments: Native values, numeric/string scalars, sc_ref/sc_cref wrappers,
+            nested bindings or sc_placeholder[index] instances.
+
+    Returns:
+        Owning native callable, suitable for direct calls or sc_spawn.
+
+    Raises:
+        TypeError: Callable or arguments cannot select a native value type.
+
+    Values are copied by std::bind; reference wrappers borrow their targets.
+    Proxies remain retained for the single kernel lifetime. Python callbacks in
+    typed std::function values must also remain alive through their invocations.
+    Guarded waits preserve reset/kill cleanup. Placeholder indices are one-based
+    and instantiate on demand. Native conversion and callback errors propagate.
+    """
+    function_type = getattr(callback, "__cpp_name__", None) or getattr(type(callback), "__cpp_name__", None)
+    if function_type is None or not callable(callback):
+        raise TypeError("sc_bind requires a native callable or typed std::function")
+    types = []
+    for argument in arguments:
+        native_type = getattr(type(argument), "__cpp_name__", None)
+        if native_type is None:
+            native_type = {bool: "bool", float: "double", str: "std::string"}.get(type(argument))
+            if type(argument) is int:
+                native_type = "int" if -(1 << 31) <= argument < (1 << 31) else "long long"
+        if native_type is None:
+            raise TypeError("sc_bind arguments require native values or numeric/string scalars")
+        types.append(native_type)
+    bound = cppyy.gbl.sc_core.python_bound[function_type, *types](callback, *arguments)
+    _bind_owners.append((bound, callback, arguments))
+    return bound
+
+
 cppyy.include(str(pathlib.Path(__file__).with_name("spawn_result.cpp")))
 
 
@@ -922,6 +976,43 @@ def _process_control(adapter):
             raise _ProcessUnwind()
 
     return control
+
+
+cppyy.include(str(pathlib.Path(__file__).with_name("process_exceptions.cpp")))
+_throw_adapters = {}
+
+
+def _process_throw_it(self, exception: Any, descendants: Any = None) -> None:
+    """Inject a native exception into a process, optionally including descendants.
+
+    Args:
+        exception: Copyable native C++ exception value, caught by the target.
+        descendants: Native descendant policy; omitted means SC_NO_DESCENDANTS.
+
+    Raises:
+        TypeError: Exception has no native C++ type.
+        sc_report: Native process restrictions or an uncaught exception fail.
+
+    The kernel copies the borrowed exception during this call. Target Python
+    callbacks can catch native exception classes around guarded waits. Injection
+    releases the GIL until the target yields, and preserves reset/kill cleanup.
+    Keep the handle and target dependencies alive through process termination.
+    """
+    exception_type = getattr(type(exception), "__cpp_name__", None)
+    if exception_type is None:
+        raise TypeError("throw_it requires a native C++ exception value")
+    adapter = _throw_adapters.get(exception_type)
+    if adapter is None:
+        adapter = cppyy.gbl.sc_core.python_throw_helper[exception_type].invoke
+        adapter.__release_gil__ = True
+        _throw_adapters[exception_type] = adapter
+    if descendants is None:
+        descendants = cppyy.gbl.sc_core.SC_NO_DESCENDANTS
+    if not adapter(self, exception, descendants):
+        raise _ProcessUnwind()
+
+
+cppyy.gbl.sc_core.sc_process_handle.throw_it = _process_throw_it
 
 
 cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
@@ -1080,6 +1171,9 @@ from ._scheduler import sc_start as sc_start, at_posedge as at_posedge, at_neged
 
 from ._references import sc_ref as sc_ref, sc_cref as sc_cref
 
+sc_assemble_vector = _assemble_vector
+sc_member_access = _MemberAccessTemplate()
+
 __all__ = sorted(
     set(_public_names(cppyy.gbl.sc_core))
     | {
@@ -1087,6 +1181,10 @@ __all__ = sorted(
         "sc_status",
         "sc_trace",
         "sc_spawn",
+        "sc_bind",
+        "sc_placeholder",
+        "sc_assemble_vector",
+        "sc_member_access",
         "wait",
         "set_report_handler",
         "sc_elab_and_sim",

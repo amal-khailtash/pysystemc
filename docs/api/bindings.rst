@@ -534,10 +534,59 @@ the native kernel switches pthreads, then preserves reset/kill unwind and Python
 cleanup. Resume, reset and kill during suspension match native timing, including
 reset and termination event delivery. Suspension before simulation or while
 paused retains native behavior. Descendant inclusion policies preserve native
-control propagation. Sticky synchronous reset and arbitrary ``throw_it`` remain
-untested in the process-handle family.
+control propagation. Sticky synchronous reset controls release the GIL and
+preserve Python thread cleanup.
+
+``handle.throw_it(native_exception, descendants=SC_NO_DESCENDANTS)`` injects a
+copyable native C++ exception into a thread process. Python threads can catch
+the native exception class around a guarded wait, inspect its values and wait
+again. Injection releases the GIL while target callbacks acquire it; descendant
+injection preserves native ordering. Python exception instances raise
+``TypeError``. Native process restrictions and uncaught-exception reports apply.
 
 The base interface and mutex/semaphore families now have complete declaration
 checks, including protected construction/state/report members exercised through
 native-derived models. Ports borrow interfaces and channels; retain their Python
 callback and event owners until consumers stop and release their views.
+
+
+Native vectors and member assemblies
+------------------------------------
+
+``sc_vector[Element](prefix, count, creator)`` and ``vector.init(count, creator)``
+accept native creator functors or synchronous Python callables taking an element
+name and index. Element types are instantiated on demand. Python creators must
+return newly allocated native elements: the vector owns their allocations and
+retains their Python callback hosts. Do not delete those elements separately.
+Creator failures propagate and native partial initialization deletes elements
+already created; initialization can then be retried under native elaboration rules.
+
+``vector.assemble("port")`` and ``sc_assemble_vector(vector, "port")`` construct
+native member pointers for public data members. Native member-pointer arguments
+also remain accepted. Assemblies retain their known Python vector owner across
+copy construction, assignment, self-assignment and swap. Views created entirely
+in native code remain borrowed unless a Python owner is attached. Keep bound
+channels alive through port destruction, and retain owners while using iterators.
+
+``sc_member_access[Element, Member]("member")`` creates a native access policy;
+policy copies and mutable-to-const conversions preserve native type rules.
+``sc_direct_access`` remains a native template. Iterator ``__follow__()`` invokes
+native ``operator->`` and returns a borrowed element or scalar member pointer.
+For a scalar pointer, index zero accesses the member. Range checks and diagnostics
+remain native; dereferencing end or invalid iterators has native undefined behavior.
+
+Native callable binding
+-----------------------
+
+``sc_bind(native_callable, *arguments)`` supports native functions, functors and
+typed ``std::function`` objects. ``sc_placeholder[index]()`` supplies arbitrary
+positive, one-based native placeholders, including reordered, repeated and nested
+bindings. Native values are copied; ``sc_ref`` and ``sc_cref`` borrow their targets.
+Reference results remain borrowed and void results become ``None``. Bound proxies
+and input owners are retained for the kernel lifetime.
+
+Raw Python callables must first be wrapped in an explicitly typed native
+``std::function``. Keep the original Python callback alive through all uses of
+that wrapper and any spawned process. Guarded waits inside bound Python thread
+callbacks preserve reset/kill unwinding and cleanup. Direct binding calls hold
+the GIL; simulation callbacks acquire it at Python entry.

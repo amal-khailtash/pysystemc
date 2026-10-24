@@ -42,7 +42,8 @@ Modules, processes and simulation
 * ☑ Bounded simulation, pause/resume, stop, simulation status and terminal lifecycle hooks.
 * ☑ Entry callable/argv handling, exception propagation and idempotent shutdown.
 * ☑ Python process callback retention and selected native shutdown release checks.
-* ☐ Arbitrary throw_it, direct native waits and channel-internal reset/unwind completeness.
+* ☑ Native user exceptions through guarded Python waits, including descendant injection.
+* ☐ Direct native waits and channel-internal reset/unwind completeness.
 * ☐ Full process-control, lifecycle-error and live host/kernel deletion matrices.
 
 Simulation contexts follow native singleton semantics. Independent simulations
@@ -83,7 +84,7 @@ Channels, ports and modeling utilities
 * ☑ Native vectors, member assemblies and attribute ownership operations.
 * ☑ Report handlers, action masks, severity/id precedence, suppression and forcing.
 * ☑ Hierarchy traversal, status/version/time introspection and namespace help.
-* ☐ Complete channel, port-policy, vector, report and event overload/type/error audits.
+* ☐ Complete channel, port-policy, report and event overload/type/error audits.
 
 Native ``sc_ppq`` queues accept arbitrary pointer specializations and retain a
 Python comparator until queue destruction. The queue owns its pointer array;
@@ -669,13 +670,13 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_allow_process_control_corners`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_argc`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_argv`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_assemble_vector`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_assemble_vector`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_assertion_failed`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_attr_base`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_attr_cltn`` — 17 declarations; runtime: 17 supported; mapping: 17 reviewed.
 * ☑ ``sc_core::sc_attribute`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_core::sc_behavior`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_bind_proxy`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_core::sc_buffer`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_byte_heap`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
@@ -692,7 +693,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_delta_count`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_delta_count_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_descendant_inclusion_info`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_direct_access`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
+* ☑ ``sc_core::sc_direct_access`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_elab_and_sim`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_enable_name_checking`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -757,7 +758,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_logic_resolution_tbl`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_lv_resolve`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
+* ☑ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
 * ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
 * ☑ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
@@ -793,7 +794,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☐ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 untested; mapping: 28 partial, 13 reviewed.
 * ☑ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 36 supported, 2 untested; mapping: 2 partial, 36 reviewed.
+* ☑ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
 * ☑ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_pvector`` — 26 declarations; runtime: 26 supported; mapping: 26 reviewed.
 * ☑ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
@@ -803,8 +804,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
-* ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Exact native function-pointer typedef transported through borrowed handler tokens.
+* ☑ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; internal reset members remain outside this scope.
 * ☑ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
@@ -851,10 +852,10 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☐ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 untested; mapping: 36 partial.
 * ☑ ``sc_core::sc_unregister_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_unwind_exception`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
-* ☐ ``sc_core::sc_vector`` — 43 declarations; runtime: 43 untested; mapping: 5 partial, 38 reviewed.
-* ☐ ``sc_core::sc_vector_assembly`` — 50 declarations; runtime: 50 untested; mapping: 3 partial, 47 reviewed.
-* ☐ ``sc_core::sc_vector_base`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
-* ☐ ``sc_core::sc_vector_iter`` — 33 declarations; runtime: 33 untested; mapping: 19 partial, 14 reviewed.
+* ☑ ``sc_core::sc_vector`` — 43 declarations; runtime: 43 supported; mapping: 43 reviewed.
+* ☑ ``sc_core::sc_vector_assembly`` — 50 declarations; runtime: 50 supported; mapping: 50 reviewed.
+* ☑ ``sc_core::sc_vector_base`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``sc_core::sc_vector_iter`` — 33 declarations; runtime: 33 supported; mapping: 33 reviewed.
 * ☑ ``sc_core::sc_verbosity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version_major`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.

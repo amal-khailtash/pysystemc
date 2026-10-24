@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support arbitrary native vector creators, Python creator ownership and rollback, member assemblies, access policies and mutable/const iterator operations. Preserve assembly owners through copy, assignment and swap.
+- Support native `sc_bind` functions, functors, typed callbacks, nested placeholders and reference wrappers.
+- Support native exception injection through process handles, including descendant threads and catch/re-wait cleanup.
 - Support typed `sc_spawn` results in native values and ctypes numeric scalars, including arbitrary-width integers and custom C++ classes. Preserve result storage on callback failure, reset and kill.
 - Support native process functors and all spawn-option sensitivity/reset overloads.
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
