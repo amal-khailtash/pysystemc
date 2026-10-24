@@ -1,28 +1,52 @@
 name: 02. CI
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
-  workflow_call:
-    inputs:
-      ref:
-        type: string
-        required: true
 permissions:
   contents: read
 concurrency:
-  group: ci-${{ github.workflow }}-${{ inputs.ref || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  plan:
+    name: Select validation / release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.classify.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+      - name: Select validation
+        id: classify
+        env:
+          IS_RELEASE: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--') }}
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$IS_RELEASE" = true ]; then
+            git show "$BASE_REF:tools/check_release_metadata.py" > "$RUNNER_TEMP/check_release_metadata.py"
+            uv run --no-project python "$RUNNER_TEMP/check_release_metadata.py" --base "$BASE_REF" --head "$HEAD_REF"
+            uv lock --check
+            echo 'mode=release' >> "$GITHUB_OUTPUT"
+            echo 'Release metadata validated; full source CI already runs on feature PRs.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'mode=full' >> "$GITHUB_OUTPUT"
+            echo 'Running full feature validation.' >> "$GITHUB_STEP_SUMMARY"
+          fi
   tests:
     name: Tests and coverage
+    needs: plan
+    if: needs.plan.outputs.mode == 'full'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.ref }}
           submodules: recursive
       - uses: astral-sh/setup-uv@v7
         with:
@@ -74,7 +98,7 @@ jobs:
       - name: Run semantic tests and coverage
         env:
           COVERAGE_SOURCE: ${{ github.event.repository.name == 'pysystemc' && 'amal.eda.systemc' || 'amal' }}
-        run: uv run --locked pytest -n 2 --dist=worksteal --durations=15 --cov="$COVERAGE_SOURCE" --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
+        run: uv run --locked pytest -n 4 --dist=worksteal --durations=15 --cov="$COVERAGE_SOURCE" --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
       - name: Save coverage reports
         if: always()
         uses: actions/upload-artifact@v7
@@ -92,37 +116,20 @@ jobs:
           fail_ci_if_error: false
   build:
     name: Build distributions
-    runs-on: ubuntu-latest
-    container: ${{ github.event.repository.name == 'pysystemc' && 'quay.io/pypa/manylinux_2_28_x86_64' || '' }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-      - uses: astral-sh/setup-uv@v7
-        with:
-          python-version: '3.14'
-          enable-cache: true
-      - name: Build distributions
-        run: uv build
-      - name: Repair native distributions
-        if: github.event.repository.name == 'pysystemc'
-        run: |
-          uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
-          rm dist/*.whl
-          mv repaired/*.whl dist/
-      - name: Check distribution metadata
-        run: uv tool run --from twine twine check dist/*
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ci-distributions
-          path: dist/*
+    needs: plan
+    if: needs.plan.outputs.mode == 'full'
+    uses: ./.github/workflows/distributions.yml
+    with:
+      ref: ${{ github.ref }}
   documentation:
     name: Build documentation
+    needs: plan
+    if: needs.plan.outputs.mode == 'full'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.ref }}
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'

@@ -1,0 +1,44 @@
+name: 02a. Build distributions (reusable)
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+    outputs:
+      artifact-id:
+        value: ${{ jobs.build.outputs.artifact-id }}
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    container: ${{ github.event.repository.name == 'pysystemc' && 'quay.io/pypa/manylinux_2_28_x86_64' || '' }}
+    outputs:
+      artifact-id: ${{ steps.artifacts.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+          enable-cache: true
+      - name: Build distributions
+        run: uv build
+      - name: Repair native distributions
+        if: github.event.repository.name == 'pysystemc'
+        run: |
+          uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
+          rm dist/*.whl
+          mv repaired/*.whl dist/
+      - name: Check distribution metadata
+        run: uv tool run --from twine twine check dist/*
+      - uses: actions/upload-artifact@v7
+        id: artifacts
+        with:
+          name: ci-distributions
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
