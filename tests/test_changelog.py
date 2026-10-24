@@ -19,9 +19,7 @@ def test_pending_details_move_into_release_and_keep_history() -> None:
     generated_heading = "## [1.2.3](https://example.invalid/compare/v1.2.2...v1.2.3)"
     generated_summary = "### Summary\n- Generated release summary."
     pending_details = "### Added\n- Pending feature."
-    older_release = (
-        "## [1.2.2]\n\n### Fixed\n- Older fix.\n\n<!-- historical marker -->\n"
-    )
+    older_release = "## [1.2.2]\n\n### Fixed\n- Older fix.\n\n<!-- historical marker -->\n"
     changelog = (
         f"{preamble}## [Unreleased]\n\n{pending_details}\n\n"
         f"{generated_heading}\n\n{generated_summary}\n\n{older_release}"
