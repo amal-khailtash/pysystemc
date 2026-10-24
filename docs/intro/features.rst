@@ -770,15 +770,15 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
 * ☑ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
 * ☑ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 untested; mapping: 18 partial.
-* ☐ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
+* ☑ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 supported; mapping: 18 reviewed.
+* ☑ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``sc_core::sc_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_pending_activity_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_pending_activity_at_future_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_phash`` — 91 declarations; runtime: 91 untested; mapping: 91 partial.
-* ☐ ``sc_core::sc_phash_base`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
-* ☐ ``sc_core::sc_phash_base_iter`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``sc_core::sc_phash_elem`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☑ ``sc_core::sc_phash_base`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
+* ☑ ``sc_core::sc_phash_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``sc_core::sc_phash_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; node fields and ownership are outside this scope.
 * ☐ ``sc_core::sc_phash_iter`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
 * ☑ ``sc_core::sc_plist`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
 * ☑ ``sc_core::sc_plist_base`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
@@ -809,9 +809,9 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
-* ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
-* ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
+* ☑ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.
+* ☑ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
 * ☑ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_set_random_seed`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_stack_size`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -836,12 +836,12 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
+* ☑ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
 * ☑ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_strhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
+* ☑ ``sc_core::sc_strhash_iter`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``sc_core::sc_strhash_kdup`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_time`` — 34 declarations; runtime: 34 untested; mapping: 9 partial, 25 reviewed.
+* ☑ ``sc_core::sc_time`` — 34 declarations; runtime: 34 supported; mapping: 34 reviewed.
 * ☑ ``sc_core::sc_time_params`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.

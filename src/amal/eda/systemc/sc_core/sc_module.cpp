@@ -1,5 +1,5 @@
 /**
- * @file sc_module_new.cpp
+ * @file sc_module.cpp
  * @brief Native process and tracing adapters for cppyy Python modules.
  * @details Callers release the GIL for blocking waits; cppyy reacquires it on Python callback entry. Callback
  * exceptions propagate through the simulation boundary. Guarded waits preserve reset/kill scheduler unwind.

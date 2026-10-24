@@ -140,6 +140,16 @@ multiplication in either order, scalar division and time/time ratios. Results
 preserve native tick rounding and leave their operands unchanged. A product of
 two times is not defined; divisors must satisfy the native nonzero contract.
 
+Time constructors accept all six native enum units and string symbols, including
+``"SC_NS"`` and explicit live simulation-context pointers. String-unit failures
+propagate native ``sc_report`` exceptions. Legacy ``sc_time(integer, False)``
+preserves the full unsigned 64-bit tick value; floating legacy inputs retain
+native rounding and default-unit scaling. Prefer ``from_value``, ``from_seconds``
+and ``from_string`` for explicit conversions. In-place arithmetic mutates the
+owned duration and returns the same native object. Configuration and resolution
+remain shared by the native kernel; contexts are borrowed during construction.
+
+
 ``sc_byte_heap.allocate(bytes_n)`` returns a mutable borrowed byte view instead
 of a copied string. The view has exactly the requested length, and allocations
 retain native eight-byte alignment and wrapping reuse. Keep the heap alive while
@@ -590,3 +600,40 @@ Raw Python callables must first be wrapped in an explicitly typed native
 that wrapper and any spawned process. Guarded waits inside bound Python thread
 callbacks preserve reset/kill unwinding and cleanup. Direct binding calls hold
 the GIL; simulation callbacks acquire it at Python entry.
+
+
+Hash containers and callback ownership
+--------------------------------------
+
+Native hash tables retain Python hash and comparison callbacks supplied to
+constructors or ``set_hash_fn`` / ``set_cmpr_fn`` until their Python table proxy
+is released. Calls hold the GIL and callbacks execute synchronously. Views of
+tables created in native code require an external callback owner. Iterators,
+returned key pointers and content pointers borrow their table and referents.
+Retain those owners while using the views; removal and erasure invalidate nodes.
+
+``sc_phash_base`` borrows keys and contents. Its explicit duplication/free
+overloads manage key allocations only when requested. ``sc_pdhash[Key, Content]``
+uses configured duplicate/free functions; ``sc_strhash[Content]`` owns copied
+string keys. Content pointees remain borrowed in all three families. Use the
+explicit ``copy`` methods between distinct tables to preserve each family's
+key-copy semantics. Template types are instantiated on demand. Lookup and
+removal output parameters retain their native pointer-slot signatures.
+
+
+Static sensitivity builders
+---------------------------
+
+Module-owned ``sc_sensitive`` builders accept events, interfaces, ports and
+event finders through both ``builder(source)`` and ``builder << source``.
+Process-handle insertion selects the process; ``reset()`` clears that selection.
+``make_static_sensitivity(process_pointer, source)`` attaches sensitivity directly
+to a native process. Keep the process and every event source alive while the
+simulation uses them.
+
+The legacy positive and negative builders accept bool/logic input interfaces,
+input ports and inout ports through either operator. Their native process-handle,
+method-handle and thread-handle selectors retain native type semantics. Clocked
+``sc_sensitive`` helpers take a native clocked-thread handle plus an event finder
+or bool/logic interface or port. Builders borrow their module and sources;
+Python process registration retains callbacks for the native process lifetime.

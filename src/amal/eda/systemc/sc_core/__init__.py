@@ -35,11 +35,15 @@ from . import _tracing
 
 # Compile first-party bridges before publishing native aliases or configuring
 # their methods. The parent package has already loaded SystemC and selected C++17.
+from ._hashes import install as _install_hashes
+
+_install_hashes()
+
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
 for _bridge in (
     "sc_main.cpp",
     "native_entry.cpp",
-    "sc_module_new.cpp",
+    "sc_module.cpp",
     "interface_teardown.cpp",
     "hash_helpers.cpp",
     "report_legacy.cpp",
@@ -627,6 +631,10 @@ def _time_modulo(self: Any, other: Any) -> Any:
 
 
 cppyy.gbl.sc_core.sc_time.__mod__ = _time_modulo
+
+from ._time import install as _install_time
+
+_install_time(cppyy.gbl.sc_core.sc_time)
 
 
 def __getattr__(name):

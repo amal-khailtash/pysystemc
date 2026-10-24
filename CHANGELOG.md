@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support static and edge sensitivity builder overloads, native process-handle selection and clocked-thread helper sources.
+- Support hash-base, pointer-duplicating and string hash-container operations and iterators, including explicit key-copy/free callbacks and borrowed output pointers.
 - Support arbitrary native vector creators, Python creator ownership and rollback, member assemblies, access policies and mutable/const iterator operations. Preserve assembly owners through copy, assignment and swap.
 - Support native `sc_bind` functions, functors, typed callbacks, nested placeholders and reference wrappers.
 - Support native exception injection through process handles, including descendant threads and catch/re-wait cleanup.
@@ -17,6 +19,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Retain Python hash and comparison callbacks for their native table proxy lifetime.
+- Preserve native time-conversion reports for string-unit constructors and full-width integer ticks in legacy time constructors.
 - Release the GIL for sticky synchronous process reset controls, including descendant resets.
 
 ### CI
