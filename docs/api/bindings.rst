@@ -9,6 +9,42 @@ pass-through availability does not by itself establish tested support.
 
 ``sc_module.sensitive(interface_or_port_or_event)``
    Add static native sensitivity, including edge finders.
+   ``sensitive_pos`` and ``sensitive_neg`` expose the module's borrowed native
+   edge builders and accept ``<<`` registration before process execution.
+
+``sc_module.wait(*args)`` / ``sc_prim_channel.wait(*args)``
+   Invoke the owner's native scheduling member, using its simulation context.
+   Cycle, time, event and OR/AND list forms release the GIL during suspension.
+   Reset and kill run Python cleanup before restoring native scheduler unwind.
+   Keep the owner and events alive; do not wait during unwind cleanup.
+
+``sc_module.next_trigger(*args)`` / ``sc_prim_channel.next_trigger(*args)``
+   Configure dynamic method sensitivity through the native member without
+   suspending. Event expressions are consumed once; reuse explicit native event
+   lists when registering the same sensitivity repeatedly. ``timed_out()``
+   reports whether the current process resumed because its timeout expired;
+   querying it outside a process raises native ``std::runtime_error`` before
+   pointer access, matching the free timeout helper.
+
+``sc_module.at_posedge(interface)`` / ``at_negedge(interface)`` / ``halt()``
+   Preserve native sampled bool/logic edge waits and clocked-thread halt.
+   These helpers require a native clocked-thread process context.
+   Blocking calls release the GIL and retain reset/kill/halt cleanup behavior.
+   Keep module and interfaces alive throughout suspension. Configure native
+   stack size and synchronous/asynchronous reset before process execution.
+
+``sc_prim_channel(name)`` / ``sc_prim_channel()``
+   Register a named or native automatically named primitive channel. Python
+   subclasses can override update and elaboration/simulation lifecycle hooks;
+   cppyy acquires the GIL for callbacks. ``request_update()`` coalesces requests
+   for the next update phase. Update callbacks must not wait. Retain the channel
+   while the kernel or any external requester can use it.
+
+``sc_prim_channel.async_request_update()``
+   Request an update from outside the simulator. Attach/detach suspending support
+   retains the native kernel's asynchronous wake behavior. Foreign native
+   threads may request an update; Python callbacks run on the simulation thread.
+   Join external requesters before destroying their borrowed channel.
 
 ``sc_spawn(callback, name='', options=None)``
    Spawn a retained Python callable or a native C++ functor and return a native

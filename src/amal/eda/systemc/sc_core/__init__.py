@@ -1226,3 +1226,7 @@ __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
 from ._kernel_flags import install as _install_kernel_flags
 
 _install_kernel_flags(sys.modules[__name__])
+
+from ._member_scheduler import install as _install_member_scheduler
+
+_install_member_scheduler(sc_module, sc_prim_channel, _ProcessUnwind)

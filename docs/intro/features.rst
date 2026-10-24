@@ -759,7 +759,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_lv_resolve`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
-* ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
+* ☑ ``sc_core::sc_module`` — 62 declarations; runtime: 62 supported; mapping: 62 reviewed.
 * ☑ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
@@ -792,7 +792,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
 * ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
-* ☐ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 untested; mapping: 28 partial, 13 reviewed.
+* ☑ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 supported; mapping: 41 reviewed.
 * ☑ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
 * ☑ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.

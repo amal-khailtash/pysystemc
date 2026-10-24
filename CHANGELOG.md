@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Expose guarded module and primitive-channel member waits and dynamic sensitivity, sampled edge waits and clocked halt with Python reset/kill cleanup.
+- Add automatically named primitive-channel construction and preserve native update coalescing, asynchronous requests and lifecycle callbacks.
 - Support ordinary signal, input, inout and output port families, generic port operations and native signal implementation members across writer policies and arbitrary datatype widths.
 - Add `sc_signal_value(signal)` and `sc_port_value(port)` for explicit native value conversion with borrowed datatype references and Python scalar copies.
 - Support native free-tracing reference and pointer overloads, scalar default widths and delayed tracing of input and inout/output ports.
