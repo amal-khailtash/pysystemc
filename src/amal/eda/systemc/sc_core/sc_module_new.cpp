@@ -5,6 +5,8 @@
  * exceptions propagate through the simulation boundary. Guarded waits preserve reset/kill scheduler unwind.
  */
 #define SC_INCLUDE_DYNAMIC_PROCESSES
+#include <Python.h>
+
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -221,7 +223,11 @@ bool python_timed_out(sc_simcontext* context)
  */
 struct python_start
 {
-  /** @brief Return an owning report address, deferring throwing until Python regains GIL. */
+  /** @brief Return an owning report address, deferring throwing until Python regains GIL.
+   * @details On a native report, acquires and releases the GIL to clear cppyy's
+   * pending callback exception, whose diagnostic is already owned by the report.
+   * This prevents Python monitoring callbacks from observing a stale error.
+   */
   static std::uintptr_t invoke(const std::function<void()>& operation)
   {
     try
@@ -231,7 +237,13 @@ struct python_start
     }
     catch (const sc_report& report)
     {
-      return reinterpret_cast<std::uintptr_t>(new sc_report(report));
+      auto copy = std::make_unique<sc_report>(report);
+      // SystemC has captured the callback diagnostic in the native report.
+      // Clear cppyy's pending Python error before returning to monitored Python.
+      const auto state = PyGILState_Ensure();
+      PyErr_Clear();
+      PyGILState_Release(state);
+      return reinterpret_cast<std::uintptr_t>(copy.release());
     }
   }
   /** @brief Consume an owning report address and throw its copy with GIL held.

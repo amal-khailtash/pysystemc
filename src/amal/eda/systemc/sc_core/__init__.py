@@ -915,7 +915,16 @@ def wait(*args: Any) -> None:
     wait during unwind cleanup. Events and sensitivity targets must outlive waits.
     Blocking scheduler calls release the GIL.
     """
-    if not cppyy.gbl.sc_core.python_wait(*args):
+    native = cppyy.gbl.sc_core
+    operation = native.python_wait
+    # A native diagnostic must not retry a different wait and enter the kernel.
+    if args and isinstance(args[0], int) and (len(args) == 1 or isinstance(args[1], native.sc_simcontext)):
+        operation = operation.__overload__("int, sc_core::sc_simcontext*")
+    elif args and isinstance(args[0], (native.sc_event_or_list, native.sc_event_and_list)):
+        name = type(args[0]).__cpp_name__
+        operation = operation.__overload__(f"const {name}&, sc_core::sc_simcontext*")
+    operation.__release_gil__ = True
+    if not operation(*args):
         raise _ProcessUnwind()
 
 

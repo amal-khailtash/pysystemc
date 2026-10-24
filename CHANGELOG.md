@@ -24,6 +24,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Preserve starvation policies for all four `sc_start` overloads and propagate callback errors without restarting simulation.
 
 ### Fixed
+- Preserve native callback reports when Python coverage monitoring is enabled; select count and event-list waits without retrying an invalid overload after a native diagnostic.
 - Preserve native kernel flag storage when assigning `sc_enable_name_checking` or `sc_allow_process_control_corners` through the `sc_core` module.
 - Support chained OR/AND event expressions with event or matching-list operands, preserving native single-use ownership.
 - Preserve the duty cycle and zero start time of numeric/unit clock constructors by explicitly selecting the native overload.

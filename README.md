@@ -74,6 +74,11 @@ Setup installs dependencies and builds SystemC 2.3.4 with pthreads. Existing
 `UV_*` environment settings are honored. To run the C++ hello example, use
 `make example-hello-cpp`.
 
+Use `make test-parallel` or `make coverage-parallel` to run tests in two isolated
+pytest workers. Override the worker count with `TEST_WORKERS=4`, and select tests
+with `ARGS="tests/test_cli.py tests/test_repl.py"`. Each simulation still runs in
+a fresh subprocess; coverage combines data from workers and their child processes.
+
 Detailed setup, validation, and logging instructions are in the
 [documentation](https://pysystemc.readthedocs.io/en/latest/).
 

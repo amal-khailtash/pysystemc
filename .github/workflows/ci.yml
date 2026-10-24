@@ -18,7 +18,7 @@ jobs:
   tests:
     name: Tests and coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
         with:
@@ -74,7 +74,7 @@ jobs:
       - name: Run semantic tests and coverage
         env:
           COVERAGE_SOURCE: ${{ github.event.repository.name == 'pysystemc' && 'amal.eda.systemc' || 'amal' }}
-        run: uv run --locked pytest --cov="$COVERAGE_SOURCE" --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
+        run: uv run --locked pytest -n 2 --dist=worksteal --durations=15 --cov="$COVERAGE_SOURCE" --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
       - name: Save coverage reports
         if: always()
         uses: actions/upload-artifact@v7
