@@ -73,6 +73,10 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
         assert entry["mapping_status"] == "unreviewed"
     assert not any(entry["kind"] == "CXXMethodDecl" and len(entry["name"].split("::")) < 3 for entry in entries)
     assert named("sc_core::sc_in::add_trace")
+    for alias in ("base_type", "this_type"):
+        port_aliases = named(f"sc_core::sc_port::{alias}")
+        assert port_aliases
+        assert all(row["access"] == "private" and row["classification"] == "internal" for row in port_aliases)
     assert not named("sc_core::add_trace")
     extension = named("tlm::tlm_generic_payload::get_extension")
     # Clang versions differ in qualification of types within their own namespace.

@@ -741,12 +741,12 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_get_top_level_objects`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_handle_exception`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_hierarchical_name_exists`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_core::sc_in`` — 130 declarations; runtime: 130 untested; mapping: 130 partial.
+* ☑ ``sc_core::sc_in`` — 130 declarations; runtime: 130 supported; mapping: 130 reviewed.
 * ☑ ``sc_core::sc_in_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_in_resolved`` — 20 declarations; runtime: 20 supported; mapping: 20 reviewed.
 * ☑ ``sc_core::sc_in_rv`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 untested; mapping: 124 partial.
+* ☑ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 supported; mapping: 124 reviewed.
 * ☑ ``sc_core::sc_inout_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
 * ☑ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
@@ -765,7 +765,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_name_gen`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_object`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
-* ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
+* ☑ ``sc_core::sc_out`` — 27 declarations; runtime: 27 supported; mapping: 27 reviewed.
 * ☑ ``sc_core::sc_out_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
 * ☑ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
@@ -786,8 +786,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_plist_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_plist_iter`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_plist_map_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_port`` — 77 declarations; runtime: 77 untested; mapping: 54 partial, 23 reviewed.
-* ☐ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 untested; mapping: 30 partial, 97 reviewed.
+* ☑ ``sc_core::sc_port`` — 67 declarations; runtime: 67 supported; mapping: 67 reviewed.
+* ☑ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 supported; mapping: 127 reviewed.
 * ☑ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
@@ -818,13 +818,13 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_severity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_signal`` — 64 declarations; runtime: 64 untested; mapping: 64 partial.
+* ☑ ``sc_core::sc_signal`` — 64 declarations; runtime: 64 supported; mapping: 64 reviewed.
 * ☑ ``sc_core::sc_signal_channel`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_core::sc_signal_in_if`` — 37 declarations; runtime: 37 supported; mapping: 37 reviewed.
 * ☑ ``sc_core::sc_signal_inout_if`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_core::sc_signal_resolved`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_signal_rv`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
-* ☐ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 untested; mapping: 119 partial.
+* ☑ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 supported; mapping: 119 reviewed.
 * ☑ ``sc_core::sc_signal_write_if`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_simcontext`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -847,7 +847,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_time_tuple`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_time_unit`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 untested; mapping: 66 partial.
+* ☑ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 supported; mapping: 66 reviewed.
 * ☑ ``sc_core::sc_trace_delta_cycles`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 supported; mapping: 36 reviewed.
 * ☑ ``sc_core::sc_unregister_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.

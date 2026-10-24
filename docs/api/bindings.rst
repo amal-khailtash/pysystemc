@@ -205,6 +205,54 @@ space, delta-cycle and time-unit methods; native-derived bridges can implement
 the protected cycle hook. This does not provide Python virtual subclassing.
 Direct native destruction requires caller-managed holder lifetimes.
 
+Free tracing supports native reference and pointer overloads. Explicit native
+selection remains available through ``sc_trace.__overload__``; pointed-to values
+must remain alive until file closure. Integer holders use native default widths
+when the width is omitted. Signal interfaces accept explicit widths for the
+native ``char``, ``short``, ``int`` and ``long`` overloads; unsupported signal
+width arguments raise ``TypeError``.
+
+``sc_trace(file, port, name)`` supports input and inout/output ports before
+binding or elaboration. Registration is deferred through the native port until
+elaboration resolves its interface. Bind every required port before starting
+simulation and keep ports and interfaces alive through tracing. Once a file
+has begun recording, adding a new waveform preserves the native trace-file
+report; create another file if additional traces are needed.
+
+Signals and ordinary signal ports
+---------------------------------
+
+``sc_signal[Type, Policy]`` supports native construction, assignment, value and
+event access for generic datatypes and the bool/logic specializations. Values
+written to a signal become current during the kernel update phase. Native writer
+policies, edge detection and value-change notifications remain in force.
+Datatype widths are instantiated on demand, including widths above 128 bits.
+
+``sc_signal_value(signal)`` invokes the signal's native conversion to a
+``const Type&``. Fundamental values become Python scalar copies; native datatype
+results borrow the signal's current storage and reflect subsequent updates.
+Keep the signal alive and treat these references as read-only. Use ``read()``
+or this explicit helper for signal values: ``bool(signal)`` checks cppyy proxy
+validity, and arbitrary native signals do not acquire Python ``int()`` coercion.
+The helper accepts native signal subclasses and their actual writer policy;
+conversion does not advance simulation.
+
+``sc_in[Type]``, ``sc_inout[Type]`` and ``sc_out[Type]`` preserve native interface
+and parent-port constructor/binding forms. Input ports provide value/event
+access; inout/output ports provide native value, interface and port assignment
+and initialization. Initialization can be supplied before binding and is applied
+when elaboration resolves the interface. Bool and logic ports expose native
+positive/negative edges and cached sensitivity finders. Keep ports, bound
+interfaces, parent ports and borrowed finder/value views alive for their native
+consumers. Required ports must be bound before simulation starts.
+
+``sc_port_value(port)`` invokes the native value conversion for bound input,
+inout and output ports. Fundamental values become Python copies; native
+datatype results borrow the bound interface's current storage. Keep both the
+port and interface alive, treat the result as read-only and bind before calling.
+The helper holds the GIL without advancing simulation or changing proxy
+truthiness. Native interface access errors propagate.
+
 Objects, port bases and temporary pools
 ---------------------------------------
 

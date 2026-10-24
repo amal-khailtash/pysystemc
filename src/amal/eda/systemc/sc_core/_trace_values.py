@@ -11,7 +11,7 @@ def value_type(value):
     return name[len(_PREFIX) : -1] if name.startswith(_PREFIX) else None
 
 
-def register(file, holder, name, *arguments):
+def register(file, holder, name, *arguments, native_free=False):
     """Register stable native storage and retain its owner through trace closure.
 
     Args:
@@ -19,6 +19,7 @@ def register(file, holder, name, *arguments):
         holder: Native sc_trace_value[Type] with owned, mutable member storage.
         name: Native waveform name.
         *arguments: Optional native integer width, or enumeration string labels.
+        native_free: Select free sc_trace overloads, including default widths.
 
     Returns:
         None after registration, matching native tracing.
@@ -42,10 +43,17 @@ def register(file, holder, name, *arguments):
         if not all(isinstance(label, str) for label in names):
             raise TypeError("enumeration labels must be strings with an optional final None")
         labels = cppyy.gbl.pysystemc_tracing.enum_labels(names)
-        result = cppyy.gbl.pysystemc_tracing.enum_dispatch.trace(file, holder, name, labels)
+        dispatch = cppyy.gbl.pysystemc_tracing.enum_dispatch
+        call = dispatch.free_trace if native_free else dispatch.trace
+        result = call(file, holder, name, labels)
         owners.append(labels)
     else:
-        result = cppyy.gbl.pysystemc_tracing.value_dispatch[value_type(holder)].trace(file, holder, name, *arguments)
+        dispatch = (
+            cppyy.gbl.pysystemc_tracing.free_value_dispatch
+            if native_free
+            else cppyy.gbl.pysystemc_tracing.value_dispatch
+        )
+        result = dispatch[value_type(holder)].trace(file, holder, name, *arguments)
     file.__dict__.setdefault("_trace_value_owners", []).extend(owners)
     return result
 

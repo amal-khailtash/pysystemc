@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support ordinary signal, input, inout and output port families, generic port operations and native signal implementation members across writer policies and arbitrary datatype widths.
+- Add `sc_signal_value(signal)` and `sc_port_value(port)` for explicit native value conversion with borrowed datatype references and Python scalar copies.
+- Support native free-tracing reference and pointer overloads, scalar default widths and delayed tracing of input and inout/output ports.
 - Add mutable native trace-value holders with exact scalar dispatch, enumeration labels and retention until trace-file closure.
 - Support object hierarchy and attribute operations, port-base binding and lifecycle helpers, native trace-file overloads, typed temporary pools and generic hash tables and iterators.
 - Support static and edge sensitivity builder overloads, native process-handle selection and clocked-thread helper sources.
@@ -21,6 +24,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve explicit integer signal trace widths and reject widths without a native signal overload.
+- Classify private typedefs in class template specializations correctly in the public API inventory.
 - Preserve null trace-file closure when releasing registered trace-value owners.
 - Retain Python hash and comparison callbacks for their native table proxy lifetime.
 - Preserve native time-conversion reports for string-unit constructors and full-width integer ticks in legacy time constructors.

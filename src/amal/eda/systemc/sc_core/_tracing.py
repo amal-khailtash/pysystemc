@@ -137,8 +137,17 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
     from ._trace_values import register, value_type
 
     if value_type(value) is not None:
-        return register(file, value, name, *args)
+        return register(file, value, name, *args, native_free=True)
     if hasattr(value, "read"):
+        for cls in type(value).__mro__:
+            native_name = getattr(cls, "__cpp_name__", "")
+            for prefix, method in (("sc_core::sc_in<", "input"), ("sc_core::sc_inout<", "inout")):
+                if native_name.startswith(prefix):
+                    if args:
+                        raise TypeError("native port tracing does not accept width arguments")
+                    datatype = native_name[len(prefix) : -1]
+                    dispatch = cppyy.gbl.pysystemc_tracing.port_dispatch[datatype]
+                    return getattr(dispatch, method)(file, value, name)
         sample = value.read()
         # Python float/int conversion loses the native signal specialization.
         # Resolve the inherited native input interface before falling back to
@@ -160,5 +169,11 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
                 break
         if value_type == "long double":
             raise TypeError("native SystemC tracing does not provide a long double overload")
-        return cppyy.gbl.sc_core.trace_signal[value_type](file, value, name)
+        if args and value_type not in ("char", "short", "int", "long"):
+            raise TypeError("native signal tracing accepts explicit widths only for char, short, int and long")
+        return cppyy.gbl.pysystemc_tracing.signal_dispatch[value_type].trace(file, value, name, *args)
     return _native_sc_trace(file, value, name, *args)
+
+
+# Keep exact native pointer/reference overload selection available.
+sc_trace.__overload__ = _native_sc_trace.__overload__

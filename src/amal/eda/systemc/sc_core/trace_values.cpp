@@ -6,6 +6,7 @@
  * registration and allocation errors propagate unchanged.
  */
 #include <systemc>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -52,6 +53,71 @@ struct value_dispatch
   }
 };
 
+/** @brief Dispatch stable holders through the native free tracing overloads.
+ * @tparam Value Exact native type of the independently owned value.
+ * @details Calls hold the GIL. Files borrow storage; Python retains the holder
+ * through matching closure. Native reports and conversion errors propagate.
+ */
+template <class Value>
+struct free_value_dispatch
+{
+  /** @brief Register an exact native reference, using native default widths. */
+  static void trace(sc_core::sc_trace_file* file, const trace_value<Value>& holder, const std::string& name)
+  {
+    sc_core::sc_trace(file, holder.value, name);
+  }
+  /** @brief Forward a native integer width without replacing reference storage. */
+  static void trace(sc_core::sc_trace_file* file, const trace_value<Value>& holder, const std::string& name, int width)
+  {
+    sc_core::sc_trace(file, holder.value, name, width);
+  }
+};
+
+/** @brief Select signal tracing without dropping explicit width arguments.
+ * @tparam Value Exact unrestricted native signal datatype.
+ * @details Structural signal refresh retains the existing native process/GIL
+ * contract. The caller keeps signals alive through tracing and simulation.
+ */
+template <class Value>
+struct signal_dispatch
+{
+  /** @brief Trace native storage with its default native width. */
+  static void trace(sc_core::sc_trace_file* file, const sc_core::sc_signal_in_if<Value>& signal,
+                    const std::string& name)
+  {
+    sc_core::trace_signal<Value>(file, signal, name);
+  }
+  /** @brief Forward a width to native tracing while preserving structural refresh. */
+  static void trace(sc_core::sc_trace_file* file, const sc_core::sc_signal_in_if<Value>& signal,
+                    const std::string& name, int width)
+  {
+    static_assert(std::is_same_v<Value, char> || std::is_same_v<Value, short> || std::is_same_v<Value, int> ||
+                    std::is_same_v<Value, long>,
+                  "native signal tracing accepts explicit widths only for char, short, int and long");
+    if (file) sc_core::trace_signal<Value, int>(file, signal, name, width);
+  }
+};
+
+/** @brief Preserve native input/output port registration before elaboration.
+ * @tparam Value Unrestricted port datatype, instantiated by cppyy on demand.
+ * @details Ports and bound interfaces remain caller-owned through tracing.
+ * Calls hold the GIL, retain no callbacks and propagate native reports.
+ */
+template <class Value>
+struct port_dispatch
+{
+  /** @brief Register an input port using native delayed elaboration tracing. */
+  static void input(sc_core::sc_trace_file* file, const sc_core::sc_in<Value>& port, const std::string& name)
+  {
+    sc_core::sc_trace(file, port, name);
+  }
+  /** @brief Register an inout/output port using the native port overload. */
+  static void inout(sc_core::sc_trace_file* file, const sc_core::sc_inout<Value>& port, const std::string& name)
+  {
+    sc_core::sc_trace(file, port, name);
+  }
+};
+
 /** @brief Own immutable enumeration labels and their native null-terminated view.
  * @details The file borrows label pointers. Retain this object until closure;
  * copying is disabled because pointers must reference this object's strings.
@@ -86,6 +152,12 @@ struct enum_dispatch
                     const enum_labels& labels)
   {
     file.trace(holder.value, name, labels.data());
+  }
+  /** @brief Preserve native free-function enum tracing and its deprecation report. */
+  static void free_trace(sc_core::sc_trace_file* file, const trace_value<unsigned int>& holder, const std::string& name,
+                         const enum_labels& labels)
+  {
+    sc_core::sc_trace(file, holder.value, name, labels.data());
   }
 };
 }  // namespace pysystemc_tracing

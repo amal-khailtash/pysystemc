@@ -768,6 +768,7 @@ sc_process_handle spawn_callback(std::function<void()> callback, const char* nam
 /**
  * @brief Trace a signal's native storage rather than a temporary Python value.
  * @tparam T Signal value type, instantiated on demand by cppyy.
+ * @tparam Arguments Optional native width arguments selected by typed dispatch.
  * @param file Open native trace file.
  * @param signal Signal retained by the caller for the simulation lifetime.
  * @details A native method refreshes structural scalar reference storage on
@@ -776,10 +777,11 @@ sc_process_handle spawn_callback(std::function<void()> callback, const char* nam
  * Structural signals must outlive the refresh method.
  * @param name Waveform variable name.
  */
-template <class T>
-void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const std::string& name)
+template <class T, class... Arguments>
+void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const std::string& name,
+                  Arguments... arguments)
 {
-  sc_trace(file, signal.read(), name);
+  sc_trace(file, signal.read(), name, arguments...);
   if (!file || dynamic_cast<const sc_signal_channel*>(&signal)) return;
   // Structural scalar references are refreshed by read(), unlike sc_signal
   // storage which is updated directly by the primitive channel.
