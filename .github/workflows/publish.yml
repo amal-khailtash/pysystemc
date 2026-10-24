@@ -100,6 +100,16 @@ jobs:
           PROJECT: ${{ needs.verify.outputs.project }}
         run: |
           uv run --no-project python tools/verify_publication.py --project "$PROJECT" --version "${RELEASE_TAG#v}" --repository "$REPOSITORY"
+  coverage:
+    name: Update released coverage after PyPI
+    needs: publish
+    if: inputs.repository != 'testpypi'
+    uses: ./.github/workflows/coverage.yml
+    with:
+      ref: ${{ inputs.tag }}
+      branch: main
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   announcement:
     name: Publish GitHub release after PyPI
     needs: publish

@@ -11,8 +11,34 @@ pass-through availability does not by itself establish tested support.
    Add static native sensitivity, including edge finders.
 
 ``sc_spawn(callback, name='', options=None)``
-   Spawn a retained Python callable and return a native process handle. Python
-   closures can retain results; callback return values are ignored.
+   Spawn a retained Python callable or a native C++ functor and return a native
+   process handle. Callback return values are ignored. Native functors execute
+   directly in the kernel, including native waits.
+
+``sc_spawn(result, callback, name='', options=None)``
+   Assign the callback return value into caller-owned native C++ value storage
+   or a ctypes numeric scalar. Templates accept arbitrary native result types,
+   including wide integers and custom classes. Assignment happens only after
+   successful return; reset, kill and callback errors leave the result unchanged.
+   Callbacks and result proxies are retained for the single kernel lifetime.
+
+``sc_spawn_options``
+   Configure method/thread execution, initialization, stack size, static
+   sensitivity and synchronous/asynchronous reset. Sensitivity accepts events,
+   interfaces, ports, exports and event finders; reset accepts boolean signal
+   interfaces and input/inout/output ports. Keep borrowed sources alive through
+   simulation. Configure options before spawning.
+
+``sc_process_handle.sync_reset_on()`` / ``sync_reset_off()``
+   Enable or disable sticky synchronous reset, optionally including descendants.
+   Reset takes effect when the process resumes; Python cleanup preserves native
+   reset unwind. These controls release the GIL during native execution.
+
+``sc_inout_resolved`` / ``sc_out_resolved`` / ``sc_inout_rv[width]`` / ``sc_out_rv[width]``
+   Construct and bind resolved scalar/vector ports, initialize values and assign
+   from values, interfaces or compatible ports using ``__assign__``. Vector
+   widths instantiate on demand. Native resolution, elaboration diagnostics and
+   trace transitions are preserved; bound interfaces must outlive their ports.
 
 ``wait(*args)``
    Suspend the native thread with GIL release. No arguments selects a cycle wait;

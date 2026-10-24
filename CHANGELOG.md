@@ -8,7 +8,16 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+- Support typed `sc_spawn` results in native values and ctypes numeric scalars, including arbitrary-width integers and custom C++ classes. Preserve result storage on callback failure, reset and kill.
+- Support native process functors and all spawn-option sensitivity/reset overloads.
+- Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
+
+### Fixed
+- Release the GIL for sticky synchronous process reset controls, including descendant resets.
+
 ### CI
+- Publish coverage for the exact release commit on Codecov’s main branch after PyPI hash verification, using the shared four-worker test workflow.
 - Run feature-PR tests and coverage with four workers; validate release-only metadata without repeating full CI on main merges or publication.
 - Verify published PyPI distribution hashes before announcing GitHub releases and activating versioned documentation.
 

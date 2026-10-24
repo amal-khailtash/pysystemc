@@ -41,79 +41,11 @@ jobs:
     name: Tests and coverage
     needs: plan
     if: needs.plan.outputs.mode == 'full'
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref }}
-          submodules: recursive
-      - uses: astral-sh/setup-uv@v7
-        with:
-          python-version: '3.14'
-          enable-cache: true
-      - name: Read project metadata from depot
-        id: project
-        run: |
-          uv run --no-project python - <<'PYTHON'
-          import os
-          import tomllib
-          from pathlib import Path
-
-          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
-          name = project["name"]
-          description = project.get("description", "")
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              print(f"name={name}", file=output)
-          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
-              print(f"### {name}\n\n{description}", file=summary)
-          PYTHON
-      - name: Compute native cache identity
-        if: github.event.repository.name == 'pysystemc'
-        id: native-key
-        shell: bash
-        run: |
-          identity=$( { c++ --version; c++ -dumpmachine; cmake --version; git -C submodules/systemc rev-parse HEAD; sha256sum Makefile build_backend/backend.py; echo 'cxx17-pthreads-python3.14'; } | sha256sum | cut -d' ' -f1 )
-          echo "key=$identity" >> "$GITHUB_OUTPUT"
-      - name: Cache native dependencies
-        if: github.event.repository.name == 'pysystemc'
-        uses: actions/cache@v4
-        with:
-          path: build/deps
-          key: native-${{ runner.os }}-${{ runner.arch }}-${{ steps.native-key.outputs.key }}
-      - name: Set up ${{ steps.project.outputs.name }} native dependencies
-        if: github.event.repository.name == 'pysystemc'
-        run: make setup
-      - name: Check Python lint and formatting
-        if: github.event.repository.name == 'pysystemc'
-        run: |
-          make lint
-          uv run ruff format --check .
-      - name: Set up ${{ steps.project.outputs.name }} dependencies
-        if: github.event.repository.name == 'pyipxact-de'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libxml2-utils xsltproc
-          uv sync --locked --all-groups
-      - name: Run semantic tests and coverage
-        env:
-          COVERAGE_SOURCE: ${{ github.event.repository.name == 'pysystemc' && 'amal.eda.systemc' || 'amal' }}
-        run: uv run --locked pytest -n 4 --dist=worksteal --durations=15 --cov="$COVERAGE_SOURCE" --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
-      - name: Save coverage reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage
-          path: build/coverage/
-          if-no-files-found: warn
-      - name: Upload coverage to Codecov
-        if: ${{ !cancelled() && hashFiles('build/coverage/coverage.xml') != '' }}
-        uses: codecov/codecov-action@v6
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: build/coverage/coverage.xml
-          disable_search: true
-          fail_ci_if_error: false
+    uses: ./.github/workflows/coverage.yml
+    with:
+      ref: ${{ github.ref }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   build:
     name: Build distributions
     needs: plan

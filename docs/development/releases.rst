@@ -10,13 +10,18 @@ The workflows separate code validation from package publication:
 * **02. CI** runs full tests, coverage, distribution checks and documentation
   checks on feature PRs. Release Please PRs receive focused release-metadata
   validation instead. Merging into main does not repeat full CI.
+* **02a. Build distributions (reusable)** packages the selected revision for CI
+  or publication.
+* **02b. Tests and coverage (reusable)** validates feature PRs and reports
+  tagged release coverage after PyPI verification, with four test workers.
 * **03. Release Please** prepares a release PR and synchronizes its lockfile.
   Merging the release PR creates an immutable tag and a **draft** GitHub release,
   then dispatches publication from main.
 * **04. Publish** builds the tagged distributions once, checks the installed
   wheel, uploads those same files and verifies their availability and SHA-256
-  hashes on PyPI. Only then does it publish the GitHub release and activate
-  released documentation.
+  hashes on PyPI. Only after that verification does it upload coverage for the
+  tagged source revision to Codecov's ``main`` branch, publish the GitHub release
+  and activate released documentation.
 
 ``distributions.yml`` is a reusable build job called by feature CI and the
 publisher. It has no independent trigger. A feature packaging check validates
@@ -50,9 +55,10 @@ Feature PR validation
 
 1. Implement and validate on the contributor branch, update relevant docs and
    changelog notes, commit, push and open a PR against main.
-2. Full CI runs tests and subprocess coverage in four pytest workers using work
-   stealing, checks distributions and builds documentation. The job reports its
-   15 slowest tests. Every simulation still uses a fresh native process.
+2. Full CI calls the reusable coverage workflow, which prepares native SystemC,
+   runs lint and formatting checks, and runs tests and subprocess coverage in
+   four pytest workers using work stealing. It reports the 15 slowest tests.
+   Every simulation still uses a fresh native process.
 3. Review the title, validation selection, tests, distributions and documentation
    results before merging. Configure required checks to match this workflow;
    skipped full jobs on a validated release-metadata PR are intentional.
@@ -92,17 +98,21 @@ Release validation and publication
 6. Trusted publishing uploads the saved artifacts to PyPI. The index must expose
    every wheel and source distribution with matching SHA-256 hashes and no
    yanked file. Bounded retries allow for index propagation.
-7. After verified publication, independent jobs attach the distributions and
-   publish the GitHub release, and activate/build the version on Read the Docs.
-   A TestPyPI dispatch verifies its uploaded artifacts but does not announce a
-   GitHub release or activate release documentation.
+7. After verified publication, the reusable coverage workflow tests the tagged
+   source revision and explicitly reports its resolved commit SHA on Codecov's
+   ``main`` branch. Other jobs attach the distributions and publish the GitHub
+   release, and activate/build the version on Read the Docs. A TestPyPI dispatch
+   verifies its uploaded artifacts but does not upload released coverage,
+   announce a GitHub release or activate release documentation.
 
 Failure and retry behavior
 --------------------------
 
 A build, installed-wheel or upload/availability failure leaves the GitHub release
-as a draft and does not activate released documentation. Coverage results from
-feature validation remain available; they describe tested code, not publication.
+as a draft and does not activate released documentation or update released
+coverage. Coverage results from feature validation remain available; they
+describe tested code, not publication. If the released-coverage job fails after
+PyPI verification, rerun that job to report the same tagged source revision.
 
 If PyPI succeeds but GitHub or documentation fails, the package is already
 published. Re-run the failed announcement job without uploading again. The docs
@@ -127,8 +137,8 @@ Service configuration
   metadata checks; draft release publication uses this token too.
 * Configure PyPI and TestPyPI trusted publishers for ``publish.yml`` and its
   respective ``pypi`` / ``testpypi`` environments. These identities are unchanged.
-* Configure ``CODECOV_TOKEN`` for feature-PR coverage and the Read the Docs GitHub
-  integration for PR previews and development docs.
+* Configure ``CODECOV_TOKEN`` for feature-PR and post-PyPI released coverage,
+  and the Read the Docs GitHub integration for PR previews and development docs.
 * Configure ``READTHEDOCS_TOKEN`` with released-version activation and build
   permissions, and disable independent automatic release-version activation.
 

@@ -776,28 +776,89 @@ cppyy.gbl.sc_core.sc_join.wait_clocked = _join_wait_clocked
 _spawn_callbacks = []
 
 
-def sc_spawn(callback: Callable[[], Any], name: str = "", options: Any = None) -> Any:
-    """Spawn a Python callable as a native dynamic SystemC process.
+cppyy.include(str(pathlib.Path(__file__).with_name("spawn_result.cpp")))
+
+
+def sc_spawn(callback: Any, *args: Any, name: str = "", options: Any = None) -> Any:
+    """Spawn a dynamic process, optionally storing its typed native result.
 
     Args:
-        callback: No-argument callable. Return values are ignored; use a Python
-            closure to retain results when joining processes.
-        name: Optional native process name.
-        options: Optional native sc_spawn_options object.
+        callback: No-argument callable, or caller-owned native result storage
+            for the ``sc_spawn(result, callback, name, options)`` overload.
+        *args: Callback after result storage, then optional name and options.
+        name: Optional native process name (positional or keyword).
+        options: Optional native sc_spawn_options (positional or keyword).
 
     Returns:
         Native sc_process_handle with termination event and process controls.
 
-    Callbacks remain retained for this interpreter's single simulation lifetime.
-    Blocking native calls within callbacks must release the GIL.
+    Raises:
+        TypeError: Callback is not callable, arguments are duplicated/invalid,
+            or result storage has no writable native value type.
+        sc_report: Native process creation or execution reports a failure.
+
+    Without result storage, return values are ignored. Result storage may be any
+    native C++ value proxy or a ctypes scalar; the callback must return a value
+    convertible to that type. The result is assigned only after a successful
+    callback return. Reset/kill executes Python cleanup before restoring native
+    scheduler unwind. Callbacks and result proxies remain retained for the
+    interpreter's single kernel lifetime. Use fresh processes for unrelated runs.
     """
-    if not callable(callback):
-        raise TypeError("sc_spawn callback must be callable")
-    if options is None:
-        handle = cppyy.gbl.sc_core.spawn_callback(callback, name)
+    result = None
+    if not callable(callback) or (args and callable(args[0])):
+        result = callback
+        if result is None:
+            raise TypeError("sc_spawn result storage cannot be null")
+        if not args or not callable(args[0]):
+            raise TypeError("sc_spawn callback must be callable")
+        callback, args = args[0], args[1:]
+    if len(args) > 2:
+        raise TypeError("sc_spawn accepts a callback, optional name and options")
+    if args:
+        if name:
+            raise TypeError("sc_spawn name supplied twice")
+        name = args[0]
+    if len(args) == 2:
+        if options is not None:
+            raise TypeError("sc_spawn options supplied twice")
+        options = args[1]
+    if result is None:
+        operation = (
+            cppyy.gbl.sc_core.sc_spawn[type(callback).__cpp_name__]
+            if getattr(type(callback), "__cpp_name__", None)
+            else cppyy.gbl.sc_core.spawn_callback
+        )
+        handle = operation(callback, name) if options is None else operation(callback, name, options)
+        owners = callback
     else:
-        handle = cppyy.gbl.sc_core.spawn_callback(callback, name, options)
-    _spawn_callbacks.append(callback)
+        result_type = getattr(type(result), "__cpp_name__", None)
+        if result_type is None:
+            import ctypes
+
+            if not isinstance(result, ctypes._SimpleCData):
+                raise TypeError("sc_spawn result must be a native C++ value or ctypes scalar")
+            result_type = {
+                "?": "bool",
+                "b": "signed char",
+                "B": "unsigned char",
+                "h": "short",
+                "H": "unsigned short",
+                "i": "int",
+                "I": "unsigned int",
+                "l": "long",
+                "L": "unsigned long",
+                "q": "long long",
+                "Q": "unsigned long long",
+                "f": "float",
+                "d": "double",
+                "g": "long double",
+            }.get(result._type_)
+            if result_type is None:
+                raise TypeError("sc_spawn result requires scalar value storage, not a pointer")
+        operation = cppyy.gbl.sc_core.python_spawn_result[result_type]
+        handle = operation(result, callback, name) if options is None else operation(result, callback, name, options)
+        owners = (result, callback)
+    _spawn_callbacks.append(owners)
     return handle
 
 
@@ -865,6 +926,9 @@ def _process_control(adapter):
 
 cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
 cppyy.gbl.sc_core.sc_process_handle.reset = _process_control(cppyy.gbl.sc_core.python_reset)
+# Native sticky synchronous-reset controls retain their descendant policy.
+cppyy.gbl.sc_core.sc_process_handle.sync_reset_on.__release_gil__ = True
+cppyy.gbl.sc_core.sc_process_handle.sync_reset_off.__release_gil__ = True
 
 _native_process_suspend = cppyy.gbl.sc_core.sc_process_handle.suspend
 _running_process_suspend = _process_control(cppyy.gbl.sc_core.python_suspend)

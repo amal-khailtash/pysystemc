@@ -747,8 +747,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 untested; mapping: 124 partial.
 * ☑ ``sc_core::sc_inout_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
+* ☑ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
 * ☑ ``sc_core::sc_interface`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
 * ☑ ``sc_core::sc_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_is_running`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -762,12 +762,12 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
-* ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
+* ☑ ``sc_core::sc_name_gen`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
 * ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
 * ☑ ``sc_core::sc_out_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
+* ☑ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
 * ☑ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☐ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 untested; mapping: 18 partial.
 * ☐ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
@@ -793,7 +793,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☐ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 untested; mapping: 28 partial, 13 reviewed.
 * ☑ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 34 supported, 4 untested; mapping: 2 partial, 36 reviewed.
+* ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 36 supported, 2 untested; mapping: 2 partial, 36 reviewed.
 * ☑ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_pvector`` — 26 declarations; runtime: 26 supported; mapping: 26 reviewed.
 * ☑ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
@@ -827,8 +827,8 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_signal_write_if`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_simcontext`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 untested; mapping: 2 partial, 19 reviewed.
+* ☑ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_start`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
