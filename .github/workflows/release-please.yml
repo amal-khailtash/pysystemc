@@ -25,7 +25,7 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
   lockfile:
-    name: Synchronize release lockfile
+    name: Prepare release metadata
     needs: release
     if: needs.release.outputs.pr != ''
     runs-on: ubuntu-latest
@@ -37,16 +37,17 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
-      - name: Update generated lockfile
+      - name: Update lockfile and roll over changelog
         env:
           RELEASE_BRANCH: ${{ fromJSON(needs.release.outputs.pr).headBranchName }}
         run: |
           uv lock
-          if ! git diff --quiet -- uv.lock; then
+          uv run --no-project python tools/prepare_release_notes.py
+          if ! git diff --quiet -- uv.lock CHANGELOG.md; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add uv.lock
-            git commit -m 'chore: synchronize release lockfile version'
+            git add uv.lock CHANGELOG.md
+            git commit -m 'chore: synchronize release metadata and changelog'
             git push origin "HEAD:$RELEASE_BRANCH"
           fi
   publish:
