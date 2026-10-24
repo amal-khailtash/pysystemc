@@ -74,10 +74,24 @@ Setup installs dependencies and builds SystemC 2.3.4 with pthreads. Existing
 `UV_*` environment settings are honored. To run the C++ hello example, use
 `make example-hello-cpp`.
 
+Use `make test-parallel` or `make coverage-parallel` to run tests in two isolated
+pytest workers. Override the worker count with `TEST_WORKERS=4`, and select tests
+with `ARGS="tests/test_cli.py tests/test_repl.py"`. Each simulation still runs in
+a fresh subprocess; coverage combines data from workers and their child processes.
+
 Detailed setup, validation, and logging instructions are in the
 [documentation](https://pysystemc.readthedocs.io/en/latest/).
 
 ## Examples
+
+Use `uv run pysystemc --version` for the installed version and
+`uv run pysystemc --help` for command help. Start an interactive Python
+playground with `uv run pysystemc repl`; it preloads `sc_core`, `sc_dt`, TLM,
+cppyy and the public kernel names. The prompt supports syntax highlighting,
+tab completion, multiline definitions, line editing and persistent history.
+Use `pysystemc help repl` for history options.
+The Makefile provides `make cli`, `make cli ARGS=version` and `make repl`;
+both targets forward `ARGS` for additional command options.
 
 `uv run pysystemc-cpp model.cpp -- --cycles 20` compiles native C++ sources
 and forwards arguments after `--` to `sc_main`. The compatibility script
@@ -117,3 +131,5 @@ Scripting Languages](https://dvcon-proceedings.org/wp-content/uploads/transparen
   * [CFFI](https://cffi.readthedocs.io/en/stable/)
   * [Boost.Python](https://www.boost.org/doc/libs/1_86_0/libs/python/doc/html/index.html)
   * [Shiboken](https://doc.qt.io/qtforpython-6/shiboken6/index.html)
+
+The CLI also runs as `python -m amal.eda.cli`; help and version commands do not load the native kernel.

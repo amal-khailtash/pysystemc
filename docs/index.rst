@@ -5,6 +5,7 @@
 
    intro/setup
    intro/examples
+   intro/playground
    intro/features
    intro/release_notes
    intro/references

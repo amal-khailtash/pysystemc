@@ -45,9 +45,25 @@ for _bridge in (
     "report_legacy.cpp",
     "report_handler.cpp",
     "event_lists.cpp",
+    "event_finders.cpp",
+    "trace_printf.cpp",
+    "time_operations.cpp",
+    "byte_heap.cpp",
+    "process_utilities.cpp",
+    "event_expressions.cpp",
+    "pvector_access.cpp",
 ):
     with (SCRIPT_PATH / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
+
+from ._event_finders import (
+    EventFinderTemplate as _EventFinderTemplate,
+    CachedFinderCreator as _CachedFinderCreator,
+)
+
+sc_event_finder_t = _EventFinderTemplate()
+sc_event_finder_cache = cppyy.gbl.pysystemc_public.event_finder_cache
+cppyy.gbl.sc_core.sc_event_finder.cached_create = _CachedFinderCreator()
 
 cppyy.gbl.sc_core.sc_start.__release_gil__ = True
 cppyy.gbl.sc_core.sc_initialize.__release_gil__ = True
@@ -78,6 +94,18 @@ def _event_list_constructor(list_type):
 
 for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
     _event_list_constructor(_event_list_type)
+
+from ._event_expressions import install as _install_event_expressions
+
+_install_event_expressions()
+
+from ._clock import install as _install_clock
+from ._pvector import install as _install_pvector
+from ._list_handles import install as _install_list_handles
+
+_install_clock()
+_install_pvector()
+_install_list_handles()
 
 
 def _event_notify_delayed(self, *args):
@@ -163,15 +191,28 @@ signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
 from ._fifo import FifoTemplate as _FifoTemplate
 
 fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
+from ._exports import ExportTemplate as _ExportTemplate
+
+from ._streams import install_fifo_streams as _install_fifo_streams
+
+_install_fifo_streams()
 sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
 sc_fifo_in = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in)
 sc_fifo_out = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out)
+sc_fifo_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in_if)
+sc_fifo_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out_if)
+sc_fifo_blocking_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_in_if)
+sc_fifo_blocking_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_out_if)
 from ._blocking import guard_native_channels as _guard_native_channels
 
 _guard_native_channels()
+from ._blocking import ScopedLock as _ScopedLock
+
+sc_scoped_lock = _ScopedLock
+
 # Keep the public port specialization native; only Python bind gains adaptation.
 sc_port = _PortTemplate(cppyy.gbl.sc_core.sc_port, channel_interface)
-sc_export = _PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface)
+sc_export = _ExportTemplate(_PortTemplate(cppyy.gbl.sc_core.sc_export, channel_interface))
 _read_interface_callbacks = []
 
 
@@ -608,6 +649,28 @@ def sc_argv() -> tuple[str, ...]:
     return tuple(str(cppyy.gbl.sc_core.python_argv_at(index)) for index in range(cppyy.gbl.sc_core.sc_argc()))
 
 
+def _prepare_entry_arguments(argc, argv):
+    """Validate and own the selected strings before entering a native callback."""
+    if argc is None and argv is None:
+        argv = list(sys.argv)
+        argc = len(argv)
+    elif argc is None or argv is None:
+        raise TypeError("argc and argv must be supplied together")
+    if isinstance(argc, bool) or not isinstance(argc, int):
+        raise TypeError("argc must be an integer")
+    if not isinstance(argv, (list, tuple)):
+        raise TypeError("argv must be a list or tuple of strings")
+    if argc < 0 or argc > 2**31 - 1 or argc > len(argv):
+        raise ValueError("argc must fit native int and the available argument entries")
+    argv = list(argv[:argc])
+    if any(not isinstance(value, str) for value in argv):
+        raise TypeError("argv entries must be strings")
+    if any("\0" in value for value in argv):
+        raise ValueError("argv entries must not contain NUL characters")
+
+    return argc, argv
+
+
 def sc_elab_and_sim(argc=None, argv=None) -> int:
     """Enter native sc_main with explicit arguments or the current sys.argv.
 
@@ -628,22 +691,7 @@ def sc_elab_and_sim(argc=None, argv=None) -> int:
     releases the GIL while native code runs and reacquires it for Python callbacks.
     Invoke once per independent simulation process; kernel state is not reset.
     """
-    if argc is None and argv is None:
-        argv = list(sys.argv)
-        argc = len(argv)
-    elif argc is None or argv is None:
-        raise TypeError("argc and argv must be supplied together")
-    if isinstance(argc, bool) or not isinstance(argc, int):
-        raise TypeError("argc must be an integer")
-    if not isinstance(argv, (list, tuple)):
-        raise TypeError("argv must be a list or tuple of strings")
-    if argc < 0 or argc > 2**31 - 1 or argc > len(argv):
-        raise ValueError("argc must fit native int and the available argument entries")
-    argv = list(argv[:argc])
-    if any(not isinstance(value, str) for value in argv):
-        raise TypeError("argv entries must be strings")
-    if any("\0" in value for value in argv):
-        raise ValueError("argv entries must not contain NUL characters")
+    argc, argv = _prepare_entry_arguments(argc, argv)
 
     log(f"Entering native simulation with {argc} arguments")
 
@@ -699,7 +747,32 @@ def sc_status() -> ScStatus:
 # Native waits suspend an OS thread. Release the GIL for every overload so
 # other Python SystemC processes can acquire it while this process waits.
 cppyy.gbl.sc_core.wait.__release_gil__ = True
-cppyy.gbl.sc_core.sc_join.wait.__release_gil__ = True
+
+
+def _join_wait(join, clocked=False):
+    """Wait on a borrowed join, releasing GIL and preserving reset/kill cleanup.
+
+    Keep the join alive until all monitored processes exit, including after a
+    waiter is reset or killed. Clocked waits require static sensitivity and
+    always wait at least one cycle. Native process/wait reports propagate.
+    """
+    operation = cppyy.gbl.sc_core.python_join_wait
+    operation.__release_gil__ = True
+    if not operation(join, clocked):
+        raise _ProcessUnwind()
+
+
+def _join_wait_clocked(join):
+    """Wait using native static sensitivity and guarded scheduler unwind.
+
+    Join storage and monitored processes remain borrowed for the entire wait.
+    The call releases GIL; invalid native waiting context reports propagate.
+    """
+    return _join_wait(join, True)
+
+
+cppyy.gbl.sc_core.sc_join.wait = _join_wait
+cppyy.gbl.sc_core.sc_join.wait_clocked = _join_wait_clocked
 _spawn_callbacks = []
 
 
@@ -756,13 +829,23 @@ def next_trigger(*args: Any) -> Any:
 
     Args:
         *args: Native next_trigger time/event arguments. Expressions are consumed
-            once; referenced events must outlive the scheduled invocation.
+            once; referenced events must outlive the scheduled invocation. An
+            optional native simulation context follows the sensitivity arguments.
+
+    Returns:
+        None after configuring the next method invocation.
+
+    Raises:
+        sc_report: The native process context does not permit dynamic sensitivity.
+        TypeError: Arguments do not match a native sensitivity overload, or cppyy
+            wraps an invalid-process native report; its diagnostic is retained.
     """
-    if len(args) == 1 and any(
-        isinstance(args[0], cppyy.gbl.sc_core.sc_event_expr[list_type])
+    if any(
+        isinstance(value, cppyy.gbl.sc_core.sc_event_expr[list_type])
+        for value in args
         for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
     ):
-        return cppyy.gbl.sc_core.python_next_trigger(args[0])
+        return cppyy.gbl.sc_core.python_next_trigger(*args)
     return _native_next_trigger(*args)
 
 
@@ -783,6 +866,28 @@ def _process_control(adapter):
 cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
 cppyy.gbl.sc_core.sc_process_handle.reset = _process_control(cppyy.gbl.sc_core.python_reset)
 
+_native_process_suspend = cppyy.gbl.sc_core.sc_process_handle.suspend
+_running_process_suspend = _process_control(cppyy.gbl.sc_core.python_suspend)
+
+
+def _process_suspend(self, *args):
+    """Suspend a process using native descendant inclusion semantics.
+
+    Args:
+        *args: Optional native descendant inclusion policy.
+
+    Suspension before simulation or while paused retains native behavior.
+    Self-suspension from a running callback releases the GIL and preserves native
+    reset/kill unwind. Retain this handle and callback dependencies until resumed
+    or terminated. Native report/conversion errors propagate.
+    """
+    if cppyy.gbl.sc_core.sc_get_status() == cppyy.gbl.sc_core.SC_RUNNING:
+        return _running_process_suspend(self, *args)
+    return _native_process_suspend(self, *args)
+
+
+cppyy.gbl.sc_core.sc_process_handle.suspend = _process_suspend
+
 
 cppyy.gbl.sc_core.python_wait.__release_gil__ = True
 
@@ -795,18 +900,121 @@ def wait(*args: Any) -> None:
     """Suspend a native thread with cycle, time, event or event-list sensitivity.
 
     Args:
-        *args: Native wait arguments, including event OR/AND expressions.
+        *args: Native wait arguments, including event OR/AND expressions and an
+            optional trailing borrowed simulation context.
+
+    Returns:
+        None when the native wait completes normally.
+
+    Raises:
+        sc_report: The native process context does not permit the selected wait.
+        TypeError: Arguments do not match a native wait overload.
 
     Reset and kill unwind Python frames, execute finally blocks, and then restore
     the original native scheduler exception. Do not suppress BaseException or
     wait during unwind cleanup. Events and sensitivity targets must outlive waits.
     Blocking scheduler calls release the GIL.
     """
-    if not cppyy.gbl.sc_core.python_wait(*args):
+    native = cppyy.gbl.sc_core
+    operation = native.python_wait
+    # A native diagnostic must not retry a different wait and enter the kernel.
+    if args and isinstance(args[0], int) and (len(args) == 1 or isinstance(args[1], native.sc_simcontext)):
+        operation = operation.__overload__("int, sc_core::sc_simcontext*")
+    elif args and isinstance(args[0], (native.sc_event_or_list, native.sc_event_and_list)):
+        name = type(args[0]).__cpp_name__
+        operation = operation.__overload__(f"const {name}&, sc_core::sc_simcontext*")
+    operation.__release_gil__ = True
+    if not operation(*args):
         raise _ProcessUnwind()
 
 
+def _time_left_multiply(time, factor):
+    """Return native factor * time, preserving rounding and leaving time unchanged.
+
+    The time is borrowed for this non-suspending call with GIL held. The result
+    owns independent native storage; invalid numeric conversion raises TypeError.
+    """
+    return cppyy.gbl.pysystemc_public.time_left_multiply(factor, time)
+
+
+cppyy.gbl.sc_core.sc_time.__rmul__ = _time_left_multiply
+
+from ._byte_heap import allocate as _byte_heap_allocate
+
+cppyy.gbl.sc_core.sc_byte_heap.allocate = _byte_heap_allocate
+
+
+def halt(simc=None):
+    """Halt the current clocked thread with native scheduling and Python cleanup.
+
+    Args:
+        simc: Borrowed native context; defaults to the current simulation context.
+
+    Returns:
+        Does not return normally; the native thread terminates after suspension.
+
+    Raises:
+        sc_report: Called outside a clocked thread.
+
+    The call releases GIL, executes Python finally blocks, and restores native
+    halt/reset/kill control flow. Do not suppress the cleanup exception or wait
+    during cleanup. Keep the context alive through the suspended call.
+    """
+    operation = cppyy.gbl.sc_core.python_halt
+    operation.__release_gil__ = True
+    if simc is None:
+        simc = cppyy.gbl.sc_core.sc_get_curr_simcontext()
+    if not operation(simc):
+        raise _ProcessUnwind()
+
+
+def sc_set_stack_size(thread_h, size):
+    """Set native thread stack size before its first execution.
+
+    Args:
+        thread_h: Borrowed native thread pointer or thread/clocked-thread handle.
+        size: Positive native byte count.
+
+    Returns:
+        None after native stack configuration.
+
+    Raises:
+        TypeError: Size or thread argument has an incompatible type.
+        ValueError: Size is not positive or the selected handle/pointer is invalid.
+        sc_report: Native stack configuration report.
+
+    The GIL remains held; this does not advance simulation. Retain the thread
+    through configuration. Changing an already prepared coroutine's stack does
+    not resize its active native stack.
+    """
+    if isinstance(size, bool) or not isinstance(size, int):
+        raise TypeError("stack size must be an integer")
+    if size <= 0:
+        raise ValueError("stack size must be positive")
+    if isinstance(thread_h, cppyy.gbl.sc_core.sc_process_handle):
+        if not thread_h.valid() or thread_h.proc_kind() not in (
+            cppyy.gbl.sc_core.SC_THREAD_PROC_,
+            cppyy.gbl.sc_core.SC_CTHREAD_PROC_,
+        ):
+            raise ValueError("stack size requires a thread or clocked-thread handle")
+    elif thread_h is None or thread_h is cppyy.nullptr:
+        raise ValueError("stack size requires a live thread pointer")
+    native = cppyy.gbl.pysystemc_public
+    operation = (
+        native.set_stack_size_handle
+        if isinstance(thread_h, cppyy.gbl.sc_core.sc_process_handle)
+        else native.set_stack_size_pointer
+    )
+    return operation(thread_h, size)
+
+
+from ._trace_printf import tprintf as tprintf
+
+from ._scheduler import sc_start as sc_start, at_posedge as at_posedge, at_negedge as at_negedge, timed_out as timed_out
+
 # Publish native classes/enums and Python adapters for wildcard imports.
+
+from ._references import sc_ref as sc_ref, sc_cref as sc_cref
 
 __all__ = sorted(
     set(_public_names(cppyy.gbl.sc_core))
@@ -832,3 +1040,7 @@ __all__ = sorted(
 )
 
 __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
+
+from ._kernel_flags import install as _install_kernel_flags
+
+_install_kernel_flags(sys.modules[__name__])

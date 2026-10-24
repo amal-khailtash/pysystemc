@@ -17,7 +17,22 @@ def _trace_create(create):
     """Retain Python-created native trace files until their matching close call."""
 
     def wrapped(filename):
-        """Create a native trace and retain its address for teardown safety."""
+        """Create a native trace file retained until its matching close call.
+
+        Args:
+            filename: String filename stem; native format suffix is appended.
+
+        Returns:
+            Borrowed native trace-file proxy retained by the open-file registry.
+
+        Raises:
+            TypeError: Filename cannot convert to a native character string.
+            sc_report: Native file creation or setup reports.
+
+        The GIL remains held. Keep traced storage alive and close the returned
+        file with the matching VCD/WIF helper exactly once after simulation.
+        Native files may be opened lazily on the first traced cycle.
+        """
         trace = create(filename)
         if trace:
             _open_trace_files[cppyy.addressof(trace)] = trace
@@ -30,9 +45,24 @@ def _trace_close(close):
     """Forget a trace only after native closure succeeds."""
 
     def wrapped(trace):
-        """Close borrowed native trace storage and release the open-file record."""
-        address = cppyy.addressof(trace)
-        close(trace)
+        """Close a matching native trace file and release its registry entry.
+
+        Args:
+            trace: Live trace proxy from the matching create helper, or None.
+
+        Returns:
+            None after native destruction flushes pending output.
+
+        Raises:
+            TypeError: Argument cannot convert to a native trace-file pointer.
+            sc_report: Native closure reports.
+
+        The GIL remains held. This destroys storage, invalidating all borrowed
+        aliases. Close non-null files exactly once; mismatched format or repeated
+        closure violates the native lifetime contract. Null closure is a no-op.
+        """
+        address = 0 if trace is None else cppyy.addressof(trace)
+        close(cppyy.nullptr if trace is None else trace)
         _open_trace_files.pop(address, None)
 
     return wrapped

@@ -12,6 +12,8 @@ requires-python = ">=3.14"
 dependencies = [
     "cppyy>=3.5",
     "loguru>=0.7",
+    "prompt-toolkit>=3.0.53",
+    "pygments>=2.19",
     "rich>=14",
 ]
 
@@ -21,6 +23,7 @@ Documentation = "https://pysystemc.readthedocs.io/"
 Issues = "https://github.com/amal-khailtash/pysystemc/issues"
 
 [project.scripts]
+pysystemc = "amal.eda.cli:main"
 pysystemc-cpp = "amal.eda.systemc._runner:main"
 
 [tool.uv.build-backend]
@@ -38,6 +41,7 @@ backend-path = ["build_backend"]
 dev = [
     "pytest>=8.3.4",
     "pytest-cov>=7.0",
+    "pytest-xdist>=3.8",
     "ruff>=0.17.0",
     { include-group = "docs" },
 ]

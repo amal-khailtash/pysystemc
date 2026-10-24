@@ -6,6 +6,36 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [Unreleased]
+
+### Added
+- Add the `pysystemc` CLI with version/help commands and a Python SystemC playground featuring syntax highlighting, completion, line editing, multiline input and persistent history.
+- Support typed signal input/output interfaces with native edge flags, borrowed value references and default writer policies.
+- Support resolved scalar/vector input-port constructor forms, aliases, elaboration checks and virtual destruction, including 137-bit vectors.
+- Support native pointer-list and iterator families with arbitrary payload pointers and Python `None` insertion handles.
+- Preserve clocked-thread `halt` suspension and Python cleanup on normal termination, reset and kill; accept native thread pointers or process handles for stack-size configuration.
+- Support native priority queues with arbitrary pointer types and retain Python comparators for the queue lifetime.
+- Support concrete buffer and resolved-signal constructors, assignments and native update hooks, including custom buffer payloads and 137-bit resolved vectors.
+- Support mutable byte views from `sc_byte_heap.allocate`, preserving native alignment and storage reuse.
+- Support formatted trace comments with C printf conversions, numeric length modifiers, positional arguments and dynamically sized buffers.
+- Preserve Python reset/kill cleanup and release the GIL for both event-based and clocked `sc_join` waits.
+- Expose package-level `sc_main` and `sc_elab_and_sim` with argument validation, copied arguments and native return statuses.
+- Preserve native module-name hierarchy, sampled bool/logic edge waits and timeout queries; retain referents in mutable and const reference wrappers.
+- Preserve starvation policies for all four `sc_start` overloads and propagate callback errors without restarting simulation.
+
+### Fixed
+- Preserve native callback reports when Python coverage monitoring is enabled; select count and event-list waits without retrying an invalid overload after a native diagnostic.
+- Preserve native kernel flag storage when assigning `sc_enable_name_checking` or `sc_allow_process_control_corners` through the `sc_core` module.
+- Support chained OR/AND event expressions with event or matching-list operands, preserving native single-use ownership.
+- Preserve the duty cycle and zero start time of numeric/unit clock constructors by explicitly selecting the native overload.
+- Adapt arbitrary pointer-vector slot reads, assignment and fetch without cppyy pointer-reference conversion failures, preserving native growth and null initialization.
+- Preserve explicit simulation contexts for guarded waits and native event-expression ownership for timed dynamic sensitivity.
+- Support native stream insertion for times, statuses, signal channels and arbitrary input/inout port types, preserving chaining and I/O diagnostics.
+- Support scalar multiplication on the left of `sc_time` with native rounding.
+- Avoid adding refresh processes when tracing native signals, preserving native delta-cycle timing and WIF output.
+- Accept null trace-file closure through either `None` or a native null pointer.
+- Route `stream << fifo` to native FIFO sample printing for unrestricted element types and stream subclasses, preserving chaining and queue contents and reporting native I/O failures as `OSError`.
+
 ## [0.15.0](https://github.com/amal-khailtash/pysystemc/compare/v0.14.0...v0.15.0) (2026-10-22)
 
 
@@ -15,7 +45,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+- Complete FIFO channel, input/output port, six FIFO interface, export/base-export and scoped-lock public families with native value, event, lifetime and error comparisons, including arbitrary-width types.
+- Complete event-finder, base-interface, mutex and semaphore public families with native reference checks; add generic reflected event-member constructors and owning finder-cache slots.
+- Validate process-handle ownership, metadata, hierarchy views, typed conversions and descendant controls; support guarded self-suspension with native reset/kill cleanup and event delivery.
+
 ### Fixed
+- Guard scoped-lock construction and FIFO assignment/conversion against blocking reset/kill unwind; retain mutex ownership and preserve native export arrow exception fields.
 - Repair signed remainder and unsigned owning shifts with explicit native overloads; expose generic owning fixed-point contexts with native scope restoration. Exclude the disabled private context copy constructor from the public inventory.
 
 ## [0.14.0](https://github.com/amal-khailtash/pysystemc/compare/v0.13.2...v0.14.0) (2026-10-21)

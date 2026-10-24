@@ -80,6 +80,81 @@ pass-through availability does not by itself establish tested support.
    The native integer status is returned, including nonzero results. Use a
    fresh process for each independent simulation; entry does not reset the kernel.
 
+``amal.eda.systemc.sc_main(argc=None, argv=None)``
+   Call the global native callback bridge directly with the same argument
+   validation as ``sc_elab_and_sim``. Define ``__main__.sc_main(argv)`` first.
+   The bridge preserves native integer returns and returns -1 for missing,
+   noncallable or invalid callbacks, invalid return values, and ``SystemExit``.
+   It releases the GIL during native execution and reacquires it for callbacks.
+   Direct calls do not activate the native ``sc_argc``/``sc_argv`` snapshot;
+   ``sc_elab_and_sim`` manages that entry lifecycle and native exception handling.
+
+``sc_start(duration, unit, p)``
+   Select the native time, integer or double overload once, preserving the
+   starvation policy and avoiding overload retries after simulation errors.
+   Omit all arguments for unbounded simulation. Events exactly at a bounded
+   run's end execute on the next simulation call, matching native SystemC.
+
+``at_posedge(signal, simc=None)`` / ``at_negedge(signal, simc=None)``
+   Use native sampled-edge waits for bool or logic input interfaces inside a
+   SystemC thread. Waits release the GIL and preserve Python cleanup during
+   native reset/kill. ``timed_out(simc=None)`` reads the current process timeout
+   flag; calling it outside a running process raises ``RuntimeError``.
+
+``sc_ref(value)`` / ``sc_cref(value)``
+   Infer unrestricted native reference-wrapper templates and retain the Python
+   referent until wrapper destruction. Native consumers preserve mutable/const
+   contracts. Keep the wrapper alive while using borrowed ``get()`` results.
+
+Time arithmetic and temporary storage
+-------------------------------------
+
+Native ``sc_time`` arithmetic supports addition, subtraction, modulo, scalar
+multiplication in either order, scalar division and time/time ratios. Results
+preserve native tick rounding and leave their operands unchanged. A product of
+two times is not defined; divisors must satisfy the native nonzero contract.
+
+``sc_byte_heap.allocate(bytes_n)`` returns a mutable borrowed byte view instead
+of a copied string. The view has exactly the requested length, and allocations
+retain native eight-byte alignment and wrapping reuse. Keep the heap alive while
+accessing a view. Reinitializing or destroying the heap invalidates existing
+views; wrapping allocations can overwrite their contents. An uninitialized heap,
+a negative request or an aligned request larger than capacity raises
+``ValueError``. Noninteger sizes raise ``TypeError``.
+
+Trace comments and file ownership
+---------------------------------
+
+``tprintf(file, format, *args)`` writes a C printf formatted trace comment.
+Numeric length modifiers, dynamic width/precision, positional arguments, string,
+character, hexadecimal-float and pointer conversions follow native formatting.
+For ``%n``, supply a compatible writable native pointer or buffer. Arguments
+remain alive during the call; invalid formats or argument conversions raise
+``ValueError`` or ``TypeError``. Comment buffers grow to the required size.
+``sc_write_comment(file, text)`` writes unformatted text.
+
+``sc_trace_delta_cycles(file, on=True)`` selects native delta-cycle tracing.
+Native signal tracing does not add simulation processes or change delta timing.
+Structural reference interfaces retain their value-refresh behavior.
+
+Files returned by ``sc_create_vcd_trace_file`` and ``sc_create_wif_trace_file``
+remain open until their matching close helper is called. Close each non-null
+file exactly once after tracing ends, keeping traced values alive until then.
+Closing invalidates all file aliases and flushes output. Both close helpers
+accept ``None`` as a null no-op; native file opening can be deferred until the
+first traced cycle.
+
+Process joins
+-------------
+
+``sc_join.wait()`` waits for its registered threads to terminate.
+``wait_clocked()`` uses static sensitivity and always waits at least one cycle.
+Both waits release the GIL and run Python cleanup when their waiter is reset or
+killed. Keep the join alive until all registered threads terminate, even if its
+waiter has exited. Register threads before they terminate: adding an already
+terminated handle leaves its join count pending. Method handles are rejected by
+the native join report.
+
 Diagnostics
 -----------
 
@@ -168,6 +243,26 @@ Python module exports and ports. Keep ``sc_module_name`` alive throughout each
 module constructor. Use ``export.get_interface()`` when binding a port or another
 export: cppyy does not provide SystemC's implicit export/interface conversion.
 
+Native ``sc_export[IF]`` supports default/named construction, ``bind(interface)``
+and call-style binding. Interface access borrows the bound channel, which must
+survive the export and its consumers. Const and mutable access preserve the same
+native interface and type identity. Duplicate binding, unbound arrow access and
+unbound elaboration retain native reports. Protected export-base lifecycle hooks
+and reporting are available to native derived modeling classes.
+
+Scoped locks
+------------
+
+``sc_core.sc_scoped_lock(mutex)`` constructs an owning native lock through a
+GIL-released scheduler guard. It retains the mutex until lock destruction.
+``lock.release()`` unlocks once and returns ``True``; subsequent calls return
+``False``. Native destruction also releases an active lock. Retain the lock in a
+local variable for the critical section and release it in ``finally`` when prompt
+cleanup matters. Construction can block and must then run in a SystemC thread;
+reset/kill during acquisition unwinds Python frames before the kernel resumes.
+The factory returns a native ``sc_scoped_lock`` proxy, usable by native consumers,
+and exposes the native ``lockable_type`` alias.
+
 Runtime initialization
 ----------------------
 
@@ -214,6 +309,18 @@ semantics; the adapter does not schedule signal writes for them.
 and ``data_read_event``. Native read overloads return a value or assign an output;
 a failed nonblocking read preserves the output. Write callbacks receive copies.
 Blocking calls release the GIL and callbacks must use guarded waits.
+
+Native ``sc_fifo[T]`` blocking reads, writes, assignment and conversion use the
+same guarded scheduler path. ``fifo.__assign__(value)`` writes and returns the
+FIFO; fundamental numeric conversions such as ``int(fifo)`` consume one sample.
+Reset/kill during a blocked operation runs Python cleanup before native unwind.
+FIFO ``trace`` retains the header's ``DEBUG_SYSTEMC`` behavior: without that
+compile-time flag, it emits no buffer declarations. Trace signals or retained
+sample values separately when a waveform is needed in that configuration.
+FIFO insertion with ``stream << fifo`` selects native sample printing for
+arbitrary element types and future native stream subclasses. It returns the
+original stream for chaining and leaves the queue unchanged. Native stream I/O
+failures raise ``OSError`` with the native diagnostic.
 
 Events returned by different adapter specializations retain the owner's event
 identity. Each specialization remains a distinct native interface/module.
@@ -370,3 +477,41 @@ select the corresponding parameter types. The constructor copies its parameters;
 contexts in reverse order, in the originating native process. References returned
 by ``value()`` and ``default_value()`` require their owning context to remain alive.
 Copying contexts is disabled by native SystemC.
+
+Public event finders and process suspension
+--------------------------------------------
+
+``sc_event_finder_t[IF](port, IF.event_method)`` constructs an owning native finder
+for arbitrary native interface types. Reflected event methods avoid cppyy's
+member-function-pointer conversion limitation. Overloaded and inherited methods
+select the exact zero-argument const event signature. For example::
+
+   IF = sc_core.sc_signal_in_if[sc_dt.sc_biguint[137]]
+   finder = sc_core.sc_event_finder_t[IF](port, IF.value_changed_event)
+   event = finder.find_event()
+
+The finder borrows its port, interface and returned event. Keep those objects
+alive through all sensitivity/wait consumers. Explicit interface lookup retains
+native dynamic-cast checks; an incompatible or unbound interface reports E118.
+If the report handler continues, the result is ``sc_event.none``.
+
+``sc_event_finder_cache()`` supplies an owning pointer slot for
+``sc_event_finder.cached_create[IF](cache, port, IF.event_method)``. Calls allocate
+once and reuse the same finder, retaining the first event method. All uses of a
+cache must reference the same port, as required by the native assertion. Returned
+finder proxies borrow and retain the cache; destroy consumers before releasing
+its native storage.
+
+A running Python thread may suspend itself with
+``sc_get_current_process_handle().suspend()``. The bridge releases the GIL while
+the native kernel switches pthreads, then preserves reset/kill unwind and Python
+cleanup. Resume, reset and kill during suspension match native timing, including
+reset and termination event delivery. Suspension before simulation or while
+paused retains native behavior. Descendant inclusion policies preserve native
+control propagation. Sticky synchronous reset and arbitrary ``throw_it`` remain
+untested in the process-handle family.
+
+The base interface and mutex/semaphore families now have complete declaration
+checks, including protected construction/state/report members exercised through
+native-derived models. Ports borrow interfaces and channels; retain their Python
+callback and event owners until consumers stop and release their views.

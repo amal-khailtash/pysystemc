@@ -19,6 +19,10 @@ class FifoTemplate:
             return native
         return guard_fifo_class(native, datatype)
 
+    def __call__(self, datatype):
+        """Support alternate cppyy template specialization syntax."""
+        return self[datatype]
+
 
 def guard_fifo_class(native, datatype):
     """Guard a native FIFO specialization or borrowed blocking interface class."""
@@ -69,5 +73,62 @@ def guard_fifo_class(native, datatype):
         native.read = read
     if hasattr(native, "write"):
         native.write = write
+    if native.__cpp_name__.startswith("sc_core::sc_fifo<"):
+
+        def assign(self, sample):
+            """Write through native assignment with guarded reset/kill cleanup."""
+            write(self, sample)
+            return self
+
+        def convert(self):
+            """Consume one sample through the guarded native conversion operator."""
+            return read(self)
+
+        stream_bridge = cppyy.gbl.sc_core.python_fifo_stream[value].insert
+
+        def stream_insert(self, stream):
+            """Print queued samples to a borrowed stream without consuming them."""
+            result = stream_bridge(stream, self)
+            if not result.first:
+                raise OSError(str(result.second))
+            return stream
+
+        native._fifo_stream_insert = stream_insert
+        native.__assign__ = assign
+        setattr(native, "operator " + value, convert)
+        if value in (
+            "int",
+            "unsigned int",
+            "long",
+            "unsigned long",
+            "long long",
+            "unsigned long long",
+            "short",
+            "unsigned short",
+            "char",
+            "signed char",
+            "unsigned char",
+        ):
+
+            def integer(self):
+                """Consume a native integer sample with guarded scheduler unwind."""
+                sample = read(self)
+                return ord(sample) if isinstance(sample, str) else int(sample)
+
+            native.__int__ = integer
+        elif value in ("float", "double", "long double"):
+
+            def floating(self):
+                """Consume a native floating sample with guarded scheduler unwind."""
+                return float(read(self))
+
+            native.__float__ = floating
+        elif value == "bool":
+
+            def boolean(self):
+                """Consume a native bool sample with guarded scheduler unwind."""
+                return bool(read(self))
+
+            native.__bool__ = boolean
     native._guarded_fifo = True
     return native
