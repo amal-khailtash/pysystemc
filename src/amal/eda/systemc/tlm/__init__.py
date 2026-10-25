@@ -7,6 +7,7 @@ Namespace availability does not establish Python transport callback support.
 
 import cppyy
 from . import _interfaces  # noqa: F401
+from ._endian import tlm_to_hostendian_generic as tlm_to_hostendian_generic
 from .._namespace import (
     public_names as _public_names,
     document_member as _document_member,

@@ -99,9 +99,14 @@ Verification scope
 Regression models under ``tests/models/tlm_*`` check connected callback state,
 connection IDs, timing, error propagation and selected reset/kill paths. Custom
 payload probes preserve 137-bit native fields and transaction identity. Simple
-and passthrough custom probes have independent C++ references. These checks do
-not establish complete socket overload, protocol, hierarchy or lifetime coverage.
-M6A remains incomplete.
+and passthrough custom probes have independent C++ references.
+``tests/models/tlm_socket_wrappers_public.py`` checks default and named
+constructors for simple, tagged, passthrough and optional multi wrappers with
+native custom protocol types and a 73-bit bus width. Required sockets elaborate
+with bindings; optional wrappers permit unbound ports subject to their native
+export requirements. Selected connected paths compare payload values, phases
+and callback times with a native reference. Wrapper construction coverage does
+not establish complete inherited socket overload or callback lifetime support.
 
 Callback return contracts
 ~~~~~~~~~~~~~~~~~~~~~~~~~

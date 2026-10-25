@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support native extension and memory-manager families, stable type registration and typed/indexed instance-specific accessors.
+- Support default and named simple, tagged, passthrough and optional multi socket wrappers with native custom protocol types.
+- Support all native endian request/response template families and response dispatch with custom data word types.
 - Support native TLM enums, version metadata, host-endianness predicates, extension registration and extension-pointer arrays.
 - Support DMI address ranges, permissions, borrowed byte buffers and latency values, registered phase names and quantumkeeper synchronization with reset/kill cleanup.
 - Support payload event queue aliases and custom protocol notifications, cancellation and native callback-owner constructors.
@@ -30,6 +33,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve full 64-bit address windows in generic endian conversion and its native response context.
 - Expose `peq_with_get[Payload].pair_type` as its native time-and-payload-pointer pair without restricting payload types.
 - Preserve non-consuming `peek(output)` dispatch across combined TLM interfaces instead of selecting the get overload.
 - Preserve explicit integer signal trace widths and reject widths without a native signal overload.
