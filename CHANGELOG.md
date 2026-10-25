@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support simple, tagged and passthrough socket base families and multi-socket hierarchy, indexed callbacks, protocol aliases and lifecycle operations with arbitrary native parameters.
+- Expose exact native member-pointer callback values for multi-socket registration, including null construction, copying and signature-checked member selection.
+- Preserve hierarchical multi-target binding after callback registration when cppyy confuses socket and interface conversions.
 - Support native extension and memory-manager families, stable type registration and typed/indexed instance-specific accessors.
 - Support default and named simple, tagged, passthrough and optional multi socket wrappers with native custom protocol types.
 - Support all native endian request/response template families and response dispatch with custom data word types.
