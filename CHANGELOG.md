@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support native TLM socket base families, nonblocking ports, event finders, analysis ports/triples, FIFO configuration, request/response channels and transport adapters with custom native types.
+- Support complete generic payload field, buffer-copy, extension and memory-manager operations with native ownership rules.
 - Support simple, tagged and passthrough socket base families and multi-socket hierarchy, indexed callbacks, protocol aliases and lifecycle operations with arbitrary native parameters.
 - Expose exact native member-pointer callback values for multi-socket registration, including null construction, copying and signature-checked member selection.
 - Preserve hierarchical multi-target binding after callback registration when cppyy confuses socket and interface conversions.
@@ -36,6 +38,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Release the GIL during native TLM FIFO get/peek/put waits and preserve Python cleanup on reset and kill.
+- Prepare both native analysis FIFO write overloads on demand for arbitrary value and pointer types, repairing SystemC 2.3.4 dependent-base lookup.
 - Preserve full 64-bit address windows in generic endian conversion and its native response context.
 - Expose `peq_with_get[Payload].pair_type` as its native time-and-payload-pointer pair without restricting payload types.
 - Preserve non-consuming `peek(output)` dispatch across combined TLM interfaces instead of selecting the get overload.

@@ -86,6 +86,28 @@ Datatypes and tracing
      - Native signal storage, declarations and transitions; explicit timescale; closure on exceptions
      - Boolean, integers, vectors, resolved logic, fixed/fast, time and event VCD; resolved/fixed WIF; scalar Python temporaries unsuitable
 
+TLM public families
+--------------------
+
+Native socket bases and concrete wrappers are compared in
+``tests/test_tlm_native_sockets_public.py``; ports, finders and analysis delivery
+are compared in ``tests/test_tlm_ports_analysis_public.py``. Pointer and 191-bit
+analysis transactions additionally check copied values and borrowed pointee
+identity in ``tests/test_tlm_analysis_values_public.py``.
+
+``tests/test_tlm_payload_public.py`` compares field conversions, response status,
+byte-enable copy rules, extension ownership and memory-manager release counts.
+``tests/test_tlm_channels_public.py`` compares FIFO capacity/debug operations,
+readiness events, destruction, request/response and transport traffic. Native
+``tlm_slave_to_transport`` inactivity in SystemC 2.3.4 is preserved.
+
+``tests/test_tlm_fifo_blocking_public.py`` exercises actual Python threads with
+191-bit get/peek value and output forms, blocked puts, retained copies after
+collection, and reset/kill cleanup with unchanged interrupted output storage.
+Native buffer, binding, index and reference-count preconditions remain required.
+These matrices cover inventoried declarations with representative arbitrary
+types; they do not enumerate every possible native template configuration.
+
 Remaining features are accounted for
 ------------------------------------
 
@@ -94,13 +116,12 @@ Availability is not semantic support. Basic custom Python channel/interface and
 TLM transport callback paths are tested; complete port/fixed-point policy and
 platform/compiler matrices remain open. The tables above describe the exercised
 combinations; they do not imply coverage of every overload. Direct export conversion, kernel restart and deletion of live module
-hosts are unsupported. Arbitrary process ``throw_it`` and reset inside other native
-blocking channel operations remain outside the verified reset contract. Python
-FIFO direct/port read/write now use guarded native operations.
+hosts are unsupported. Native blocking operations require the appropriate guarded binding for Python
+reset/kill cleanup. Python FIFO direct/port read/write and native TLM FIFO
+get/peek/put use guarded native operations.
 
-The private development plan records these separately from milestone checks;
-the remaining upstream example inventory continues under later interoperability
-and extension work. No namespace export is counted as an executed example.
+Further upstream examples and platform combinations remain unverified. No
+namespace export is counted as an executed example.
 
 Trace errors and ownership
 --------------------------

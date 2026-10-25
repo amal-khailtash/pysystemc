@@ -64,3 +64,28 @@ additionally compares native clone/copy/free counts, stable registration,
 memory-manager callbacks, typed and numeric accessor overloads, public aliases
 and concrete extension specializations. These checks preserve borrowed private
 extension storage and distinguish its lifetime from the carrier/container.
+
+Generic payload storage and copying
+------------------------------------
+
+``tlm.tlm_generic_payload`` exposes command, address, response, streaming-width,
+byte-enable and payload-option fields with native numeric conversions. Data and
+byte-enable pointers borrow caller storage; keep buffers alive while the payload
+or any recipient uses them. ``deep_copy_from`` requires sufficiently allocated
+destination buffers, copies payload fields and clones supported extensions.
+``update_original_from`` copies read responses with native byte-enable masking;
+write responses do not copy source data back.
+
+Typed and indexed extension access preserve native pointer identity. Replacing
+an extension returns the old pointer. ``clear_extension`` detaches without
+freeing it, whereas ``release_extension`` follows the payload's native manager
+and deferred-release policy. Auto extensions require a memory manager and are
+released by native recycling/reset rules. ``reset()`` releases scheduled
+auto extensions while preserving ordinary payload fields.
+
+Keep a memory manager alive while its payloads are acquired. ``acquire()`` and
+``release()`` follow the native reference count and invoke the manager's
+``free`` callback when it reaches zero. Extension indices must be registered and
+within the allocated extension array. Manager, reference-count and buffer-size
+preconditions remain native requirements; violating them is not guaranteed to
+produce a safe Python exception.
