@@ -109,5 +109,8 @@ dynamic spawned callbacks use the same dispatch boundary.
 
 Process-handle ``reset()`` and ``kill()`` release the GIL and require a running
 SystemC process as controller. Calling them from paused or stopped top-level
-Python raises ``RuntimeError``. Arbitrary ``throw_it`` exceptions and waits inside
-third-party native blocking channels are outside the resettable wait contract.
+Python raises ``RuntimeError``. ``throw_it`` accepts native copyable exception
+values through an on-demand typed adapter; target processes must catch the
+injected value before returning to the kernel. Python exception instances are
+not accepted. Raw ``cppyy.gbl.sc_core.wait`` calls and waits inside third-party
+native blocking channels bypass the guarded Python unwind adapter.

@@ -42,10 +42,10 @@ Kernel and modeling
      - Duplicate timed queue notifications, cancellation, resolved contention and port propagation
      - Independent zero/one writers resolve to X; resolved port reads are checked
    * - Signal writer policies
-     - One/many/unchecked template arguments, same-delta conflicts and later-delta ownership
+     - One/many/unchecked policies, equal/different-value same-delta conflicts, later-delta ownership and sampled value/time checks
      - Suppressed native reports accept writes and transfer ownership
    * - Required port binding
-     - SC_ALL_BOUND bounded full/under/zero and unlimited one/zero binding counts
+     - One-or-more, zero-or-more and all-bound policies at 21 empty/partial/full/excess/unlimited binding cases
      - Native elaboration report 109, interface values and binding counts
    * - sc_vector, sc_attribute
      - Signal indexing, generated names, values, native member assemblies, range termination and attribute add/remove ownership
@@ -55,7 +55,7 @@ Kernel and modeling
      - Upstream native comparison; use get_interface explicitly
    * - sc_mutex, sc_semaphore, sc_scoped_lock
      - Blocking mutex wakeup at 2 ns, semaphore wakeup at 2.5 ns and idempotent scoped release
-     - Blocking methods require GIL release; reset inside channel waits unverified
+     - Guarded Python mutex/semaphore waits preserve native reset/kill cleanup through direct, port and structural access; direct C++ calls retain native behavior
    * - Reports and hierarchy helpers
      - Action masks, handler restoration, indexed hierarchy traversal
      - 40 native report/field pairs, namespace/help, hierarchy child paths and status tests
@@ -101,14 +101,14 @@ Datatypes and tracing
      - Copy-on-write, formatting, character mutation, substring operations, concatenation and native streams
      - Native printf type/format preconditions; borrowed character storage requires a live owner
    * - sc_fixed, sc_fixed_fast
-     - 8/4 truncation, saturation/wrap, 73/19 construction and 16/8 arithmetic
-     - Complete quantization/overflow policy matrix untested
+     - All seven quantizers and native overflow/cast policies at positive/negative boundaries; wide construction and arithmetic
+     - 1,848 native/Python value/flag records and 14 unsigned sign-magnitude-wrap rejections; cast ON/OFF and wrap n_bits effects
    * - concat and dynamic datatypes
      - Writable integer concatenation; dynamic signed/unsigned and bv/lv storage
      - Dynamic widths 7/73/193; retain concatenated operands
    * - sc_trace, vcd_trace
      - Native signal storage, declarations and transitions; explicit timescale; closure on exceptions
-     - Boolean, integers, vectors, resolved logic, fixed/fast, time and event VCD; resolved/fixed WIF; scalar Python temporaries unsuitable
+     - 28 VCD and 26 WIF type declarations and timed transitions; native WIF time/event omissions are reported explicitly; scalar Python temporaries unsuitable
 
 TLM public families
 --------------------

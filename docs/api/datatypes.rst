@@ -259,3 +259,19 @@ Use ``sc_dt.concat[NativeTypes...](left, right)`` for explicit native template
 arguments or ``sc_dt.concat.__overload__(signature)(left, right)`` when selecting
 a particular const-qualified overload. Python comma expressions create tuples;
 use ``sc_dt.concat`` for the corresponding native concatenation behavior.
+
+
+Fixed-point policy boundaries
+-----------------------------
+
+Quantization, overflow and cast switches retain native SystemC semantics.
+Native comparisons exercise all seven quantizers across signed/unsigned fixed
+and fast families, using positive/negative half ties and adjacent values.
+Saturation, zero saturation, symmetric saturation and wrap policies are checked
+at both ends of the representable range, including lossy ``SC_ON`` versus
+``SC_OFF`` assignments and the effects of ``n_bits`` on wrap results.
+
+Unsigned fixed-point families reject ``SC_WRAP_SM`` with the native report;
+this mode requires signed encoding. Unsigned ``SC_SAT`` and ``SC_SAT_SYM`` have
+the same endpoint behavior. These numerical checks complement constructor and
+arbitrary-width template audits; widths remain native template parameters.

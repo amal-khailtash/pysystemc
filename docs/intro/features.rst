@@ -136,13 +136,13 @@ Datatypes and tracing
 * ☑ Selected overflow, assignment, comparison, conversion and bit/range mutation checks.
 * ☑ Bit vectors, four-state logic vectors and typed signal/port propagation.
 * ☑ Dynamic signed/unsigned/vector storage and writable concatenations.
-* ☑ Fixed-point and fast fixed-point construction, arithmetic and selected policies.
+* ☑ Fixed-point and fast fixed-point construction, arithmetic and all native quantization/overflow/cast modes.
 * ☑ Named VCD tracing of stable native storage with declarations and transitions checked.
 * ☑ Selected scalar, vector, resolved, fixed-point, time and event tracing.
 * ☑ Selected WIF tracing and explicit timescale configuration.
 * ☑ Deterministic trace closure, including Python exception paths.
 * ☑ Source-inventoried datatype/proxy/concat/implicit-conversion and overload matrices on the audited baseline.
-* ☐ Complete fixed-point quantization/overflow and tracing type/format matrices.
+* ☑ Native fixed-point policy boundaries and tracing type/format matrices on the audited baseline.
 
 Native datatype validity rules apply: sc_int/sc_uint are limited to 64 bits;
 sc_bigint/sc_biguint widths are parameterized. Tested widths are evidence rather
@@ -295,8 +295,8 @@ F. Core semantics and final gates — incomplete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
-* ☐ **F2** — Full writer/port/fixed-point policy audit.
-* ☐ **F3** — Full tracing type/format and vector assembly audit.
+* ☑ **F2** — Full writer/port/fixed-point policy audit.
+* ☑ **F3** — Full tracing type/format and vector assembly audit.
 * ☐ **F4** — Full report/process-control/lifecycle error audit.
 * ☐ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
 * ☐ **F6** — Verify host/kernel lifetime and adapter ownership release.
@@ -311,10 +311,17 @@ comma-operator matrices compare Python results with native C++ on the selected
 Linux/Python 3.14/pthread baseline. Native type, ownership and configuration
 preconditions apply to custom specializations.
 
-The remaining final gates cover policy, tracing/vector, report/process and
-lifetime audits, complete regression coverage, adapter review and installed
-wheel/sdist validation. Declaration inventory completion does not close these
-gates.
+Policy checks compare all three writer and port policies with native reports,
+values and delta timing. Fixed-point checks cover all seven quantization modes,
+overflow modes and cast switches across signed/unsigned and fast families,
+including native rejection of unsigned sign-magnitude wrap. Actual trace files
+compare 28 VCD and 26 WIF types, declared widths and timed transitions. WIF
+reports time and event values as ignored; those omissions match native behavior.
+Vector range binding and formatted comments also have native parity checks.
+
+The remaining final gates cover report/process and lifetime audits, complete
+regression coverage, adapter review and installed wheel/sdist validation.
+Declaration inventory completion does not close these gates.
 
 Examples and C++ interoperability
 ---------------------------------

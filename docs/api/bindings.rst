@@ -194,13 +194,24 @@ views; wrapping allocations can overwrite their contents. An uninitialized heap,
 a negative request or an aligned request larger than capacity raises
 ``ValueError``. Noninteger sizes raise ``TypeError``.
 
+For signed native byte trace storage, initialize and update
+``sc_trace_value["char"]`` with a one-byte ``bytes`` object. This preserves the
+native bit pattern. cppyy's Unicode conversion cannot read negative native
+``char`` values through the holder's field getter; trace registration reads the
+native storage directly.
+
 Trace comments and file ownership
 ---------------------------------
 
 ``tprintf(file, format, *args)`` writes a C printf formatted trace comment.
 Numeric length modifiers, dynamic width/precision, positional arguments, string,
 character, hexadecimal-float and pointer conversions follow native formatting.
-For ``%n``, supply a compatible writable native pointer or buffer. Arguments
+For ``%n``, supply a compatible writable native pointer or contiguous signed
+integer buffer matching the required native element type and width. Native typedef
+aliases and ctypes integral aliases follow the host ABI. All count lengths,
+including ``%hhn``, borrow aligned storage and write counts only during the output
+pass. Count conversions cannot use flags, width or precision. Null, read-only, empty,
+noncontiguous and incompatible Python buffers raise ``TypeError``. Arguments
 remain alive during the call; invalid formats or argument conversions raise
 ``ValueError`` or ``TypeError``. Comment buffers grow to the required size.
 ``sc_write_comment(file, text)`` writes unformatted text.

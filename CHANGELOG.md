@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Verify all native fixed-point quantization, overflow and cast modes, port binding policies and writer contention with independent native references.
+- Verify actual VCD/WIF typed declarations and timed transitions, including native WIF omissions for time and event values.
 - Document required port binding counts and vector assembly range termination, backed by native/Python parity checks.
 - Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
 
@@ -54,6 +56,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Accept compatible writable buffers for all formatted trace count lengths, including signed-byte `%hhn`, with aligned storage and exact native counter types.
+- Preserve one output write for formatted trace counts, and reject invalid count flags, widths, precisions and incompatible storage.
 - Preserve exact vector pointer-array operands, native proxy comparison and compound dispatch, and numeric operands on integer concatenation views.
 - Preserve typed integer and fixed-point operands during construction, assignment and arithmetic, including 64-bit scalar values and exact decimal Python integer assignment.
 - Keep native overload selectors bound to their numeric owner when called through Python adapters.
