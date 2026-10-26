@@ -3,6 +3,15 @@
 
 namespace pysystemc_datatypes
 {
+/** Return the exact native enum spelling without cross-enum overload conversion.
+ * The enum value is copied; the returned string owns its storage. Call with the
+ * GIL held. Native allocation errors propagate; no callbacks or waits occur.
+ */
+template <class Enum>
+std::string enum_string(Enum value)
+{
+  return sc_dt::to_string(value);
+}
 /** Return independent native signed remainder storage; GIL held, no callbacks.
  * Native division reports propagate. A zero divisor retains native abort semantics.
  */

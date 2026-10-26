@@ -61,6 +61,9 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     assert named("sc_core::sc_process_b::SPAWN_SIM")[0]["access"] == "protected"
     assert named("sc_core::sc_simcontext::phase_notify")[0]["access"] == "private"
     assert named("sc_dt::scfx_rep::not_a_number")[0]["access"] == "private"
+    context_allocators = named("sc_dt::sc_context::operator new")
+    assert context_allocators
+    assert all(row["access"] == "private" and row["classification"] == "internal" for row in context_allocators)
     assert named("sc_core::sc_time::from_value")[0]["static"] is True
     assert named("sc_core::sc_time::value")[0]["static"] is False
     assert any(entry["kind"] == "ClassTemplateSpecializationDecl" for entry in entries)

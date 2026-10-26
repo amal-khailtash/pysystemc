@@ -24,6 +24,7 @@
 
    api/bindings
    api/tlm_sockets
+   api/datatypes
    api/tlm_values
    api/tlm_extensions
    api/tlm_endian
