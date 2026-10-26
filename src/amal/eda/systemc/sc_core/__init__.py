@@ -73,7 +73,6 @@ sc_trace_value = cppyy.gbl.pysystemc_tracing.trace_value
 sc_signal_value = _python_sc_signal_value
 sc_port_value = _python_sc_port_value
 
-
 sc_event_finder_t = _EventFinderTemplate()
 sc_event_finder_cache = cppyy.gbl.pysystemc_public.event_finder_cache
 cppyy.gbl.sc_core.sc_event_finder.cached_create = _CachedFinderCreator()
@@ -108,15 +107,9 @@ def _event_list_constructor(list_type):
 for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
     _event_list_constructor(_event_list_type)
 
-
 _install_event_expressions()
-
-
 _install_vectors()
-
 _install_vector_policies()
-
-
 _install_clock()
 _install_pvector()
 _install_list_handles()
@@ -181,13 +174,11 @@ def add_sc_core_members():
 # Add all sc_core members to this module
 add_sc_core_members()
 
-
 # Manually add each public member of the `sc_core` namespace to the module"s globals
 for name, member in sc_core_namespace.__dict__.items():
     # Filter out internal or irrelevant attributes
     if not name.startswith("__"):
         globals()[name] = member
-
 
 # Publish Python helpers after namespace copying so native overloads cannot
 # overwrite the adapters. Native C++ sc_module remains intact.
@@ -204,7 +195,6 @@ sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
 signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
 
 fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
-
 
 _install_fifo_streams()
 sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
@@ -626,7 +616,6 @@ def _time_modulo(self: Any, other: Any) -> Any:
 
 cppyy.gbl.sc_core.sc_time.__mod__ = _time_modulo
 
-
 _install_time(cppyy.gbl.sc_core.sc_time)
 
 
@@ -786,7 +775,6 @@ def _join_wait_clocked(join):
 cppyy.gbl.sc_core.sc_join.wait = _join_wait
 cppyy.gbl.sc_core.sc_join.wait_clocked = _join_wait_clocked
 _spawn_callbacks = []
-
 
 cppyy.include(str(pathlib.Path(__file__).with_name("bind.cpp")))
 sc_placeholder = cppyy.gbl.sc_core.python_placeholder
@@ -1013,7 +1001,6 @@ def _process_throw_it(self, exception: Any, descendants: Any = None) -> None:
 
 cppyy.gbl.sc_core.sc_process_handle.throw_it = _process_throw_it
 
-
 cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
 cppyy.gbl.sc_core.sc_process_handle.reset = _process_control(cppyy.gbl.sc_core.python_reset)
 # Native sticky synchronous-reset controls retain their descendant policy.
@@ -1041,7 +1028,6 @@ def _process_suspend(self, *args):
 
 
 cppyy.gbl.sc_core.sc_process_handle.suspend = _process_suspend
-
 
 cppyy.gbl.sc_core.python_wait.__release_gil__ = True
 
@@ -1092,7 +1078,6 @@ def _time_left_multiply(time, factor):
 
 
 cppyy.gbl.sc_core.sc_time.__rmul__ = _time_left_multiply
-
 
 cppyy.gbl.sc_core.sc_byte_heap.allocate = _byte_heap_allocate
 
@@ -1208,8 +1193,5 @@ __all__ = sorted(
 
 __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
 
-
 _install_kernel_flags(sys.modules[__name__])
-
-
 _install_member_scheduler(sc_module, sc_prim_channel, _ProcessUnwind)
