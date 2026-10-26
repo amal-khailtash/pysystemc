@@ -76,11 +76,20 @@ void exercise_owner(const char* family, Owner& owner, int width, int index, cons
   }
   owner = 0;
 
+  if constexpr (std::is_same<ReadView, sc_dt::sc_int_bitref_r>::value ||
+                std::is_same<ReadView, sc_dt::sc_uint_bitref_r>::value)
+  {
 #ifdef SC_DT_DEPRECATED
-  emit(family, width, "bitwidth", read_view.bitwidth());
+    emit(family, width, "bitwidth", read_view.bitwidth());
 #else
-  emit(family, width, "bitwidth", "feature-disabled");
+    // The native deprecated alias is exactly length(), including disabled builds.
+    emit(family, width, "bitwidth", read_view.length());
 #endif
+  }
+  else
+  {
+    emit(family, width, "bitwidth", "feature-disabled");
+  }
 
   owner = 0;
   owner[index] = true;

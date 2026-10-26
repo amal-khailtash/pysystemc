@@ -25,6 +25,16 @@ struct fixed_number_bits
   {
     return number.bit(index);
   }
+  /** Return the exact mutable range view borrowing the supplied live number. */
+  static auto range(Number& number, int high, int low)
+  {
+    return number.range(high, low);
+  }
+  /** Return the whole-word mutable view borrowing the supplied live number. */
+  static auto range(Number& number)
+  {
+    return number.range();
+  }
 };
 /** Return independent native signed remainder storage; GIL held, no callbacks.
  * Native division reports propagate. A zero divisor retains native abort semantics.

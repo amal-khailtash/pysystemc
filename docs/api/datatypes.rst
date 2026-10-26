@@ -84,6 +84,11 @@ word length determines the represented exponent. Native bounds reports apply.
 Fast fixed-point numbers preserve native double precision, even when their
 configured word length exceeds the double significand.
 
+Binary and four-state vector bit views also expose native assignment, compound,
+clone, scan and word-access operations. Python truth conversion uses native
+``to_bool()`` and retains native X/Z reports. Scalar assignment selects exact
+bool, int and char overloads, preserving native invalid-value reports.
+
 Native vector rotations, reversals, shifts, reductions and equality operations
 preserve four-state data. Binary ``&``, ``|`` and ``^`` select exact C++ expressions
 for native vectors and supported native scalar or bit-string operands. Compound
@@ -98,3 +103,30 @@ caller-owned output storage. Native quantization, overflow and report policies
 continue to apply. Build exact large integer fixtures from strings or native
 arithmetic: cppyy scalar constructor selection can narrow values even for a
 64-bit bounded integer.
+
+Range and concatenation views
+-----------------------------
+
+Integer ``range(high, low)`` views preserve native range direction, conversion,
+assignment and concatenation behavior. Assignment from native generic sources
+uses the exact C++ source type. Integer range shells use the same native pooled
+lifetime model as integer bit shells: copy a view to preserve coordinates across
+pool reuse, and retain its parent integer.
+
+Fixed-point ``range(high, low)`` and ``number(high, low)`` return mutable views
+from mutable numbers. Calling either form without indices selects the whole
+word. The returned view retains its parent; native copies still require the
+caller to retain that parent. ``sc_bv_base(view)`` and ``sc_bv[Width](view)`` use
+the native conversion operator and own independent copied vector storage.
+``to_signed()`` and ``to_unsigned()`` preserve their native deprecated alias
+semantics through ``to_int()`` and ``to_uint()``, including builds where the
+native deprecated names are disabled. Bounded integer bit and range views also
+preserve ``bitwidth()`` as the native alias for ``length()``.
+
+Vector subreferences and concatenation references borrow their operands. Keep
+parent vectors and nested operand views alive for every operation. Native
+``clone()`` allocates a proxy shell for the caller to release; the clone continues
+to borrow its parent. Use vector value construction for an independent snapshot.
+Subreference template arguments require native ``sc_proxy_traits`` support:
+normal ``sc_bv``/``sc_lv`` range selection uses ``sc_bv_base``/``sc_lv_base``
+parents, including vectors of arbitrary width.

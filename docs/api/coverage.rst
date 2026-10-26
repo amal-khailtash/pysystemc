@@ -64,6 +64,9 @@ Datatypes and tracing
    :header-rows: 1
    :widths: 25 45 30
 
+   * - Range and concatenation references
+     - Native integer/fixed/vector slices, nested concatenation views, exact source assignment, conversions, copies and pooled-shell behavior
+     - Wide native parity, reversed-range rules, retained fixed parents and owned vector conversion snapshots; native proxy traits required
    * - Integer and fixed-point bit references
      - Mutable/read views, copy/assignment/compound operations, scans, bounds reports, pooled integer shell reuse and Python truth conversion
      - Native parity at 19/63/137/191 bits; copied views borrow live parents; fixed .bit() retains its parent

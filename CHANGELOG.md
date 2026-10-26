@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support integer, fixed-point and vector range-reference families, native concatenation views and binary/four-state vector bit proxies.
 - Support integer and fixed-point bit-reference families, vector rotations/reversals/shifts/reductions/equality, and free scalar/fixed-point bitwise and negation overloads.
 - Support native scalar bit/logic, datatype policy and formatting constants, parameter contexts, fixed-point observer callbacks and generic value-source bases.
 - Support native TLM socket base families, nonblocking ports, event finders, analysis ports/triples, FIFO configuration, request/response channels and transport adapters with custom native types.
@@ -40,6 +41,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve mutable fixed-point range and call operators, native slice-to-vector conversion and deprecated view conversion/width aliases.
+- Preserve exact generic-source integer slice assignment and vector bit-proxy scalar and truth conversion.
 - Preserve native four-state vector binary and compound operators, owned integer complements, and integer bit-reference truth conversion.
 - Select mutable fixed-point `.bit()` access and retain its parent number for the returned view.
 - Preserve native invalid-value reports for `sc_bit` construction, assignment and compound operations by selecting exact scalar overloads.

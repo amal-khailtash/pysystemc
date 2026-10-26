@@ -17,6 +17,7 @@ _namespace = cppyy.gbl.sc_dt
 cppyy.include(str(Path(__file__).with_name("adapters.h")))
 from . import _bit  # noqa: E402, F401
 from . import _operators  # noqa: E402, F401
+from . import _ranges  # noqa: E402, F401
 
 _native_remainder = getattr(_namespace.sc_signed, "__mod__", lambda self, other: NotImplemented)
 _native_left_shift = getattr(_namespace.sc_unsigned, "__lshift__", lambda self, other: NotImplemented)
@@ -89,6 +90,39 @@ def _fixed_bit_member(number_type):
 
 for _number_type in (_namespace.sc_fxnum, _namespace.sc_fxnum_fast):
     _fixed_bit_member(_number_type)
+
+
+def _fixed_range_member(number_type, name):
+    """Select exact mutable native range and call operators."""
+    native = getattr(number_type, name)
+    operation = cppyy.gbl.pysystemc_datatypes.fixed_number_bits[number_type].range
+
+    def range_view(number, *indices):
+        """Return a mutable native range view retaining its parent number.
+
+        Args:
+            number: Live fixed-point owner retained by the returned view.
+            indices: Inclusive high/low storage-bit indices, or no arguments
+                for the whole configured word. Native reversed ranges apply.
+        Returns:
+            A mutable native subreference borrowing the retained number.
+        Raises:
+            TypeError: Arguments do not match a native range overload.
+            Native exception: A configured native bounds report throws.
+        Calls hold the GIL and never suspend. Native copies of the returned
+        proxy require caller-retained parents and preserve native view semantics.
+        """
+        result = operation(number, *indices)
+        result._pysystemc_parent = number
+        return result
+
+    range_view.__overload__ = native.__overload__
+    setattr(number_type, name, range_view)
+
+
+for _number_type in (_namespace.sc_fxnum, _namespace.sc_fxnum_fast):
+    for _range_name in ("range", "__call__"):
+        _fixed_range_member(_number_type, _range_name)
 
 
 def _signed_remainder(self, other):

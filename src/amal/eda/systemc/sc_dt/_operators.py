@@ -92,3 +92,33 @@ def _bitref_bool(value):
 for _name in ("sc_int", "sc_uint", "sc_signed", "sc_unsigned"):
     for _suffix in ("_bitref", "_bitref_r"):
         getattr(cppyy.gbl.sc_dt, _name + _suffix).__bool__ = _bitref_bool
+
+
+def _subref_assignment(native):
+    """Preserve native generic-source assignment on integer range references."""
+
+    def assign(owner, other):
+        """Assign a native value source through the selected range.
+
+        Args:
+            other: Native datatype/generic source or native-compatible scalar.
+        Returns:
+            The same mutable range view borrowing its live parent.
+        Raises:
+            TypeError: The native assignment/conversion is unavailable.
+            Native exception: A configured report throws.
+        Calls hold the GIL and never suspend; no source storage is retained.
+        """
+        if hasattr(type(other), "__cpp_name__"):
+            operation = cppyy.gbl.pysystemc_datatypes.binary_operator[type(owner), type(other)]
+            operation.assign(owner, other)
+            return owner
+        return native(owner, other)
+
+    assign.__overload__ = native.__overload__
+    return assign
+
+
+for _name in ("sc_int_subref", "sc_uint_subref", "sc_signed_subref", "sc_unsigned_subref"):
+    _type = getattr(cppyy.gbl.sc_dt, _name)
+    _type.__assign__ = _subref_assignment(_type.__assign__)

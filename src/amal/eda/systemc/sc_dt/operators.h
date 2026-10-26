@@ -57,6 +57,12 @@ struct binary_operator
   {
     return operator_argument(left) ^ operator_argument(right);
   }
+  /** @brief Assign an exact native source and return the same borrowed owner. */
+  static Left& assign(Left& left, const Right& right)
+  {
+    left = operator_argument(right);
+    return left;
+  }
   /** @brief Mutate the borrowed left value and return the same owner. */
   static Left& compound_and(Left& left, const Right& right)
   {
