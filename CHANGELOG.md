@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support complete native unary/binary arithmetic and comparison overloads with typed scalar signedness, arbitrary-width results, fixed-point precision and four-state equality.
 - Support exact native remainder and bitwise overloads across arbitrary-width integers, fixed-point values, scalar bits and binary/four-state vectors.
 - Support generic native vector proxy members and typed output-parameter `add`, `sub`, `mult` and `div` calls, preserving output precision, identity and observer ownership.
 - Support configurable signed/unsigned fixed-point and fast fixed-point families, including parameter-only and typed-source construction, runtime policies and native observer identity.
