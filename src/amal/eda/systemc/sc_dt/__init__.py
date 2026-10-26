@@ -16,6 +16,7 @@ from .._namespace import (
 _namespace = cppyy.gbl.sc_dt
 cppyy.include(str(Path(__file__).with_name("adapters.h")))
 from . import _bit  # noqa: E402, F401
+from . import _operators  # noqa: E402, F401
 
 _native_remainder = getattr(_namespace.sc_signed, "__mod__", lambda self, other: NotImplemented)
 _native_left_shift = getattr(_namespace.sc_unsigned, "__lshift__", lambda self, other: NotImplemented)
@@ -55,6 +56,39 @@ def to_string(value):
 
 
 to_string.__overload__ = _native_to_string.__overload__
+
+
+def _fixed_bit_member(number_type):
+    """Select the native mutable overload for fixed-point bit access."""
+    native = number_type.bit
+    operation = cppyy.gbl.pysystemc_datatypes.fixed_number_bits[number_type].bit
+
+    def bit(number, index):
+        """Return a mutable native bit proxy and retain its parent number.
+
+        Args:
+            number: Live native fixed-point owner retained by the returned view.
+            index: Native storage-bit index in ``[0, number.wl())``; the native
+                fractional-word length determines the represented exponent.
+        Returns:
+            A native mutable bit proxy borrowing the retained parent number.
+            Further native copies of proxies retain native lifetime rules.
+        Raises:
+            TypeError: The index cannot convert to native int.
+            Native exception: A configured bounds report throws.
+        Calls hold the GIL and do not suspend. Native report actions can
+        terminate the process. The parent's value changes through this proxy.
+        """
+        result = operation(number, index)
+        result._pysystemc_parent = number
+        return result
+
+    bit.__overload__ = native.__overload__
+    number_type.bit = bit
+
+
+for _number_type in (_namespace.sc_fxnum, _namespace.sc_fxnum_fast):
+    _fixed_bit_member(_number_type)
 
 
 def _signed_remainder(self, other):

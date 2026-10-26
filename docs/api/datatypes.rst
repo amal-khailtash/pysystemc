@@ -63,3 +63,38 @@ derived object. A correct derived type supplies ``to_uint64()``, ``to_int64()``,
 ``to_sc_unsigned(output)`` and ``to_sc_signed(output)``. The base does not own
 separate storage or validate that the derived-type relationship is correct.
 ``sc_value_base`` retains its native virtual destruction contract.
+
+Bit views and vector operations
+-------------------------------
+
+Integer bit-reference objects borrow their parent integer. Native indexing uses
+reusable proxy pools: enough subsequent selections can retarget a retained proxy
+shell to another bit. Use a native copy constructor, such as
+``sc_dt.sc_signed_bitref(view)``, to preserve a selected coordinate across pool
+reuse, and retain the parent integer. A copied view still reads and writes the
+live parent; it is not a snapshot of the bit value. ``bool(view)`` and
+``not view`` follow the current native bit value. A const selection can appear
+as a mutable derived proxy class in cppyy; preserve the native const-use contract.
+
+Fixed-point ``number.bit(index)`` selects the mutable native overload and retains
+its parent number. Assigning through this view changes the same storage observed
+by ``number[index]``. Native copies of a view borrow the parent and require their
+own parent lifetime management. Indices are storage-bit indices; the fractional
+word length determines the represented exponent. Native bounds reports apply.
+Fast fixed-point numbers preserve native double precision, even when their
+configured word length exceeds the double significand.
+
+Native vector rotations, reversals, shifts, reductions and equality operations
+preserve four-state data. Binary ``&``, ``|`` and ``^`` select exact C++ expressions
+for native vectors and supported native scalar or bit-string operands. Compound
+operators mutate and return the same owner. Non-mutating expressions return
+independent native values, with native width rules. Complementing an arbitrary
+unsigned integer also preserves the native result-width rule, which can add one
+bit; the input's configured width is not forced onto the result.
+
+Free ``b_and``, ``b_or``, ``b_xor`` and ``neg`` overloads support native scalar and
+fixed-point types, including mixed fast/arbitrary fixed-point operands and
+caller-owned output storage. Native quantization, overflow and report policies
+continue to apply. Build exact large integer fixtures from strings or native
+arithmetic: cppyy scalar constructor selection can narrow values even for a
+64-bit bounded integer.

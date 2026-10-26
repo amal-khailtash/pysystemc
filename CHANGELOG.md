@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support integer and fixed-point bit-reference families, vector rotations/reversals/shifts/reductions/equality, and free scalar/fixed-point bitwise and negation overloads.
 - Support native scalar bit/logic, datatype policy and formatting constants, parameter contexts, fixed-point observer callbacks and generic value-source bases.
 - Support native TLM socket base families, nonblocking ports, event finders, analysis ports/triples, FIFO configuration, request/response channels and transport adapters with custom native types.
 - Support complete generic payload field, buffer-copy, extension and memory-manager operations with native ownership rules.
@@ -39,6 +40,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve native four-state vector binary and compound operators, owned integer complements, and integer bit-reference truth conversion.
+- Select mutable fixed-point `.bit()` access and retain its parent number for the returned view.
 - Preserve native invalid-value reports for `sc_bit` construction, assignment and compound operations by selecting exact scalar overloads.
 - Select the exact native `to_string` overload for datatype policy and formatting enums, preserving names when enum values overlap.
 - Expose `sc_length_context` through the owning native context adapter, preserving copied defaults and ordered restoration.

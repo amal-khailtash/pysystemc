@@ -12,6 +12,20 @@ std::string enum_string(Enum value)
 {
   return sc_dt::to_string(value);
 }
+/** Select a mutable fixed-point bit using the exact non-const native overload.
+ * The proxy is a value borrowing its number; Python must retain that number.
+ * Call with the GIL held; no waits or callbacks are introduced. Native bounds
+ * reports propagate and retain the configured report actions.
+ */
+template <class Number>
+struct fixed_number_bits
+{
+  /** Return the native mutable proxy; index is the public storage-bit index. */
+  static auto bit(Number& number, int index)
+  {
+    return number.bit(index);
+  }
+};
 /** Return independent native signed remainder storage; GIL held, no callbacks.
  * Native division reports propagate. A zero divisor retains native abort semantics.
  */

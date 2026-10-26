@@ -64,6 +64,12 @@ Datatypes and tracing
    :header-rows: 1
    :widths: 25 45 30
 
+   * - Integer and fixed-point bit references
+     - Mutable/read views, copy/assignment/compound operations, scans, bounds reports, pooled integer shell reuse and Python truth conversion
+     - Native parity at 19/63/137/191 bits; copied views borrow live parents; fixed .bit() retains its parent
+   * - Free vector and numeric operations
+     - Rotations/reversals/shifts, reductions/equality, scalar/fixed bitwise/negation, normal/reflected vector expressions and compounds
+     - Four-state native parity, owned result lifetime, native result widths and fast fixed-point precision
    * - API
      - Verified combinations
      - Limits
