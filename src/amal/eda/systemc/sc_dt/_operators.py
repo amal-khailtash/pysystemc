@@ -4,6 +4,8 @@ from pathlib import Path
 
 import cppyy
 
+from ._native_methods import NativeMethod
+
 cppyy.include(str(Path(__file__).with_name("operators.h")))
 
 
@@ -30,11 +32,7 @@ def _vector_argument_type(value):
     """
     if isinstance(value, cppyy.gbl.sc_dt.sc_logic):
         return "const sc_dt::sc_logic*"
-    if (
-        type(value).__module__ == "cppyy"
-        and type(value).__name__ == "LowLevelView"
-        and value.typecode == "?"
-    ):
+    if type(value).__module__ == "cppyy" and type(value).__name__ == "LowLevelView" and value.typecode == "?":
         return "const bool*"
     return _native_argument_type(value)
 
@@ -55,6 +53,41 @@ def _complement(native_type):
         return operation(value)
 
     native_type.__invert__ = invert
+
+
+def _scalar_bit_operator(operation, reverse=False):
+    """Select native bit/logic expressions with exact scalar operand types."""
+
+    def apply(owner, other):
+        """Return a native bit/logic value or comparison boolean.
+
+        Args:
+            other: Native bit/logic value, bool, int or single-character string.
+        Returns:
+            An independently owned native value or copied comparison boolean.
+        Raises:
+            TypeError: The native expression or scalar conversion is unavailable.
+            Native exception: Allocation or configured value reports throw.
+        Calls hold the GIL and borrow inputs only during the expression. Native
+        truth tables and invalid-value reports apply; no callbacks are retained.
+        """
+        if any(getattr(base, "__cpp_name__", "").startswith("sc_dt::sc_proxy<") for base in type(other).__mro__):
+            return _vector_operator(operation, reverse=reverse)(owner, other)
+        left, right = (other, owner) if reverse else (owner, other)
+        left_type = "char" if type(left) is str else _native_argument_type(left)
+        right_type = "char" if type(right) is str else _native_argument_type(right)
+        adapter = cppyy.gbl.pysystemc_datatypes.binary_operator[left_type, right_type]
+        return getattr(adapter, operation)(left, right)
+
+    return apply
+
+
+for _type in (cppyy.gbl.sc_dt.sc_bit, cppyy.gbl.sc_dt.sc_logic):
+    for _method, _operation in (("and", "bit_and"), ("or", "bit_or"), ("xor", "bit_xor")):
+        for _name, _reverse in ((f"__{_method}__", False), (f"__r{_method}__", True)):
+            setattr(_type, _name, NativeMethod(_scalar_bit_operator(_operation, _reverse), getattr(_type, _name, None)))
+    for _name, _operation in (("__eq__", "equal"), ("__ne__", "not_equal")):
+        setattr(_type, _name, NativeMethod(_scalar_bit_operator(_operation), getattr(_type, _name, None)))
 
 
 for _type in (cppyy.gbl.sc_dt.sc_bit, cppyy.gbl.sc_dt.sc_signed, cppyy.gbl.sc_dt.sc_unsigned):
@@ -87,12 +120,34 @@ def _vector_operator(native_method, reverse=False, inplace=False):
     return apply
 
 
-for _type in (cppyy.gbl.sc_dt.sc_bv_base, cppyy.gbl.sc_dt.sc_lv_base):
+def _adapt_vector(native_type):
+    """Preserve exact vector and arbitrary CRTP proxy expression operands."""
     for _method, _native in (("and", "bit_and"), ("or", "bit_or"), ("xor", "bit_xor")):
-        setattr(_type, f"__{_method}__", _vector_operator(_native))
-        setattr(_type, f"__r{_method}__", _vector_operator(_native, reverse=True))
+        for name, wrapper in (
+            (f"__{_method}__", _vector_operator(_native)),
+            (f"__r{_method}__", _vector_operator(_native, reverse=True)),
+            (f"__i{_method}__", _vector_operator(f"compound_{_method}", inplace=True)),
+        ):
+            if name.startswith("__i") and native_type.__cpp_name__.startswith(
+                ("sc_dt::sc_bitref<", "sc_dt::sc_bitref_r<")
+            ):
+                continue
+            setattr(native_type, name, NativeMethod(wrapper, getattr(native_type, name, None)))
+    for name, operation in (("__eq__", "equal"), ("__ne__", "not_equal")):
+        setattr(native_type, name, NativeMethod(_vector_operator(operation), getattr(native_type, name, None)))
 
-        setattr(_type, f"__i{_method}__", _vector_operator(f"compound_{_method}", inplace=True))
+
+def _pythonize_vector(native_type, name):
+    """Adapt native sc_proxy instantiations for unrestricted CRTP owners."""
+    if name.startswith(
+        ("sc_proxy<", "sc_bitref<", "sc_bitref_r<", "sc_subref<", "sc_subref_r<", "sc_concref<", "sc_concref_r<")
+    ):
+        _adapt_vector(native_type)
+
+
+cppyy.py.add_pythonization(_pythonize_vector, "sc_dt")
+for _type in (cppyy.gbl.sc_dt.sc_bv_base, cppyy.gbl.sc_dt.sc_lv_base):
+    _adapt_vector(_type)
 
 
 def _bitref_bool(value):

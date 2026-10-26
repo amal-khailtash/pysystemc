@@ -36,6 +36,8 @@ def named_function(name):
             Native exception: Allocation or configured arithmetic reports throw.
         Calls hold the GIL. All operands are borrowed for the call; native
         aliasing, precision, observer and arithmetic preconditions apply.
+        An arbitrary-precision sc_fxnum output must be distinct from both
+        inputs; native named functions invalidate aliased input representation.
         """
         adapter = cppyy.gbl.pysystemc_datatypes.NumericFunctions[
             type(target), _argument_type(left), _argument_type(right)
@@ -43,6 +45,8 @@ def named_function(name):
         getattr(adapter, "perform_" + name)(target, left, right)
 
     apply.__overload__ = native.__overload__
+    apply.__name__ = name
+    apply.__qualname__ = name
     return apply
 
 
@@ -116,6 +120,14 @@ def _install(native_type, name, wrapper):
 
 def _adapt(native_type):
     """Adapt native expressions while retaining inherited template behavior."""
+    integer = any(
+        issubclass(native_type, getattr(cppyy.gbl.sc_dt, name))
+        for name in ("sc_signed", "sc_unsigned", "sc_int_base", "sc_uint_base", "sc_concatref")
+    )
+    fixed = any(
+        issubclass(native_type, getattr(cppyy.gbl.sc_dt, name))
+        for name in ("sc_fix", "sc_ufix", "sc_fix_fast", "sc_ufix_fast")
+    )
     if any(
         issubclass(native_type, getattr(cppyy.gbl.sc_dt, name))
         for name in ("sc_fxval", "sc_fxval_fast", "sc_fxnum", "sc_fxnum_fast")
@@ -124,9 +136,10 @@ def _adapt(native_type):
     for name, operation in _ARITHMETIC.items():
         _install(native_type, f"__{name}__", _binary(operation))
         _install(native_type, f"__r{name}__", _binary(operation, reverse=True))
-        _install(native_type, f"__i{name}__", _compound(operation))
+        if hasattr(native_type, f"__i{name}__"):
+            _install(native_type, f"__i{name}__", _compound(operation))
     for name, operation in _BITS.items():
-        if hasattr(native_type, f"__{name}__"):
+        if integer or (fixed and name != "mod") or hasattr(native_type, f"__{name}__"):
             _install(native_type, f"__{name}__", _binary(operation))
             _install(native_type, f"__r{name}__", _binary(operation, reverse=True))
         if hasattr(native_type, f"__i{name}__"):
@@ -160,6 +173,7 @@ for _name in (
     "sc_unsigned",
     "sc_int_base",
     "sc_uint_base",
+    "sc_concatref",
     "sc_fxval",
     "sc_fxval_fast",
     "sc_fxnum",

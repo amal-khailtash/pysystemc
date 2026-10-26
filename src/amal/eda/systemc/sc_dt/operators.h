@@ -42,6 +42,16 @@ inline const char* operator_argument(const std::string& value)
 template <class Left, class Right>
 struct binary_operator
 {
+  /** @brief Compare exact native operands and copy the boolean result. */
+  static bool equal(const Left& left, const Right& right)
+  {
+    return operator_argument(left) == operator_argument(right);
+  }
+  /** @brief Compare native inequality without changing either operand. */
+  static bool not_equal(const Left& left, const Right& right)
+  {
+    return operator_argument(left) != operator_argument(right);
+  }
   /** @brief Return the native bitwise conjunction value. */
   static auto bit_and(const Left& left, const Right& right)
   {

@@ -1,4 +1,4 @@
-"""Initialize fixed-point templates directly with exact native source types."""
+"""Initialize fixed-point owners directly with exact native source types."""
 
 from pathlib import Path
 
@@ -60,7 +60,10 @@ def _adapt(native_type):
         """Initialize native fixed-point storage with its borrowed observer.
 
         Args:
-            args: Native source, optional cast switch and optional observer.
+            args: Optional native source and constructor parameters, including
+                width/integer-width, quantization/overflow, overflow bit count,
+                native type parameters, cast switch and borrowed observer.
+                Template owners encode width and policy parameters in their type.
             kwargs: Native keyword arguments, forwarded to native initialization.
         Returns:
             None, matching native construction.

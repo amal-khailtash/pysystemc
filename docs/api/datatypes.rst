@@ -59,9 +59,21 @@ source followed by ``sc_fxtype_params``, ``sc_enc``, ``sc_fxcast_switch`` and an
 optional observer pointer. The facade is a native base instance and stores its
 value independently. The native private default and copy constructors remain
 unavailable; use the source-plus-parameters constructor to copy a value.
+These exports name the owning derived classes. The original base types remain
+available as ``cppyy.gbl.sc_dt.sc_fxnum`` and ``sc_fxnum_fast``; use those base
+types when checking membership of other native derived classes such as
+``sc_fix`` or ``sc_fixed``.
 Observers are borrowed and must remain live through number destruction.
 ``type_params()`` and ``cast_switch()`` return borrowed references to owner
 storage. Native precision, reports and observer build settings apply.
+
+``sc_dt.add(output, left, right)``, ``sub``, ``mult`` and ``div`` call the exact
+native output-parameter arithmetic overload and return ``None``. Output owners
+retain their identity, native precision and borrowed observers. Keep all
+operands live for the synchronous call. An arbitrary-precision ``sc_fxnum``
+output must be distinct from both input owners: native named arithmetic deletes
+its output representation before reading input representations. Native
+conversion, allocation and arithmetic reports remain in effect.
 
 Shifts, streams and integer concatenation
 -----------------------------------------
@@ -193,6 +205,14 @@ operators mutate and return the same owner. Non-mutating expressions return
 independent native values, with native width rules. Complementing an arbitrary
 unsigned integer also preserves the native result-width rule, which can add one
 bit; the input's configured width is not forced onto the result.
+
+Native vector expressions also accept borrowed ``bool*`` and ``sc_logic*``
+arrays. Keep the array owner live and provide at least as many elements as the
+vector length. cppyy bool pointer views and logic pointer proxies select the
+corresponding native array overloads, including reflected operations. These
+overloads retain native unchecked pointer-length preconditions. Native
+``sc_proxy[OwnerType]`` expressions support arbitrary CRTP owners with valid
+``sc_proxy_traits`` and the native bit/word interface.
 
 Free ``b_and``, ``b_or``, ``b_xor`` and ``neg`` overloads support native scalar and
 fixed-point types, including mixed fast/arbitrary fixed-point operands and
