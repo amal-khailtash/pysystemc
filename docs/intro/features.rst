@@ -953,14 +953,14 @@ sc_dt public families
 * ☑ ``sc_dt::rrotate`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_dt::rshift`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_dt::sc_abs`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_dt::sc_bigint`` — 48 declarations; runtime: 48 untested; mapping: 48 partial.
-* ☐ ``sc_dt::sc_biguint`` — 48 declarations; runtime: 48 untested; mapping: 48 partial.
+* ☑ ``sc_dt::sc_bigint`` — 48 declarations; runtime: 48 supported; mapping: 48 reviewed.
+* ☑ ``sc_dt::sc_biguint`` — 48 declarations; runtime: 48 supported; mapping: 48 reviewed.
 * ☑ ``sc_dt::sc_bit`` — 42 declarations; runtime: 42 supported; mapping: 42 reviewed.
 * ☑ ``sc_dt::sc_bitref`` — 78 declarations; runtime: 78 supported; mapping: 78 reviewed.
 * ☑ ``sc_dt::sc_bitref_conv_r`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_dt::sc_bitref_r`` — 44 declarations; runtime: 44 supported; mapping: 44 reviewed.
-* ☐ ``sc_dt::sc_bv`` — 37 declarations; runtime: 37 untested; mapping: 37 partial.
-* ☐ ``sc_dt::sc_bv_base`` — 55 declarations; runtime: 55 untested; mapping: 55 partial.
+* ☑ ``sc_dt::sc_bv`` — 37 declarations; runtime: 37 supported; mapping: 37 reviewed.
+* ☑ ``sc_dt::sc_bv_base`` — 55 declarations; runtime: 55 supported; mapping: 55 reviewed.
 * ☐ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 untested; mapping: 57 partial, 2 reviewed.
 * ☑ ``sc_dt::sc_concref`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
 * ☑ ``sc_dt::sc_concref_r`` — 20 declarations; runtime: 20 supported; mapping: 20 reviewed.
@@ -994,7 +994,7 @@ sc_dt public families
 * ☑ ``sc_dt::sc_fxval_fast_observer`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
 * ☑ ``sc_dt::sc_fxval_observer`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
 * ☑ ``sc_dt::sc_generic_base`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
-* ☐ ``sc_dt::sc_int`` — 59 declarations; runtime: 59 untested; mapping: 59 partial.
+* ☑ ``sc_dt::sc_int`` — 59 declarations; runtime: 59 supported; mapping: 59 reviewed.
 * ☐ ``sc_dt::sc_int_base`` — 98 declarations; runtime: 98 untested; mapping: 98 partial.
 * ☑ ``sc_dt::sc_int_bitref`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_dt::sc_int_bitref_r`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
@@ -1010,8 +1010,8 @@ sc_dt public families
 * ☑ ``sc_dt::sc_logic_X`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_dt::sc_logic_Z`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_dt::sc_logic_value_t`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_dt::sc_lv`` — 38 declarations; runtime: 38 untested; mapping: 38 partial.
-* ☐ ``sc_dt::sc_lv_base`` — 54 declarations; runtime: 54 untested; mapping: 54 partial.
+* ☑ ``sc_dt::sc_lv`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
+* ☑ ``sc_dt::sc_lv_base`` — 54 declarations; runtime: 54 supported; mapping: 54 reviewed.
 * ☑ ``sc_dt::sc_max`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_dt::sc_min`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_dt::sc_numrep`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -1023,7 +1023,7 @@ sc_dt public families
 * ☑ ``sc_dt::sc_signed_bitref_r`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
 * ☑ ``sc_dt::sc_signed_subref`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
 * ☑ ``sc_dt::sc_signed_subref_r`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
-* ☐ ``sc_dt::sc_string_old`` — 48 declarations; runtime: 48 untested; mapping: 48 partial.
+* ☑ ``sc_dt::sc_string_old`` — 48 declarations; runtime: 48 supported; mapping: 48 reviewed.
 * ☑ ``sc_dt::sc_subref`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
 * ☑ ``sc_dt::sc_subref_r`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
 * ☑ ``sc_dt::sc_switch`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -1031,7 +1031,7 @@ sc_dt public families
 * ☐ ``sc_dt::sc_ufix_fast`` — 353 declarations; runtime: 353 untested; mapping: 353 partial.
 * ☐ ``sc_dt::sc_ufixed`` — 137 declarations; runtime: 137 untested; mapping: 137 partial.
 * ☐ ``sc_dt::sc_ufixed_fast`` — 137 declarations; runtime: 137 untested; mapping: 137 partial.
-* ☐ ``sc_dt::sc_uint`` — 59 declarations; runtime: 59 untested; mapping: 59 partial.
+* ☑ ``sc_dt::sc_uint`` — 59 declarations; runtime: 59 supported; mapping: 59 reviewed.
 * ☐ ``sc_dt::sc_uint_base`` — 98 declarations; runtime: 98 untested; mapping: 98 partial.
 * ☑ ``sc_dt::sc_uint_bitref`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_dt::sc_uint_bitref_r`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.

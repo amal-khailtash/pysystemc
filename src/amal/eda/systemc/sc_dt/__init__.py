@@ -18,6 +18,9 @@ cppyy.include(str(Path(__file__).with_name("adapters.h")))
 from . import _bit  # noqa: E402, F401
 from . import _operators  # noqa: E402, F401
 from . import _ranges  # noqa: E402, F401
+from . import _integers  # noqa: E402, F401
+from . import _vectors  # noqa: E402, F401
+from . import _strings  # noqa: E402, F401
 
 _native_remainder = getattr(_namespace.sc_signed, "__mod__", lambda self, other: NotImplemented)
 _native_left_shift = getattr(_namespace.sc_unsigned, "__lshift__", lambda self, other: NotImplemented)

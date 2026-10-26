@@ -77,14 +77,17 @@ Datatypes and tracing
      - Verified combinations
      - Limits
    * - sc_uint, sc_int
-     - Construction at 1/4/17/63/64 bits; mutation and typed ports at 1/4/17/64 unsigned and 4/17/64 signed
+     - Exact constructor/assignment overloads at 19/59/63/64 bits, fixed-point sources, compound arithmetic and prefix/postfix mutation; typed ports
      - Pass native objects to assignment to avoid ambiguous scalar overloads
    * - sc_biguint, sc_bigint
-     - Widths 65, 137, 257; exact string construction, bit/range mutation, overflow and typed ports; 137-bit comparison
-     - Large Python integers should use exact binary/decimal strings
+     - Exact constructor/assignment overloads at 48/137/191/257 bits, generic and fixed-point sources, Python integer precision, independent copies and native reports
+     - Template constructors preserve exact Python integers before native width wrapping
    * - sc_bv, sc_lv
-     - 137-bit vectors, 17-bit four-state vectors and native signals
-     - Full-width vector strings avoid implicit extension assumptions
+     - Constructor/assignment overloads, cross-state proxies, numeric sources, storage hooks and independent copies at 37/38/137/191/257 bits
+     - Native X/Z reports and extension rules; legacy base numeric constructors preserve source width
+   * - sc_string_old
+     - Copy-on-write, formatting, character mutation, substring operations, concatenation and native streams
+     - Native printf type/format preconditions; borrowed character storage requires a live owner
    * - sc_fixed, sc_fixed_fast
      - 8/4 truncation, saturation/wrap, 73/19 construction and 16/8 arithmetic
      - Complete quantization/overflow policy matrix untested

@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support integer-template constructor, assignment and bounded arithmetic families, binary/four-state vector owner families and legacy string operations.
 - Support integer, fixed-point and vector range-reference families, native concatenation views and binary/four-state vector bit proxies.
 - Support integer and fixed-point bit-reference families, vector rotations/reversals/shifts/reductions/equality, and free scalar/fixed-point bitwise and negation overloads.
 - Support native scalar bit/logic, datatype policy and formatting constants, parameter contexts, fixed-point observer callbacks and generic value-source bases.
@@ -41,6 +42,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve exact Python integer construction, native vector proxy conversions and legacy string formatting and character mutation.
 - Preserve mutable fixed-point range and call operators, native slice-to-vector conversion and deprecated view conversion/width aliases.
 - Preserve exact generic-source integer slice assignment and vector bit-proxy scalar and truth conversion.
 - Preserve native four-state vector binary and compound operators, owned integer complements, and integer bit-reference truth conversion.

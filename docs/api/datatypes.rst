@@ -4,9 +4,38 @@ Native datatypes and contexts
 ``sc_dt`` exposes native SystemC datatype templates and policy enums. Template
 arguments are resolved on demand. Widths used in examples are test cases, not a
 registry of supported widths; the native datatype's own limits still apply.
-For Python integers beyond native scalar ranges, use an exact string constructor
-or native arithmetic to build large values. cppyy can otherwise select a
-floating-point constructor and lose lower bits.
+The ``sc_int``, ``sc_uint``, ``sc_bigint`` and ``sc_biguint`` template constructors
+accept exact Python integers, preserving all bits before native width and sign
+conversion. Explicit native scalar arguments retain their declared overloads.
+Other numeric classes may require exact strings for values beyond native scalar
+ranges.
+
+Integer and vector owners
+-------------------------
+
+Integer templates copy native number, range, generic and fixed-point sources
+into independently owned storage. Bounded integers retain their native 64-bit
+width limit. Arbitrary-width integer templates instantiate on demand. Native
+conversion reports, overflow and fixed-point rounding rules remain in effect.
+
+``sc_bv`` and ``sc_lv`` constructors and assignments select exact native source
+types for vector proxies and numeric values. Base vectors accept legacy numeric
+constructor forms using the native source length and assignment implementation
+when those declarations are disabled by the native build. Binary conversion of
+X/Z values preserves native reports. Copying a vector owns independent storage;
+a range or bit view continues to borrow its live parent.
+
+Legacy strings
+--------------
+
+``sc_string_old`` retains native copy-on-write storage, substring operations and
+character mutation through ``text[index] = character``. Mutable indexing is
+unchecked; callers must supply valid native positions. ``to_string(format, *args)``
+and ``fmt(value)`` call the native printf-style formatter. Python ``int`` arguments
+use C++ ``int``, ``float`` uses ``double``, and ``str`` supplies null-terminated
+bytes; use explicit cppyy scalar types for other format specifiers. The format
+must match the argument types, as required by native printf. Formatted results
+and concatenations own their storage; ``fmt`` mutates and returns its owner.
 
 Scalar bits and logic
 ----------------------
