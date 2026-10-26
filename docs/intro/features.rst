@@ -916,7 +916,7 @@ sc_dt public families
 * ☑ ``sc_dt::b_not`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_dt::b_or`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
 * ☑ ``sc_dt::b_xor`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
-* ☐ ``sc_dt::concat`` — 170 declarations; runtime: 170 untested; mapping: 170 partial.
+* ☑ ``sc_dt::concat`` — 170 declarations; runtime: 170 supported; mapping: 170 reviewed.
 * ☑ ``sc_dt::div`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
 * ☑ ``sc_dt::equal`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_dt::int64`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -933,7 +933,7 @@ sc_dt public families
 * ☑ ``sc_dt::operator&=`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_dt::operator*`` — 191 declarations; runtime: 191 supported; mapping: 191 reviewed.
 * ☑ ``sc_dt::operator+`` — 194 declarations; runtime: 194 supported; mapping: 194 reviewed.
-* ☐ ``sc_dt::operator,`` — 170 declarations; runtime: 170 untested; mapping: 170 partial.
+* ☑ ``sc_dt::operator,`` — 170 declarations; runtime: 170 supported; mapping: 170 reviewed.
 * ☑ ``sc_dt::operator-`` — 203 declarations; runtime: 203 supported; mapping: 203 reviewed.
 * ☑ ``sc_dt::operator/`` — 191 declarations; runtime: 191 supported; mapping: 191 reviewed.
 * ☑ ``sc_dt::operator<`` — 185 declarations; runtime: 185 supported; mapping: 185 reviewed.

@@ -247,3 +247,15 @@ to borrow its parent. Use vector value construction for an independent snapshot.
 Subreference template arguments require native ``sc_proxy_traits`` support:
 normal ``sc_bv``/``sc_lv`` range selection uses ``sc_bv_base``/``sc_lv_base``
 parents, including vectors of arbitrary width.
+
+``sc_dt.concat(left, right)`` also concatenates binary/four-state vectors, bits,
+ranges and nested vector views. Mutable operands produce writable views when
+the native overload allows it; scalar and read-only operands produce read-only
+views. Python strings are copied into native vector storage and preserve X/Z
+states. Boolean/vector-bit forms select the defined native binary-vector result.
+Parent vectors remain borrowed even when the result owns cloned proxy shells.
+
+Use ``sc_dt.concat[NativeTypes...](left, right)`` for explicit native template
+arguments or ``sc_dt.concat.__overload__(signature)(left, right)`` when selecting
+a particular const-qualified overload. Python comma expressions create tuples;
+use ``sc_dt.concat`` for the corresponding native concatenation behavior.

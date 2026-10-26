@@ -62,7 +62,18 @@ def _adapt(native_type, fast=False):
     )
 
 
-sc_fxnum = cppyy.gbl.pysystemc_datatypes.FxnumOwner
-sc_fxnum_fast = cppyy.gbl.pysystemc_datatypes.FxnumFastOwner
-_adapt(sc_fxnum)
-_adapt(sc_fxnum_fast, fast=True)
+def install():
+    """Create owning facades after native fixed-point views are configured.
+
+    Returns:
+        The owning native ``sc_fxnum`` and ``sc_fxnum_fast`` facade classes.
+    Call once during package initialization, after configuring native base bit
+    and range access. The classes borrow observers through owner destruction;
+    no instances or callbacks are retained by installation. Calls hold the GIL;
+    native declaration and adapter errors propagate.
+    """
+    sc_fxnum = cppyy.gbl.pysystemc_datatypes.FxnumOwner
+    sc_fxnum_fast = cppyy.gbl.pysystemc_datatypes.FxnumFastOwner
+    _adapt(sc_fxnum)
+    _adapt(sc_fxnum_fast, fast=True)
+    return sc_fxnum, sc_fxnum_fast

@@ -4,27 +4,31 @@ Templates are instantiated by cppyy on demand. Fixed-point quantization and
 overflow policies are the native sc_dt enums, not Python substitutes.
 """
 
-from pathlib import Path
-
 import cppyy
+
 from .._namespace import (
     public_names as _public_names,
     document_member as _document_member,
     namespace_help as _namespace_help,
 )
 
-_namespace = cppyy.gbl.sc_dt
-cppyy.include(str(Path(__file__).with_name("adapters.h")))
-from . import _bit  # noqa: E402, F401
-from . import _operators  # noqa: E402, F401
-from . import _ranges  # noqa: E402, F401
-from . import _integers  # noqa: E402, F401
-from . import _integer_owners  # noqa: E402, F401
-from . import _vectors  # noqa: E402, F401
-from . import _strings  # noqa: E402, F401
-from . import _streams  # noqa: E402, F401
+from . import _native_setup  # noqa: F401
+from . import _bit  # noqa: F401
+from . import _operators  # noqa: F401
+from . import _ranges  # noqa: F401
+from . import _integers  # noqa: F401
+from . import _integer_owners  # noqa: F401
+from . import _vectors  # noqa: F401
+from . import _strings  # noqa: F401
+from . import _streams  # noqa: F401
+from . import _concat
+from . import _shifts  # noqa: F401
+from . import _numeric_operators
+from . import _fixed_constructors  # noqa: F401
+from . import _fxnum_owners
 
-_native_remainder = getattr(_namespace.sc_signed, "__mod__", lambda self, other: NotImplemented)
+_namespace = cppyy.gbl.sc_dt
+concat = _concat.concat
 sc_context = cppyy.gbl.pysystemc_datatypes.context_owner
 sc_fxtype_context = sc_context[_namespace.sc_fxtype_params]
 sc_fxcast_context = sc_context[_namespace.sc_fxcast_switch]
@@ -128,18 +132,7 @@ for _number_type in (_namespace.sc_fxnum, _namespace.sc_fxnum_fast):
         _fixed_range_member(_number_type, _range_name)
 
 
-def _signed_remainder(self, other):
-    """Return native signed remainder, preserving sign, widths and report errors."""
-    if not isinstance(other, _namespace.sc_signed):
-        return _native_remainder(self, other)
-    return cppyy.gbl.pysystemc_datatypes.remainder(self, other)
-
-
-_namespace.sc_signed.__mod__ = _signed_remainder
-from . import _shifts  # noqa: E402, F401
-from . import _numeric_operators  # noqa: E402, F401
-from . import _fixed_constructors  # noqa: E402, F401
-from ._fxnum_owners import sc_fxnum, sc_fxnum_fast  # noqa: E402, F401
+sc_fxnum, sc_fxnum_fast = _fxnum_owners.install()
 
 for _function_name in ("add", "sub", "mult", "div"):
     globals()[_function_name] = _numeric_operators.named_function(_function_name)
