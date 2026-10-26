@@ -44,9 +44,12 @@ Kernel and modeling
    * - Signal writer policies
      - One/many/unchecked template arguments, same-delta conflicts and later-delta ownership
      - Suppressed native reports accept writes and transfer ownership
+   * - Required port binding
+     - SC_ALL_BOUND bounded full/under/zero and unlimited one/zero binding counts
+     - Native elaboration report 109, interface values and binding counts
    * - sc_vector, sc_attribute
-     - Signal indexing, generated names, values, native member assemblies and attribute add/remove ownership
-     - Retain vector elements and attributes for native use
+     - Signal indexing, generated names, values, native member assemblies, range termination and attribute add/remove ownership
+     - Retain vector elements and attributes; range binding stops at either end and returns the next destination iterator
    * - sc_export
      - Hierarchical interface forwarding
      - Upstream native comparison; use get_interface explicitly

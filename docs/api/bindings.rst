@@ -304,6 +304,11 @@ respect their binding policy and keep bound interfaces and parent ports alive.
 Protected constructors, sensitivity helpers and lifecycle hooks require native
 derived access and preserve native report behavior.
 
+``sc_port[Interface, N, SC_ALL_BOUND]`` requires all ``N`` slots to be bound
+before elaboration completes. With ``N=0``, the native unlimited port still
+requires at least one binding. Missing bindings produce native report 109
+(``complete binding failed``); ignoring that report does not supply an interface.
+
 ``sc_vpool[Type]`` allocates native temporary-array slots, wraps at its capacity
 and resets the allocation index without destroying values. Its native destructor
 does not free default-allocated storage. An external array must contain live
@@ -714,6 +719,14 @@ also remain accepted. Assemblies retain their known Python vector owner across
 copy construction, assignment, self-assignment and swap. Views created entirely
 in native code remain borrowed unless a Python owner is attached. Keep bound
 channels alive through port destruction, and retain owners while using iterators.
+
+Assembly ``bind(first, last, destination)`` and ``assembly(first, last, destination)``
+consume the source range starting at the supplied destination iterator. Binding
+stops when either range ends and returns the next destination iterator. A short
+source leaves the remaining destinations unbound; a short destination leaves
+unused source entries untouched. Source subranges and nonzero destination
+positions preserve these rules. Bind any required remaining ports before
+elaboration; the range operation does not relax their binding policy.
 
 ``sc_member_access[Element, Member]("member")`` creates a native access policy;
 policy copies and mutable-to-const conversions preserve native type rules.

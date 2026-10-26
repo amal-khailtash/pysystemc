@@ -141,7 +141,7 @@ Datatypes and tracing
 * ☑ Selected scalar, vector, resolved, fixed-point, time and event tracing.
 * ☑ Selected WIF tracing and explicit timescale configuration.
 * ☑ Deterministic trace closure, including Python exception paths.
-* ☐ Complete datatype/proxy/concat/implicit-conversion and overload matrices.
+* ☑ Source-inventoried datatype/proxy/concat/implicit-conversion and overload matrices on the audited baseline.
 * ☐ Complete fixed-point quantization/overflow and tracing type/format matrices.
 
 Native datatype validity rules apply: sc_int/sc_uint are limited to 64 bits;

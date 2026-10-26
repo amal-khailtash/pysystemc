@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Document required port binding counts and vector assembly range termination, backed by native/Python parity checks.
 - Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
 
 ### Added
