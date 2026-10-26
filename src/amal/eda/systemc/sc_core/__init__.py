@@ -7,14 +7,14 @@ exception values; targets must catch them before returning to the kernel.
 """
 
 import atexit
-from collections.abc import Callable
-from typing import Any
-from enum import Enum
+import ctypes
 import pathlib
 import sys
+from collections.abc import Callable
+from enum import Enum
+from typing import Any
 
 # The parent package selects the JIT C++ standard before importing cppyy.
-
 import cppyy
 
 from .._logging import log
@@ -33,46 +33,46 @@ from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
 from . import _tracing
 
-# Compile first-party bridges before publishing native aliases or configuring
-# their methods. The parent package has already loaded SystemC and selected C++17.
-from ._hashes import install as _install_hashes
-
-_install_hashes()
-
-SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-for _bridge in (
-    "sc_main.cpp",
-    "native_entry.cpp",
-    "sc_module.cpp",
-    "interface_teardown.cpp",
-    "hash_helpers.cpp",
-    "report_legacy.cpp",
-    "report_handler.cpp",
-    "event_lists.cpp",
-    "event_finders.cpp",
-    "trace_printf.cpp",
-    "trace_values.cpp",
-    "signal_values.cpp",
-    "time_operations.cpp",
-    "byte_heap.cpp",
-    "process_utilities.cpp",
-    "event_expressions.cpp",
-    "pvector_access.cpp",
-):
-    with (SCRIPT_PATH / _bridge).open() as _source:
-        cppyy.cppdef(_source.read())
-
+# Compile bridges before importing adapters that reflect their native types.
+from . import _native_setup  # noqa: F401
 from ._trace_values import install as _install_trace_values
-
-_install_trace_values()
-sc_trace_value = cppyy.gbl.pysystemc_tracing.trace_value
-
-from ._signal_values import sc_signal_value as sc_signal_value, sc_port_value as sc_port_value
-
+from ._signal_values import sc_signal_value as _python_sc_signal_value, sc_port_value as _python_sc_port_value
 from ._event_finders import (
     EventFinderTemplate as _EventFinderTemplate,
     CachedFinderCreator as _CachedFinderCreator,
 )
+from ._event_expressions import install as _install_event_expressions
+from ._clock import install as _install_clock
+from ._vectors import install as _install_vectors, assemble_vector as _assemble_vector
+from ._vector_policies import install as _install_vector_policies, MemberAccessTemplate as _MemberAccessTemplate
+from ._pvector import install as _install_pvector
+from ._list_handles import install as _install_list_handles
+from ._fifo import FifoTemplate as _FifoTemplate
+from ._exports import ExportTemplate as _ExportTemplate
+from ._streams import install_fifo_streams as _install_fifo_streams
+from ._blocking import guard_native_channels as _guard_native_channels
+from ._blocking import ScopedLock as _ScopedLock
+from ._time import install as _install_time
+from ._byte_heap import allocate as _byte_heap_allocate
+from ._trace_printf import tprintf as _python_tprintf
+from ._scheduler import (
+    sc_start as _python_sc_start,
+    at_posedge as _python_at_posedge,
+    at_negedge as _python_at_negedge,
+    timed_out as _python_timed_out,
+)
+from ._references import sc_ref as _python_sc_ref, sc_cref as _python_sc_cref
+from ._kernel_flags import install as _install_kernel_flags
+from ._member_scheduler import install as _install_member_scheduler
+
+SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
+
+_install_trace_values()
+sc_trace_value = cppyy.gbl.pysystemc_tracing.trace_value
+
+sc_signal_value = _python_sc_signal_value
+sc_port_value = _python_sc_port_value
+
 
 sc_event_finder_t = _EventFinderTemplate()
 sc_event_finder_cache = cppyy.gbl.pysystemc_public.event_finder_cache
@@ -108,24 +108,14 @@ def _event_list_constructor(list_type):
 for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
     _event_list_constructor(_event_list_type)
 
-from ._event_expressions import install as _install_event_expressions
 
 _install_event_expressions()
 
-from ._clock import install as _install_clock
-
-cppyy.include(str(pathlib.Path(__file__).with_name("vector_creator.cpp")))
-from ._vectors import install as _install_vectors, assemble_vector as _assemble_vector
 
 _install_vectors()
-cppyy.include(str(pathlib.Path(__file__).with_name("vector_policies.cpp")))
-from ._vector_policies import install as _install_vector_policies, MemberAccessTemplate as _MemberAccessTemplate
 
 _install_vector_policies()
 
-
-from ._pvector import install as _install_pvector
-from ._list_handles import install as _install_list_handles
 
 _install_clock()
 _install_pvector()
@@ -212,12 +202,9 @@ sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
 signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
-from ._fifo import FifoTemplate as _FifoTemplate
 
 fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
-from ._exports import ExportTemplate as _ExportTemplate
 
-from ._streams import install_fifo_streams as _install_fifo_streams
 
 _install_fifo_streams()
 sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
@@ -227,10 +214,8 @@ sc_fifo_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in_if)
 sc_fifo_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out_if)
 sc_fifo_blocking_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_in_if)
 sc_fifo_blocking_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_out_if)
-from ._blocking import guard_native_channels as _guard_native_channels
 
 _guard_native_channels()
-from ._blocking import ScopedLock as _ScopedLock
 
 sc_scoped_lock = _ScopedLock
 
@@ -641,7 +626,6 @@ def _time_modulo(self: Any, other: Any) -> Any:
 
 cppyy.gbl.sc_core.sc_time.__mod__ = _time_modulo
 
-from ._time import install as _install_time
 
 _install_time(cppyy.gbl.sc_core.sc_time)
 
@@ -904,8 +888,6 @@ def sc_spawn(callback: Any, *args: Any, name: str = "", options: Any = None) -> 
     else:
         result_type = getattr(type(result), "__cpp_name__", None)
         if result_type is None:
-            import ctypes
-
             if not isinstance(result, ctypes._SimpleCData):
                 raise TypeError("sc_spawn result must be a native C++ value or ctypes scalar")
             result_type = {
@@ -1111,7 +1093,6 @@ def _time_left_multiply(time, factor):
 
 cppyy.gbl.sc_core.sc_time.__rmul__ = _time_left_multiply
 
-from ._byte_heap import allocate as _byte_heap_allocate
 
 cppyy.gbl.sc_core.sc_byte_heap.allocate = _byte_heap_allocate
 
@@ -1180,13 +1161,17 @@ def sc_set_stack_size(thread_h, size):
     return operation(thread_h, size)
 
 
-from ._trace_printf import tprintf as tprintf
+tprintf = _python_tprintf
 
-from ._scheduler import sc_start as sc_start, at_posedge as at_posedge, at_negedge as at_negedge, timed_out as timed_out
+sc_start = _python_sc_start
+at_posedge = _python_at_posedge
+at_negedge = _python_at_negedge
+timed_out = _python_timed_out
 
 # Publish native classes/enums and Python adapters for wildcard imports.
 
-from ._references import sc_ref as sc_ref, sc_cref as sc_cref
+sc_ref = _python_sc_ref
+sc_cref = _python_sc_cref
 
 sc_assemble_vector = _assemble_vector
 sc_member_access = _MemberAccessTemplate()
@@ -1223,10 +1208,8 @@ __all__ = sorted(
 
 __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
 
-from ._kernel_flags import install as _install_kernel_flags
 
 _install_kernel_flags(sys.modules[__name__])
 
-from ._member_scheduler import install as _install_member_scheduler
 
 _install_member_scheduler(sc_module, sc_prim_channel, _ProcessUnwind)

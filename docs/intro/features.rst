@@ -294,7 +294,7 @@ See :doc:`../api/tlm_values`, :doc:`../api/tlm_extensions` and
 F. Core semantics and final gates — incomplete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
+* ☑ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
 * ☐ **F2** — Full writer/port/fixed-point policy audit.
 * ☐ **F3** — Full tracing type/format and vector assembly audit.
 * ☐ **F4** — Full report/process-control/lifecycle error audit.
@@ -304,13 +304,17 @@ F. Core semantics and final gates — incomplete
 * ☐ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
 * ☐ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
 
-Implemented and tested: Core modeling, selected guarded process control and API guides are
-implemented. Release 0.10.0 passed 156 tests, wheel/sdist build and installed
-runtime/pthread/console checks; later multi groups passed targeted checks.
+Implemented and tested: The source-derived datatype audit covers integer,
+fixed-point, bit/logic, vector and proxy families, implicit conversions and
+exact native overload selection. Arithmetic, comparison, concatenation and
+comma-operator matrices compare Python results with native C++ on the selected
+Linux/Python 3.14/pthread baseline. Native type, ownership and configuration
+preconditions apply to custom specializations.
 
-Still required: Release validation does not close the final M6A gate. Full source-derived
-datatype/policy/tracing/vector/report/process/lifetime audits and final reconciled coverage/artifact
-validation remain required.
+The remaining final gates cover policy, tracing/vector, report/process and
+lifetime audits, complete regression coverage, adapter review and installed
+wheel/sdist validation. Declaration inventory completion does not close these
+gates.
 
 Examples and C++ interoperability
 ---------------------------------

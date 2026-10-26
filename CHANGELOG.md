@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Changed
+- Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
+
 ### Added
 - Support complete native vector concatenation and comma-operator families through `sc_dt.concat`, including mutable/read-only views, explicit template and const-qualified selectors, Python strings and boolean bit operands.
 - Support complete native unary/binary arithmetic and comparison overloads with typed scalar signedness, arbitrary-width results, fixed-point precision and four-state equality.
