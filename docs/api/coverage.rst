@@ -64,6 +64,18 @@ Datatypes and tracing
    :header-rows: 1
    :widths: 25 45 30
 
+   * - API
+     - Verified combinations
+     - Limits
+   * - Integer concatenation references
+     - Exact member overloads, wide packing/scatter, X/Z controls, overlap, conversions, reductions and pooled-shell lifetimes
+     - Operands remain borrowed; copy numeric snapshots before shell or temporary storage reuse
+   * - Native shifts
+     - Typed integer/count and fixed-point overloads, native result widths/signs and independently owned results
+     - Native shift-count conversion and preconditions apply
+   * - Datatype streams
+     - Insertion and mutable extraction, policy enums, numeric/bit/range/concat proxies, formatting flags, stream identity and exceptions
+     - Keep streams and target parents live; native input validity and exception masks apply
    * - Range and concatenation references
      - Native integer/fixed/vector slices, nested concatenation views, exact source assignment, conversions, copies and pooled-shell behavior
      - Wide native parity, reversed-range rules, retained fixed parents and owned vector conversion snapshots; native proxy traits required
@@ -73,9 +85,6 @@ Datatypes and tracing
    * - Free vector and numeric operations
      - Rotations/reversals/shifts, reductions/equality, scalar/fixed bitwise/negation, normal/reflected vector expressions and compounds
      - Four-state native parity, owned result lifetime, native result widths and fast fixed-point precision
-   * - API
-     - Verified combinations
-     - Limits
    * - sc_uint, sc_int
      - Exact constructor/assignment overloads at 19/59/63/64 bits, fixed-point sources, compound arithmetic and prefix/postfix mutation; typed ports
      - Pass native objects to assignment to avoid ambiguous scalar overloads

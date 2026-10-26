@@ -87,7 +87,7 @@ def _legacy_bitwidth(view):
     """Return native view length through the deprecated bitwidth alias.
 
     Args:
-        view: Integer bit or range reference borrowing a live parent.
+        view: Integer bit, range or concatenation reference borrowing live parents.
     Returns:
         int: Native ``length()`` result, identical to native ``bitwidth()``.
     Raises:
@@ -97,7 +97,7 @@ def _legacy_bitwidth(view):
     return view.length()
 
 
-for _name in ("sc_int_bitref_r", "sc_uint_bitref_r", "sc_int_subref_r", "sc_uint_subref_r"):
+for _name in ("sc_int_bitref_r", "sc_uint_bitref_r", "sc_int_subref_r", "sc_uint_subref_r", "sc_concatref"):
     _type = getattr(cppyy.gbl.sc_dt, _name)
     if not hasattr(_type, "bitwidth"):
         _type.bitwidth = _legacy_bitwidth

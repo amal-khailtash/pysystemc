@@ -937,12 +937,12 @@ sc_dt public families
 * ☐ ``sc_dt::operator-`` — 203 declarations; runtime: 203 untested; mapping: 203 partial.
 * ☐ ``sc_dt::operator/`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
 * ☐ ``sc_dt::operator<`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator<<`` — 67 declarations; runtime: 1 supported, 66 untested; mapping: 66 partial, 1 reviewed.
+* ☑ ``sc_dt::operator<<`` — 67 declarations; runtime: 67 supported; mapping: 67 reviewed.
 * ☐ ``sc_dt::operator<=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
 * ☐ ``sc_dt::operator==`` — 268 declarations; runtime: 268 untested; mapping: 268 partial.
 * ☐ ``sc_dt::operator>`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
 * ☐ ``sc_dt::operator>=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator>>`` — 68 declarations; runtime: 1 supported, 67 untested; mapping: 67 partial, 1 reviewed.
+* ☑ ``sc_dt::operator>>`` — 68 declarations; runtime: 68 supported; mapping: 68 reviewed.
 * ☐ ``sc_dt::operator^`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
 * ☑ ``sc_dt::operator^=`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☐ ``sc_dt::operator|`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
@@ -961,7 +961,7 @@ sc_dt public families
 * ☑ ``sc_dt::sc_bitref_r`` — 44 declarations; runtime: 44 supported; mapping: 44 reviewed.
 * ☑ ``sc_dt::sc_bv`` — 37 declarations; runtime: 37 supported; mapping: 37 reviewed.
 * ☑ ``sc_dt::sc_bv_base`` — 55 declarations; runtime: 55 supported; mapping: 55 reviewed.
-* ☐ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 untested; mapping: 57 partial, 2 reviewed.
+* ☑ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 supported; mapping: 59 reviewed.
 * ☑ ``sc_dt::sc_concref`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
 * ☑ ``sc_dt::sc_concref_r`` — 20 declarations; runtime: 20 supported; mapping: 20 reviewed.
 * ☑ ``sc_dt::sc_context`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.

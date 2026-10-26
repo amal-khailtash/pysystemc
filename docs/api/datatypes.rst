@@ -25,6 +25,36 @@ when those declarations are disabled by the native build. Binary conversion of
 X/Z values preserves native reports. Copying a vector owns independent storage;
 a range or bit view continues to borrow its live parent.
 
+Shifts, streams and integer concatenation
+-----------------------------------------
+
+Native arbitrary-width integers, fixed-point values and integer concatenation
+views support ``value << count`` and ``value >> count``. Count datatypes preserve
+their native conversion rules; an ordinary Python integer uses C++ ``int``.
+Results own independent storage and retain native result widths and signedness.
+Native count preconditions and error reports apply, including the distinct
+integer and fixed-point behavior for negative counts.
+
+Character streams insert native datatype values with ``stream << value`` and
+extract into mutable values or views with ``stream >> target``. Both operations
+return the original Python stream for chaining. Native formatting flags,
+conversion reports, EOF/failure state and exception masks remain in effect.
+Keep each stream and target owner live; extraction through a view also requires
+its parent. These synchronous operations hold the GIL. cppyy can expose native
+I/O failures through the ``std::exception`` base with its generic diagnostic;
+stream failure state and exception masks still follow native behavior.
+
+``sc_dt.concat(left, right)`` selects a native ``sc_concatref`` for integer
+operands. The shell borrows its operands and comes from the native concatenation
+pool. Keep operands live throughout use. Pool reuse can retarget a
+retained shell. ``value()`` and implicit unsigned-reference conversion additionally
+borrow reusable unsigned shells and temporary numeric storage; copy the value
+immediately when an independent snapshot is needed. Unary ``+``, ``-`` and ``~``
+produce independent native values. Explicit scalar conversions follow native
+width rules, including the low 64 bits for implicit integer conversion. The
+legacy ``bitwidth()`` name delegates to native ``length()`` when disabled by the
+native deprecated-API setting.
+
 Legacy strings
 --------------
 

@@ -21,10 +21,9 @@ from . import _ranges  # noqa: E402, F401
 from . import _integers  # noqa: E402, F401
 from . import _vectors  # noqa: E402, F401
 from . import _strings  # noqa: E402, F401
+from . import _streams  # noqa: E402, F401
 
 _native_remainder = getattr(_namespace.sc_signed, "__mod__", lambda self, other: NotImplemented)
-_native_left_shift = getattr(_namespace.sc_unsigned, "__lshift__", lambda self, other: NotImplemented)
-_native_right_shift = getattr(_namespace.sc_unsigned, "__rshift__", lambda self, other: NotImplemented)
 sc_context = cppyy.gbl.pysystemc_datatypes.context_owner
 sc_fxtype_context = sc_context[_namespace.sc_fxtype_params]
 sc_fxcast_context = sc_context[_namespace.sc_fxcast_switch]
@@ -135,23 +134,9 @@ def _signed_remainder(self, other):
     return cppyy.gbl.pysystemc_datatypes.remainder(self, other)
 
 
-def _unsigned_left_shift(self, count):
-    """Return independent native unsigned storage shifted by an int count."""
-    if not isinstance(count, int):
-        return _native_left_shift(self, count)
-    return cppyy.gbl.pysystemc_datatypes.left_shift(self, count)
-
-
-def _unsigned_right_shift(self, count):
-    """Return independent native unsigned storage using native right-shift widths."""
-    if not isinstance(count, int):
-        return _native_right_shift(self, count)
-    return cppyy.gbl.pysystemc_datatypes.right_shift(self, count)
-
-
 _namespace.sc_signed.__mod__ = _signed_remainder
-_namespace.sc_unsigned.__lshift__ = _unsigned_left_shift
-_namespace.sc_unsigned.__rshift__ = _unsigned_right_shift
+from . import _shifts  # noqa: E402, F401
+
 __all__ = _public_names(_namespace)
 
 
