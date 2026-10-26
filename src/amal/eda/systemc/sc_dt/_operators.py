@@ -20,6 +20,25 @@ def _native_argument_type(value):
     raise TypeError("Expected a native datatype or a bool, int or bit string")
 
 
+def _vector_argument_type(value):
+    """Resolve native vector operands, including borrowed pointer arrays.
+
+    cppyy represents a logic pointer as a logic proxy and a bool pointer as a
+    LowLevelView. Native vector overloads consume these as arrays; callers must
+    retain storage with at least the vector's native length. No bounds or
+    lifetime validation is added. Scalar logic expressions use their own path.
+    """
+    if isinstance(value, cppyy.gbl.sc_dt.sc_logic):
+        return "const sc_dt::sc_logic*"
+    if (
+        type(value).__module__ == "cppyy"
+        and type(value).__name__ == "LowLevelView"
+        and value.typecode == "?"
+    ):
+        return "const bool*"
+    return _native_argument_type(value)
+
+
 def _complement(native_type):
     """Install owned native complement results on a concrete scalar type."""
     operation = cppyy.gbl.pysystemc_datatypes.unary_operator[native_type].invert
@@ -60,7 +79,7 @@ def _vector_operator(native_method, reverse=False, inplace=False):
         """
         left, right = (other, owner) if reverse else (owner, other)
         operation = cppyy.gbl.pysystemc_datatypes.binary_operator[
-            _native_argument_type(left), _native_argument_type(right)
+            _vector_argument_type(left), _vector_argument_type(right)
         ]
         result = getattr(operation, native_method)(left, right)
         return owner if inplace else result

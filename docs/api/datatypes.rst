@@ -18,12 +18,50 @@ into independently owned storage. Bounded integers retain their native 64-bit
 width limit. Arbitrary-width integer templates instantiate on demand. Native
 conversion reports, overflow and fixed-point rounding rules remain in effect.
 
+``sc_int_base`` and ``sc_uint_base`` use native width constructors; a scalar
+constructor argument specifies width rather than an initial numeric value.
+``sc_signed`` and ``sc_unsigned`` also retain native dynamic-width construction.
+Assignment from an ordinary Python integer uses exact decimal conversion before
+native truncation. Deprecated ``to_signed()`` and ``to_unsigned()`` names retain
+their native ``to_int()`` and ``to_uint()`` alias behavior.
+
 ``sc_bv`` and ``sc_lv`` constructors and assignments select exact native source
 types for vector proxies and numeric values. Base vectors accept legacy numeric
 constructor forms using the native source length and assignment implementation
 when those declarations are disabled by the native build. Binary conversion of
 X/Z values preserves native reports. Copying a vector owns independent storage;
 a range or bit view continues to borrow its live parent.
+
+Fixed-point numeric owners
+--------------------------
+
+``sc_fxval`` and ``sc_fxval_fast`` retain native arbitrary and double precision.
+``sc_fixed``, ``sc_ufixed`` and their fast variants instantiate native width,
+integer-width, quantization and overflow template parameters on demand. Typed
+construction, assignment and arithmetic preserve the declared scalar source
+type. Arithmetic results own independent storage; compound operations mutate
+and return the original owner. Exact native ``__overload__`` selectors remain
+available on both classes and bound methods.
+
+``sc_fix``, ``sc_ufix`` and their fast variants configure those parameters at
+construction. Native parameter-only forms and source-plus-parameter forms
+remain distinct, including width/integer-width, quantization/overflow, overflow
+bit count, ``sc_fxtype_params`` and cast switches. Observers are borrowed;
+construction initializes the owner's storage directly and preserves observer
+identity. Numeric Python integers beyond C++ ``int`` select signed or unsigned
+64-bit arithmetic overloads; explicit native scalar types select their own
+overloads. Integer assignment and fixed-point construction can also use exact
+decimal strings for larger values before native conversion.
+
+``sc_dt.sc_fxnum`` and ``sc_dt.sc_fxnum_fast`` expose owning native derived
+facades because native base construction is protected. Construct with an optional
+source followed by ``sc_fxtype_params``, ``sc_enc``, ``sc_fxcast_switch`` and an
+optional observer pointer. The facade is a native base instance and stores its
+value independently. The native private default and copy constructors remain
+unavailable; use the source-plus-parameters constructor to copy a value.
+Observers are borrowed and must remain live through number destruction.
+``type_params()`` and ``cast_switch()`` return borrowed references to owner
+storage. Native precision, reports and observer build settings apply.
 
 Shifts, streams and integer concatenation
 -----------------------------------------

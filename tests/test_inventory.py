@@ -64,6 +64,13 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     context_allocators = named("sc_dt::sc_context::operator new")
     assert context_allocators
     assert all(row["access"] == "private" and row["classification"] == "internal" for row in context_allocators)
+    for type_name in ("sc_dt::sc_fxnum", "sc_dt::sc_fxnum_fast"):
+        disabled = [
+            row for row in named(type_name + "::" + type_name.rsplit("::", 1)[-1]) if row["access"] == "private"
+        ]
+        assert len(disabled) == 2
+        assert {row["signature"] for row in disabled} == {"void ()", f"void (const {type_name} &)"}
+        assert all(row["classification"] == "internal" for row in disabled)
     assert named("sc_core::sc_time::from_value")[0]["static"] is True
     assert named("sc_core::sc_time::value")[0]["static"] is False
     assert any(entry["kind"] == "ClassTemplateSpecializationDecl" for entry in entries)

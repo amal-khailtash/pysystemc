@@ -49,34 +49,41 @@ cppyy.py.add_pythonization(_vector_pythonization, "sc_dt")
 
 
 def _legacy_signed(view):
-    """Return native signed range conversion using the deprecated alias name.
+    """Return native signed conversion using the deprecated alias name.
 
     Args:
-        view: Native fixed-point range borrowing a live parent number.
+        view: Native integer owner or fixed-point range borrowing a live parent.
     Returns:
         int: Native ``to_int()`` result, identical to native ``to_signed()``.
     Raises:
         Native exception: A configured report throws.
-    The view borrows its live parent. Calls hold the GIL and never suspend.
+    Keep the owner or the view and its parent live. Calls hold the GIL and
+    never suspend or retain additional references.
     """
     return view.to_int()
 
 
 def _legacy_unsigned(view):
-    """Return native unsigned range conversion using the deprecated alias name.
+    """Return native unsigned conversion using the deprecated alias name.
 
     Args:
-        view: Native fixed-point range borrowing a live parent number.
+        view: Native integer owner or fixed-point range borrowing a live parent.
     Returns:
         int: Native ``to_uint()`` result, identical to native ``to_unsigned()``.
     Raises:
         Native exception: A configured report throws.
-    The view borrows its live parent. Calls hold the GIL and never suspend.
+    Keep the owner or the view and its parent live. Calls hold the GIL and
+    never suspend or retain additional references.
     """
     return view.to_uint()
 
 
-for _type in (cppyy.gbl.sc_dt.sc_fxnum_subref_r, cppyy.gbl.sc_dt.sc_fxnum_fast_subref_r):
+for _type in (
+    cppyy.gbl.sc_dt.sc_fxnum_subref_r,
+    cppyy.gbl.sc_dt.sc_fxnum_fast_subref_r,
+    cppyy.gbl.sc_dt.sc_signed,
+    cppyy.gbl.sc_dt.sc_unsigned,
+):
     if not hasattr(_type, "to_signed"):
         _type.to_signed = _legacy_signed
     if not hasattr(_type, "to_unsigned"):

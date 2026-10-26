@@ -9,6 +9,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Added
+- Support configurable signed/unsigned fixed-point and fast fixed-point families, including parameter-only and typed-source construction, runtime policies and native observer identity.
+- Support bounded and arbitrary-width integer base families, fixed-point value families and arbitrary-width fixed-point templates, including exact typed construction, assignment, arithmetic, formatting and proxy access.
+- Expose owning native derived facades for fixed-point base construction with configured type parameters, encoding, cast switches and borrowed observers.
 - Support integer concatenation references, native numeric shift overloads and datatype stream insertion and extraction.
 - Support integer-template constructor, assignment and bounded arithmetic families, binary/four-state vector owner families and legacy string operations.
 - Support integer, fixed-point and vector range-reference families, native concatenation views and binary/four-state vector bit proxies.
@@ -43,6 +46,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve typed integer and fixed-point operands during construction, assignment and arithmetic, including 64-bit scalar values and exact decimal Python integer assignment.
+- Keep native overload selectors bound to their numeric owner when called through Python adapters.
 - Select native datatype stream output instead of pointer formatting, and preserve typed shift and extraction overloads.
 - Preserve exact Python integer construction, native vector proxy conversions and legacy string formatting and character mutation.
 - Preserve mutable fixed-point range and call operators, native slice-to-vector conversion and deprecated view conversion/width aliases.
