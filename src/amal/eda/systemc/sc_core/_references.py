@@ -4,20 +4,22 @@ import cppyy
 
 
 def sc_ref(value):
-    """Return a mutable native reference wrapper retaining its referent.
+    """Return a native reference wrapper retaining the original Python proxy.
 
     Args:
         value: Native C++ object of any type inferred by SystemC's template.
 
     Returns:
         Native std::reference_wrapper with the original Python proxy retained.
+        Native constness is preserved; mutable inputs produce mutable wrappers.
 
     Raises:
         TypeError: The value cannot bind to the native template.
 
-    The wrapper keeps the referent alive until its own destruction. References
-    obtained through get() borrow the referent; retain the wrapper while using
-    them. Calls hold the GIL and do not advance simulation.
+    The wrapper keeps the original Python proxy alive until its own destruction.
+    References obtained through get() borrow native storage; retain the wrapper
+    while using them, and ensure separately managed native storage also remains
+    alive. Calls hold the GIL and do not advance simulation.
     """
     wrapper = cppyy.gbl.sc_core.sc_ref(value)
     wrapper._reference_owner = value

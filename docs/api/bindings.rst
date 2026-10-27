@@ -426,6 +426,12 @@ replace prior temporary values; reference-proxy slots require native setup
 before dereferencing. Allocation, reset and size operations support arbitrary
 native types, including the native datatype-proxy specializations.
 
+``sc_pvector[PointerType]`` indexing grows native slots and initializes new
+pointer slots to null. Pointees remain borrowed. Negative indices raise
+``IndexError``; indices whose count would overflow native ``unsigned int``
+raise ``OverflowError`` before accessing or changing storage. ``fetch()`` reads
+an existing slot without growing the vector and checks its bounds.
+
 ``sc_phash[Key, Contents]`` and its iterators preserve native typed output slots,
 copy and removal overloads. Tables borrow pointer contents; duplicated-key
 callbacks control key copying and release. Keep contents and callback state
@@ -932,8 +938,10 @@ Native callable binding
 typed ``std::function`` objects. ``sc_placeholder[index]()`` supplies arbitrary
 positive, one-based native placeholders, including reordered, repeated and nested
 bindings. Native values are copied; ``sc_ref`` and ``sc_cref`` borrow their targets.
-Reference results remain borrowed and void results become ``None``. Bound proxies
-and input owners are retained for the kernel lifetime.
+Reference results remain borrowed and void results become ``None``. Value results
+support copy-only and move-only types; they must be copyable or movable through
+the adapter's temporary storage. Bound proxies and input owners are retained
+for the kernel lifetime.
 
 Raw Python callables must first be wrapped in an explicitly typed native
 ``std::function``. Keep the original Python callback alive through all uses of

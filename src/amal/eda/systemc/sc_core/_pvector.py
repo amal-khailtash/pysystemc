@@ -14,6 +14,16 @@ def _wrap(native, name=""):
     if not item.endswith("*") or native.__dict__.get("_pointer_slots_wrapped", False):
         return
     access = cppyy.gbl.pysystemc_public.pvector_access[item]
+    unsigned_limit = int(cppyy.gbl.std.numeric_limits["unsigned int"].max())
+
+    def slot_index(values, index):
+        """Validate an index before native unsigned slot-count arithmetic."""
+        index = integer_index(index)
+        if index < 0:
+            raise IndexError("native pointer-vector index must be nonnegative")
+        if index > unsigned_limit or (index == unsigned_limit and index >= values.size()):
+            raise OverflowError("native pointer-vector index exceeds safe unsigned growth range")
+        return index
 
     def get(values, index):
         """Return a borrowed pointee, growing slots with native null initialization.
@@ -28,13 +38,11 @@ def _wrap(native, name=""):
         Raises:
             IndexError: Index is negative.
             TypeError: Index is not an integer.
+            OverflowError: Index or a growing slot count cannot fit unsigned int.
 
         GIL stays held. Growth invalidates slot/iterator views; retain pointees.
         """
-        index = integer_index(index)
-        if index < 0:
-            raise IndexError("native pointer-vector index must be nonnegative")
-        return access.get(values, index)
+        return access.get(values, slot_index(values, index))
 
     def set_slot(values, index, value):
         """Assign a borrowed pointer to an auto-growing native slot.
@@ -50,13 +58,11 @@ def _wrap(native, name=""):
         Raises:
             IndexError: Index is negative.
             TypeError: Index or pointer conversion is invalid.
+            OverflowError: Index or a growing slot count cannot fit unsigned int.
 
         GIL stays held; retain pointees and discard old slot views after growth.
         """
-        index = integer_index(index)
-        if index < 0:
-            raise IndexError("native pointer-vector index must be nonnegative")
-        access.set(values, index, value)
+        access.set(values, slot_index(values, index), value)
 
     def fetch(values, index):
         """Return a borrowed pointee from an existing slot without growing.

@@ -2,10 +2,15 @@
  * @brief Named native binding values and portable indexed placeholders.
  * @details Bound values follow std::bind copying and reference-wrapper rules.
  * Native callable copies are owned; pointers and reference wrappers borrow their
- * targets. Python retains input proxies for kernel lifetime. Callback entry
- * acquires the GIL; guarded waits and scheduler unwind remain supported.
+ * targets. The Python adapter retains input proxies and callbacks for the kernel
+ * lifetime. Direct calls from Python already hold the GIL. Python-backed callbacks
+ * entered from native code re-enter through cppyy, which acquires the GIL; native
+ * callbacks do not require it. Callable exceptions propagate, and guarded waits
+ * preserve scheduler unwind. Invoke Python-backed callbacks only through cppyy's
+ * callback bridge from native threads.
  */
 #include <functional>
+#include <memory>
 #include <optional>
 #include <systemc>
 #include <type_traits>
@@ -26,6 +31,12 @@ struct python_placeholder
 /** @brief Own the native binding without exposing implementation-specific types.
  * @tparam Function Native callable value or function pointer.
  * @tparam Arguments Decayed bound values, reference wrappers or placeholders.
+ * @details The binding owns values copied by native std::bind. Pointers and
+ * reference wrappers borrow their targets, which must outlive every invocation.
+ * The Python adapter retains callback and argument proxies for kernel lifetime.
+ * Calls made directly from Python run with the GIL held. Python-backed callbacks
+ * entered from native code acquire it through cppyy; native callbacks do not
+ * require it. Callable exceptions propagate, including scheduler unwind.
  */
 template <class Function, class... Arguments>
 struct python_bound
@@ -33,15 +44,26 @@ struct python_bound
   using binding_type = decltype(sc_bind(std::declval<Function>(), std::declval<Arguments>()...));
   binding_type function;
 
-  /** @brief Copy inputs following native std::bind value/reference semantics. */
+  /** @brief Construct the native binding from callable and bound arguments.
+   * @param callback Callable copied or moved into native std::bind.
+   * @param arguments Bound values copied/moved or borrowed according to native
+   * std::bind and reference-wrapper rules.
+   * @throws Any exception raised while copying or moving the native binding.
+   */
   python_bound(Function callback, Arguments... arguments)
     : function(sc_bind(std::move(callback), std::move(arguments)...))
   {
   }
 
   /** @brief Invoke the binding and restore pending Python reset/kill unwind.
-   * @details Arguments are borrowed during invocation. Returned references remain
-   * borrowed. Python callback errors propagate; no scheduler unwind is hidden.
+   * @param binding Mutable or const native std::bind object.
+   * @param values Call arguments forwarded to native std::bind for this call.
+   * @return The native result by value, or the original borrowed reference.
+   * @throws Callable exceptions and pending native scheduler unwind.
+   * @details Call arguments are borrowed during invocation. Returned references
+   * remain borrowed. Python callbacks entered from native code rely on cppyy to
+   * acquire the GIL; do not enter Python callbacks from native threads by another
+   * route. Native callback code follows its own SystemC thread requirements.
    */
   template <class Binding, class... Values>
   static decltype(auto) invoke(Binding& binding, Values&&... values)
@@ -60,17 +82,40 @@ struct python_bound
     else
     {
       std::optional<result_type> result;
-      dispatch_python([&] { result.emplace(binding(std::forward<Values>(values)...)); });
-      return result_type(std::move(*result));
+      if constexpr (std::is_move_constructible_v<result_type>)
+      {
+        dispatch_python([&] { result.emplace(binding(std::forward<Values>(values)...)); });
+        return result_type(std::move(*result));
+      }
+      else
+      {
+        static_assert(std::is_copy_constructible_v<result_type>,
+                      "python_bound value results must be movable or copyable");
+        dispatch_python(
+          [&]
+          {
+            const result_type value = binding(std::forward<Values>(values)...);
+            result.emplace(value);
+          });
+        return result_type(static_cast<const result_type&>(*result));
+      }
     }
   }
-  /** @brief Invoke a mutable native binder with borrowed call arguments. */
+  /** @brief Invoke a mutable native binder with borrowed call arguments.
+   * @param values Call arguments forwarded to the native binder.
+   * @return Native value or borrowed reference returned by the binder.
+   * @throws Callable exceptions and pending native scheduler unwind.
+   */
   template <class... Values>
   decltype(auto) operator()(Values&&... values)
   {
     return invoke(function, std::forward<Values>(values)...);
   }
-  /** @brief Preserve native const binder calls, including nested bind expressions. */
+  /** @brief Preserve native const binder calls, including nested bind expressions.
+   * @param values Call arguments forwarded to the native binder.
+   * @return Native value or borrowed reference returned by the binder.
+   * @throws Callable exceptions and pending native scheduler unwind.
+   */
   template <class... Values>
   decltype(auto) operator()(Values&&... values) const
   {
