@@ -810,7 +810,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
-* ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
+* ☐ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 8 reviewed, 1 partial. Native comparator calls work; direct ``compare_fn_t`` typedef lookup is unavailable.
 * ☑ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 supported; mapping: 41 reviewed.
 * ☑ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
@@ -1130,7 +1130,7 @@ tlm public families
 * ☑ ``tlm::tlm_base_initiator_socket`` — 29 declarations; runtime: 29 supported; mapping: 29 reviewed.
 * ☑ ``tlm::tlm_base_initiator_socket_b`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``tlm::tlm_base_protocol_types`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☑ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☐ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 9 supported, 2 untested; mapping: 9 reviewed, 2 partial. The base ``get_base_interface`` overloads require ``SC_ENABLE_COVARIANT_VIRTUAL_BASE``, disabled in the current runtime; the opt-in configuration remains untested. Concrete socket accessors are separately supported.
 * ☑ ``tlm::tlm_base_target_socket`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
 * ☑ ``tlm::tlm_base_target_socket_b`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``tlm::tlm_blocking_get_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.

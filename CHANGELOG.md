@@ -60,6 +60,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Clarify FIFO, PEQ, socket, extension and comparator lifetimes; correct support claims for the optional covariant base-socket getters and direct priority-queue comparator typedef lookup.
 - Clarify datatype reduction and in-place operator results, fixed-point bit-reference lifetimes, attribute ownership, process joins and simulation-start overloads.
 - Clarify edge-wait static sensitivity, time-query value ownership, consuming event expressions, TLM interface references, endian conversion buffers and optional socket binding policies.
 - Clarify report identifier values, kernel query ownership, TLM metadata and simulation-entry exception contracts, including the unavailable direct report-handler typedef lookup and the distinction between the legacy status query and native enum.
