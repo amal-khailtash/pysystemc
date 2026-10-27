@@ -68,7 +68,8 @@ def exercise_owner(family, owner, width, index, read_view):
     emit(family, width, "access", view.length(), read_view.length(), int(view.value()), int(read_view.value()))
     emit(family, width, "copy_ctor", int(mutable_copy.value()), int(read_copy.value()))
     mutable_copy.__destruct__()
-    read_copy.__destruct__()
+    # Integer string parsing may reuse pooled shells while assigning the owner.
+    # Keep an owning rvalue proxy copy across those operations.
     assert owner_value(owner) == "0"
 
     digits = cppyy.gbl.std.vector[native_dt.sc_digit](2, 0)
@@ -152,7 +153,7 @@ def exercise_owner(family, owner, width, index, read_view):
     emit(family, width, "assign_lvalue", owner_value(owner))
     owner.__assign__(0)
     owner[index].__assign__(True)
-    owner[index - 1].__assign__(read_view)
+    owner[index - 1].__assign__(read_copy)
     emit(family, width, "assign_rvalue", owner_value(owner))
 
     for operand in (False, True):
@@ -190,6 +191,7 @@ def exercise_owner(family, owner, width, index, read_view):
     unsigned_source.__assign__(32)
     owner[index].concat_set(unsigned_source, 5)
     emit(family, width, "concat_unsigned", owner_value(owner))
+    read_copy.__destruct__()
 
 
 def exercise_pool(family, owner, width, pool_size):

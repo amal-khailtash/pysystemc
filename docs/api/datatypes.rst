@@ -184,6 +184,9 @@ reuse, and retain the parent integer. A copied view still reads and writes the
 live parent; it is not a snapshot of the bit value. ``bool(view)`` and
 ``not view`` follow the current native bit value. A const selection can appear
 as a mutable derived proxy class in cppyy; preserve the native const-use contract.
+Native decimal-string assignment of arbitrary-width integers also uses temporary
+bit selections and can reuse these pools. Copy a retained proxy before assigning
+its parent, even when the assigned value is small.
 
 Fixed-point ``number.bit(index)`` selects the mutable native overload and retains
 its parent number. Assigning through this view changes the same storage observed

@@ -8,6 +8,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <systemc>
 
 #include "sc_dt_integer_bitrefs_probe.h"
 
@@ -32,7 +33,9 @@ std::string owner_value(const Owner& owner)
 
 /** @brief Exercise one lvalue and const bit-reference pair from a live owner.
  * @details The owner remains alive until every borrowed view and copied shell
- * is destroyed. The mutable view is always obtained through owner selection;
+ * is destroyed. An owning rvalue shell survives assignments that reuse pooled
+ * shells, including native integer string parsing. The mutable view is obtained
+ * through owner selection;
  * this deliberately avoids constructing a pooled proxy directly.
  */
 template <typename Owner, typename ConstView>
@@ -48,7 +51,6 @@ void exercise_owner(const char* family, Owner& owner, int width, int index, cons
        static_cast<int>(read_view.value()));
   emit(family, width, "copy_ctor", static_cast<int>(mutable_copy->value()), static_cast<int>(read_copy->value()));
   mutable_copy.reset();
-  read_copy.reset();
 
   sc_dt::sc_digit data[2]{0, 0};
   sc_dt::sc_digit control[2]{0, 0};
@@ -100,7 +102,7 @@ void exercise_owner(const char* family, Owner& owner, int width, int index, cons
   emit(family, width, "assign_lvalue", owner_value(owner));
   owner = 0;
   owner[index] = true;
-  owner[index - 1] = read_view;
+  owner[index - 1] = *read_copy;
   emit(family, width, "assign_rvalue", owner_value(owner));
 
   for (const bool operand : {false, true})
