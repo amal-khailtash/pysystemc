@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Default local parallel test and coverage targets to four workers, with `TEST_WORKERS` available to override the count.
 - Verify all native fixed-point quantization, overflow and cast modes, port binding policies and writer contention with independent native references.
 - Verify actual VCD/WIF typed declarations and timed transitions, including native WIF omissions for time and event values.
 - Document required port binding counts and vector assembly range termination, backed by native/Python parity checks.

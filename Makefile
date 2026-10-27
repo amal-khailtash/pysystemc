@@ -49,7 +49,7 @@ ruff    := $(run) ruff
 
 # Forward command options with: make cli ARGS=version or make repl ARGS=--no-history.
 ARGS ?=
-TEST_WORKERS ?= 2
+TEST_WORKERS ?= 4
 
 # ----------------------------------------------------------------------------------------------------------------------
 # cli: ## Run the pysystemc CLI (ARGS selects a command or options; default: help)
@@ -225,7 +225,7 @@ test:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -q
 
 # ----------------------------------------------------------------------------------------------------------------------
-# test-parallel: ## Run regressions in isolated pytest workers (TEST_WORKERS defaults to 2)
+# test-parallel: ## Run regressions in isolated pytest workers (TEST_WORKERS defaults to 4)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: test-parallel
 test-parallel:
@@ -260,7 +260,7 @@ coverage:
 	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
 
 # ----------------------------------------------------------------------------------------------------------------------
-# coverage-parallel: ## Run coverage in isolated pytest workers (TEST_WORKERS defaults to 2)
+# coverage-parallel: ## Run coverage in isolated pytest workers (TEST_WORKERS defaults to 4)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage-parallel
 coverage-parallel:

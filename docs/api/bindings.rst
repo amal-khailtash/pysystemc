@@ -104,6 +104,11 @@ pass-through availability does not by itself establish tested support.
    Emit a message report with file/line and optional verbosity, or a legacy
    integer-ID report with file/line. Each call executes native policy counters,
    cache updates and the configured handler once, including when it throws.
+   Incompatible Python arguments raise ``TypeError``; integers outside the native
+   parameter range raise ``OverflowError`` before report counters, cache or handler
+   state changes. Verbosity accepts the full native signed-int range. Only info
+   reports are filtered by the current verbosity level; other severities retain
+   their native actions even above that level.
 
 ``sc_report``
    Copy a borrowed callback report before retaining it. Copies own their message,
