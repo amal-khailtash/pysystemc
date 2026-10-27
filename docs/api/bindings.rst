@@ -27,6 +27,45 @@ pass-through availability does not by itself establish tested support.
    Python calls; blocking methods inside third-party C++ channels require their
    own native unwind adapters.
 
+``native_blocking_call(operation)``
+   Invoke a zero-argument native C++ functor with the GIL released. Use this
+   adapter for blocking methods in third-party C++ channels, including inherited
+   methods, or for original native function pointers retained before importing
+   the bindings. The functor's const call operator must execute the operation
+   entirely in C++. It may return void or a copyable native value; the returned
+   value has independent storage; borrowed storage inside that value retains
+   its normal native lifetime. Pointer, reference and move-only returns are
+   rejected before execution. Capture arguments in the functor and retain
+   borrowed channels, events, and output buffers throughout the call. Copy Python
+   scalar inputs into the functor; a native reference to a cppyy conversion
+   temporary does not retain its storage after the factory returns.
+
+   Reset and kill run Python ``finally`` blocks before restoring native scheduler
+   unwind. Ordinary native exceptions propagate and subsequent guarded calls
+   remain usable. Call from a SystemC thread process; never block in unwind
+   cleanup or suppress ``BaseException``.
+
+   For example, wrap an arbitrary native acquisition method in a native functor::
+
+      cppyy.cppdef("""
+      struct NativeAcquire {
+          sc_core::sc_mutex_if& mutex;
+          explicit NativeAcquire(sc_core::sc_mutex_if& value) : mutex(value) {}
+          int operator()() const { return mutex.lock(); }
+      };
+      """)
+      operation = cppyy.gbl.NativeAcquire(mutex)
+      # Within a registered SystemC thread:
+      status = sc_core.native_blocking_call(operation)
+
+   Python callables and raw cppyy function/overload objects are rejected before
+   execution. Importing the bindings replaces subsequent Python lookups of
+   ``wait``; it cannot replace previously retained raw objects. Calling those
+   objects directly during reset or kill bypasses the native guard and can
+   cause SystemC's fatal F539 unwind report. A Python lambda around such a call
+   does not solve the boundary: use the C++ functor adapter above. Python
+   overrides inside the functor must themselves use guarded scheduling calls.
+
 ``sc_module.next_trigger(*args)`` / ``sc_prim_channel.next_trigger(*args)``
    Configure dynamic method sensitivity through the native member without
    suspending. Event expressions are consumed once; reuse explicit native event

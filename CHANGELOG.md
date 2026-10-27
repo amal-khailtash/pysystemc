@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Verify kernel report metadata and recovery for member process operations, phase callbacks, module binding, deprecated calls and simulation boundary diagnostics against native SystemC.
 - Verify recoverable invalid waits, empty event-list use and start/stop reports against native SystemC.
 - Default local parallel test and coverage targets to four workers, with `TEST_WORKERS` available to override the count.
 - Verify all native fixed-point quantization, overflow and cast modes, port binding policies and writer contention with independent native references.
@@ -17,6 +18,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
 
 ### Added
+- Add `sc_core.native_blocking_call` for native C++ functors, preserving return values, exceptions and Python reset/kill cleanup through third-party blocking methods and cached native function pointers.
 - Support complete native vector concatenation and comma-operator families through `sc_dt.concat`, including mutable/read-only views, explicit template and const-qualified selectors, Python strings and boolean bit operands.
 - Support complete native unary/binary arithmetic and comparison overloads with typed scalar signedness, arbitrary-width results, fixed-point precision and four-state equality.
 - Support exact native remainder and bitwise overloads across arbitrary-width integers, fixed-point values, scalar bits and binary/four-state vectors.

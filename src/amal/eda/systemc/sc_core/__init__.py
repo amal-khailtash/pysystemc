@@ -53,6 +53,7 @@ from ._exports import ExportTemplate as _ExportTemplate
 from ._streams import install_fifo_streams as _install_fifo_streams
 from ._blocking import guard_native_channels as _guard_native_channels
 from ._blocking import ScopedLock as _ScopedLock
+from ._native_call import native_blocking_call as native_blocking_call
 from ._time import install as _install_time
 from ._byte_heap import allocate as _byte_heap_allocate
 from ._trace_printf import tprintf as _python_tprintf
@@ -1267,6 +1268,7 @@ __all__ = sorted(
         "sc_assemble_vector",
         "sc_member_access",
         "wait",
+        "native_blocking_call",
         "set_report_handler",
         "sc_elab_and_sim",
         "sc_stop",

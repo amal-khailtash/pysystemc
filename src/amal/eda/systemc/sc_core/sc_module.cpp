@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "binding_log.h"
+#include "native_blocking.h"
 
 namespace sc_core
 {
