@@ -185,55 +185,66 @@ const char* const* sc_argv()
 
 int sc_elab_and_sim(int argc, char* argv[])
 {
-  int status = 1;
+  try
   {
-    EntryArguments entry(argc, argv);
-    try
+    int status = 1;
     {
-      pln();
-      entry.activate(argc, argv);
-      status = sc_main(argc, entry.arguments());
-    }
-    catch (const sc_report& report)
-    {
-      throw_pending_entry_python_error();
-      sc_report_handler::get_handler()(report, sc_report_handler::get_catch_actions());
-    }
-    catch (...)
-    {
-      // Translation itself emits a report and can reenter the Python handler.
-      throw_pending_entry_python_error();
-      std::unique_ptr<sc_report> report(sc_handle_exception());
-      if (report)
+      EntryArguments entry(argc, argv);
+      try
       {
-        sc_report_handler::get_handler()(*report, sc_report_handler::get_catch_actions());
+        pln();
+        entry.activate(argc, argv);
+        status = sc_main(argc, entry.arguments());
+      }
+      catch (const sc_report& report)
+      {
+        throw_pending_entry_python_error();
+        sc_report_handler::get_handler()(report, sc_report_handler::get_catch_actions());
+      }
+      catch (...)
+      {
+        // Translation itself emits a report and can reenter the Python handler.
+        throw_pending_entry_python_error();
+        std::unique_ptr<sc_report> report(sc_handle_exception());
+        if (report)
+        {
+          sc_report_handler::get_handler()(*report, sc_report_handler::get_catch_actions());
+        }
       }
     }
+
+    throw_pending_entry_python_error();
+
+    // IF DEPRECATION WARNINGS WERE ISSUED TELL THE USER HOW TO TURN THEM OFF
+
+    if (sc_report_handler::get_count(SC_ID_IEEE_1666_DEPRECATION_) > 0)
+    {
+      std::stringstream ss;
+
+      const char MSGNL[] = "\n             ";
+      const char CODENL[] = "\n  ";
+
+      ss << "You can turn off warnings about" << MSGNL << "IEEE 1666 deprecated features by placing this method call"
+         << MSGNL << "as the first statement in your sc_main() function:\n"
+         << CODENL << "sc_core::sc_report_handler::set_actions( "
+         << "\"" << SC_ID_IEEE_1666_DEPRECATION_ << "\"," << CODENL
+         << "                                         " /* indent param */
+         << "sc_core::SC_DO_NOTHING );" << std::endl;
+
+      SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_, ss.str().c_str());
+    }
+
+    throw_pending_entry_python_error();
+    return status;
   }
-
-  throw_pending_entry_python_error();
-
-  // IF DEPRECATION WARNINGS WERE ISSUED TELL THE USER HOW TO TURN THEM OFF
-
-  if (sc_report_handler::get_count(SC_ID_IEEE_1666_DEPRECATION_) > 0)
+  catch (...)
   {
-    std::stringstream ss;
-
-    const char MSGNL[] = "\n             ";
-    const char CODENL[] = "\n  ";
-
-    ss << "You can turn off warnings about" << MSGNL << "IEEE 1666 deprecated features by placing this method call"
-       << MSGNL << "as the first statement in your sc_main() function:\n"
-       << CODENL << "sc_core::sc_report_handler::set_actions( "
-       << "\"" << SC_ID_IEEE_1666_DEPRECATION_ << "\"," << CODENL
-       << "                                         " /* indent param */
-       << "sc_core::SC_DO_NOTHING );" << std::endl;
-
-    SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_, ss.str().c_str());
+    // Capture pending callback errors from entry, report translation/dispatch,
+    // and the deprecation summary after all owned entry buffers/state unwind.
+    // Native callers may consume the C++ exception without entering cppyy.
+    throw_pending_entry_python_error();
+    throw;
   }
-
-  throw_pending_entry_python_error();
-  return status;
 }
 
 }  // namespace sc_core

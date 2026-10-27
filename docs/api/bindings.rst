@@ -431,6 +431,70 @@ copy and removal overloads. Tables borrow pointer contents; duplicated-key
 callbacks control key copying and release. Keep contents and callback state
 alive for every native use, and discard iterators after invalidating mutations.
 
+Owner lifetimes and shutdown
+----------------------------
+
+Native pointer and reference APIs preserve their C++ borrowing rules. Keep the
+referent alive for every native borrower; deleting a Python variable does not
+end a process, close a trace, or detach a port. ``sc_stop()`` ends simulation
+without resetting the singleton kernel or clearing process callback owners.
+
+.. list-table:: Python adapter ownership boundaries
+   :header-rows: 1
+   :widths: 28 38 34
+
+   * - Adapter
+     - Retained storage
+     - Release boundary
+   * - Module process registration
+     - Registered Python callable on its module
+     - Native module lifetime; destroy only after its processes and borrowers finish
+   * - ``sc_spawn`` and ``sc_bind``
+     - Registered callback, typed result storage, and bound native input proxies
+     - Interpreter's single kernel lifetime, including after stop or callback error
+   * - Structural interfaces
+     - Implementation and returned reference storage
+     - ``release_interface_callbacks()`` after stop and final reads; native adapter deletion requires ``teardown_interfaces()``
+   * - Blocking call frames
+     - Channel, input, tag, and output proxies passed to the call
+     - Return or unwind; retaining an exception traceback can retain its call frame
+   * - Callable TLM sockets
+     - Accepted socket and callback registrations; ignored duplicate candidates are dropped
+     - Interpreter's single kernel lifetime; stopping simulation does not release active callbacks
+   * - Callback PEQ
+     - Queue and callback; payload addresses remain borrowed while phases and scheduling times are copied
+     - Queue and callback stay retained for the kernel lifetime; retain payloads until final delivery or cancellation
+   * - Callback quantumkeeper
+     - Callback and copied native time slot
+     - Last keeper proxy; a synchronization call retains its keeper through suspension
+   * - ``sc_scoped_lock``
+     - Its mutex proxy
+     - Lock destruction; ``release()`` unlocks without destroying the lock
+   * - ``sc_ref`` and ``sc_cref``
+     - Referent proxy, with no native value copy
+     - Last wrapper reference; borrowed ``get()`` results still require a live referent
+   * - Vector creator
+     - Returned native element proxies after ownership transfers to the vector
+     - Vector destruction; the creator callable is used synchronously during initialization
+   * - Trace value holders
+     - Holder storage and copied enumeration labels
+     - Matching trace-file close; ordinary traced sources remain caller-owned
+   * - Hash table callbacks
+     - Python constructor and setter callbacks on the table proxy
+     - Table proxy destruction; native-created table views need externally retained callbacks
+
+A Python callable converted directly to a raw cppyy ``std::function`` still
+needs an external Python owner throughout every possible invocation, including
+when that native function proxy is passed to ``sc_bind``. Retaining the native
+proxy does not acquire ownership of its original Python callable.
+
+Finish end-of-simulation hooks and final reads before releasing structural
+callbacks. Close trace files before deleting traced storage. Destroy native
+ports and exports and terminate thread processes before deleting their
+structural adapters. ``teardown_interfaces()`` checks those visible borrowers
+before mutation; close traces created directly in C++ separately. Borrowed
+adapter, event, and result aliases become invalid after native deletion.
+
 Process joins
 -------------
 
