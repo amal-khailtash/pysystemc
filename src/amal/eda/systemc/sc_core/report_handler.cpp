@@ -6,6 +6,36 @@
 #include <sysc/utils/sc_report_handler.h>
 namespace pysystemc
 {
+/** @brief Emit one message report without cppyy retrying after a thrown report.
+ * @details String arguments are borrowed through this GIL-held call. Native
+ * report policy owns copied diagnostics; Python handlers retain their own
+ * callbacks and must not block. Report and callback exceptions propagate once.
+ */
+void report_message(sc_core::sc_severity severity, const char* message_type, const char* message, const char* file,
+                    int line)
+{
+  sc_core::sc_report_handler::report(severity, message_type, message, file, line);
+}
+
+/** @brief Emit one message report with the native explicit verbosity signature.
+ * @details Strings are borrowed, GIL remains held, and errors propagate without
+ * retry. Report policy and callback ownership match report_message.
+ */
+void report_message_verbosity(sc_core::sc_severity severity, const char* message_type, const char* message,
+                              int verbosity, const char* file, int line)
+{
+  sc_core::sc_report_handler::report(severity, message_type, message, verbosity, file, line);
+}
+
+/** @brief Emit one legacy ID report, preserving native promotion and metadata.
+ * @details Strings are borrowed and GIL stays held. Native registered IDs own
+ * their messages; policy and callback exceptions propagate without retry.
+ */
+void report_identifier(sc_core::sc_severity severity, int identifier, const char* message, const char* file, int line)
+{
+  sc_core::sc_report_handler::report(severity, identifier, message, file, line);
+}
+
 /** @brief Set/reset a severity-wide native stop limit. */
 int report_stop_severity(sc_core::sc_severity severity, int limit)
 {

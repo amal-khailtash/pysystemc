@@ -275,6 +275,40 @@ def _assign_report(self, source):
 cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
 
 
+def _report(severity, message_type, message, *args):
+    """Emit one native report using message, verbosity or legacy identifier form.
+
+    Args:
+        severity: Native report severity.
+        message_type: Message-type string or registered integer identifier.
+        message: Diagnostic string borrowed during the call.
+        *args: File and line, or verbosity, file and line for message reports.
+
+    Returns:
+        None when the configured native handler completes normally.
+
+    Raises:
+        sc_report: Native actions require throwing the emitted report.
+        Exception: A configured Python handler fails; its error propagates once.
+        TypeError: Arguments do not match a native report signature.
+
+    Policy counters, caches and handlers execute once, including on failure.
+    Call on the simulation thread with the GIL held; handlers must not wait.
+    Report policy owns copied diagnostics and retains no caller string storage.
+    """
+    bridge = cppyy.gbl.pysystemc
+    if len(args) == 2:
+        operation = bridge.report_identifier if isinstance(message_type, int) else bridge.report_message
+    elif len(args) == 3 and not isinstance(message_type, int):
+        operation = bridge.report_message_verbosity
+    else:
+        raise TypeError("report expects severity/message/message/file/line with optional verbosity before file")
+    return operation(severity, message_type, message, *args)
+
+
+cppyy.gbl.sc_core.sc_report_handler.report = staticmethod(_report)
+
+
 def _report_stop_after(subject, *args):
     """Set a native severity, message or message/severity stop threshold.
 
@@ -696,7 +730,13 @@ def sc_elab_and_sim(argc=None, argv=None) -> int:
 
     log(f"Entering native simulation with {argc} arguments")
 
-    return cppyy.gbl.sc_core.sc_elab_and_sim(argc, argv)
+    try:
+        return cppyy.gbl.sc_core.sc_elab_and_sim(argc, argv)
+    except cppyy.gbl.sc_core.python_entry_callback_error as carrier:
+        error = ctypes.cast(carrier.address(), ctypes.py_object).value
+    # Release the native carrier before adding this frame to the traceback.
+    # Raising within its except block would retain it through __context__.
+    raise error
 
 
 def sc_stop() -> None:
@@ -937,6 +977,7 @@ def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> No
 
 
 _native_next_trigger = cppyy.gbl.sc_core.next_trigger
+_next_trigger_adapters = {}
 
 
 def next_trigger(*args: Any) -> Any:
@@ -952,16 +993,37 @@ def next_trigger(*args: Any) -> Any:
 
     Raises:
         sc_report: The native process context does not permit dynamic sensitivity.
-        TypeError: Arguments do not match a native sensitivity overload, or cppyy
-            wraps an invalid-process native report; its diagnostic is retained.
+        TypeError: Arguments do not match a native sensitivity overload.
     """
-    if any(
-        isinstance(value, cppyy.gbl.sc_core.sc_event_expr[list_type])
-        for value in args
-        for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
-    ):
-        return cppyy.gbl.sc_core.python_next_trigger(*args)
-    return _native_next_trigger(*args)
+    native = cppyy.gbl.sc_core
+    context = native.sc_get_curr_simcontext()
+    if args and isinstance(args[-1], native.sc_simcontext):
+        context, args = args[-1], args[:-1]
+    types, values = [], []
+    for index, value in enumerate(args):
+        for list_type in (native.sc_event_or_list, native.sc_event_and_list):
+            if isinstance(value, native.sc_event_expr[list_type]):
+                value = value.release()
+                break
+        if index == 0 and isinstance(value, (int, float)):
+            name = "double"
+        elif index == 1 and types[0] == "double":
+            name = "sc_core::sc_time_unit"
+        else:
+            for argument_type in (native.sc_time, native.sc_event, native.sc_event_or_list, native.sc_event_and_list):
+                if isinstance(value, argument_type):
+                    name = f"const {argument_type.__cpp_name__}&"
+                    break
+            else:
+                raise TypeError("next_trigger requires native time/event arguments or a numeric duration")
+        types.append(name)
+        values.append(value)
+    signature = ", ".join((*types, "sc_core::sc_simcontext*"))
+    operation = _next_trigger_adapters.get(signature)
+    if operation is None:
+        operation = _native_next_trigger.__overload__(signature)
+        _next_trigger_adapters[signature] = operation
+    return operation(*values, context)
 
 
 def _process_control(adapter):

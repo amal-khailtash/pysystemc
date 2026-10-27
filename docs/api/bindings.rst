@@ -95,6 +95,16 @@ pass-through availability does not by itself establish tested support.
    Install a retained callback receiving a native report and integer action mask;
    no callback restores the native default handler.
 
+``next_trigger(*args)``
+   Select exact native time, event or event-list overloads, with an optional
+   simulation context. Event expressions are consumed once. Calling from a
+   thread raises the native E520 ``sc_report`` without changing time or sensitivity.
+
+``sc_report_handler.report(severity, message_type, message, ...)``
+   Emit a message report with file/line and optional verbosity, or a legacy
+   integer-ID report with file/line. Each call executes native policy counters,
+   cache updates and the configured handler once, including when it throws.
+
 ``sc_report``
    Copy a borrowed callback report before retaining it. Copies own their message,
    file, process name and timestamp. ``__assign__(source)`` copies fields into
@@ -150,6 +160,11 @@ pass-through availability does not by itself establish tested support.
    nonstring selected entries and embedded NULs fail before native entry.
    The native integer status is returned, including nonzero results. Use a
    fresh process for each independent simulation; entry does not reset the kernel.
+   Copied native arguments are released and the active argument snapshot is
+   restored on every exit. Python report callback failures preserve their original
+   exception and traceback, including during native exception translation and
+   the final deprecation notice. Retaining a caught exception also retains its
+   callback traceback until that exception is released.
 
 ``amal.eda.systemc.sc_main(argc=None, argv=None)``
    Call the global native callback bridge directly with the same argument

@@ -7,6 +7,7 @@ import sys
 
 from . import __version__
 from ._runtime import cppyy
+from .sc_core import sc_elab_and_sim
 
 _invoked = False
 
@@ -56,7 +57,7 @@ def run_sources(sources: Sequence[str], arguments: Sequence[str] = (), includes:
     cppyy.gbl.sc_core.sc_elab_and_sim.__release_gil__ = True
     values = [sources[0], *arguments]
     try:
-        return int(cppyy.gbl.sc_core.sc_elab_and_sim(len(values), values))
+        return int(sc_elab_and_sim(len(values), values))
     finally:
         cppyy.cppdef("pysystemc::native_model_entry = nullptr;")
 

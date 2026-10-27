@@ -328,18 +328,16 @@ class Model(sc.sc_module):
         """Capture the native error from calling next_trigger in a thread."""
         try:
             sc.next_trigger(sc.sc_get_curr_simcontext())
-        except TypeError as error:
-            message = str(error)
-            assert "(E520)" in message, message
-            assert sc.SC_ID_NEXT_TRIGGER_NOT_ALLOWED_ in message, message
-            assert "in SC_THREADs and SC_CTHREADs use wait() instead" in message, message
+        except sc.sc_report as error:
+            assert error.get_id() == 520
+            assert error.get_msg_type() == sc.SC_ID_NEXT_TRIGGER_NOT_ALLOWED_
             error_records.append(
                 (
                     "thread_next_trigger",
-                    520,
-                    int(sc.SC_ERROR),
-                    sc.SC_ID_NEXT_TRIGGER_NOT_ALLOWED_,
-                    "in SC_THREADs and SC_CTHREADs use wait() instead",
+                    error.get_id(),
+                    int(error.get_severity()),
+                    error.get_msg_type(),
+                    " ".join(error.get_msg().split()),
                 )
             )
         else:
