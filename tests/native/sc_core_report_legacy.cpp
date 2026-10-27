@@ -18,15 +18,21 @@ void capture(const sc_core::sc_report& report, const sc_core::sc_actions& action
   }
 }
 /** @brief Require invalid registration to throw its native report. */
-void rejected(int id, const char* message)
+void rejected(const char* label, int id, const char* message)
 {
+  const auto before = sc_core::sc_report_handler::get_count(sc_core::SC_ID_REGISTER_ID_FAILED_);
   try
   {
     sc_core::sc_report::register_id(id, message);
     throw std::runtime_error("invalid accepted");
   }
-  catch (const sc_core::sc_report&)
+  catch (const sc_core::sc_report& report)
   {
+    const auto count = sc_core::sc_report_handler::get_count(sc_core::SC_ID_REGISTER_ID_FAILED_) - before;
+    if (count != 1 || report.get_severity() != sc_core::SC_ERROR || report.get_time() != sc_core::SC_ZERO_TIME)
+      throw std::runtime_error("registration report metadata/count mismatch");
+    std::cout << "REPORT_REGISTER_ERROR " << label << "|" << report.get_id() << "|" << int(report.get_severity()) << "|"
+              << report.get_msg_type() << "|" << report.get_msg() << "|" << count << "\n";
   }
 }
 /** @brief Exercise every public legacy report configuration and restore defaults. */
@@ -40,9 +46,15 @@ int sc_main(int, char**)
       std::string(sc_report::get_message(61999)) != "unknown id" || sc_report::is_suppressed(61999))
     return 2;
   sc_report::suppress_id(61999, true);
-  rejected(-1, "bad");
-  rejected(61001, "conflict");
-  rejected(61003, nullptr);
+  rejected("negative", -1, "bad");
+  rejected("conflict", 61001, "conflict");
+  rejected("null_message", 61003, nullptr);
+  if (std::string(sc_report::get_message(61001)) != "legacy/first" ||
+      std::string(sc_report::get_message(61003)) != "unknown id")
+    return 4;
+  sc_report::register_id(61004, "");
+  if (std::string(sc_report::get_message(61004)) != "unknown id") return 5;
+  std::cout << "REPORT_REGISTER_EMPTY unknown id\n";
   auto previous = sc_report_handler::set_handler(capture);
   sc_report::suppress_id(61001, true);
   sc_report_handler::report(SC_INFO, 61001, "suppressed", "legacy.cpp", 9);

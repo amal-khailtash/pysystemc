@@ -17,12 +17,14 @@ def test_sc_core_report_legacy(tmp_path):
     )
     assert native.returncode == 0, native.stdout + native.stderr
     actual = [
-        line for line in output.splitlines() if line.startswith(("REPORT_LEGACY_REFERENCE", "REPORT_ASSIGN_REFERENCE"))
+        line
+        for line in output.splitlines()
+        if line.startswith(("REPORT_LEGACY_REFERENCE", "REPORT_ASSIGN_REFERENCE", "REPORT_REGISTER_"))
     ]
     expected = [
         line
         for line in native.stdout.splitlines()
-        if line.startswith(("REPORT_LEGACY_REFERENCE", "REPORT_ASSIGN_REFERENCE"))
+        if line.startswith(("REPORT_LEGACY_REFERENCE", "REPORT_ASSIGN_REFERENCE", "REPORT_REGISTER_"))
     ]
-    assert len(actual) == 8
+    assert len(actual) == 12
     assert actual == expected

@@ -224,6 +224,7 @@ def _legacy_report_method(name):
 
         Args:
             args: Native method arguments: an ID/message, ID/bool, or bool.
+                For register_id, cppyy.nullptr selects a native null message.
 
         Returns:
             Native result; message strings are copied, suppression is bool, setters
@@ -231,11 +232,15 @@ def _legacy_report_method(name):
 
         Raises:
             TypeError: Arguments cannot convert to native parameters.
+            sc_report: Native policy rejects an invalid or conflicting report ID
+                or a null message.
             Exception: Native report policy rejects registration or a callback fails.
 
         Hold the GIL; no ownership transfer. Native deprecation reports and any
         configured callback execute synchronously with their native action policy.
         """
+        if name == "register_id" and len(args) == 2 and args[1] is cppyy.nullptr:
+            return cppyy.gbl.pysystemc.report_register_null_id(args[0])
         return native(*args)
 
     return staticmethod(method)

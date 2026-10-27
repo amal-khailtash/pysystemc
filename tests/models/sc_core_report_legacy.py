@@ -21,20 +21,40 @@ assert sc.sc_report.get_message(61001) == "legacy/first"
 assert sc.sc_report.get_message(61999) == "unknown id"
 assert not sc.sc_report.is_suppressed(61999)
 sc.sc_report.suppress_id(61999, True)
-for arguments in ((-1, "bad"), (61001, "conflict"), (61003, cppyy.nullptr)):
+for label, arguments in (
+    ("negative", (-1, "bad")),
+    ("conflict", (61001, "conflict")),
+    ("null_message", (61003, cppyy.nullptr)),
+):
+    before = sc.sc_report_handler.get_count(sc.SC_ID_REGISTER_ID_FAILED_)
     try:
         sc.sc_report.register_id(*arguments)
-    except Exception as error:
-        assert "register" in str(error)
+    except sc.sc_report as error:
+        count = sc.sc_report_handler.get_count(sc.SC_ID_REGISTER_ID_FAILED_) - before
+        assert count == 1
+        assert error.get_msg_type() == sc.SC_ID_REGISTER_ID_FAILED_
+        assert error.get_severity() == sc.SC_ERROR
+        assert error.get_time() == sc.SC_ZERO_TIME
+        print(
+            f"REPORT_REGISTER_ERROR {label}|{error.get_id()}|{int(error.get_severity())}|"
+            f"{error.get_msg_type()}|{error.get_msg()}|{count}"
+        )
     else:
         raise AssertionError("invalid ID registration accepted")
 assert sc.sc_report.get_message(61001) == "legacy/first"
+assert sc.sc_report.get_message(61003) == "unknown id"
+sc.sc_report.register_id(61004, "")
+# The empty message already has a predefined native ID; registration is a no-op.
+assert sc.sc_report.get_message(61004) == "unknown id"
+print("REPORT_REGISTER_EMPTY unknown id")
+before = sc.sc_report_handler.get_count(sc.SC_ID_REGISTER_ID_FAILED_)
 try:
     sc.sc_report.register_id(object(), "bad")
 except TypeError:
     pass
 else:
     raise AssertionError("invalid ID conversion accepted")
+assert sc.sc_report_handler.get_count(sc.SC_ID_REGISTER_ID_FAILED_) == before
 sc.set_report_handler(capture)
 sc.sc_report.suppress_id(61001, True)
 assert sc.sc_report.is_suppressed(61001)

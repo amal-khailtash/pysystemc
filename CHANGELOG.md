@@ -56,6 +56,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve native E800 registration errors when `sc_report.register_id` receives `cppyy.nullptr`, including report metadata and single-call counts.
 - Dispatch report calls once when native actions throw, preserving exact counts, cached reports and Python callback errors.
 - Select exact native free `next_trigger` overloads so invalid thread calls raise the original E520 report.
 - Release native entry argument copies and restore entry state on callback failures; preserve the original Python exception in both explicit entry and the C++ source runner.

@@ -112,8 +112,12 @@ pass-through availability does not by itself establish tested support.
    process-name context and can be false for populated reports outside a process.
    Legacy static methods ``register_id``, ``get_message``, ``is_suppressed``,
    ``suppress_id``, ``suppress_infos``, ``suppress_warnings`` and
-   ``make_warnings_errors`` preserve native diagnostics and policy. These settings
-   persist in the singleton kernel; restore them when finished. Destruction
+   ``make_warnings_errors`` preserve native diagnostics and policy.
+   ``register_id`` accepts ``cppyy.nullptr`` to select the native null-message
+   error. Invalid, conflicting and null-message registrations raise E800 under
+   the default handler without changing registered messages. An empty message
+   uses the predefined native message and does not register the requested new ID.
+   Policy settings persist in the singleton kernel; restore them when finished. Destruction
    releases copy-owned fields. Borrowed views must not outlive their report.
 
 ``sc_report_handler.stop_after(subject, ...)``
