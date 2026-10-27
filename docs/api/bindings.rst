@@ -290,7 +290,11 @@ retain native eight-byte alignment and wrapping reuse. Keep the heap alive while
 accessing a view. Reinitializing or destroying the heap invalidates existing
 views; wrapping allocations can overwrite their contents. An uninitialized heap,
 a negative request or an aligned request larger than capacity raises
-``ValueError``. Noninteger sizes raise ``TypeError``.
+``ValueError``. Noninteger sizes raise ``TypeError``. An explicitly initialized
+zero-capacity heap supports ``allocate(0)`` and returns an empty borrowed view;
+a default, uninitialized heap still raises ``ValueError``. Serialize access to a
+shared heap from native threads; holding the GIL does not protect its native
+allocation cursor.
 
 For signed native byte trace storage, initialize and update
 ``sc_trace_value["char"]`` with a one-byte ``bytes`` object. This preserves the

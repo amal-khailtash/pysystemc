@@ -21,11 +21,14 @@ def allocate(heap, bytes_n):
     Keep the heap alive through every access. Reinitialization and destruction
     invalidate all views. Native wrapping allocations reuse storage and can
     overwrite earlier views. This call holds GIL and preserves 8-byte alignment.
+    The native heap cursor is not thread-safe; callers must serialize access
+    when native threads can use the same heap.
     """
     size = bytes_n
     if isinstance(size, bool) or not isinstance(size, int):
         raise TypeError("allocation size must be an integer")
-    if size < 0 or heap.length() == 0 or (size + 7) // 8 * 8 > heap.length():
+    initialized = cppyy.gbl.pysystemc_public.byte_heap_is_initialized(heap)
+    if size < 0 or not initialized or (size + 7) // 8 * 8 > heap.length():
         raise ValueError("allocation requires an initialized heap with enough capacity")
     view = cppyy.gbl.pysystemc_public.byte_heap_allocate(heap, size)
     view.reshape((size,))

@@ -60,6 +60,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Allow zero-byte allocation from an initialized zero-capacity byte heap while continuing to reject uninitialized storage.
 - Clarify that event finders registered for static sensitivity must remain alive until elaboration completes.
 - Preserve copy-only value returns from `sc_bind` while retaining move-only results and native reference returns.
 - Reject pointer-vector indices that would overflow native unsigned slot-count arithmetic before reading or mutating storage.
