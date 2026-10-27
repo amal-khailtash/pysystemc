@@ -632,11 +632,13 @@ def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> A
 
     Raises:
         TypeError: Callback is not callable or native value conversion fails.
+        Exception: The callback's original exception propagates from notify_changed().
 
     Callback and channel must survive simulation. Callback retention lasts through
-    interpreter shutdown. notify_changed samples the callback and schedules a native signal update; reads
-    never invoke Python. Call it from the simulation thread after changing state.
-    Native bool/logic edge interfaces use the same stable signal storage.
+    interpreter shutdown. notify_changed samples the callback and schedules a
+    native signal update; reads never invoke Python. Call it from the simulation
+    thread after changing state. Native bool/logic edge interfaces use the same
+    stable signal storage.
     """
     if not callable(callback):
         raise TypeError("read interface callback must be callable")
@@ -906,9 +908,11 @@ def sc_spawn(callback: Any, *args: Any, name: str = "", options: Any = None) -> 
             or result storage has no writable native value type.
         sc_report: Native process creation or execution reports a failure.
 
-    Without result storage, return values are ignored. Result storage may be any
-    native C++ value proxy or a ctypes scalar; the callback must return a value
-    convertible to that type. The result is assigned only after a successful
+    Without result storage, return values are ignored. Result storage may be a
+    native C++ value proxy supporting SystemC's result assignment, or a ctypes
+    bool/numeric scalar using a supported native scalar format. Pointer and
+    character-buffer ctypes values are rejected. The callback must return a value
+    convertible to the selected type. The result is assigned only after a successful
     callback return. Reset/kill executes Python cleanup before restoring native
     scheduler unwind. Callbacks and result proxies remain retained for the
     interpreter's single kernel lifetime. Use fresh processes for unrelated runs.
@@ -975,8 +979,24 @@ _report_callback = None
 def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> None:
     """Install a retained Python report handler, or restore the native default.
 
+    Args:
+        callback: Callable receiving a native sc_report and its integer action
+            bitmask, or None to restore the native default handler.
+
+    Returns:
+        None after the native handler is installed or restored.
+
+    Raises:
+        TypeError: A non-callable, non-None callback is supplied.
+        Exception: A report raised during synchronous callback dispatch propagates.
+
     The callback receives a native sc_report and an integer action bitmask.
     This adapter avoids cppyy's const-reference scalar callback conversion.
+    The module retains the callback while it is installed. Installing another
+    callback or restoring the native default releases the module's ownership of
+    the previous callback; retained exception tracebacks may delay its final
+    collection. Call on the simulation thread with the GIL held; handlers must
+    not block or enter the scheduler.
     """
     global _report_callback
     if callback is None:

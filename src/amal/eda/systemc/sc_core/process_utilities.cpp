@@ -14,8 +14,10 @@ namespace pysystemc_public
  */
 void set_stack_size_handle(sc_core::sc_process_handle handle, std::size_t size)
 {
+  if (!handle.valid() ||
+      (handle.proc_kind() != sc_core::SC_THREAD_PROC_ && handle.proc_kind() != sc_core::SC_CTHREAD_PROC_))
+    throw std::invalid_argument("stack size requires a live thread or clocked-thread handle");
   auto* thread = static_cast<sc_core::sc_thread_handle>(handle);
-  if (!thread) throw std::invalid_argument("stack size requires a live thread handle");
   sc_core::sc_set_stack_size(thread, size);
 }
 /** @brief Set stack size through the original borrowed native thread pointer form.

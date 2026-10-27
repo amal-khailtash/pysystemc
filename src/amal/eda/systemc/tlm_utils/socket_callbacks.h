@@ -8,6 +8,7 @@
 #include <functional>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 namespace pysystemc_interfaces
 {

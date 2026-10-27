@@ -139,6 +139,7 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
     if value_type(value) is not None:
         return register(file, value, name, *args, native_free=True)
     if hasattr(value, "read"):
+        signal_type = None
         for cls in type(value).__mro__:
             native_name = getattr(cls, "__cpp_name__", "")
             for prefix, method in (("sc_core::sc_in<", "input"), ("sc_core::sc_inout<", "inout")):
@@ -148,13 +149,6 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
                     datatype = native_name[len(prefix) : -1]
                     dispatch = cppyy.gbl.pysystemc_tracing.port_dispatch[datatype]
                     return getattr(dispatch, method)(file, value, name)
-        sample = value.read()
-        # Python float/int conversion loses the native signal specialization.
-        # Resolve the inherited native input interface before falling back to
-        # the callback value type (for wrappers lacking native class metadata).
-        value_type = bool if isinstance(sample, bool) else type(sample)
-        for cls in type(value).__mro__:
-            native_name = getattr(cls, "__cpp_name__", "")
             if native_name.startswith(
                 ("sc_core::sc_signal_in_if<", "sc_core::sc_signal_inout_if<", "sc_core::sc_signal<")
             ):
@@ -165,13 +159,17 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
                     if char == "," and depth == 0:
                         arguments = arguments[:index]
                         break
-                value_type = arguments.strip()
+                signal_type = arguments.strip()
                 break
-        if value_type == "long double":
+        if signal_type is None:
+            # Do not probe arbitrary read() methods: FIFO reads consume samples
+            # and user-defined readers may block or have other side effects.
+            return _native_sc_trace(file, value, name, *args)
+        if signal_type == "long double":
             raise TypeError("native SystemC tracing does not provide a long double overload")
-        if args and value_type not in ("char", "short", "int", "long"):
+        if args and signal_type not in ("char", "short", "int", "long"):
             raise TypeError("native signal tracing accepts explicit widths only for char, short, int and long")
-        return cppyy.gbl.pysystemc_tracing.signal_dispatch[value_type].trace(file, value, name, *args)
+        return cppyy.gbl.pysystemc_tracing.signal_dispatch[signal_type].trace(file, value, name, *args)
     return _native_sc_trace(file, value, name, *args)
 
 

@@ -48,6 +48,9 @@ def guard_fifo_class(native, datatype):
         """
     if hasattr(native, "write"):
         methods += f"""
+      /** Guard a borrowed blocking FIFO write; retain input and channel.
+       * The caller releases GIL; Python reset/kill unwind is returned by bool.
+       */
       static bool write(sc_core::sc_fifo_blocking_out_if<{value}>& channel, const {value}& value) {{
         return sc_core::python_fifo_write(channel, value);
       }}
