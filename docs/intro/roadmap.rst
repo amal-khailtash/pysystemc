@@ -20,6 +20,21 @@ Verification libraries
    Connect Python testbenches to native UVM components, sequences, phases and
    objections while retaining familiar SystemC verification semantics.
 
+HLS modeling libraries
+----------------------
+
+`HLSLibs <https://hlslibs.org/>`_ (`GitHub repositories <https://github.com/hlslibs/>`_)
+   Integrate Algorithmic C datatypes from ``ac_types``, including arbitrary-width
+   integers, fixed-point values and channels. Extend integration to related
+   libraries such as ``ac_math`` and ``ac_dsp``, preserving native template
+   parameters and numeric semantics with Python/C++ reference comparisons.
+
+`MatchLib <https://github.com/NVlabs/matchlib>`_
+   Enable Python-driven SystemC models and testbenches to use MatchLib components
+   and Connections channels. Verify clock/reset behavior, handshake timing and
+   backpressure against native examples, including interoperability with
+   Algorithmic C datatypes.
+
 RTL co-simulation
 -----------------
 
