@@ -865,8 +865,12 @@ select the exact zero-argument const event signature. For example::
    event = finder.find_event()
 
 The finder borrows its port, interface and returned event. Keep those objects
-alive through all sensitivity/wait consumers. Explicit interface lookup retains
-native dynamic-cast checks; an incompatible or unbound interface reports E118.
+alive through all sensitivity/wait consumers. Static sensitivity borrows the
+finder itself until elaboration completes. Retain a direct finder, or its cached
+finder and cache owner, through that boundary; store it on the module rather
+than passing a temporary finder. Once elaboration resolves sensitivity to the
+native event, the event and its channel must still outlive the process.
+Explicit interface lookup retains native dynamic-cast checks; an incompatible or unbound interface reports E118.
 If the report handler continues, the result is ``sc_event.none``.
 
 ``sc_event_finder_cache()`` supplies an owning pointer slot for
