@@ -60,6 +60,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Replace broad datatype and core constant/alias contracts with declaration-specific ownership, GIL, and error behavior; clarify unavailable direct callback typedef lookups.
+- Complete the private-declaration exclusion record and correct the documented public API count to 12,681.
 - Reject unsupported readable trace inputs without consuming FIFO data or calling their `read()` methods.
 - Reject method-process handles in the native stack-size bridge before converting them to thread handles.
 - Allow zero-byte allocation from an initialized zero-capacity byte heap while continuing to reject uninitialized storage.

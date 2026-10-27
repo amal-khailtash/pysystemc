@@ -409,12 +409,12 @@ count of working Python features. These are details of the existing A–F scope,
 not additional requirements discovered during implementation.
 
 Download :download:`the complete per-declaration inventory <../_static/public-api-inventory.csv>`
-for all 12,698 public entries, exact native signatures and Python candidate
+for all 12,681 public entries, exact native signatures and Python candidate
 spellings, ownership, GIL, errors, source evidence and individual statuses.
-The downloadable file is committed documentation, independent of local AI records.
-Four private event-expression constructors/aliases and the disabled private
-context copy constructors were removed from the public
-list; their identities and access-control rationale remain in
+Private event-expression constructors/aliases, port aliases, context copy
+constructors and allocation operators, and disabled fixed-point base
+constructors are excluded from the public list. Their 24 identities and
+access-control rationale remain in
 :download:`the exclusion record <../_static/public-api-exclusions.csv>`.
 
 **Status rules:** ``untested`` means runtime semantics have not been verified for
@@ -434,7 +434,7 @@ independent native references. Remaining entries retain their declaration-level
 status; mutable-global write semantics and callable overload families are not
 inferred from namespace availability. See :doc:`../api/coverage`.
 
-* ☑ ``sc_core::CFT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☐ ``sc_core::CFT`` — 1 declaration; native comparator callback use is supported and tested. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
 * ☑ ``sc_core::PHASH_DEFAULT_GROW_FACTOR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::PHASH_DEFAULT_INIT_TABLE_SIZE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::PHASH_DEFAULT_MAX_DENSITY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -804,7 +804,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_plist_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_plist_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_plist_iter`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
-* ☑ ``sc_core::sc_plist_map_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☐ ``sc_core::sc_plist_map_fn`` — 1 declaration; native list callback use is supported and tested. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
 * ☑ ``sc_core::sc_port`` — 67 declarations; runtime: 67 supported; mapping: 67 reviewed.
 * ☑ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 supported; mapping: 127 reviewed.
 * ☑ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
