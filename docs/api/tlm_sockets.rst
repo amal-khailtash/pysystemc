@@ -53,6 +53,12 @@ Forward target indices and backward initiator indices can differ on the same
 multi-to-multi connection. Duplicate multi registrations warn and keep the first
 callback. Passthrough duplicates also keep the first callback; tagged passthrough
 registration updates its user ID even when warning about a duplicate callback.
+Simple socket duplicates also preserve the first callback, except that native
+tagged target DMI registration replaces it after warning. Tagged simple
+registrations update their user ID according to the native setter. Ignored
+callback candidates are released; installed callbacks remain retained for the
+socket's native lifetime. If the warning throws, registration leaves the prior
+callback installed.
 
 Binding and simulation
 ----------------------
@@ -116,7 +122,8 @@ directly. For example, with a native ``Owner::transport`` member::
 ``from_member`` requires a qualified native member name without a leading ``&``.
 C++ checks the exact callback signature; incompatible signatures raise cppyy
 template conversion errors. Holders support default null construction, copying
-and ``valid()``. A null pointer must not be used for transport dispatch. Initiator
+and ``valid()``. Registering a null holder raises ``TypeError`` before changing
+the native callback slot. Initiator
 aliases are ``nb_cb`` and ``dmi_cb``; target aliases are ``nb_cb``, ``b_cb``,
 ``dbg_cb`` and ``dmi_cb``. These values store the native pointer and do not own
 the callback module. Keep ``owner`` alive until the socket is no longer used.

@@ -12,9 +12,11 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <systemc>
+#include <utility>
 
 #include "binding_log.h"
 
@@ -358,16 +360,41 @@ bool guarded_wait(Operation operation)
   }
 }
 
-/** @brief Guard native FIFO read against cppyy consuming scheduler unwind.
- * @details Borrow channel for this call, release GIL before entry. On unwind
- * Python must raise its private unwind signal; output is assigned only on success.
+/** @brief Guard a native value-return FIFO read against cppyy consuming scheduler unwind.
+ * @details Borrow channel for this call and release the GIL before entry. The
+ * disengaged optional denotes interruption; the native value overload only
+ * requires T to be copy-constructible, not default-constructible or assignable.
+ * On unwind Python must raise its private unwind signal before exposing a value.
  */
 template <class T>
-std::pair<T, bool> python_fifo_read(sc_fifo_blocking_in_if<T>& channel)
+std::pair<std::optional<T>, bool> python_fifo_read(sc_fifo_blocking_in_if<T>& channel)
 {
-  T value{};
-  bool complete = python_guarded_operation([&] { channel.read(value); });
+  std::optional<T> value;
+  bool complete = python_guarded_operation(
+    [&]
+    {
+      T sample = channel.read();
+      value.emplace(sample);
+    });
   return {value, complete};
+}
+
+/** @brief Guard a native output-parameter FIFO read using private staged storage.
+ * @details Copy the caller's initial value before entering the guarded call,
+ * then dispatch to the native void read(T&) overload. This avoids default
+ * construction and keeps the caller's target unchanged if reset or kill
+ * interrupts the read. Call with the GIL released; exceptions propagate.
+ */
+template <class T>
+std::pair<std::optional<T>, bool> python_fifo_read_output(sc_fifo_blocking_in_if<T>& channel, const T& initial)
+{
+  std::optional<T> staged(initial);
+  bool complete = python_guarded_operation([&] { channel.read(*staged); });
+  if (!complete)
+  {
+    staged.reset();
+  }
+  return {staged, complete};
 }
 
 /** @brief Guard native FIFO writes; borrowed input is copied by the channel.

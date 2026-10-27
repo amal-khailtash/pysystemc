@@ -313,7 +313,12 @@ def _report(severity, message_type, message, *args):
 
 
 cppyy.gbl.sc_core.sc_report_handler.report = staticmethod(_report)
-_install_report_policy(cppyy.gbl.sc_core.sc_report_handler, cppyy.gbl.sc_core.sc_severity)
+_install_report_policy(
+    cppyy.gbl.sc_core.sc_report_handler,
+    cppyy.gbl.sc_core.sc_severity,
+    cppyy.gbl.pysystemc.report_clear_log_file_name,
+    cppyy.nullptr,
+)
 
 
 def _report_stop_after(subject, *args):

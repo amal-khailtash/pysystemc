@@ -6,6 +6,17 @@
 #include <sysc/utils/sc_report_handler.h>
 namespace pysystemc
 {
+/** @brief Clear the native report log filename through its explicit null setter.
+ * @return False, matching native set_log_file_name(nullptr).
+ * @details The native handler frees its copied filename. Call with the GIL held
+ * on the simulation thread after any active log stream has been closed. No
+ * callback is invoked or retained; native exceptions propagate.
+ */
+bool report_clear_log_file_name()
+{
+  return sc_core::sc_report_handler::set_log_file_name(nullptr);
+}
+
 /** @brief Emit one message report without cppyy retrying after a thrown report.
  * @details String arguments are borrowed through this GIL-held call. Native
  * report policy owns copied diagnostics; Python handlers retain their own

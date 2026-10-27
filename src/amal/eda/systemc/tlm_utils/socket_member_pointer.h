@@ -1,6 +1,8 @@
 /** @file Exact native storage for multi-socket callback member pointers. */
 #pragma once
 
+#include <stdexcept>
+
 namespace pysystemc_interfaces
 {
 /** @brief Select a public callback typedef without changing its native type. */
@@ -62,6 +64,7 @@ struct socket_member_pointer
   /** @brief Register the stored pointer on a borrowed socket and MODULE owner. */
   void register_on(Socket& socket, module_type* owner) const
   {
+    if (!valid()) throw std::invalid_argument("cannot register a null socket callback member pointer");
     if constexpr (Kind == 0)
       socket.register_nb_transport_bw(owner, value);
     else if constexpr (Kind == 1)

@@ -18,12 +18,14 @@ def _action_mask(value):
     return mask
 
 
-def install_report_policy(handler, severity_type):
+def install_report_policy(handler, severity_type, clear_log_file_name, null_pointer):
     """Install checked setters on the native report-handler class.
 
     Args:
         handler: Native sc_report_handler class after bridge initialization.
         severity_type: Native sc_severity enum used to select policy scope.
+        clear_log_file_name: Exact native null filename setter bridge.
+        null_pointer: cppyy's native null pointer singleton.
 
     Returns:
         None. Native overloads remain responsible for all non-mask arguments.
@@ -38,6 +40,28 @@ def install_report_policy(handler, severity_type):
     native_suppress = handler.suppress
     native_force = handler.force
     native_catch = handler.set_catch_actions
+    native_log_name = handler.set_log_file_name
+
+    def set_log_file_name(filename):
+        """Set the copied log filename or clear it with None or cppyy.nullptr.
+
+        Args:
+            filename: Native-compatible filename, or a null pointer selection.
+
+        Returns:
+            True when a new filename is installed. False when a non-null name
+            is already configured or the name is cleared, as in native SystemC.
+
+        Raises:
+            TypeError: The argument cannot convert to a native filename.
+
+        Call with the GIL held on the simulation thread. Close an active default
+        log stream before changing its name. Native policy owns the copied name;
+        no Python callback is retained or invoked.
+        """
+        if filename is None or filename is null_pointer:
+            return clear_log_file_name()
+        return native_log_name(filename)
 
     def set_actions(*args):
         """Set severity, message or message/severity native report actions.
@@ -130,3 +154,4 @@ def install_report_policy(handler, severity_type):
     handler.suppress = staticmethod(suppress)
     handler.force = staticmethod(force)
     handler.set_catch_actions = staticmethod(set_catch_actions)
+    handler.set_log_file_name = staticmethod(set_log_file_name)

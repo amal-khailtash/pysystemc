@@ -78,6 +78,23 @@ initiator_dmi = initiator_type.dmi_cb(initiator_dmi)
 assert initiator_nb.valid() and initiator_dmi.valid()
 initiator_type.register_nb_transport_bw(owner.outer_initiator, owner, initiator_nb)
 initiator_type.register_invalidate_direct_mem_ptr(owner.outer_initiator, owner, initiator_dmi)
+for registration, alias in (
+    ("register_nb_transport_bw", initiator_type.nb_cb),
+    ("register_invalidate_direct_mem_ptr", initiator_type.dmi_cb),
+):
+    null_callback = alias()
+    try:
+        null_callback.register_on(owner.outer_initiator, owner)
+    except cppyy.gbl.std.invalid_argument:
+        pass
+    else:
+        raise AssertionError("native registration accepted a null initiator callback")
+    try:
+        getattr(initiator_type, registration)(owner.outer_initiator, owner, null_callback)
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("Python registration accepted a null initiator callback")
 for alias, registration, callback in target_callbacks:
     alias_type = getattr(target_type, alias)
     assert not alias_type().valid()
@@ -86,6 +103,19 @@ for alias, registration, callback in target_callbacks:
     callback_value = alias_type(callback_value)
     assert callback_value.valid()
     assert getattr(target_type, registration)(owner.inner_target, owner, callback_value) is None
+    null_callback = alias_type()
+    try:
+        null_callback.register_on(owner.inner_target, owner)
+    except cppyy.gbl.std.invalid_argument:
+        pass
+    else:
+        raise AssertionError("native registration accepted a null target callback")
+    try:
+        getattr(target_type, registration)(owner.inner_target, owner, null_callback)
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("Python registration accepted a null target callback")
 
 # Exercise both hierarchy bind overloads in separate fresh-kernel executions.
 if bind_mode == "bind":

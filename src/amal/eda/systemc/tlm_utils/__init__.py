@@ -32,6 +32,15 @@ _callback_queues = []
 _callback_sockets = []
 
 
+def _retain_socket_callback(socket, method, callback):
+    """Retain the callback currently installed for one native socket slot."""
+    for index, (retained_socket, retained_method, _) in enumerate(_callback_sockets):
+        if retained_socket is socket and retained_method == method:
+            _callback_sockets[index] = (socket, method, callback)
+            return
+    _callback_sockets.append((socket, method, callback))
+
+
 def _pythonize_get_queue(queue_type, name):
     """Expose the native queue's public pair alias omitted by cppyy reflection.
 
@@ -128,6 +137,8 @@ def _pythonize_multi_callback_aliases(socket_type, name):
             copies the pointer and does not acquire ownership of the MODULE.
             """
             if isinstance(callback, _pointer):
+                if not callback.valid():
+                    raise TypeError("cannot register a null socket callback member pointer")
                 return callback.register_on(socket, owner)
             return _native(socket, owner, callback)
 
@@ -224,12 +235,16 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None, tag
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, *args, _native=native_register, _method=method):
-                """Retain callable ownership after successful native registration."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked, *args)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked, *args):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -283,12 +298,16 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, *args, _native=native_register, _method=method):
-                """Retain a callable after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked, *args)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked, *args):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -342,12 +361,16 @@ def callback_passthrough_target_socket(name, *, width=32, protocol=None, policy=
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, *args, _native=native_register, _method=method):
-                """Retain a callable after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked, *args)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked, *args):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -381,12 +404,16 @@ def callback_multi_initiator_socket(name, *, width=32, protocol=None, connection
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, _native=native_register, _method=method):
-                """Retain callback ownership after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -424,12 +451,16 @@ def callback_multi_target_socket(name, *, width=32, protocol=None, connections=0
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, _native=native_register, _method=method):
-                """Retain callable ownership after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True

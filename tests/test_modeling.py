@@ -503,6 +503,34 @@ def test_convenience_socket_indexed_forward_access(tmp_path):
     assert "CALLBACK_INDEXED_SOCKET_OK" in run_example(tmp_path, "tests/models/tlm_callback_indexed.py")
 
 
+def test_convenience_socket_duplicate_callback_retention(tmp_path):
+    """Verify duplicate warnings preserve native callback selection and ownership."""
+    output = run_example(tmp_path, "tests/models/tlm_callback_duplicate_semantics.py")
+    assert "CALLBACK_DUPLICATE_PYTHON_OK 26" in output
+    native = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples/run_sysc_cpp.py"),
+            str(ROOT / "tests/native/tlm_callback_duplicate_reference.cpp"),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    python_records = [line for line in output.splitlines() if line.startswith("DUPLICATE_REF ")]
+    native_records = [line for line in native.stdout.splitlines() if line.startswith("DUPLICATE_REF ")]
+    assert (
+        python_records
+        == native_records
+        == [
+            "DUPLICATE_REF simple first -1",
+            "DUPLICATE_REF tagged_dmi duplicate 22",
+        ]
+    )
+
+
 def test_convenience_socket_callback_exception_state(tmp_path):
     """Verify callback errors preserve borrowed mutations and stop at service time."""
     assert "CALLBACK_SOCKET_ERROR_OK" in run_example(tmp_path, "tests/models/tlm_callback_socket_error.py")

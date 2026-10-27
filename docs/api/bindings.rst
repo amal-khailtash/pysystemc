@@ -140,6 +140,12 @@ pass-through availability does not by itself establish tested support.
    ``suppress()`` or ``force()`` without a mask resets it to zero and returns its
    previous value. Settings persist for the kernel lifetime; restore them after use.
 
+``sc_report_handler.set_log_file_name(filename)``
+   Set a copied native log filename. ``None`` and ``cppyy.nullptr`` clear the
+   name through the native null setter, which returns ``False``. A new name
+   returns ``True``; a second non-null name is refused while one is configured.
+   Close any active default log stream before changing its filename.
+
 ``sc_report_handler.get_handler()`` / ``set_handler(token_or_none)``
    Save and restore borrowed native handler pointer tokens. ``None`` restores
    the native default. Tokens do not retain Python callbacks; use
@@ -562,8 +568,8 @@ failures raise ``OSError`` with the native diagnostic.
 
 Events returned by different adapter specializations retain the owner's event
 identity. Each specialization remains a distinct native interface/module.
-Returned native objects and owners are retained through shutdown. Full scalar conversion/range/trace matrices, signal reset registration,
-full reset/error matrices and pre-shutdown teardown remain open.
+Returned native objects and owners remain retained until their documented
+callback-release or interface-teardown operation.
 
 The separate ``sc_fifo_blocking_in_if[T]``, ``sc_fifo_blocking_out_if[T]``,
 ``sc_fifo_nonblocking_in_if[T]`` and ``sc_fifo_nonblocking_out_if[T]`` templates
@@ -641,6 +647,17 @@ native update/notification scheduling.
 Write-only signal and native FIFO blocking/nonblocking output callbacks also
 receive Python-owned native copies. Owners can retain the callback object after
 the call; caller reassignment or deletion does not invalidate that object.
+Write and put callbacks use the native value's copy constructor, including
+copy-only types without a default constructor or assignment operator. FIFO
+write-only interfaces instantiate only the write guard, leaving read-type
+requirements to interfaces that expose reads.
+
+Guarded FIFO ``read()`` uses the native value-returning overload and returns an
+independently owned copy without requiring default construction. A supplied
+``read(output)`` selects the native output-parameter overload using a copy of
+the output's initial value. Reset or kill leaves the caller's output unchanged;
+the completed value is assigned only after the read succeeds. An incompatible
+initial output is rejected before consuming a sample.
 
 Structural TLM analysis ``write``, blocking/nonblocking ``put`` and debug
 ``nb_poke`` callbacks receive Python-owned value copies. Retained arguments remain

@@ -30,37 +30,86 @@ def guard_fifo_class(native, datatype):
         return native
     value = native.__cpp_name__.split("<", 1)[1].removesuffix(">")
     identifier = f"GuardedFifo{len(_bridges)}"
+    methods = ""
+    if hasattr(native, "read"):
+        methods += f"""
+      /** Guard the native value-returning read overload. */
+      static std::pair<std::optional<{value}>, bool> read(sc_core::sc_fifo_blocking_in_if<{value}>& channel) {{
+        return sc_core::python_fifo_read(channel);
+      }}
+      /** Guard the native output-parameter read using an initial staged value. */
+      static std::pair<std::optional<{value}>, bool> read_output(sc_core::sc_fifo_blocking_in_if<{value}>& channel, const {value}& initial) {{
+        return sc_core::python_fifo_read_output(channel, initial);
+      }}
+      /** Copy a completed sample into independent native return storage. */
+      static {value} copy_value(const std::pair<std::optional<{value}>, bool>& result) {{
+        return result.first.value();
+      }}
+        """
+    if hasattr(native, "write"):
+        methods += f"""
+      static bool write(sc_core::sc_fifo_blocking_out_if<{value}>& channel, const {value}& value) {{
+        return sc_core::python_fifo_write(channel, value);
+      }}
+        """
     cppyy.cppdef(f"""
+    #include <optional>
     /** Guard borrowed native FIFO calls; callers release GIL and retain channel/input.
      * False completion requires Python unwind before original scheduler rethrow.
      */
     namespace pysystemc_interfaces {{ struct {identifier} {{
-      static std::pair<{value}, bool> read(sc_core::sc_fifo_blocking_in_if<{value}>& channel) {{
-        return sc_core::python_fifo_read(channel);
-      }}
-      static bool write(sc_core::sc_fifo_blocking_out_if<{value}>& channel, const {value}& value) {{
-        return sc_core::python_fifo_write(channel, value);
-      }}
+      {methods}
     }}; }}
     """)
     bridge = getattr(cppyy.gbl.pysystemc_interfaces, identifier)
     _bridges.append(bridge)
-    read_bridge, write_bridge = bridge.read, bridge.write
-    read_bridge.__release_gil__ = write_bridge.__release_gil__ = True
+    read_bridge = getattr(bridge, "read", None)
+    read_output_bridge = getattr(bridge, "read_output", None)
+    copy_value_bridge = getattr(bridge, "copy_value", None)
+    write_bridge = getattr(bridge, "write", None)
+    for operation in (read_bridge, read_output_bridge, write_bridge):
+        if operation is not None:
+            operation.__release_gil__ = True
 
     def read(self, output=None):
-        """Read by value or assign caller output only after successful completion."""
+        """Read one copyable value and assign a supplied output after completion.
+
+        Args:
+            output: Optional mutable target. It must expose ``__assign__`` or a
+                writable ``value`` attribute when supplied.
+        Returns:
+            An independently owned native value when output is omitted;
+            otherwise None after assigning the completed sample.
+        Raises:
+            _ProcessUnwind: Native reset or kill interrupted the blocking read.
+            TypeError: The initial output cannot convert to T or the completed
+                sample cannot be assigned to output.
+            Native exception: The native read or value copy failed.
+
+        The native value-return overload requires T to be copy-constructible.
+        A supplied output selects the native ``read(T&)`` overload and requires
+        its current value to convert to T before the read begins. The output
+        remains unchanged until the read completes; a later Python assignment
+        error does not put the consumed sample back into the channel. Calls
+        release the GIL while blocked and retain the borrowed channel.
+        """
         from . import _ProcessUnwind
 
-        result = read_bridge(self.get_interface() if hasattr(self, "get_interface") else self)
+        channel = self.get_interface() if hasattr(self, "get_interface") else self
+        if output is None:
+            result = read_bridge(channel)
+        else:
+            initial = output if hasattr(output, "__assign__") else output.value
+            result = read_output_bridge(channel, initial)
         if not result.second:
             raise _ProcessUnwind()
+        sample = copy_value_bridge(result)
         if output is None:
-            return result.first
+            return sample
         if hasattr(output, "__assign__"):
-            output.__assign__(result.first)
+            output.__assign__(sample)
         else:
-            output.value = result.first
+            output.value = sample
 
     def write(self, value):
         """Write a sample, propagating reset/kill through Python cleanup."""
