@@ -28,7 +28,9 @@ def capture(report, actions):
     )
 
 
-def report_string(severity=sc.SC_WARNING, message_type=rejected_message_type, message="probe", file="arguments.py", line=10):
+def report_string(
+    severity=sc.SC_WARNING, message_type=rejected_message_type, message="probe", file="arguments.py", line=10
+):
     """Call the message-string report signature with selectable fields."""
     handler.report(severity, message_type, message, file, line)
 
@@ -114,7 +116,11 @@ def expect_rejection(label, expected_exception, invoke):
 
 
 rejections = (
-    ("wrong_arity_string", TypeError, lambda: handler.report(sc.SC_WARNING, rejected_message_type, "probe", "arguments.py")),
+    (
+        "wrong_arity_string",
+        TypeError,
+        lambda: handler.report(sc.SC_WARNING, rejected_message_type, "probe", "arguments.py"),
+    ),
     (
         "wrong_arity_verbosity",
         TypeError,

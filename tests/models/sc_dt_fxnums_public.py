@@ -161,10 +161,7 @@ def exercise(family, number_type, observer_type, params, cast, sources):
         "CTOR",
         family,
         "zero",
-        render(number)
-        + "|"
-        + str(int(probe.observer_matches(number, observer)))
-        + "|1|1",
+        render(number) + "|" + str(int(probe.observer_matches(number, observer))) + "|1|1",
     )
     del number
 
@@ -180,24 +177,31 @@ def exercise(family, number_type, observer_type, params, cast, sources):
             "CTOR",
             family,
             source_signature,
-            render(number)
-            + "|"
-            + str(int(probe.observer_matches(number, observer)))
-            + "|1|1",
+            render(number) + "|" + str(int(probe.observer_matches(number, observer))) + "|1|1",
         )
         del number
 
         number = construct(number_type, family, "double", 3.125, params, cast, observer)
         assign = number.__assign__.__overload__(source_signature)
         assigned = assign(source)
-        emit("ASSIGN", family, source_signature, render(number) + "|" + str(int(cppyy.addressof(assigned) == cppyy.addressof(number))))
+        emit(
+            "ASSIGN",
+            family,
+            source_signature,
+            render(number) + "|" + str(int(cppyy.addressof(assigned) == cppyy.addressof(number))),
+        )
         del assigned, number
 
         for label, method, native_name, _ in operations:
             number = construct(number_type, family, "double", 3.125, params, cast, observer)
             getattr(number, method).__overload__(source_signature)
             result = getattr(number, method)(source)
-            emit(label, family, source_signature, render(number) + "|" + str(int(cppyy.addressof(result) == cppyy.addressof(number))))
+            emit(
+                label,
+                family,
+                source_signature,
+                render(number) + "|" + str(int(cppyy.addressof(result) == cppyy.addressof(number))),
+            )
             del result, number
 
     number = construct(number_type, family, "double", 3.125, params, cast, observer)

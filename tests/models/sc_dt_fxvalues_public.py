@@ -85,9 +85,7 @@ def construct(owner_type, signature, values):
     if len(params) == 1:
         owner_type.__init__.__overload__(", ".join(params))(owner, cppyy.nullptr)
     else:
-        owner_type.__init__.__overload__(", ".join(params))(
-            owner, values[params[0]], cppyy.nullptr
-        )
+        owner_type.__init__.__overload__(", ".join(params))(owner, values[params[0]], cppyy.nullptr)
     return owner
 
 
@@ -102,8 +100,7 @@ for type_name, value_type in (("sc_dt::sc_fxval", dt.sc_fxval), ("sc_dt::sc_fxva
     constructors = [
         row
         for row in rows
-        if row["name"] == f"{type_name}::{type_name.split('::')[-1]}"
-        and row["kind"] == "CXXConstructorDecl"
+        if row["name"] == f"{type_name}::{type_name.split('::')[-1]}" and row["kind"] == "CXXConstructorDecl"
     ]
     seen = set()
     for row in constructors:
@@ -139,8 +136,7 @@ for type_name, value_type in (("sc_dt::sc_fxval", dt.sc_fxval), ("sc_dt::sc_fxva
     target_cpp = type_name
     for method_name, (adapter_name, python_mutation, operation) in compound_methods.items():
         selected = [
-            row for row in rows
-            if row["name"] == f"{type_name}::{method_name}" and row["kind"] == "CXXMethodDecl"
+            row for row in rows if row["name"] == f"{type_name}::{method_name}" and row["kind"] == "CXXMethodDecl"
         ]
         for param in {arguments(row["signature"])[0] for row in selected}:
             source = 2 if operation >= 4 else values[param]
@@ -155,8 +151,7 @@ for type_name, value_type in (("sc_dt::sc_fxval", dt.sc_fxval), ("sc_dt::sc_fxva
 # Run every exact named add/subtract/multiply/divide overload for each result type.
 for type_name, value_type in (("sc_dt::sc_fxval", dt.sc_fxval), ("sc_dt::sc_fxval_fast", dt.sc_fxval_fast)):
     selected = [
-        row for row in rows
-        if row["name"] == "sc_dt::add" and row["signature"].startswith(f"void ({type_name} &,")
+        row for row in rows if row["name"] == "sc_dt::add" and row["signature"].startswith(f"void ({type_name} &,")
     ]
     pairs = {}
     for row in selected:
@@ -175,8 +170,7 @@ for type_name, value_type in (("sc_dt::sc_fxval", dt.sc_fxval), ("sc_dt::sc_fxva
 # Exact native arithmetic adapter types cover all declared friend operand orderings.
 for type_name in ("sc_dt::sc_fxval", "sc_dt::sc_fxval_fast"):
     selected = [
-        row for row in rows
-        if row["name"] == "sc_dt::operator+" and row["signature"].startswith(f"const {type_name} (")
+        row for row in rows if row["name"] == "sc_dt::operator+" and row["signature"].startswith(f"const {type_name} (")
     ]
     pairs = {}
     for row in selected:

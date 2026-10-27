@@ -130,6 +130,16 @@ pass-through availability does not by itself establish tested support.
    severity enums. An omitted limit is -1 and removes that selected limit.
    This adapter avoids treating a severity enum as an integer message limit.
 
+``sc_report_handler.set_actions(...)`` / ``suppress(...)`` / ``force(...)`` / ``set_catch_actions(mask)``
+   ``set_actions`` accepts severity, message and message/severity scopes. Omitting
+   its mask installs ``SC_UNSPECIFIED`` and returns the previous scoped actions,
+   matching the native default argument and fallback policy.
+   Action masks must be integer-like and fit native unsigned int. Negative or
+   oversized masks raise ``OverflowError`` before changing policy; incompatible
+   types raise ``TypeError``. Native custom action bits remain available. Calling
+   ``suppress()`` or ``force()`` without a mask resets it to zero and returns its
+   previous value. Settings persist for the kernel lifetime; restore them after use.
+
 ``sc_report_handler.get_handler()`` / ``set_handler(token_or_none)``
    Save and restore borrowed native handler pointer tokens. ``None`` restores
    the native default. Tokens do not retain Python callbacks; use
@@ -592,7 +602,7 @@ The default event callback returns retained native event storage.
 ``sc_port[sc_signal_write_if[T]]`` requires ``write(value)`` and
 ``get_writer_policy``. Write callbacks receive a value copy. The owner provides
 native update scheduling and writer policy; the adapter does not enforce a policy
-independently. Full reset/error/type and teardown matrices remain open.
+independently.
 
 Synchronization callbacks return signed native 32-bit integers; Python bools,
 non-integers and out-of-range values raise ``TypeError``. Signal event/edge flags
@@ -606,6 +616,12 @@ Structural TLM ``nb_put``, ``nb_can_put``, ``nb_can_get``, ``nb_can_peek`` and
 strings and other truthy objects raise ``TypeError`` rather than being converted
 implicitly. Later valid callbacks remain usable. Callback mutations of payloads,
 DMI descriptors or owner state are not rolled back when result validation fails.
+
+Blocking TLM ``peek()`` and ``peek(tag)`` select the native value overload
+directly, including ``cppyy.nullptr`` tags. Callback exceptions
+propagate without being replaced by an output-overload conversion error.
+Calls after structural callback release raise ``RuntimeError``; failed output
+calls preserve caller storage.
 
 Structural TLM FIFO ``nb_expand`` and ``nb_unbound`` callbacks return None, matching
 the native void interface. ``nb_reduce``, ``nb_bound`` and debug ``nb_poke`` return

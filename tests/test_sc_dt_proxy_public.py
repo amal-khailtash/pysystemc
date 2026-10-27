@@ -46,9 +46,7 @@ def inventory_groups():
                 continue
             name = row["name"]
             if name == "sc_dt::sc_proxy" or name.startswith("sc_dt::sc_proxy::"):
-                groups[row["source"]].append(
-                    (row["name"], row["kind"], row["source"], row["signature"])
-                )
+                groups[row["source"]].append((row["name"], row["kind"], row["source"], row["signature"]))
     return groups
 
 
@@ -86,12 +84,8 @@ def test_sc_dt_proxy_inventory_and_native_parity(tmp_path):
     if python_records != native_records:
         for index, (python_record, native_record) in enumerate(zip(python_records, native_records)):
             if python_record != native_record:
-                raise AssertionError(
-                    f"record {index} differs:\nPython: {python_record}\nNative: {native_record}"
-                )
-        raise AssertionError(
-            f"record counts differ: Python={len(python_records)} native={len(native_records)}"
-        )
+                raise AssertionError(f"record {index} differs:\nPython: {python_record}\nNative: {native_record}")
+        raise AssertionError(f"record counts differ: Python={len(python_records)} native={len(native_records)}")
 
     records = [line.split("\t") for line in python_records]
     assert Counter(row[2] for row in records) == Counter(
@@ -113,7 +107,4 @@ def test_sc_dt_proxy_inventory_and_native_parity(tmp_path):
     for family in ("bv", "lv", "custom"):
         assert {row[3] for row in records if row[1] == family and row[2] == "source"} == SOURCE_LABELS
     assert "SDP\tcustom\tlifetime\tvirtual_delete\t1" in python_records
-    assert any(
-        row[:4] == ["SDP", "bv", "report", "negative_shift"] and row[4] == "1"
-        for row in records
-    )
+    assert any(row[:4] == ["SDP", "bv", "report", "negative_shift"] and row[4] == "1" for row in records)

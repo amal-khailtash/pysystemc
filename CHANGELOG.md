@@ -57,6 +57,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve TLM blocking peek callback errors for value and tag calls, including calls after callback release.
+- Preserve native default action masks for severity, message and message/severity report policies.
+- Reject report action masks outside the native unsigned-integer range before changing action, suppression, force or catch policies.
 - Preserve native E800 registration errors when `sc_report.register_id` receives `cppyy.nullptr`, including report metadata and single-call counts.
 - Dispatch report calls once when native actions throw, preserving exact counts, cached reports and Python callback errors.
 - Select exact native free `next_trigger` overloads so invalid thread calls raise the original E520 report.

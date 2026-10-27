@@ -59,7 +59,16 @@ def sources():
         "generic_concat": generic,
         **views,
     }
-    owners = (signed, unsigned, signed_fixed, unsigned_fixed, bit_vector, logic_vector, generic_signed, generic_unsigned)
+    owners = (
+        signed,
+        unsigned,
+        signed_fixed,
+        unsigned_fixed,
+        bit_vector,
+        logic_vector,
+        generic_signed,
+        generic_unsigned,
+    )
     return values, owners
 
 
@@ -75,7 +84,14 @@ def exercise_constructors():
         emit_value(family, "construct", "copy", owner_type(width))
         values, owners = sources()
         labels = (
-            "signed", "unsigned", "signed_range", "unsigned_range", "int_range", "uint_range", "bv", "lv",
+            "signed",
+            "unsigned",
+            "signed_range",
+            "unsigned_range",
+            "int_range",
+            "uint_range",
+            "bv",
+            "lv",
             "generic_concat",
         )
         for label in labels:
@@ -83,7 +99,14 @@ def exercise_constructors():
 
         target = owner_type(257)
         for label in (
-            "signed", "unsigned", "signed_range", "unsigned_range", "sc_int_base", "sc_uint_base", "bv", "lv",
+            "signed",
+            "unsigned",
+            "signed_range",
+            "unsigned_range",
+            "sc_int_base",
+            "sc_uint_base",
+            "bv",
+            "lv",
             "generic_concat",
         ):
             result = target.__assign__(values[label])
@@ -147,9 +170,16 @@ def operand_types():
 def exercise_compounds():
     """Exercise every exact compound operand overload and both increment forms."""
     operations = (
-        ("add", "__iadd__"), ("subtract", "__isub__"), ("multiply", "__imul__"), ("divide", "__itruediv__"),
-        ("remainder", "__imod__"), ("and", "__iand__"), ("or", "__ior__"), ("xor", "__ixor__"),
-        ("left_shift", "__ilshift__"), ("right_shift", "__irshift__"),
+        ("add", "__iadd__"),
+        ("subtract", "__isub__"),
+        ("multiply", "__imul__"),
+        ("divide", "__itruediv__"),
+        ("remainder", "__imod__"),
+        ("and", "__iand__"),
+        ("or", "__ior__"),
+        ("xor", "__ixor__"),
+        ("left_shift", "__ilshift__"),
+        ("right_shift", "__irshift__"),
     )
     for family, owner_type in (("sc_dt::sc_signed", dt.sc_signed), ("sc_dt::sc_unsigned", dt.sc_unsigned)):
         for operand_label, operand in operand_types():

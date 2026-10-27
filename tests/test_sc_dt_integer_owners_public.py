@@ -23,21 +23,62 @@ EXPECTED_KIND_COUNTS = {
 }
 PHASES = ("constructors", "compounds", "storage", "errors")
 EXPECTED_CONSTRUCTOR_LABELS = {
-    "width", "copy", "signed", "unsigned", "signed_range", "unsigned_range", "int_range", "uint_range", "bv",
-    "lv", "generic_concat",
+    "width",
+    "copy",
+    "signed",
+    "unsigned",
+    "signed_range",
+    "unsigned_range",
+    "int_range",
+    "uint_range",
+    "bv",
+    "lv",
+    "generic_concat",
 }
 EXPECTED_ASSIGN_LABELS = {
-    "signed", "unsigned", "signed_range", "unsigned_range", "sc_int_base", "sc_uint_base", "bv", "lv",
-    "generic_concat", "string", "int", "unsigned_int", "long", "unsigned_long", "int64", "uint64", "double",
+    "signed",
+    "unsigned",
+    "signed_range",
+    "unsigned_range",
+    "sc_int_base",
+    "sc_uint_base",
+    "bv",
+    "lv",
+    "generic_concat",
+    "string",
+    "int",
+    "unsigned_int",
+    "long",
+    "unsigned_long",
+    "int64",
+    "uint64",
+    "double",
 }
 EXPECTED_COMPOUND_LABELS = {
     f"{operation}_{operand}"
     for operation in (
-        "add", "subtract", "multiply", "divide", "remainder", "and", "or", "xor", "left_shift", "right_shift",
+        "add",
+        "subtract",
+        "multiply",
+        "divide",
+        "remainder",
+        "and",
+        "or",
+        "xor",
+        "left_shift",
+        "right_shift",
     )
     for operand in (
-        "int", "unsigned_int", "long", "unsigned_long", "int64", "uint64", "sc_int_base", "sc_uint_base",
-        "sc_signed", "sc_unsigned",
+        "int",
+        "unsigned_int",
+        "long",
+        "unsigned_long",
+        "int64",
+        "uint64",
+        "sc_int_base",
+        "sc_uint_base",
+        "sc_signed",
+        "sc_unsigned",
     )
 }
 
@@ -97,29 +138,37 @@ def test_sc_dt_integer_owners_match_native_reference(tmp_path):
         native_records = record_map(native.stdout)
         assert python_records == native_records, phase
         for family in INVENTORY_DIGESTS:
-            labels = {
-                (group, label)
-                for record_family, group, label in python_records
-                if record_family == family
-            }
+            labels = {(group, label) for record_family, group, label in python_records if record_family == family}
             if phase == "constructors":
                 assert {("construct", label) for label in EXPECTED_CONSTRUCTOR_LABELS} <= labels
                 assert {("assign", label) for label in EXPECTED_ASSIGN_LABELS} <= labels
                 assert ("lifetime", "copied_owner") in labels
             elif phase == "compounds":
                 assert {("compound", label) for label in EXPECTED_COMPOUND_LABELS} <= labels
-                assert {("increment", label) for label in ("prefix_up", "postfix_up", "prefix_down", "postfix_down")} <= labels
+                assert {
+                    ("increment", label) for label in ("prefix_up", "postfix_up", "prefix_down", "postfix_down")
+                } <= labels
             elif phase == "storage":
                 assert {("width", str(width)) for width in (1, 32, 137, 191, 257)} <= labels
                 assert {("storage", name) for name in ("packed", "raw", "set_packed")} <= labels
-                assert {("view", name) for name in ("bits", "mutable_range", "mutable_call", "const_range", "const_call")} <= labels
-                assert {("concat", name) for name in ("get", "set_int64", "set_uint64", "set_signed", "set_unsigned")} <= labels
+                assert {
+                    ("view", name) for name in ("bits", "mutable_range", "mutable_call", "const_range", "const_call")
+                } <= labels
+                assert {
+                    ("concat", name) for name in ("get", "set_int64", "set_uint64", "set_signed", "set_unsigned")
+                } <= labels
             else:
                 assert {
                     ("error", name)
                     for name in (
-                        "index_-1", "index_32", "invalid_index_-1", "invalid_index_32", "range_32_0",
-                        "invalid_range_32_0", "width_0", "width_-1",
+                        "index_-1",
+                        "index_32",
+                        "invalid_index_-1",
+                        "invalid_index_32",
+                        "range_32_0",
+                        "invalid_range_32_0",
+                        "width_0",
+                        "width_-1",
                     )
                 } <= labels
         assert "SC_DT_INTEGER_OWNERS_PUBLIC_OK" in python_output

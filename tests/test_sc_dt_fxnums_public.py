@@ -75,7 +75,9 @@ def test_sc_dt_fxnums_inventory_and_native_parity(tmp_path):
         constructors = [row for row in declarations if row["kind"] == "CXXConstructorDecl"]
         assert len(constructors) == 18
         assert {
-            row["signature"][row["signature"].index("(") + 1 : row["signature"].index(", const sc_dt::sc_fxtype_params")]
+            row["signature"][
+                row["signature"].index("(") + 1 : row["signature"].index(", const sc_dt::sc_fxtype_params")
+            ]
             for row in constructors
             if ", const sc_dt::sc_fxtype_params" in row["signature"]
         } == SOURCES
@@ -133,16 +135,8 @@ def test_sc_dt_fxnums_inventory_and_native_parity(tmp_path):
         assert borrow == "1|1"
         assert next(line[4] for line in selected if line[1] == "lifetime") == "1"
 
-    normal_wide = {
-        line[3]: line[4].split("|")
-        for line in grouped["sc_fxnum"]
-        if line[1] == "precision"
-    }
-    fast_wide = {
-        line[3]: line[4].split("|")
-        for line in grouped["sc_fxnum_fast"]
-        if line[1] == "precision"
-    }
+    normal_wide = {line[3]: line[4].split("|") for line in grouped["sc_fxnum"] if line[1] == "precision"}
+    fast_wide = {line[3]: line[4].split("|") for line in grouped["sc_fxnum_fast"] if line[1] == "precision"}
     assert normal_wide["wide137"][2] == "137" and normal_wide["wide191"][2] == "191"
     assert fast_wide["wide137"][2] == "137" and fast_wide["wide191"][2] == "191"
     assert normal_wide["wide137"][1] != fast_wide["wide137"][1]

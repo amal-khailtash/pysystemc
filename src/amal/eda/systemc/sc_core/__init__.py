@@ -32,6 +32,7 @@ from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
 from . import _tracing
+from ._report_policy import install_report_policy as _install_report_policy
 
 # Compile bridges before importing adapters that reflect their native types.
 from . import _native_setup  # noqa: F401
@@ -312,6 +313,7 @@ def _report(severity, message_type, message, *args):
 
 
 cppyy.gbl.sc_core.sc_report_handler.report = staticmethod(_report)
+_install_report_policy(cppyy.gbl.sc_core.sc_report_handler, cppyy.gbl.sc_core.sc_severity)
 
 
 def _report_stop_after(subject, *args):

@@ -21,11 +21,7 @@ def fixed_rows():
     with (ROOT / "docs/_static/public-api-inventory.csv").open(newline="") as source:
         rows = list(csv.DictReader(source))
     return {
-        type_name: [
-            row
-            for row in rows
-            if row["name"] == type_name or row["name"].startswith(type_name + "::")
-        ]
+        type_name: [row for row in rows if row["name"] == type_name or row["name"].startswith(type_name + "::")]
         for type_name in INVENTORY_HASHES
     }
 

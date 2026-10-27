@@ -142,15 +142,14 @@ def test_integer_binary_operator_inventory_is_exact_and_probeable():
 
     for family, parents in TEMPLATE_PARENT_CHILDREN.items():
         family_rows = [row for row in rows if row["name"] == family]
-        actual_parents = {
-            (row["source"], row["line"]) for row in family_rows if row["kind"] == "FunctionTemplateDecl"
-        }
+        actual_parents = {(row["source"], row["line"]) for row in family_rows if row["kind"] == "FunctionTemplateDecl"}
         assert actual_parents == parents
         for source, line in parents:
             # The template parent is an AST wrapper. Its same-location function
             # declaration is kept as the exact signature identity to probe.
             children = [
-                row for row in family_rows
+                row
+                for row in family_rows
                 if row["kind"] == "FunctionDecl" and row["source"] == source and row["line"] == line
             ]
             expected_signatures = TEMPLATE_CHILD_SIGNATURES[(family, source.rsplit("/", 1)[-1], line)]
@@ -160,6 +159,7 @@ def test_integer_binary_operator_inventory_is_exact_and_probeable():
 
 def test_integer_binary_operators_match_independent_native_phases(tmp_path):
     """Compare each typed Python case with its exact native function-pointer call."""
+
     def run_native(phase):
         """Run one independent native phase and require a clean result."""
         native = subprocess.run(
@@ -182,31 +182,48 @@ def test_integer_binary_operators_match_independent_native_phases(tmp_path):
 
     representative_labels = {
         "integer": {
-            "remainder_signed_signed", "remainder_signed_int", "remainder_int_signed",
-            "remainder_unsigned_fixed", "and_signed_unsigned", "or_unsigned_signed",
-            "xor_fixed_signed", "and_int_unsigned", "or_unsigned_int", "xor_int_signed",
-            "remainder_integer_concat", "and_integer_concat", "or_concat_integer",
-            "xor_concat_unsigned", "lifetime_owned_result",
+            "remainder_signed_signed",
+            "remainder_signed_int",
+            "remainder_int_signed",
+            "remainder_unsigned_fixed",
+            "and_signed_unsigned",
+            "or_unsigned_signed",
+            "xor_fixed_signed",
+            "and_int_unsigned",
+            "or_unsigned_int",
+            "xor_int_signed",
+            "remainder_integer_concat",
+            "and_integer_concat",
+            "or_concat_integer",
+            "xor_concat_unsigned",
+            "lifetime_owned_result",
         },
         "vector": {
-            "and_bv_lv", "or_lv_bv", "xor_bv_int", "or_int_bv", "xor_bitrefs", "lifetime_owned_vector",
-            "and_bool_pointer_left", "and_bool_pointer_right", "or_char_pointer_left",
-            "or_char_pointer_right", "xor_logic_pointer_left", "xor_logic_pointer_right",
-            "and_logic_bool", "or_logic_char", "xor_bit_int",
+            "and_bv_lv",
+            "or_lv_bv",
+            "xor_bv_int",
+            "or_int_bv",
+            "xor_bitrefs",
+            "lifetime_owned_vector",
+            "and_bool_pointer_left",
+            "and_bool_pointer_right",
+            "or_char_pointer_left",
+            "or_char_pointer_right",
+            "xor_logic_pointer_left",
+            "xor_logic_pointer_right",
+            "and_logic_bool",
+            "or_logic_char",
+            "xor_bit_int",
         },
     }
     for phase, labels in representative_labels.items():
         python_output = run_example(tmp_path, "tests/models/sc_dt_integer_binary_public.py", (phase,))
         native_output = run_native(phase)
         python_records = {
-            tuple(line.split("\t", 2)[1:]): line
-            for line in python_output.splitlines()
-            if line.startswith("BIN\t")
+            tuple(line.split("\t", 2)[1:]): line for line in python_output.splitlines() if line.startswith("BIN\t")
         }
         native_records = {
-            tuple(line.split("\t", 2)[1:]): line
-            for line in native_output.splitlines()
-            if line.startswith("BIN\t")
+            tuple(line.split("\t", 2)[1:]): line for line in native_output.splitlines() if line.startswith("BIN\t")
         }
         assert {label for label, _value in python_records} == labels | {"probe_count"}
         assert python_records == native_records, phase
@@ -220,11 +237,7 @@ def test_integer_binary_operators_match_independent_native_phases(tmp_path):
         "xor": "sc_dt::operator^",
     }.items():
         signatures = sorted(
-            {
-                row["signature"]
-                for row in inventory_rows()
-                if row["name"] == family and row["kind"] == "FunctionDecl"
-            }
+            {row["signature"] for row in inventory_rows() if row["name"] == family and row["kind"] == "FunctionDecl"}
         )
         python_output = run_example(tmp_path, "tests/models/sc_dt_integer_binary_public.py", (phase,))
         native_output = run_native(phase)

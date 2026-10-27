@@ -45,8 +45,7 @@ EXPECTED_TEMPLATE_CHILDREN = {
         "sc_concref_r<sc_bitref_r<T>, sc_dt::sc_lv_base> (sc_bitref_r<T>, const char *)",
     },
     ("sc_dt::concat", "sc_bit_proxies.h", "1285"): {
-        "sc_concref_r<sc_concref_r<T1, T2>, sc_concref_r<T3, T4>> "
-        "(sc_concref_r<T1, T2>, sc_concref_r<T3, T4>)",
+        "sc_concref_r<sc_concref_r<T1, T2>, sc_concref_r<T3, T4>> (sc_concref_r<T1, T2>, sc_concref_r<T3, T4>)",
     },
     ("sc_dt::concat", "sc_lv_base.h", "870"): {
         "sc_concref_r<sc_bitref_r<T>, sc_dt::sc_lv_base> (sc_bitref_r<T>, const char *)",
@@ -64,8 +63,7 @@ EXPECTED_TEMPLATE_CHILDREN = {
         "sc_concref_r<sc_bitref_r<T>, sc_dt::sc_lv_base> (sc_bitref_r<T>, const char *)",
     },
     ("sc_dt::operator,", "sc_bit_proxies.h", "1234"): {
-        "sc_concref_r<sc_concref_r<T1, T2>, sc_concref_r<T3, T4>> "
-        "(sc_concref_r<T1, T2>, sc_concref_r<T3, T4>)",
+        "sc_concref_r<sc_concref_r<T1, T2>, sc_concref_r<T3, T4>> (sc_concref_r<T1, T2>, sc_concref_r<T3, T4>)",
     },
     ("sc_dt::operator,", "sc_lv_base.h", "815"): {
         "sc_concref_r<sc_bitref_r<T>, sc_dt::sc_lv_base> (sc_bitref_r<T>, const char *)",
@@ -135,17 +133,11 @@ def test_sc_dt_concat_and_comma_inventory_is_exact():
     for family, expected in FAMILIES.items():
         family_rows = [row for row in rows if row["name"] == family]
         assert len(family_rows) == 170
-        assert Counter(row["kind"] for row in family_rows) == Counter(
-            {"FunctionDecl": 164, "FunctionTemplateDecl": 6}
-        )
+        assert Counter(row["kind"] for row in family_rows) == Counter({"FunctionDecl": 164, "FunctionTemplateDecl": 6})
         assert canonical_digest(family_rows) == expected["digest"]
         declarations = [row for row in family_rows if row["kind"] == "FunctionDecl"]
         assert len({normalized(row["signature"]) for row in declarations}) == 120
-        parents = {
-            (row["source"], row["line"])
-            for row in family_rows
-            if row["kind"] == "FunctionTemplateDecl"
-        }
+        parents = {(row["source"], row["line"]) for row in family_rows if row["kind"] == "FunctionTemplateDecl"}
         assert parents == expected["parents"]
         for source, line in parents:
             child_signatures = {
@@ -153,9 +145,7 @@ def test_sc_dt_concat_and_comma_inventory_is_exact():
                 for row in family_rows
                 if row["kind"] == "FunctionDecl" and row["source"] == source and row["line"] == line
             }
-            assert child_signatures == EXPECTED_TEMPLATE_CHILDREN[
-                (family, source.rsplit("/", 1)[-1], line)
-            ]
+            assert child_signatures == EXPECTED_TEMPLATE_CHILDREN[(family, source.rsplit("/", 1)[-1], line)]
 
 
 def test_sc_dt_concat_and_comma_match_fresh_native_processes(tmp_path):

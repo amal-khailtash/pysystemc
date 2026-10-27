@@ -37,10 +37,19 @@ def _pythonize(interface_type, name):
             continue
         transaction = cpp_name[len(prefix) : -1]
         native_peek = interface_type.peek
+        native_tag_peek = native_peek.__overload__(f"tlm::tlm_tag<{transaction}>*")
+        native_tag_peek.__release_gil__ = True
         operation = cppyy.gbl.pysystemc_interfaces.exact_tlm_peek[transaction].call
         operation.__release_gil__ = True
 
-        def peek(owner, *args, _native=native_peek, _operation=operation, _type=transaction):
+        def peek(
+            owner,
+            *args,
+            _native=native_peek,
+            _native_tag_peek=native_tag_peek,
+            _operation=operation,
+            _type=transaction,
+        ):
             """Peek into caller-owned output or use native value/tag dispatch.
 
             Output storage and interface remain borrowed through suspension.
@@ -51,6 +60,16 @@ def _pythonize(interface_type, name):
                 if not _operation(owner, args[0]):
                     raise _ProcessUnwind()
                 return None
+            tag_type = f"tlm::tlm_tag<{_type}>"
+            if not args or (
+                len(args) == 1
+                and (
+                    args[0] is None
+                    or args[0] is cppyy.nullptr
+                    or getattr(type(args[0]), "__cpp_name__", "") == tag_type
+                )
+            ):
+                return _native_tag_peek(owner, *args)
             return _native(owner, *args)
 
         if hasattr(native_peek, "__overload__"):

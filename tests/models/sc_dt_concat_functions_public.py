@@ -188,10 +188,7 @@ def run_signature_matrix():
 
     for index, signature in enumerate(signatures["sc_dt::concat"]):
         result_type, parameter_text = _split_signature(signature)
-        parameters = [
-            _concrete_signature_type(parameter)
-            for parameter in _split_cpp_arguments(parameter_text)
-        ]
+        parameters = [_concrete_signature_type(parameter) for parameter in _split_cpp_arguments(parameter_text)]
         assert len(parameters) == 2
         left, right = (_matrix_operand(parameter, objects) for parameter in parameters)
         stale_declaration = parameter_text in stale_parameter_lists
@@ -222,7 +219,12 @@ def run_signature_matrix():
         bit_text = dt.concat[selected_class](readonly_bits[vector_type], ctypes.c_char_p(b"10XZ01"))
         record = f"parent_bit_text_{label}"
         emit(record, bit_text.length(), render(bit_text), _python_cpp_type_name(bit_text))
-        emit(record.replace("parent_", "comma_parent_", 1), bit_text.length(), render(bit_text), _python_cpp_type_name(bit_text))
+        emit(
+            record.replace("parent_", "comma_parent_", 1),
+            bit_text.length(),
+            render(bit_text),
+            _python_cpp_type_name(bit_text),
+        )
 
     nested_pair = dt.concat[dt.sc_bv_base, dt.sc_lv_base, dt.sc_bv_base, dt.sc_lv_base](
         readonly_pairs[(vector_types[0], vector_types[1])],
