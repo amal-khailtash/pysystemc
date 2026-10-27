@@ -2,6 +2,7 @@
 #include "sc_core_fifo_nondefault.h"
 
 #include <iostream>
+#include <systemc>
 
 int sc_main(int, char**)
 {

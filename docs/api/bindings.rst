@@ -90,6 +90,8 @@ pass-through availability does not by itself establish tested support.
    arguments select guarded native timed/event overloads, including OR/AND
    expressions. Reset/kill unwind executes Python cleanup before the original
    scheduler exception is restored. Do not suppress unwind or wait in cleanup.
+   Nonpositive cycle counts emit native E525; empty OR/AND event lists emit E565.
+   With ``SC_THROW`` selected, the original ``sc_report`` propagates to the caller.
 
 ``set_report_handler(callback=None)``
    Install a retained callback receiving a native report and integer action mask;
@@ -99,6 +101,7 @@ pass-through availability does not by itself establish tested support.
    Select exact native time, event or event-list overloads, with an optional
    simulation context. Event expressions are consumed once. Calling from a
    thread raises the native E520 ``sc_report`` without changing time or sensitivity.
+   Empty OR/AND event lists emit native E565, preserving report metadata and counts.
 
 ``sc_report_handler.report(severity, message_type, message, ...)``
    Emit a message report with file/line and optional verbosity, or a legacy
@@ -205,6 +208,7 @@ pass-through availability does not by itself establish tested support.
    starvation policy and avoiding overload retries after simulation errors.
    Omit all arguments for unbounded simulation. Events exactly at a bounded
    run's end execute on the next simulation call, matching native SystemC.
+   Starting after the kernel has stopped emits native E546.
 
 ``sc_stop()``
    Request native stop once. Python lifecycle callback errors propagate; if an
