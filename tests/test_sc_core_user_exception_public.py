@@ -8,12 +8,13 @@ import pytest
 from .support import ROOT, run_example
 
 
+@pytest.mark.parametrize("route", ("public", "namespace"))
 @pytest.mark.parametrize("policy", ("default", "descendants"))
 @pytest.mark.parametrize("kind", ("custom", "runtime"))
-def test_sc_core_user_exception_public(tmp_path, policy, kind):
+def test_sc_core_user_exception_public(tmp_path, policy, kind, route):
     """Assert native exception values, catches, yields, cleanup and termination."""
     arguments = (policy, kind)
-    actual = run_example(tmp_path, "tests/models/sc_core_user_exception_public.py", arguments)
+    actual = run_example(tmp_path, "tests/models/sc_core_user_exception_public.py", (*arguments, route))
     native = subprocess.run(
         [
             sys.executable,

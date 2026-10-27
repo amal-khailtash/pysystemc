@@ -700,10 +700,23 @@ def sc_elab_and_sim(argc=None, argv=None) -> int:
 
 
 def sc_stop() -> None:
-    """Request kernel stop unless already stopped; also used at interpreter exit."""
-    if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_STOPPED:
+    """Request kernel stop once, including when an end-of-simulation hook fails.
+
+    Returns:
+        None after requesting stop, or when the kernel is already stopping/stopped.
+
+    Raises:
+        Exception: A Python end-of-simulation callback fails; its error propagates.
+        sc_report: Native stop restrictions report an error.
+
+    Calls from simulation callbacks or interpreter exit retain native stop
+    timing. An end-of-simulation error leaves the native status at that phase;
+    subsequent calls do not repeat the stop request or lifecycle callbacks.
+    """
+    native = cppyy.gbl.sc_core
+    if native.sc_get_status() not in (native.SC_STOPPED, native.SC_END_OF_SIMULATION):
         log("Stopping simulation")
-        cppyy.gbl.sc_core.sc_stop()
+        native.sc_stop()
 
 
 # Register the cleanup function to be called at exit
@@ -1066,6 +1079,10 @@ def wait(*args: Any) -> None:
     operation.__release_gil__ = True
     if not operation(*args):
         raise _ProcessUnwind()
+
+
+# Python namespace lookups need the same guard; native C++ calls remain native.
+cppyy.gbl.sc_core.wait = wait
 
 
 def _time_left_multiply(time, factor):

@@ -56,6 +56,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Avoid repeating the native stop request after an end-of-simulation callback fails, preserving the original exception without a duplicate-stop warning at interpreter exit.
+- Route Python `cppyy.gbl.sc_core.wait(...)` calls through the guarded wait adapter, preserving cleanup during process reset and kill instead of aborting on native scheduler unwind.
 - Accept compatible writable buffers for all formatted trace count lengths, including signed-byte `%hhn`, with aligned storage and exact native counter types.
 - Preserve one output write for formatted trace counts, and reject invalid count flags, widths, precisions and incompatible storage.
 - Preserve exact vector pointer-array operands, native proxy comparison and compound dispatch, and numeric operands on integer concatenation views.

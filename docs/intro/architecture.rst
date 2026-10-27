@@ -112,5 +112,7 @@ SystemC process as controller. Calling them from paused or stopped top-level
 Python raises ``RuntimeError``. ``throw_it`` accepts native copyable exception
 values through an on-demand typed adapter; target processes must catch the
 injected value before returning to the kernel. Python exception instances are
-not accepted. Raw ``cppyy.gbl.sc_core.wait`` calls and waits inside third-party
-native blocking channels bypass the guarded Python unwind adapter.
+not accepted. After importing the bindings, ``cppyy.gbl.sc_core.wait`` lookups
+use the same guarded adapter as ``sc_core.wait``. References captured before
+binding initialization and waits inside third-party native blocking methods
+remain outside this routing and need their own native unwind adapters.

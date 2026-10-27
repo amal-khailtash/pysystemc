@@ -43,6 +43,7 @@ Modules, processes and simulation
 * ☑ Entry callable/argv handling, exception propagation and idempotent shutdown.
 * ☑ Python process callback retention and selected native shutdown release checks.
 * ☑ Native user exceptions through guarded Python waits, including descendant injection.
+* ☑ Guarded Python wait lookups through the cppyy native namespace.
 * ☐ Direct native waits and channel-internal reset/unwind completeness.
 * ☐ Full process-control, lifecycle-error and live host/kernel deletion matrices.
 
@@ -318,6 +319,18 @@ including native rejection of unsigned sign-magnitude wrap. Actual trace files
 compare 28 VCD and 26 WIF types, declared widths and timed transitions. WIF
 reports time and event values as ignored; those omissions match native behavior.
 Vector range binding and formatted comments also have native parity checks.
+
+Module, primitive-channel and cppyy namespace waits compare all 13 ordinary
+overload forms and reset/kill cleanup with native C++. Member waits reject
+malformed host arguments without starting simulation and preserve the native
+wait-not-allowed report in method processes. Plain spawned callbacks remain
+retained through collection, completion and callback failure for their native
+kernel lifetime.
+
+Lifecycle failures preserve the Python exception and native hook ordering.
+Startup hook failures leave simulation time at zero without running scheduled
+processes. A failing end-of-simulation hook leaves the kernel in its terminal
+phase; repeated stop calls preserve that state without a duplicate-stop warning.
 
 The remaining final gates cover report/process and lifetime audits, complete
 regression coverage, adapter review and installed wheel/sdist validation.

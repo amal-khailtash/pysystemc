@@ -10,6 +10,7 @@ include_children = len(sys.argv) > 1 and sys.argv[1] == "descendants"
 kind = sys.argv[2] if len(sys.argv) > 2 else "custom"
 exception_type = cppyy.gbl.UserProcessException if kind == "custom" else cppyy.gbl.std.runtime_error
 exception = exception_type(41) if kind == "custom" else exception_type("native user exception")
+wait = cppyy.gbl.sc_core.wait if len(sys.argv) > 3 and sys.argv[3] == "namespace" else sc.wait
 records = []
 handles = []
 
@@ -26,13 +27,13 @@ def worker(label):
         handles.append(sc.sc_spawn(lambda: worker("child"), "exception_child"))
     try:
         try:
-            sc.wait(5, sc.SC_NS)
+            wait(5, sc.SC_NS)
         except exception_type as error:
             assert "native user exception" in error.what()
             if kind == "custom":
                 assert error.code == 41
             stamp(f"caught {label}")
-            sc.wait(1, sc.SC_NS)
+            wait(1, sc.SC_NS)
         stamp(f"done {label}")
     finally:
         stamp(f"cleanup {label}")
@@ -44,7 +45,7 @@ handles.append(parent)
 
 def controller():
     """Inject with the default or explicit descendant policy and verify yielding."""
-    sc.wait(1, sc.SC_NS)
+    wait(1, sc.SC_NS)
     if include_children:
         parent.throw_it(exception, sc.SC_INCLUDE_DESCENDANTS)
     else:

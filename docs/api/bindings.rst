@@ -18,6 +18,15 @@ pass-through availability does not by itself establish tested support.
    Reset and kill run Python cleanup before restoring native scheduler unwind.
    Keep the owner and events alive; do not wait during unwind cleanup.
 
+``wait(*args)`` / ``cppyy.gbl.sc_core.wait(*args)``
+   After importing the bindings, Python lookups through either namespace use
+   the guarded wait adapter. Cycle, time, event and event-list overloads release
+   the GIL and preserve Python cleanup during reset and kill. The original
+   native scheduler exception is then restored to the kernel. Event and context
+   arguments remain borrowed throughout suspension. This routing applies to
+   Python calls; blocking methods inside third-party C++ channels require their
+   own native unwind adapters.
+
 ``sc_module.next_trigger(*args)`` / ``sc_prim_channel.next_trigger(*args)``
    Configure dynamic method sensitivity through the native member without
    suspending. Event expressions are consumed once; reuse explicit native event
@@ -156,6 +165,12 @@ pass-through availability does not by itself establish tested support.
    starvation policy and avoiding overload retries after simulation errors.
    Omit all arguments for unbounded simulation. Events exactly at a bounded
    run's end execute on the next simulation call, matching native SystemC.
+
+``sc_stop()``
+   Request native stop once. Python lifecycle callback errors propagate; if an
+   end-of-simulation hook fails, the kernel retains its native terminal phase.
+   Further stop calls and interpreter cleanup leave that phase unchanged and
+   do not repeat the callback or emit a duplicate-stop warning.
 
 ``at_posedge(signal, simc=None)`` / ``at_negedge(signal, simc=None)``
    Use native sampled-edge waits for bool or logic input interfaces inside a
