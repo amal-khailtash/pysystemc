@@ -60,6 +60,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Clarify report identifier values, kernel query ownership, TLM metadata and simulation-entry exception contracts, including the unavailable direct report-handler typedef lookup and the distinction between the legacy status query and native enum.
 - Replace broad datatype and core constant/alias contracts with declaration-specific ownership, GIL, and error behavior; clarify unavailable direct callback typedef lookups.
 - Complete the private-declaration exclusion record and correct the documented public API count to 12,681.
 - Reject unsupported readable trace inputs without consuming FIFO data or calling their `read()` methods.

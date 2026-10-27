@@ -823,7 +823,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
-* ☑ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Exact native function-pointer typedef transported through borrowed handler tokens.
+* ☐ ``sc_core::sc_report_handler_proc`` — 1 declaration; typed native handler tokens can be retrieved and restored. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
 * ☑ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; internal reset members remain outside this scope.
 * ☑ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
@@ -852,7 +852,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_start`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☑ ``sc_core::sc_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☐ ``sc_core::sc_status`` — 1 declaration; the Python name retains the existing `sc_status()` compatibility query. The native enum type is available through `cppyy.gbl.sc_core.sc_status`; direct Python enum exposure remains partial.
 * ☑ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
