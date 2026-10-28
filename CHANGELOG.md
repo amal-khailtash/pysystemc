@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Clarify bitwise result ownership, four-state scalar conversions, fixed-point result widths and operand observer callbacks in the public API reference.
+- Clarify process-pointer and vector-view lifetimes, deferred port tracing, signal assignment returns, hash insertion replacement and fixed-point conversion ownership in the public API reference.
 - Verify kernel report metadata and recovery for member process operations, phase callbacks, module binding, deprecated calls and simulation boundary diagnostics against native SystemC.
 - Verify recoverable invalid waits, empty event-list use and start/stop reports against native SystemC.
 - Default local parallel test and coverage targets to four workers, with `TEST_WORKERS` available to override the count.
