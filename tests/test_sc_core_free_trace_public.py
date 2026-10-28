@@ -35,8 +35,21 @@ def test_sc_core_free_trace_public(tmp_path):
         "inout_before_bind": 32,
         "wide_input_before_bind": 137,
         "wide_inout_before_bind": 137,
+        "char_pointer_wave": 8,
+        "char_array_wave": 8,
         "integer_width": 7,
         "wide_generic": 137,
     }
     assert "#1000" in records[0]
     assert any(line.startswith("b" + format((1 << 136) + 257, "b")) for line in records[0])
+    identifiers = {
+        row[4]: row[3]
+        for row in (line.split() for line in records[0] if line.startswith("$var"))
+        if row[4] in {"char_pointer_wave", "char_array_wave"}
+    }
+    assert set(identifiers) == {"char_pointer_wave", "char_array_wave"}
+    for identifier in identifiers.values():
+        transitions = [
+            int(line.split()[0][1:], 2) for line in records[0] if line.startswith("b") and line.split()[1] == identifier
+        ]
+        assert 99 in transitions and 255 in transitions

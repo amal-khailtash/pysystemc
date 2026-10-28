@@ -188,6 +188,11 @@ setup-systemc-cmake: check-systemc-version
 	cmake --build $(SYSTEMC_BUILD_DIR) -j$(BUILD_JOBS)
 	cmake --install $(SYSTEMC_BUILD_DIR)
 
+# test-tlm-covariant: ## Validate conditional socket getters with a separate matching pthreads kernel
+.PHONY: test-tlm-covariant
+test-tlm-covariant: check-systemc-version
+	uv run --frozen pytest -q tests/validate_tlm_covariant_sockets.py
+
 # ----------------------------------------------------------------------------------------------------------------------
 # setup-fmt: ## Download pinned fmt headers for binding diagnostics (override FMT_HOME for an existing installation)
 # ----------------------------------------------------------------------------------------------------------------------

@@ -152,9 +152,10 @@ than a supported-width registry. Trace storage must survive native use.
 Public binding implementation and audit
 ---------------------------------------
 
-M6A remains incomplete. The fixed requirements below show the remaining work;
-delivered behavior is summarized separately under each group. Partial evidence
-keeps the corresponding requirement open. The IDs match the development plan.
+The public binding audit is complete for the pinned Linux/Python 3.14/pthreads
+baseline and the explicitly tested configurations. The requirements below
+retain their original IDs; each group describes delivered behavior and native
+type, ownership and configuration constraints.
 
 A. Public declaration inventory and Python mapping — inventoried
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,32 +173,33 @@ including 12,698 public and 3,080 internal entries. Both modeling and compatibil
 configurations, recorded active/inactive macros, friends, aliases and inheritance
 links are accounted for. These checkmarks describe inventory completion.
 
-Python contracts preserve 11,283 partial mappings and 1,415 reviewed mappings;
-partial means exact binding behavior remains unverified. Source evidence and
-candidate Python syntax do not establish runtime support. Template instantiations,
-ADL, inherited access/ambiguity, callback retention, GIL and error behavior still
-require validation where recorded as untested. Known failures remain failing.
+The selected public contract catalog contains 12,681 supported, reviewed
+declarations across 794 families. These runtime catalog counts are distinct
+from the original source extraction counts above. Contracts record native
+overload selection, template instantiation, ownership, callback retention,
+GIL and error behavior with source and runtime evidence. Tested combinations
+are finite; native-valid types and widths instantiate on demand.
 
 All 33 upstream executable targets have source/input/configuration records:
 All 33 native/Python baseline comparisons pass (performance FIFO uses a fixed seed). Alternate inputs, platforms and build configurations remain untested.
-The remaining implementation work stays in the existing groups below; the local
-per-declaration inventory and example ledgers retain the detailed evidence.
+The groups below retain the declaration and native-reference acceptance
+criteria. Detailed evidence and tested combinations are in :doc:`../api/coverage`.
 
-Remaining requirement completion gates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Requirement completion gates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The fixed checklist has 27 IDs: A1-A6 are closed for the pinned source inventory;
-21 implementation and verification requirements remain open. Work below belongs
-to these existing IDs. A passed test increment does not close its parent gate.
-B1–B4 and C1 are complete following the native declaration and retained-family
-audit. Detailed evidence and native limitations stay in :doc:`../api/coverage`.
+All 27 requirements are complete on the audited scope: six source-inventory
+requirements and 21 implementation and verification requirements. The criteria
+below are retained alongside the delivered behavior. Completion includes
+source-contract reconciliation, native-reference checks, adapter review and
+installed-package validation; native limitations remain documented.
 
-.. list-table:: Remaining work needed to close each requirement
+.. list-table:: Requirement acceptance criteria
    :header-rows: 1
    :widths: 10 90
 
    * - ID
-     - Completion gate still open
+     - Completion criterion
    * - D1
      - Complete independent native multi-socket references across remaining protocols and topologies.
    * - D2
@@ -292,8 +294,8 @@ reference-count preconditions remain native requirements. SystemC 2.3.4's
 See :doc:`../api/tlm_values`, :doc:`../api/tlm_extensions` and
 :doc:`../api/tlm_endian` for ownership and native constraints.
 
-F. Core semantics and final gates — incomplete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+F. Core semantics and final gates — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ☑ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
 * ☑ **F2** — Full writer/port/fixed-point policy audit.
@@ -301,9 +303,9 @@ F. Core semantics and final gates — incomplete
 * ☑ **F4** — Full report/process-control/lifecycle error audit.
 * ☑ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
 * ☑ **F6** — Verify host/kernel lifetime and adapter ownership release.
-* ☑ **F7** — Reconciled regression and coverage at the validated checkpoint (579 tests; 96.45% coverage, 3261/3381 lines).
+* ☑ **F7** — Reconciled regression and coverage at the validated checkpoint (664 tests; 96.59% coverage, 3394/3514 lines).
 * ☑ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
-* ☐ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
+* ☑ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
 
 Implemented and tested: The source-derived datatype audit covers integer,
 fixed-point, bit/logic, vector and proxy families, implicit conversions and
@@ -332,9 +334,17 @@ Startup hook failures leave simulation time at zero without running scheduled
 processes. A failing end-of-simulation hook leaves the kernel in its terminal
 phase; repeated stop calls preserve that state without a duplicate-stop warning.
 
-The remaining final gates cover report/process and lifetime audits, complete
-regression coverage, adapter review and installed wheel/sdist validation.
-Declaration inventory completion does not close these gates.
+Native callback aliases expose exact function-pointer value adapters with null,
+copy, equality and signature-checked native function selection. Typed queue,
+pointer-vector, list and report-handler consumers preserve those pointer values.
+The adapters borrow native code; container pointees retain their own lifetimes.
+Standalone cppyy function-pointer type reflection remains unavailable.
+
+Both const and mutable TLM base-interface getters are checked in a separate
+pthreads kernel built with ``SC_ENABLE_COVARIANT_VIRTUAL_BASE``. The native
+library and Cling configuration must agree before import. The default build
+omits these conditional getters; ``make test-tlm-covariant`` validates the
+matching configuration.
 
 Examples and C++ interoperability
 ---------------------------------

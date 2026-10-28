@@ -274,23 +274,48 @@ pass-through availability does not by itself establish tested support.
 Native callback typedefs
 ------------------------
 
-The native ``sc_core::CFT``, ``sc_plist_map_fn``,
-``sc_report_handler_proc`` and ``sc_ppq_base::compare_fn_t`` typedef names do
-not resolve as direct Python or cppyy namespace attributes. Their exact native
-signatures are accepted by tested native consumers, which can adapt Python
-callables for synchronous calls. That consumer support does not expose a Python
-object representing the native function-pointer typedef. Keep the callable alive
-through the consumer's documented use; callback retention beyond a synchronous
-call depends on the specific consumer.
+``sc_core.CFT``, ``sc_plist_map_fn``, ``sc_report_handler_proc`` and
+``sc_ppq_base.compare_fn_t`` expose native pointer-value adapters. They store
+the exact native function-pointer typedef, rather than converting it to
+``std::function``. cppyy does not reflect these typedefs as standalone type
+objects; the Python aliases name their value adapters. ``CFT`` and
+``compare_fn_t`` share a type because their native signatures are identical.
+
+Default construction creates a null value. Copy construction and equality
+preserve native pointer identity. Select a qualified native function with
+``CFT.from_function("model::compare")`` or ``CFT.from_function("::compare")``.
+Overloaded names select the exact native callback signature; malformed names
+and incompatible signatures raise ``TypeError``. Keep the selected native code
+loaded through every consumer. Adapters do not retain Python callables; existing native
+consumer APIs continue accepting Python callbacks with their documented
+retention requirements.
+
+Pass a ``CFT`` value to ``sc_pvector.sort`` or a ``sc_plist_map_fn`` value to
+``sc_plist.mapcar``. Vector comparators receive pointer-slot addresses; list
+mappers receive borrowed payload/context pointers. A comparator's
+``create_queue(sc_ppq[T], size)`` method returns a Python-owned native queue
+that borrows pointees and the selected native comparator code. Null values
+raise ``ValueError`` in these adapter consumers. Report-handler values work
+with ``sc_report_handler.get_handler`` and ``set_handler``; use
+``set_report_handler`` to install retained Python callbacks.
 
 TLM base socket interface
 -------------------------
 
 ``tlm_base_socket_if.get_base_interface()`` is conditional on
 ``SC_ENABLE_COVARIANT_VIRTUAL_BASE`` and is absent from the default runtime.
-Concrete socket accessors do not establish availability of these base-interface
-overloads. The macro requires an ABI-compatible native build and is not enabled
-by the Python package.
+Both const and nonconst base-interface overloads are supported with a matching
+native build and Cling configuration. Select that installation with
+``SYSTEMC_INSTALL_DIR`` and add ``-DSC_ENABLE_COVARIANT_VIRTUAL_BASE`` to
+``EXTRA_CLING_ARGS`` before importing the package; retain the C++17 compiler
+flag and any existing compiler options. All translation units must agree with
+the linked library. Changing this macro after import is not supported.
+
+Invoke the virtual getter on a bound socket/base proxy. Its returned native
+``sc_interface`` reference borrows the bound endpoint and its module owner;
+keep both alive. Default and custom protocols are tested before and after
+elaboration using exact const/nonconst base-member calls. Run
+``make test-tlm-covariant`` for the separate compatible-build validation.
 
 Time arithmetic and temporary storage
 -------------------------------------
@@ -327,6 +352,19 @@ For signed native byte trace storage, initialize and update
 native bit pattern. cppyy's Unicode conversion cannot read negative native
 ``char`` values through the holder's field getter; trace registration reads the
 native storage directly.
+
+For borrowed native ``char`` storage, pass a typed
+``ctypes.POINTER(ctypes.c_char)`` or a nonempty ``ctypes.c_char`` array to
+``sc_trace(file, value, name, width)``. Omitting the width uses the native
+8-bit default. The exact ``const char*`` overload selector accepts the same
+typed forms. Registration preserves the original address and samples live
+mutations without interpreting the byte as text. For Python-managed trace files, the wrapper retains the
+ctypes pointer or array until matching closure. With an externally created
+native trace file, retain the ctypes object yourself. A pointer created
+from a native address still borrows its independent owner. Keep that owner
+alive until closure. Null pointers with a live trace file raise ``ValueError`` and empty arrays raise
+``TypeError``. Raw ``const char*`` results are converted to Python strings by
+cppyy and do not provide a stable scalar trace address.
 
 Trace comments and file ownership
 ---------------------------------

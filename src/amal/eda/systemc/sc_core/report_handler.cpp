@@ -4,6 +4,8 @@
  * no ownership transfers or retained callbacks. Native exceptions propagate.
  */
 #include <sysc/utils/sc_report_handler.h>
+
+#include "report_handler_pointer.h"
 namespace pysystemc
 {
 /** @brief Clear the native report log filename through its explicit null setter.
@@ -66,16 +68,6 @@ int report_stop_message_severity(const char* message, sc_core::sc_severity sever
 
 namespace pysystemc
 {
-/** @brief Store a native report-handler pointer without Python callable conversion.
- * @details Pointer is borrowed and does not own or retain a Python callback.
- * Native handlers must remain loaded; a Python dispatcher additionally requires
- * its callback retention managed by set_report_handler. Use on simulation thread
- * with GIL held; construction/destruction never call the handler.
- */
-struct report_handler_pointer
-{
-  sc_core::sc_report_handler_proc value;
-};
 /** @brief Return a borrowed native handler pointer token. */
 report_handler_pointer report_get_handler()
 {

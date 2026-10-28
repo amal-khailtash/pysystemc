@@ -9,6 +9,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Validate conditional TLM base-interface getters with a matching native/Cling configuration, including const references, custom protocols and endpoint lifetimes.
 - Correct fixed-point parameter-only constructor observer contracts and clarify comparison operand conversions and proxy ownership.
 - Document direct callback typedef lookup limits and the native build requirement for conditional TLM base-interface getters.
 - Document the distinct-output requirement for native named arithmetic with `sc_fxval` and `sc_fxnum`, and limit output/input alias checks to fast fixed-point outputs.
@@ -24,6 +25,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
 
 ### Added
+- Expose exact native callback-pointer values for `CFT`, list mappers, priority-queue comparators and report handlers, with null/copy construction, function selection and typed container consumers.
+- Add `make test-tlm-covariant` to validate optional socket APIs in a separate pthreads kernel installation.
 - Expose `sc_core.sc_status_type` as the native SystemC status enum while preserving the `sc_status()` query.
 - Add `sc_core.native_blocking_call` for native C++ functors, preserving return values, exceptions and Python reset/kill cleanup through third-party blocking methods and cached native function pointers.
 - Support complete native vector concatenation and comma-operator families through `sc_dt.concat`, including mutable/read-only views, explicit template and const-qualified selectors, Python strings and boolean bit operands.
@@ -67,6 +70,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Preserve borrowed char trace addresses through typed ctypes pointers and arrays, avoiding cppyy string decoding and checking live waveform changes.
 - Clarify report, event, time, trace, vector and numeric operator contracts, including copied legacy-string results and the native formatting-placeholder requirement.
 - Clarify guarded FIFO read and output-assignment failures, one-shot event-expression ownership, resolved port assignments, and numeric proxy lifetimes.
 - Verify resolved-vector signal assignment return references and clarify export, clock, container, subreference and fixed-point context ownership.
@@ -74,8 +78,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Clarify FIFO, PEQ, socket, extension and comparator lifetimes; correct support claims for the optional covariant base-socket getters and direct priority-queue comparator typedef lookup.
 - Clarify datatype reduction and in-place operator results, fixed-point bit-reference lifetimes, attribute ownership, process joins and simulation-start overloads.
 - Clarify edge-wait static sensitivity, time-query value ownership, consuming event expressions, TLM interface references, endian conversion buffers and optional socket binding policies.
-- Clarify report identifier values, kernel query ownership, TLM metadata and simulation-entry exception contracts, including the unavailable direct report-handler typedef lookup and the distinction between the legacy status query and native enum.
-- Replace broad datatype and core constant/alias contracts with declaration-specific ownership, GIL, and error behavior; clarify unavailable direct callback typedef lookups.
+- Clarify report identifier values, kernel query ownership, TLM metadata and simulation-entry exception contracts, including native report-handler pointer values and the distinction between the legacy status query and native enum.
+- Replace broad datatype and core constant/alias contracts with declaration-specific ownership, GIL, and error behavior; clarify callback pointer-value adapters and their native-code lifetime requirements.
 - Complete the private-declaration exclusion record and correct the documented public API count to 12,681.
 - Reject unsupported readable trace inputs without consuming FIFO data or calling their `read()` methods.
 - Reject method-process handles in the native stack-size bridge before converting them to thread handles.

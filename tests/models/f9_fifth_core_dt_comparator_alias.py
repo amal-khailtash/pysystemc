@@ -1,4 +1,4 @@
-"""Check priority comparator tokens while reporting unavailable typedef exposure."""
+"""Check priority comparator tokens and exact native pointer-value exposure."""
 
 from amal.eda.systemc import sc_core
 
@@ -32,16 +32,14 @@ int invoke(sc_core::sc_ppq_base::compare_fn_t comparator)
 """
 )
 
-for native_type in (sc_core.sc_ppq_base, cppyy.gbl.sc_core.sc_ppq_base):
-    try:
-        getattr(native_type, "compare_fn_t")
-    except AttributeError:
-        pass
-    else:
-        raise AssertionError("typedef became directly exposed; update contract disposition")
+assert sc_core.CFT is sc_core.sc_ppq_base.compare_fn_t
+assert "CFT" in sc_core.__all__
+holder = sc_core.sc_ppq_base.compare_fn_t.from_function("fifth_comparator_probe::compare")
+assert holder.valid() and holder == sc_core.sc_ppq_base.compare_fn_t(holder)
+assert holder != sc_core.sc_ppq_base.compare_fn_t()
 
 probe = cppyy.gbl.fifth_comparator_probe
 comparator = probe.token()
 assert probe.invoke(comparator) == 23
 assert probe.invoke(probe.compare) == 23
-print("COMPARATOR_ALIAS_PARTIAL 2 TOKEN_RESULTS 23 23")
+print("COMPARATOR_ALIAS_VALUES 2 TOKEN_RESULTS 23 23")

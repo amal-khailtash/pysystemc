@@ -112,6 +112,8 @@ int sc_main(int, char**)
   sc_trace(wave, ports.inout, "inout_before_bind");
   sc_trace(wave, ports.wide_input, "wide_input_before_bind");
   sc_trace(wave, ports.wide_inout, "wide_inout_before_bind");
+  sc_trace(wave, free_trace_probe::char_pointer(file), "char_pointer_wave");
+  sc_trace(wave, free_trace_probe::char_pointer(file), "char_array_wave");
   ports.input.bind(integer);
   ports.inout.bind(integer);
   ports.wide_input.bind(wide);
@@ -119,6 +121,7 @@ int sc_main(int, char**)
   sc_trace(wave, integer, "integer_width", 7);
   sc_trace(wave, wide, "wide_generic");
   sc_start(1, SC_NS);
+  file.char_sample() = static_cast<char>(0xff);
   sc_trace(&file, ports.input, "input_after_elaboration");
   sc_trace(&file, ports.inout, "inout_after_elaboration");
   for (std::size_t index = 81; index < file.records().size(); ++index)

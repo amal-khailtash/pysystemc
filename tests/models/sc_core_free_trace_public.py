@@ -1,6 +1,10 @@
 """Verify every free trace overload, widths and delayed port registration."""
 
 from pathlib import Path
+import ctypes
+import gc
+import weakref
+
 from amal.eda.systemc import sc_core as sc, sc_dt as dt
 import cppyy
 
@@ -109,12 +113,35 @@ sc.sc_trace.__overload__("sc_core::sc_trace_file*,const unsigned long*,const std
 )
 sc.sc_trace(file, sc.sc_trace_value["char"](file.char_sample()), "char_ref", 11)
 sc.sc_trace(file, sc.sc_trace_value["char"](file.char_sample()), "char_ref_default")
+# cppyy decodes const char* as text, so retain a typed alias at the native address.
+char_pointer_address = probe.char_pointer_address(file)
+char_storage = (ctypes.c_char * 1).from_address(char_pointer_address)
+assert ctypes.addressof(char_storage) == char_pointer_address
+char_pointer = ctypes.cast(char_storage, ctypes.POINTER(ctypes.c_char))
+assert ctypes.cast(char_pointer, ctypes.c_void_p).value == char_pointer_address
 sc.sc_trace.__overload__("sc_core::sc_trace_file*,const char*,const std::string&,int")(
-    file, probe.char_pointer(file), "char_ptr", 13
+    file, char_pointer, "char_ptr", 13
 )
-sc.sc_trace.__overload__("sc_core::sc_trace_file*,const char*,const std::string&,int")(
-    file, probe.char_pointer(file), "char_ptr_default"
-)
+sc.sc_trace(file, char_storage, "char_ptr_default")
+null_char_pointer = ctypes.POINTER(ctypes.c_char)()
+for call in (
+    lambda: sc.sc_trace(file, null_char_pointer, "null_char"),
+    lambda: sc.sc_trace.__overload__("sc_core::sc_trace_file*,const char*,const std::string&,int")(
+        file, null_char_pointer, "null_char_selected"
+    ),
+):
+    try:
+        call()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("null char pointer was accepted for a live trace file")
+try:
+    sc.sc_trace(file, (ctypes.c_char * 0)(), "empty_char_array")
+except TypeError:
+    pass
+else:
+    raise AssertionError("empty char array was accepted for tracing")
 sc.sc_trace(file, sc.sc_trace_value["short"](file.short_sample()), "short_ref", 12)
 sc.sc_trace(file, sc.sc_trace_value["short"](file.short_sample()), "short_ref_default")
 sc.sc_trace.__overload__("sc_core::sc_trace_file*,const short*,const std::string&,int")(
@@ -196,6 +223,11 @@ sc.sc_trace(wave, ports.input, "input_before_bind")
 sc.sc_trace(wave, ports.inout, "inout_before_bind")
 sc.sc_trace(wave, ports.wide_input, "wide_input_before_bind")
 sc.sc_trace(wave, ports.wide_inout, "wide_inout_before_bind")
+char_pointer_selector = sc.sc_trace.__overload__("sc_core::sc_trace_file*,const char*,const std::string&,int", False)
+char_pointer_selector(wave, char_pointer, "char_pointer_wave")
+sc.sc_trace(wave, char_storage, "char_array_wave")
+char_pointer_ref = weakref.ref(char_pointer)
+char_storage_ref = weakref.ref(char_storage)
 ports.input.bind(integer)
 ports.inout.bind(integer)
 ports.wide_input.bind(wide)
@@ -209,6 +241,10 @@ for port in (ports.wide_input, ports.wide_inout):
     value = sc.sc_port_value(port)
     assert value == wide.read()
     assert cppyy.addressof(value) == cppyy.addressof(wide.read())
+char_pointer[0] = b"\xff"
+del char_pointer, char_storage
+gc.collect()
+assert char_pointer_ref() is not None and char_storage_ref() is not None
 sc.sc_trace(file, ports.input, "input_after_elaboration")
 sc.sc_trace(file, ports.inout, "inout_after_elaboration")
 for row in list(file.records())[81:]:
@@ -217,4 +253,6 @@ integer.write(35)
 wide.write(wide_type(str((1 << 136) + 257)))
 sc.sc_start(1, sc.SC_NS)
 sc.sc_close_vcd_trace_file(wave)
+gc.collect()
+assert char_pointer_ref() is None and char_storage_ref() is None
 print("FREE_TRACE_TIME", int(sc.sc_time_stamp().value()))

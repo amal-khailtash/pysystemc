@@ -5,6 +5,7 @@
  * hold the GIL; no Python callbacks or scheduler entry occur. Native conversion,
  * registration and allocation errors propagate unchanged.
  */
+#include <cstdint>
 #include <systemc>
 #include <type_traits>
 #include <utility>
@@ -12,6 +13,26 @@
 
 namespace pysystemc_tracing
 {
+/** @brief Dispatch a borrowed char address through SystemC's exact char overload.
+ * @param file Open trace file; native tracing handles a null file as usual.
+ * @param address Address of at least one live char, or zero for a null pointer.
+ * @param name Native trace name.
+ * @param width Requested native char trace width; the native default is used
+ * when omitted.
+ * @details Python wrappers retain the typed ctypes pointer or array through
+ * matching file closure. With a native-created file, the caller retains that
+ * owner through closure. The address is borrowed, never copied or retained here.
+ * Calls hold the GIL and invoke no Python callbacks. Native reports and
+ * conversion exceptions propagate unchanged.
+ */
+inline void trace_char_pointer(sc_core::sc_trace_file* file, std::uintptr_t address, const std::string& name,
+                               int width = 8 * sizeof(char))
+{
+  using char_trace_overload = void (*)(sc_core::sc_trace_file*, const char*, const std::string&, int);
+  const auto trace = static_cast<char_trace_overload>(&sc_core::sc_trace);
+  trace(file, reinterpret_cast<const char*>(address), name, width);
+}
+
 /** @brief Own one unrestricted native value until its trace consumers close.
  * @tparam Value A type accepted by the native trace-file overload set.
  */

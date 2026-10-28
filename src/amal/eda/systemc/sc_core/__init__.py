@@ -66,6 +66,10 @@ from ._scheduler import (
 from ._references import sc_ref as _python_sc_ref, sc_cref as _python_sc_cref
 from ._kernel_flags import install as _install_kernel_flags
 from ._member_scheduler import install as _install_member_scheduler
+from ._callback_pointers import install as _install_callback_pointers
+
+cppyy.include(str(pathlib.Path(__file__).with_name("callback_pointers.h")))
+CFT, sc_plist_map_fn, sc_report_handler_proc = _install_callback_pointers()
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
 
@@ -1280,6 +1284,9 @@ sc_member_access = _MemberAccessTemplate()
 __all__ = sorted(
     set(_public_names(cppyy.gbl.sc_core))
     | {
+        "CFT",
+        "sc_plist_map_fn",
+        "sc_report_handler_proc",
         "ScStatus",
         "sc_status",
         "sc_status_type",

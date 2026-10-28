@@ -27,19 +27,17 @@ assert sc.sc_plist_elem.__cpp_name__ == "sc_core::sc_plist_elem"
 
 
 def alias_exposure(name):
-    """Check Python-module and cppyy namespace alias lookup independently."""
+    """Distinguish exact pointer-value adapters from unavailable native reflection."""
+    public_alias = getattr(sc, name)
+    assert name in sc.__all__ and isinstance(public_alias, type)
+    assert public_alias.__cpp_name__.startswith("pysystemc::callback_pointer<")
     try:
-        public_alias = getattr(sc, name)
+        getattr(cppyy.gbl.sc_core, name)
     except AttributeError:
-        public_alias = None
-    try:
-        cppyy_alias = getattr(cppyy.gbl.sc_core, name)
-    except AttributeError:
-        cppyy_alias = None
-    assert bool(public_alias) == bool(cppyy_alias)
-    if public_alias is not None:
-        assert public_alias is cppyy_alias
-    return public_alias is not None, cppyy_alias is not None
+        pass
+    else:
+        raise AssertionError("native typedef reflection changed; review the adapter")
+    return True, False
 
 
 calls = []

@@ -5,6 +5,8 @@
  */
 #ifndef PYSYSTEMC_TEST_SC_CORE_FREE_TRACE_PROBE_H
 #define PYSYSTEMC_TEST_SC_CORE_FREE_TRACE_PROBE_H
+#include <cstdint>
+
 #include "sc_core_trace_file_probe.h"
 namespace free_trace_probe
 {
@@ -117,6 +119,14 @@ inline const unsigned long* ulong_pointer(sc_core::TraceFileProbe& file)
 inline const char* char_pointer(sc_core::TraceFileProbe& file)
 {
   return &file.char_sample();
+}
+/** @brief Expose the char sample address without decoding it as text in Python.
+ * @details The returned address is borrowed from file and remains valid while
+ * the recorder lives. No Python callback or GIL state is involved.
+ */
+inline std::uintptr_t char_pointer_address(sc_core::TraceFileProbe& file)
+{
+  return reinterpret_cast<std::uintptr_t>(char_pointer(file));
 }
 /** @brief Borrow the recorder's live short sample address. */
 inline const short* short_pointer(sc_core::TraceFileProbe& file)

@@ -1,4 +1,4 @@
-"""Check direct lookup status and compile the report handler callback type."""
+"""Check native report signature and its public pointer-value adapter."""
 
 from amal.eda.systemc import sc_core as sc
 import cppyy
@@ -23,5 +23,8 @@ def alias_is_exposed(namespace):
 
 python_exposed = alias_is_exposed(sc)
 cppyy_exposed = alias_is_exposed(cppyy.gbl.sc_core)
-assert not python_exposed and not cppyy_exposed
-print("F9_CORE_NEXT_HANDLER_ALIAS 1 0 0")
+assert python_exposed and not cppyy_exposed
+assert "sc_report_handler_proc" in sc.__all__
+assert sc.sc_report_handler_proc is cppyy.gbl.pysystemc.report_handler_pointer
+assert not sc.sc_report_handler_proc().valid()
+print("F9_CORE_NEXT_HANDLER_ALIAS 1 1 0")
