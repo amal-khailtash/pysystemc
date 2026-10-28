@@ -60,6 +60,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Verify resolved-vector signal assignment return references and clarify export, clock, container, subreference and fixed-point context ownership.
 - Clarify wait process kinds, iterator assignment results, event-finder cache ownership, and integer/fixed-point proxy lifetimes and const restrictions.
 - Clarify FIFO, PEQ, socket, extension and comparator lifetimes; correct support claims for the optional covariant base-socket getters and direct priority-queue comparator typedef lookup.
 - Clarify datatype reduction and in-place operator results, fixed-point bit-reference lifetimes, attribute ownership, process joins and simulation-start overloads.
