@@ -8,6 +8,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+## [1.0.0](https://github.com/amal-khailtash/pysystemc/compare/v0.16.0...v1.0.0) (2026-10-28)
+
+
+### Features
+
+* complete audited SystemC public API families ([4ecbbc1](https://github.com/amal-khailtash/pysystemc/commit/4ecbbc1b28ea69af2a136e79c71004e706601fff))
+
 ### Changed
 - Validate conditional TLM base-interface getters with a matching native/Cling configuration, including const references, custom protocols and endpoint lifetimes.
 - Correct fixed-point parameter-only constructor observer contracts and clarify comparison operand conversions and proxy ownership.
@@ -258,7 +265,6 @@ Completed family groups: sc_report (25 declarations), sc_report_handler (32), sc
 - Compare inherited TLM get/peek readiness-event identity with independent native FIFO specializations across the four multiword/wide types.
 - Extend the independent multiword TLM FIFO comparison to nonblocking copies, empty outputs, and readiness before and after consumption.
 - Compare standalone multiword/wide TLM get/peek value and caller-output overloads against independent native tlm_fifo references.
-
 
 ## [0.13.1](https://github.com/amal-khailtash/pysystemc/compare/v0.13.0...v0.13.1) (2026-10-20)
 
