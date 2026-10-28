@@ -813,6 +813,10 @@ def sc_status() -> ScStatus:
     return ScStatus(status)  # Convert to Python enum
 
 
+# Keep the native enum available without replacing the established query function.
+sc_status_type = cppyy.gbl.sc_core.sc_status
+
+
 # Native waits suspend an OS thread. Release the GIL for every overload so
 # other Python SystemC processes can acquire it while this process waits.
 cppyy.gbl.sc_core.wait.__release_gil__ = True
@@ -1278,6 +1282,7 @@ __all__ = sorted(
     | {
         "ScStatus",
         "sc_status",
+        "sc_status_type",
         "sc_trace",
         "sc_spawn",
         "sc_bind",

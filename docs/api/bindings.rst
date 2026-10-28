@@ -212,6 +212,11 @@ pass-through availability does not by itself establish tested support.
 ``sc_status()``
    Query the native current status and convert it to ``ScStatus``.
 
+``sc_status_type``
+   The native ``sc_core::sc_status`` enum type is exported under this distinct
+   name so the existing ``sc_status()`` query keeps its callable behavior.
+   Native enum members and conversions retain cppyy semantics.
+
 ``sc_argc()`` / ``sc_argv()``
    During ``sc_main``, read the native argument count and an immutable tuple of
    original argument strings, including argument zero. The tuple copies native
@@ -265,6 +270,27 @@ pass-through availability does not by itself establish tested support.
    Infer unrestricted native reference-wrapper templates and retain the Python
    referent until wrapper destruction. Native consumers preserve mutable/const
    contracts. Keep the wrapper alive while using borrowed ``get()`` results.
+
+Native callback typedefs
+------------------------
+
+The native ``sc_core::CFT``, ``sc_plist_map_fn``,
+``sc_report_handler_proc`` and ``sc_ppq_base::compare_fn_t`` typedef names do
+not resolve as direct Python or cppyy namespace attributes. Their exact native
+signatures are accepted by tested native consumers, which can adapt Python
+callables for synchronous calls. That consumer support does not expose a Python
+object representing the native function-pointer typedef. Keep the callable alive
+through the consumer's documented use; callback retention beyond a synchronous
+call depends on the specific consumer.
+
+TLM base socket interface
+-------------------------
+
+``tlm_base_socket_if.get_base_interface()`` is conditional on
+``SC_ENABLE_COVARIANT_VIRTUAL_BASE`` and is absent from the default runtime.
+Concrete socket accessors do not establish availability of these base-interface
+overloads. The macro requires an ABI-compatible native build and is not enabled
+by the Python package.
 
 Time arithmetic and temporary storage
 -------------------------------------

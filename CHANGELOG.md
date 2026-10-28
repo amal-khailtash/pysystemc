@@ -9,6 +9,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Changed
+- Correct fixed-point parameter-only constructor observer contracts and clarify comparison operand conversions and proxy ownership.
+- Document direct callback typedef lookup limits and the native build requirement for conditional TLM base-interface getters.
 - Document the distinct-output requirement for native named arithmetic with `sc_fxval` and `sc_fxnum`, and limit output/input alias checks to fast fixed-point outputs.
 - Clarify input-port and interface lifetimes, numeric owner mutations, named arithmetic outputs and arithmetic/comma result ownership in the public API reference.
 - Clarify bitwise result ownership, four-state scalar conversions, fixed-point result widths and operand observer callbacks in the public API reference.
@@ -22,6 +24,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
 
 ### Added
+- Expose `sc_core.sc_status_type` as the native SystemC status enum while preserving the `sc_status()` query.
 - Add `sc_core.native_blocking_call` for native C++ functors, preserving return values, exceptions and Python reset/kill cleanup through third-party blocking methods and cached native function pointers.
 - Support complete native vector concatenation and comma-operator families through `sc_dt.concat`, including mutable/read-only views, explicit template and const-qualified selectors, Python strings and boolean bit operands.
 - Support complete native unary/binary arithmetic and comparison overloads with typed scalar signedness, arbitrary-width results, fixed-point precision and four-state equality.

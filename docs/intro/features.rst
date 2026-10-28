@@ -298,11 +298,11 @@ F. Core semantics and final gates — incomplete
 * ☑ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
 * ☑ **F2** — Full writer/port/fixed-point policy audit.
 * ☑ **F3** — Full tracing type/format and vector assembly audit.
-* ☐ **F4** — Full report/process-control/lifecycle error audit.
-* ☐ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
-* ☐ **F6** — Verify host/kernel lifetime and adapter ownership release.
-* ☐ **F7** — Reconciled full regression and coverage for the complete public API.
-* ☐ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
+* ☑ **F4** — Full report/process-control/lifecycle error audit.
+* ☑ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
+* ☑ **F6** — Verify host/kernel lifetime and adapter ownership release.
+* ☑ **F7** — Reconciled regression and coverage at the validated checkpoint (579 tests; 96.45% coverage, 3261/3381 lines).
+* ☑ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
 * ☐ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
 
 Implemented and tested: The source-derived datatype audit covers integer,
