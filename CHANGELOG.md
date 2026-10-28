@@ -60,6 +60,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
 
 ### Fixed
+- Clarify report, event, time, trace, vector and numeric operator contracts, including copied legacy-string results and the native formatting-placeholder requirement.
 - Clarify guarded FIFO read and output-assignment failures, one-shot event-expression ownership, resolved port assignments, and numeric proxy lifetimes.
 - Verify resolved-vector signal assignment return references and clarify export, clock, container, subreference and fixed-point context ownership.
 - Clarify wait process kinds, iterator assignment results, event-finder cache ownership, and integer/fixed-point proxy lifetimes and const restrictions.
