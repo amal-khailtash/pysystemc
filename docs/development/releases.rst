@@ -58,7 +58,10 @@ Feature PR validation
 2. Full CI calls the reusable coverage workflow, which prepares native SystemC,
    runs lint and formatting checks, and runs tests and subprocess coverage in
    four pytest workers using work stealing. It reports the 15 slowest tests.
-   Every simulation still uses a fresh native process.
+   Test names are printed as they run, and the suite requests a stop after the
+   first failure with a short traceback. Tests already running may finish.
+   Coverage from a failed run is partial; an all-green run executes the full
+   suite. Every simulation still uses a fresh native process.
 3. Review the title, validation selection, tests, distributions and documentation
    results before merging. Configure required checks to match this workflow;
    skipped full jobs on a validated release-metadata PR are intentional.
@@ -67,9 +70,9 @@ Feature PR validation
    the merged PR before deleting a branch with ``git branch -D``.
 
 Use ``make test-parallel TEST_WORKERS=4`` or
-``make coverage-parallel TEST_WORKERS=4`` locally. The Makefile defaults remain
-at two workers for machines with fewer resources. CI can also be dispatched
-manually for full validation without a PR.
+``make coverage-parallel TEST_WORKERS=4`` locally. Both targets default to four
+workers; use ``TEST_WORKERS=2`` on machines with fewer resources. CI can also be
+dispatched manually for full validation without a PR.
 
 Release validation and publication
 ----------------------------------

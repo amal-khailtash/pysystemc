@@ -70,7 +70,7 @@ jobs:
           make lint
           uv run ruff format --check .
       - name: Run semantic tests and coverage
-        run: uv run --locked pytest -n 4 --dist=worksteal --durations=15 --cov=amal.eda.systemc --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
+        run: uv run --locked pytest -n 4 --dist=worksteal --durations=15 --maxfail=1 -vv --tb=short --cov=amal.eda.systemc --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
       - name: Save coverage reports
         if: always()
         uses: actions/upload-artifact@v7

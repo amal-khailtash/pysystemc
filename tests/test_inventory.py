@@ -69,7 +69,14 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
             row for row in named(type_name + "::" + type_name.rsplit("::", 1)[-1]) if row["access"] == "private"
         ]
         assert len(disabled) == 2
-        assert {row["signature"] for row in disabled} == {"void ()", f"void (const {type_name} &)"}
+        local_type_name = type_name.rsplit("::", 1)[-1]
+        qualified_copy = f"void (const {type_name} &)"
+        local_copy = f"void (const {local_type_name} &)"
+        # Clang versions vary in qualifying injected-class-name constructor arguments.
+        assert {row["signature"] for row in disabled} in (
+            {"void ()", qualified_copy},
+            {"void ()", local_copy},
+        )
         assert all(row["classification"] == "internal" for row in disabled)
     assert named("sc_core::sc_time::from_value")[0]["static"] is True
     assert named("sc_core::sc_time::value")[0]["static"] is False
