@@ -6,6 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [1.0.0](https://github.com/amal-khailtash/pysystemc/compare/v0.16.0...v1.0.0) (2026-10-28)
+
+
+### Features
+
+* complete audited SystemC public API families ([4ecbbc1](https://github.com/amal-khailtash/pysystemc/commit/4ecbbc1b28ea69af2a136e79c71004e706601fff))
+
 ## [Unreleased]
 
 ### Changed
