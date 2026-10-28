@@ -3,6 +3,39 @@
 
 namespace pysystemc_datatypes
 {
+/** Return the exact native enum spelling without cross-enum overload conversion.
+ * The enum value is copied; the returned string owns its storage. Call with the
+ * GIL held. Native allocation errors propagate; no callbacks or waits occur.
+ */
+template <class Enum>
+std::string enum_string(Enum value)
+{
+  return sc_dt::to_string(value);
+}
+/** Select a mutable fixed-point bit using the exact non-const native overload.
+ * The proxy is a value borrowing its number; Python must retain that number.
+ * Call with the GIL held; no waits or callbacks are introduced. Native bounds
+ * reports propagate and retain the configured report actions.
+ */
+template <class Number>
+struct fixed_number_bits
+{
+  /** Return the native mutable proxy; index is the public storage-bit index. */
+  static auto bit(Number& number, int index)
+  {
+    return number.bit(index);
+  }
+  /** Return the exact mutable range view borrowing the supplied live number. */
+  static auto range(Number& number, int high, int low)
+  {
+    return number.range(high, low);
+  }
+  /** Return the whole-word mutable view borrowing the supplied live number. */
+  static auto range(Number& number)
+  {
+    return number.range();
+  }
+};
 /** Return independent native signed remainder storage; GIL held, no callbacks.
  * Native division reports propagate. A zero divisor retains native abort semantics.
  */

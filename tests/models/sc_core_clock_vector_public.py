@@ -43,6 +43,14 @@ short_default_duty_clock = sc.sc_clock("clock_short_default", 6, sc.SC_NS)
 long_clock = sc.sc_clock("clock_long", 12, sc.SC_NS, 0.25, 3, sc.SC_NS, False)
 legacy_clock = sc.sc_clock("clock_legacy", 14, 0.5, 2, False)
 fallback_clock = sc.sc_clock("clock_fallback", sc.sc_time(4, sc.SC_NS), 0.0)
+keyword_unit_clock = sc.sc_clock("clock_keyword_unit", 10, period_tu_=sc.SC_NS)
+keyword_duty_clock = sc.sc_clock("clock_keyword_duty", 10, period_tu_=sc.SC_NS, duty_cycle_=0.25)
+mixed_keyword_clock = sc.sc_clock("clock_mixed_keyword", 10, sc.SC_NS, duty_cycle_=0.25)
+
+for clock, duty in ((keyword_unit_clock, 0.5), (keyword_duty_clock, 0.25), (mixed_keyword_clock, 0.25)):
+    assert clock.period() == sc.sc_time(10, sc.SC_NS)
+    assert clock.duty_cycle() == duty
+    assert clock.start_time() == sc.SC_ZERO_TIME and clock.posedge_first()
 
 assert default_clock.period() == sc.sc_time(1, sc.SC_NS)
 assert named_clock.period() == sc.sc_time(1, sc.SC_NS)

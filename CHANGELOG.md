@@ -8,7 +8,129 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Changed
+- Validate conditional TLM base-interface getters with a matching native/Cling configuration, including const references, custom protocols and endpoint lifetimes.
+- Correct fixed-point parameter-only constructor observer contracts and clarify comparison operand conversions and proxy ownership.
+- Document direct callback typedef lookup limits and the native build requirement for conditional TLM base-interface getters.
+- Document the distinct-output requirement for native named arithmetic with `sc_fxval` and `sc_fxnum`, and limit output/input alias checks to fast fixed-point outputs.
+- Clarify input-port and interface lifetimes, numeric owner mutations, named arithmetic outputs and arithmetic/comma result ownership in the public API reference.
+- Clarify bitwise result ownership, four-state scalar conversions, fixed-point result widths and operand observer callbacks in the public API reference.
+- Clarify process-pointer and vector-view lifetimes, deferred port tracing, signal assignment returns, hash insertion replacement and fixed-point conversion ownership in the public API reference.
+- Verify kernel report metadata and recovery for member process operations, phase callbacks, module binding, deprecated calls and simulation boundary diagnostics against native SystemC.
+- Verify recoverable invalid waits, empty event-list use and start/stop reports against native SystemC.
+- Default local parallel test and coverage targets to four workers, with `TEST_WORKERS` available to override the count.
+- Verify all native fixed-point quantization, overflow and cast modes, port binding policies and writer contention with independent native references.
+- Verify actual VCD/WIF typed declarations and timed transitions, including native WIF omissions for time and event values.
+- Document required port binding counts and vector assembly range termination, backed by native/Python parity checks.
+- Initialize kernel bridges before loading dependent adapters, with module imports grouped at the top of the `sc_core` initializer.
+
+### Added
+- Expose exact native callback-pointer values for `CFT`, list mappers, priority-queue comparators and report handlers, with null/copy construction, function selection and typed container consumers.
+- Add `make test-tlm-covariant` to validate optional socket APIs in a separate pthreads kernel installation.
+- Expose `sc_core.sc_status_type` as the native SystemC status enum while preserving the `sc_status()` query.
+- Add `sc_core.native_blocking_call` for native C++ functors, preserving return values, exceptions and Python reset/kill cleanup through third-party blocking methods and cached native function pointers.
+- Support complete native vector concatenation and comma-operator families through `sc_dt.concat`, including mutable/read-only views, explicit template and const-qualified selectors, Python strings and boolean bit operands.
+- Support complete native unary/binary arithmetic and comparison overloads with typed scalar signedness, arbitrary-width results, fixed-point precision and four-state equality.
+- Support exact native remainder and bitwise overloads across arbitrary-width integers, fixed-point values, scalar bits and binary/four-state vectors.
+- Support generic native vector proxy members and typed output-parameter `add`, `sub`, `mult` and `div` calls, preserving output precision, identity and observer ownership.
+- Support configurable signed/unsigned fixed-point and fast fixed-point families, including parameter-only and typed-source construction, runtime policies and native observer identity.
+- Support bounded and arbitrary-width integer base families, fixed-point value families and arbitrary-width fixed-point templates, including exact typed construction, assignment, arithmetic, formatting and proxy access.
+- Expose owning native derived facades for fixed-point base construction with configured type parameters, encoding, cast switches and borrowed observers.
+- Support integer concatenation references, native numeric shift overloads and datatype stream insertion and extraction.
+- Support integer-template constructor, assignment and bounded arithmetic families, binary/four-state vector owner families and legacy string operations.
+- Support integer, fixed-point and vector range-reference families, native concatenation views and binary/four-state vector bit proxies.
+- Support integer and fixed-point bit-reference families, vector rotations/reversals/shifts/reductions/equality, and free scalar/fixed-point bitwise and negation overloads.
+- Support native scalar bit/logic, datatype policy and formatting constants, parameter contexts, fixed-point observer callbacks and generic value-source bases.
+- Support native TLM socket base families, nonblocking ports, event finders, analysis ports/triples, FIFO configuration, request/response channels and transport adapters with custom native types.
+- Support complete generic payload field, buffer-copy, extension and memory-manager operations with native ownership rules.
+- Support simple, tagged and passthrough socket base families and multi-socket hierarchy, indexed callbacks, protocol aliases and lifecycle operations with arbitrary native parameters.
+- Expose exact native member-pointer callback values for multi-socket registration, including null construction, copying and signature-checked member selection.
+- Preserve hierarchical multi-target binding after callback registration when cppyy confuses socket and interface conversions.
+- Support native extension and memory-manager families, stable type registration and typed/indexed instance-specific accessors.
+- Support default and named simple, tagged, passthrough and optional multi socket wrappers with native custom protocol types.
+- Support all native endian request/response template families and response dispatch with custom data word types.
+- Support native TLM enums, version metadata, host-endianness predicates, extension registration and extension-pointer arrays.
+- Support DMI address ranges, permissions, borrowed byte buffers and latency values, registered phase names and quantumkeeper synchronization with reset/kill cleanup.
+- Support payload event queue aliases and custom protocol notifications, cancellation and native callback-owner constructors.
+- Support TLM get/peek, analysis/write, FIFO debug/configuration and forward/backward transport interface families with arbitrary native value types.
+- Expose guarded module and primitive-channel member waits and dynamic sensitivity, sampled edge waits and clocked halt with Python reset/kill cleanup.
+- Add automatically named primitive-channel construction and preserve native update coalescing, asynchronous requests and lifecycle callbacks.
+- Support ordinary signal, input, inout and output port families, generic port operations and native signal implementation members across writer policies and arbitrary datatype widths.
+- Add `sc_signal_value(signal)` and `sc_port_value(port)` for explicit native value conversion with borrowed datatype references and Python scalar copies.
+- Support native free-tracing reference and pointer overloads, scalar default widths and delayed tracing of input and inout/output ports.
+- Add mutable native trace-value holders with exact scalar dispatch, enumeration labels and retention until trace-file closure.
+- Support object hierarchy and attribute operations, port-base binding and lifecycle helpers, native trace-file overloads, typed temporary pools and generic hash tables and iterators.
+- Support static and edge sensitivity builder overloads, native process-handle selection and clocked-thread helper sources.
+- Support hash-base, pointer-duplicating and string hash-container operations and iterators, including explicit key-copy/free callbacks and borrowed output pointers.
+- Support arbitrary native vector creators, Python creator ownership and rollback, member assemblies, access policies and mutable/const iterator operations. Preserve assembly owners through copy, assignment and swap.
+- Support native `sc_bind` functions, functors, typed callbacks, nested placeholders and reference wrappers.
+- Support native exception injection through process handles, including descendant threads and catch/re-wait cleanup.
+- Support typed `sc_spawn` results in native values and ctypes numeric scalars, including arbitrary-width integers and custom C++ classes. Preserve result storage on callback failure, reset and kill.
+- Support native process functors and all spawn-option sensitivity/reset overloads.
+- Support resolved scalar/vector output and inout port constructors, assignments, initialization and lifecycle hooks, with vector widths instantiated on demand.
+
+### Fixed
+- Preserve borrowed char trace addresses through typed ctypes pointers and arrays, avoiding cppyy string decoding and checking live waveform changes.
+- Clarify report, event, time, trace, vector and numeric operator contracts, including copied legacy-string results and the native formatting-placeholder requirement.
+- Clarify guarded FIFO read and output-assignment failures, one-shot event-expression ownership, resolved port assignments, and numeric proxy lifetimes.
+- Verify resolved-vector signal assignment return references and clarify export, clock, container, subreference and fixed-point context ownership.
+- Clarify wait process kinds, iterator assignment results, event-finder cache ownership, and integer/fixed-point proxy lifetimes and const restrictions.
+- Clarify FIFO, PEQ, socket, extension and comparator lifetimes; correct support claims for the optional covariant base-socket getters and direct priority-queue comparator typedef lookup.
+- Clarify datatype reduction and in-place operator results, fixed-point bit-reference lifetimes, attribute ownership, process joins and simulation-start overloads.
+- Clarify edge-wait static sensitivity, time-query value ownership, consuming event expressions, TLM interface references, endian conversion buffers and optional socket binding policies.
+- Clarify report identifier values, kernel query ownership, TLM metadata and simulation-entry exception contracts, including native report-handler pointer values and the distinction between the legacy status query and native enum.
+- Replace broad datatype and core constant/alias contracts with declaration-specific ownership, GIL, and error behavior; clarify callback pointer-value adapters and their native-code lifetime requirements.
+- Complete the private-declaration exclusion record and correct the documented public API count to 12,681.
+- Reject unsupported readable trace inputs without consuming FIFO data or calling their `read()` methods.
+- Reject method-process handles in the native stack-size bridge before converting them to thread handles.
+- Allow zero-byte allocation from an initialized zero-capacity byte heap while continuing to reject uninitialized storage.
+- Clarify that event finders registered for static sensitivity must remain alive until elaboration completes.
+- Preserve copy-only value returns from `sc_bind` while retaining move-only results and native reference returns.
+- Reject pointer-vector indices that would overflow native unsigned slot-count arithmetic before reading or mutating storage.
+- Preserve the original Python exception when a report handler raises during native entry error translation, and release its carrier references with the GIL on every exit.
+- Copy structural write and put callback values through their native copy constructor, including types without default construction or assignment.
+- Avoid instantiating read adapters for FIFO interfaces that expose only writes.
+- Preserve native FIFO value and output read overloads for values without default construction, retaining staged output assignment on reset or kill.
+- Support clearing the report log filename with `None` or `cppyy.nullptr`, preserving the native return value.
+- Preserve native duplicate socket registration behavior and release ignored callback candidates; reject null callback member-pointer holders before registration.
+- Preserve TLM blocking peek callback errors for value and tag calls, including calls after callback release.
+- Preserve native default action masks for severity, message and message/severity report policies.
+- Reject report action masks outside the native unsigned-integer range before changing action, suppression, force or catch policies.
+- Preserve native E800 registration errors when `sc_report.register_id` receives `cppyy.nullptr`, including report metadata and single-call counts.
+- Dispatch report calls once when native actions throw, preserving exact counts, cached reports and Python callback errors.
+- Select exact native free `next_trigger` overloads so invalid thread calls raise the original E520 report.
+- Release native entry argument copies and restore entry state on callback failures; preserve the original Python exception in both explicit entry and the C++ source runner.
+- Avoid repeating the native stop request after an end-of-simulation callback fails, preserving the original exception without a duplicate-stop warning at interpreter exit.
+- Route Python `cppyy.gbl.sc_core.wait(...)` calls through the guarded wait adapter, preserving cleanup during process reset and kill instead of aborting on native scheduler unwind.
+- Accept compatible writable buffers for all formatted trace count lengths, including signed-byte `%hhn`, with aligned storage and exact native counter types.
+- Preserve one output write for formatted trace counts, and reject invalid count flags, widths, precisions and incompatible storage.
+- Preserve exact vector pointer-array operands, native proxy comparison and compound dispatch, and numeric operands on integer concatenation views.
+- Preserve typed integer and fixed-point operands during construction, assignment and arithmetic, including 64-bit scalar values and exact decimal Python integer assignment.
+- Keep native overload selectors bound to their numeric owner when called through Python adapters.
+- Select native datatype stream output instead of pointer formatting, and preserve typed shift and extraction overloads.
+- Preserve exact Python integer construction, native vector proxy conversions and legacy string formatting and character mutation.
+- Preserve mutable fixed-point range and call operators, native slice-to-vector conversion and deprecated view conversion/width aliases.
+- Preserve exact generic-source integer slice assignment and vector bit-proxy scalar and truth conversion.
+- Preserve native four-state vector binary and compound operators, owned integer complements, and integer bit-reference truth conversion.
+- Select mutable fixed-point `.bit()` access and retain its parent number for the returned view.
+- Preserve native invalid-value reports for `sc_bit` construction, assignment and compound operations by selecting exact scalar overloads.
+- Select the exact native `to_string` overload for datatype policy and formatting enums, preserving names when enum values overlap.
+- Expose `sc_length_context` through the owning native context adapter, preserving copied defaults and ordered restoration.
+- Exclude private context allocation methods from the public API inventory.
+- Release the GIL during native TLM FIFO get/peek/put waits and preserve Python cleanup on reset and kill.
+- Prepare both native analysis FIFO write overloads on demand for arbitrary value and pointer types, repairing SystemC 2.3.4 dependent-base lookup.
+- Preserve full 64-bit address windows in generic endian conversion and its native response context.
+- Expose `peq_with_get[Payload].pair_type` as its native time-and-payload-pointer pair without restricting payload types.
+- Preserve non-consuming `peek(output)` dispatch across combined TLM interfaces instead of selecting the get overload.
+- Preserve explicit integer signal trace widths and reject widths without a native signal overload.
+- Classify private typedefs in class template specializations correctly in the public API inventory.
+- Preserve null trace-file closure when releasing registered trace-value owners.
+- Retain Python hash and comparison callbacks for their native table proxy lifetime.
+- Preserve native time-conversion reports for string-unit constructors and full-width integer ticks in legacy time constructors.
+- Release the GIL for sticky synchronous process reset controls, including descendant resets.
+
 ### CI
+- Publish coverage for the exact release commit on Codecov’s main branch after PyPI hash verification, using the shared four-worker test workflow.
 - Run feature-PR tests and coverage with four workers; validate release-only metadata without repeating full CI on main merges or publication.
 - Verify published PyPI distribution hashes before announcing GitHub releases and activating versioned documentation.
 

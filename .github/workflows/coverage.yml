@@ -1,0 +1,90 @@
+name: 02b. Tests and coverage (reusable)
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git revision to test
+        type: string
+        required: true
+      branch:
+        description: Codecov branch for released coverage; empty preserves PR detection
+        type: string
+        default: ''
+    secrets:
+      CODECOV_TOKEN:
+        required: true
+permissions:
+  contents: read
+jobs:
+  tests:
+    name: Tests and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          submodules: recursive
+      - name: Resolve coverage commit
+        id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+          enable-cache: true
+      - name: Read project metadata from depot
+        id: project
+        run: |
+          uv run --no-project python - <<'PYTHON'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+          name = project["name"]
+          description = project.get("description", "")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"name={name}", file=output)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              print(f"### {name}\n\n{description}", file=summary)
+          PYTHON
+      - name: Compute native cache identity
+        if: github.event.repository.name == 'pysystemc'
+        id: native-key
+        shell: bash
+        run: |
+          identity=$( { c++ --version; c++ -dumpmachine; cmake --version; git -C submodules/systemc rev-parse HEAD; sha256sum Makefile build_backend/backend.py; echo 'cxx17-pthreads-python3.14'; } | sha256sum | cut -d' ' -f1 )
+          echo "key=$identity" >> "$GITHUB_OUTPUT"
+      - name: Cache native dependencies
+        if: github.event.repository.name == 'pysystemc'
+        uses: actions/cache@v4
+        with:
+          path: build/deps
+          key: native-${{ runner.os }}-${{ runner.arch }}-${{ steps.native-key.outputs.key }}
+      - name: Set up ${{ steps.project.outputs.name }} native dependencies
+        if: github.event.repository.name == 'pysystemc'
+        run: make setup
+      - name: Check Python lint and formatting
+        if: github.event.repository.name == 'pysystemc'
+        run: |
+          make lint
+          uv run ruff format --check .
+      - name: Run semantic tests and coverage
+        run: uv run --locked pytest -n 4 --dist=worksteal --durations=15 --maxfail=1 -vv --tb=short --cov=amal.eda.systemc --cov-report=term-missing --cov-report=xml:build/coverage/coverage.xml --cov-report=html:build/coverage/html
+      - name: Save coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: build/coverage/
+          if-no-files-found: warn
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() && hashFiles('build/coverage/coverage.xml') != '' }}
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/coverage/coverage.xml
+          disable_search: true
+          override_commit: ${{ inputs.branch != '' && steps.revision.outputs.sha || '' }}
+          override_branch: ${{ inputs.branch }}
+          fail_ci_if_error: ${{ inputs.branch != '' }}

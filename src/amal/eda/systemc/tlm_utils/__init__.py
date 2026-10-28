@@ -27,8 +27,127 @@ _namespace = cppyy.gbl.tlm_utils
 __all__ = _public_names(_namespace)
 cppyy.include(str(Path(__file__).with_name("callback_peq.h")))
 cppyy.include(str(Path(__file__).with_name("socket_callbacks.h")))
+cppyy.include(str(Path(__file__).with_name("socket_member_pointer.h")))
 _callback_queues = []
 _callback_sockets = []
+
+
+def _retain_socket_callback(socket, method, callback):
+    """Retain the callback currently installed for one native socket slot."""
+    for index, (retained_socket, retained_method, _) in enumerate(_callback_sockets):
+        if retained_socket is socket and retained_method == method:
+            _callback_sockets[index] = (socket, method, callback)
+            return
+    _callback_sockets.append((socket, method, callback))
+
+
+def _pythonize_get_queue(queue_type, name):
+    """Expose the native queue's public pair alias omitted by cppyy reflection.
+
+    The pair stores a time value and a borrowed payload pointer. Instantiating
+    this alias does not transfer payload ownership or enter the scheduler.
+    """
+    if name.startswith("peq_with_get<"):
+        payload = queue_type.transaction_type.__cpp_name__
+        queue_type.pair_type = cppyy.gbl.std.pair["const sc_core::sc_time", payload + "*"]
+
+
+cppyy.py.add_pythonization(_pythonize_get_queue, "tlm_utils")
+
+
+def _pythonize_multi_callback_aliases(socket_type, name):
+    """Expose native member-pointer values for multi-socket callback typedefs.
+
+    Alias values store exact native pointers and borrow callback owners. Use
+    ``Socket.nb_cb.from_member("Owner::method")`` to select a native member;
+    incompatible signatures raise cppyy template conversion errors. Default
+    construction creates a null pointer. Registration retains native ownership
+    rules: callers keep MODULE owners alive through simulation.
+    """
+    if name.startswith("multi_passthrough_initiator_socket<"):
+        aliases = (("nb_cb", 0, "register_nb_transport_bw"), ("dmi_cb", 1, "register_invalidate_direct_mem_ptr"))
+    elif name.startswith("multi_passthrough_target_socket<"):
+        aliases = (
+            ("nb_cb", 2, "register_nb_transport_fw"),
+            ("b_cb", 3, "register_b_transport"),
+            ("dbg_cb", 4, "register_transport_dbg"),
+            ("dmi_cb", 5, "register_get_direct_mem_ptr"),
+        )
+    else:
+        return
+    if name.startswith("multi_passthrough_target_socket<"):
+        binding = cppyy.gbl.pysystemc_interfaces.multi_target_binding[socket_type]
+        for method, operation in (("bind", binding.bind), ("__call__", binding.call)):
+            native_bind = getattr(socket_type, method)
+
+            def bind(socket, other, _operation=operation, _native=native_bind):
+                """Bind a borrowed native hierarchy socket before elaboration.
+
+                Args:
+                    other: Native hierarchy socket borrowed through simulation.
+                Returns:
+                    None after native binding.
+                Raises:
+                    TypeError: The socket types cannot bind.
+                    Native sc_report: Binding violates native elaboration rules.
+                Keep both sockets and their owners alive through simulation.
+                The GIL remains held. Non-native arguments use cppyy conversion.
+                """
+                if getattr(type(other), "__cpp_name__", None):
+                    return _operation[type(other)](socket, other)
+                return _native(socket, other)
+
+            if hasattr(native_bind, "__overload__"):
+                bind.__overload__ = native_bind.__overload__
+            setattr(socket_type, method, bind)
+    for alias, kind, registration in aliases:
+        pointer_type = cppyy.gbl.pysystemc_interfaces.socket_member_pointer[socket_type, kind]
+
+        def from_member(member, _socket=socket_type, _kind=kind):
+            """Return a native pointer value for a qualified C++ member name.
+
+            Args:
+                member: Qualified native member name, such as ``Owner::callback``.
+            Returns:
+                Native value storing the exact callback typedef.
+            Raises:
+                TypeError: The name or native member signature is incompatible.
+            No owner is retained and no simulation operation is performed.
+            """
+            if not isinstance(member, str) or "::" not in member or member.startswith("&"):
+                raise TypeError("member must be a qualified C++ member name without '&'")
+            return cppyy.gbl.pysystemc_interfaces.make_socket_member_pointer[_socket, _kind, "&" + member]()
+
+        pointer_type.from_member = staticmethod(from_member)
+        setattr(socket_type, alias, pointer_type)
+        native_register = getattr(socket_type, registration)
+
+        def register(socket, owner, callback, _native=native_register, _pointer=pointer_type):
+            """Register an exact stored member pointer with a borrowed MODULE.
+
+            Args:
+                owner: Native MODULE object retained by the caller through use.
+                callback: Exact alias value or a cppyy-compatible native pointer.
+            Returns:
+                None after native registration.
+            Raises:
+                TypeError: The MODULE or pointer signature is incompatible.
+                Native sc_report: Registration violates native socket rules.
+            Registration holds the GIL and never invokes transport. The socket
+            copies the pointer and does not acquire ownership of the MODULE.
+            """
+            if isinstance(callback, _pointer):
+                if not callback.valid():
+                    raise TypeError("cannot register a null socket callback member pointer")
+                return callback.register_on(socket, owner)
+            return _native(socket, owner, callback)
+
+        if hasattr(native_register, "__overload__"):
+            register.__overload__ = native_register.__overload__
+        setattr(socket_type, registration, register)
+
+
+cppyy.py.add_pythonization(_pythonize_multi_callback_aliases, "tlm_utils")
 
 
 def _checked_socket_callback(method, callback):
@@ -116,12 +235,16 @@ def callback_initiator_socket(name, *, width=32, protocol=None, policy=None, tag
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, *args, _native=native_register, _method=method):
-                """Retain callable ownership after successful native registration."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked, *args)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked, *args):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -175,12 +298,16 @@ def callback_target_socket(name, *, width=32, protocol=None, policy=None, tagged
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, *args, _native=native_register, _method=method):
-                """Retain a callable after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked, *args)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked, *args):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -234,12 +361,16 @@ def callback_passthrough_target_socket(name, *, width=32, protocol=None, policy=
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, *args, _native=native_register, _method=method):
-                """Retain a callable after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket transport callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked, *args)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked, *args):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -273,12 +404,16 @@ def callback_multi_initiator_socket(name, *, width=32, protocol=None, connection
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, _native=native_register, _method=method):
-                """Retain callback ownership after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True
@@ -316,12 +451,16 @@ def callback_multi_target_socket(name, *, width=32, protocol=None, connections=0
             native_register = getattr(socket_type, method)
 
             def register(socket, callback, _native=native_register, _method=method):
-                """Retain callable ownership after native registration succeeds."""
+                """Keep callbacks only when native registration installs them.
+
+                The Python API returns None. The native bool preserves the
+                installed owner; upstream duplicate warnings propagate normally.
+                """
                 if not callable(callback):
                     raise TypeError("socket callback must be callable")
                 checked = _checked_socket_callback(_method, callback)
-                _native(socket, checked)
-                _callback_sockets.append((socket, checked))
+                if _native(socket, checked):
+                    _retain_socket_callback(socket, _method, checked)
 
             setattr(socket_type, method, register)
         socket_type._retained_registration = True

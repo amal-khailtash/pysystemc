@@ -61,6 +61,23 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
     assert named("sc_core::sc_process_b::SPAWN_SIM")[0]["access"] == "protected"
     assert named("sc_core::sc_simcontext::phase_notify")[0]["access"] == "private"
     assert named("sc_dt::scfx_rep::not_a_number")[0]["access"] == "private"
+    context_allocators = named("sc_dt::sc_context::operator new")
+    assert context_allocators
+    assert all(row["access"] == "private" and row["classification"] == "internal" for row in context_allocators)
+    for type_name in ("sc_dt::sc_fxnum", "sc_dt::sc_fxnum_fast"):
+        disabled = [
+            row for row in named(type_name + "::" + type_name.rsplit("::", 1)[-1]) if row["access"] == "private"
+        ]
+        assert len(disabled) == 2
+        local_type_name = type_name.rsplit("::", 1)[-1]
+        qualified_copy = f"void (const {type_name} &)"
+        local_copy = f"void (const {local_type_name} &)"
+        # Clang versions vary in qualifying injected-class-name constructor arguments.
+        assert {row["signature"] for row in disabled} in (
+            {"void ()", qualified_copy},
+            {"void ()", local_copy},
+        )
+        assert all(row["classification"] == "internal" for row in disabled)
     assert named("sc_core::sc_time::from_value")[0]["static"] is True
     assert named("sc_core::sc_time::value")[0]["static"] is False
     assert any(entry["kind"] == "ClassTemplateSpecializationDecl" for entry in entries)
@@ -73,6 +90,10 @@ def test_source_inventory_overloads_templates_and_locations(tmp_path):
         assert entry["mapping_status"] == "unreviewed"
     assert not any(entry["kind"] == "CXXMethodDecl" and len(entry["name"].split("::")) < 3 for entry in entries)
     assert named("sc_core::sc_in::add_trace")
+    for alias in ("base_type", "this_type"):
+        port_aliases = named(f"sc_core::sc_port::{alias}")
+        assert port_aliases
+        assert all(row["access"] == "private" and row["classification"] == "internal" for row in port_aliases)
     assert not named("sc_core::add_trace")
     extension = named("tlm::tlm_generic_payload::get_extension")
     # Clang versions differ in qualification of types within their own namespace.

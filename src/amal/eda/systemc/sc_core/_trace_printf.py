@@ -1,6 +1,8 @@
 """Select native printf argument types for formatted trace comments."""
 
+import ctypes
 import re
+import sys
 
 import cppyy
 
@@ -27,6 +29,65 @@ _UNSIGNED = {
     "z": "std::size_t",
     "t": "std::size_t",
 }
+
+
+def _count_argument(value, datatype):
+    """Borrow aligned count storage, validating writable Python buffers before native access."""
+    if value is None or value is cppyy.nullptr or isinstance(value, (int, float, str)):
+        raise TypeError("%n requires a writable native pointer or buffer")
+    counter = cppyy.gbl.pysystemc_public.trace_count_argument[datatype]
+    expected_format = counter.buffer_format()
+    expected_ctype = {
+        "b": ctypes.c_byte,
+        "h": ctypes.c_short,
+        "i": ctypes.c_int,
+        "l": ctypes.c_long,
+        "q": ctypes.c_longlong,
+    }[expected_format]
+    if isinstance(value, ctypes._Pointer):
+        pointee = value._type_
+        if not value or ctypes.sizeof(pointee) != cppyy.sizeof(datatype) or pointee is not expected_ctype:
+            raise TypeError("%n requires a compatible nonnull count pointer")
+        address = ctypes.cast(value, ctypes.c_void_p).value
+        if address % counter.alignment():
+            raise TypeError("%n requires aligned count storage")
+        wrapper = counter.from_address(address)
+        wrapper._buffer_owner = value
+        return wrapper
+    try:
+        view = memoryview(value)
+    except TypeError:
+        referent = getattr(value, "_obj", None)
+        if type(referent) is not expected_ctype and not (
+            isinstance(referent, ctypes.Array) and referent._type_ is expected_ctype
+        ):
+            raise TypeError("%n requires a writable native count pointer or compatible buffer")
+        address = ctypes.cast(value, ctypes.c_void_p).value
+        start = ctypes.addressof(referent)
+        if not start <= address <= start + ctypes.sizeof(referent) - cppyy.sizeof(datatype):
+            raise TypeError("%n count pointer exceeds its referenced storage")
+        if address % counter.alignment():
+            raise TypeError("%n requires aligned count storage")
+        wrapper = counter.from_address(address)
+    else:
+        size = cppyy.sizeof(datatype)
+        native_prefix = "<" if sys.byteorder == "little" else ">"
+        buffer_format = view.format.removeprefix(native_prefix).lstrip("@=")
+        ctypes_alias = isinstance(value, ctypes.Array) and value._type_ is expected_ctype
+        if (
+            view.readonly
+            or not view.c_contiguous
+            or view.itemsize != size
+            or view.nbytes < size
+            or (buffer_format != expected_format and not ctypes_alias)
+        ):
+            raise TypeError("%n requires compatible writable contiguous count storage")
+        address = ctypes.addressof(ctypes.c_char.from_buffer(view))
+        if address % counter.alignment():
+            raise TypeError("%n requires aligned count storage")
+        wrapper = counter.from_address(address)
+    wrapper._buffer_owner = value
+    return wrapper
 
 
 def tprintf(file, format, *args):
@@ -89,6 +150,8 @@ def tprintf(file, format, *args):
                 raise ValueError("literal percent must use %%")
             pieces.append("%%")
             continue
+        if conversion == "n" and (flags or width is not None or precision is not None):
+            raise ValueError("%n does not accept flags, width or precision")
         normalized_fields = []
         for field in (width, precision):
             if field is not None and field.startswith("*"):
@@ -116,17 +179,18 @@ def tprintf(file, format, *args):
                 value = ord(value)
         elif conversion == "n":
             datatype = {
-                "": "int*",
-                "hh": "signed char*",
-                "h": "short*",
-                "l": "long*",
-                "ll": "long long*",
-                "j": "std::intmax_t*",
-                "z": "std::ptrdiff_t*",
-                "t": "std::ptrdiff_t*",
+                "": "int",
+                "hh": "signed char",
+                "h": "short",
+                "l": "long",
+                "ll": "long long",
+                "j": "std::intmax_t",
+                "z": "std::ptrdiff_t",
+                "t": "std::ptrdiff_t",
             }.get(length)
-            if value is None or isinstance(value, (int, float, str)):
-                raise TypeError("%n requires a writable native pointer or buffer")
+            if datatype:
+                value = _count_argument(value, datatype)
+                datatype = f"pysystemc_public::trace_count_argument<{datatype}>"
         else:
             datatype = "const void*" if not length else None
             if value is None:

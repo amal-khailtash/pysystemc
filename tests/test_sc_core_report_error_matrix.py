@@ -1,0 +1,36 @@
+"""Compare report error/action policy behavior with native SystemC."""
+
+import subprocess
+import sys
+
+from .support import ROOT, run_example
+
+
+def test_sc_core_report_error_matrix(tmp_path):
+    """Verify action precedence, suppress/force masks, counts and thrown reports."""
+    output = run_example(tmp_path, "tests/models/sc_core_report_error_matrix.py")
+    native_dir = tmp_path / "native"
+    native_dir.mkdir()
+    native = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "examples/run_sysc_cpp.py"),
+            str(ROOT / "tests/native/sc_core_report_error_matrix.cpp"),
+        ],
+        cwd=native_dir,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert native.returncode == 0, native.stdout + native.stderr
+    prefixes = (
+        "REPORT_ERROR_THROW",
+        "REPORT_CALLBACK_ERROR",
+        "REPORT_STOP_ZERO",
+        "REPORT_ERROR_ACTION",
+        "REPORT_ERROR_COUNTS",
+    )
+    actual = [line for line in output.splitlines() if line.startswith(prefixes)]
+    expected = [line for line in native.stdout.splitlines() if line.startswith(prefixes)]
+    assert actual == expected
+    assert len(actual) == 12

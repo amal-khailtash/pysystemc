@@ -142,6 +142,22 @@ for contract in (tlm.tlm_nonblocking_peek_if, tlm.tlm_blocking_get_if, tlm.tlm_g
     queue_port(queue_owner)
     queue_ports.append(queue_port)
 assert queue_ports[-1].get_interface().peek() == 43
+assert queue_ports[-1].get_interface().peek(cppyy.nullptr) == 43
+tag = tlm.tlm_tag[int]()
+assert queue_ports[-1].get_interface().peek(tag) == 43
+cppyy.cppdef("""
+/** @brief Check caller-owned blocking peek output while callbacks are live.
+ * @param channel Borrowed native peek interface, retained by its port.
+ * @return The sample copied into caller-owned output storage.
+ * @details The blocking callback may execute Python; native exceptions propagate.
+ */
+int blocking_peek_output_value(tlm::tlm_blocking_peek_if<int>& channel)
+{
+  int value = -1;
+  channel.peek(value);
+  return value;
+}
+""")
 partial_ports = []
 partial_references = []
 for operation in ("get", "peek"):
@@ -166,6 +182,7 @@ gc.collect()
 assert reference() is not None
 assert queue_reference() is not None
 assert queue_ports[1].get_interface().get() == 43
+assert cppyy.gbl.blocking_peek_output_value(queue_ports[-1].get_interface()) == 43
 assert port.get_interface().read() == 17
 try:
     sc.release_interface_callbacks()
@@ -222,9 +239,9 @@ bool released_blocking_get_output(tlm::tlm_blocking_get_if<int>& channel) {
 bool released_blocking_peek_output(tlm::tlm_blocking_peek_if<int>& channel) {
   int value = 83;
   try { channel.peek(value); }
-  catch (...) {
+  catch (const std::exception& error) {
     auto gil = PyGILState_Ensure(); PyErr_Clear(); PyGILState_Release(gil);
-    return value == 83;
+    return value == 83 && std::string(error.what()).find("released") != std::string::npos;
   }
   return false;
 }
@@ -280,13 +297,32 @@ for partial_port, operation in partial_ports:
         assert "released" in str(error)
     else:
         raise AssertionError("partial callback executed after release")
-for queue_port, method in ((queue_ports[1], "get"), (queue_ports[-1], "peek")):
-    try:
-        getattr(queue_port.get_interface(), method)()
-    except RuntimeError as error:
-        assert "released" in str(error)
-    else:
-        raise AssertionError("shared TLM callback executed after release")
+queue_port = queue_ports[1]
+method = "get"
+try:
+    getattr(queue_port.get_interface(), method)()
+except RuntimeError as error:
+    assert "released" in str(error)
+else:
+    raise AssertionError("shared TLM callback executed after release")
+try:
+    queue_ports[-1].get_interface().peek(cppyy.nullptr)
+except RuntimeError as error:
+    assert "released" in str(error)
+else:
+    raise AssertionError("shared TLM peek callback executed after release")
+try:
+    queue_ports[-1].get_interface().peek(tag)
+except RuntimeError as error:
+    assert "released" in str(error)
+else:
+    raise AssertionError("shared TLM tagged peek callback executed after release")
+try:
+    queue_ports[-1].get_interface().peek()
+except RuntimeError as error:
+    assert "released" in str(error)
+else:
+    raise AssertionError("shared TLM peek callback executed after release")
 try:
     port.get_interface().read()
 except RuntimeError as error:

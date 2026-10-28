@@ -15,6 +15,12 @@ multiple bridges. Use the same native word type and bus width for explicit
 request/response pairs. The generic ``tlm_from_hostendian(payload)`` dispatcher
 uses the response function stored by the preceding request conversion.
 
+The Python generic request helper preserves the full 64-bit address window.
+SystemC 2.3.4 uses an unsigned-int mask in that request converter; the binding
+converts a bus-relative address and then restores the payload and native response
+context to the original window. The response converter and dispatcher continue
+to use native buffer-copy behavior.
+
 Converter preconditions
 -----------------------
 
@@ -56,6 +62,10 @@ Regression evidence
 unaligned transfers, streaming windows and repeating enables. An independent C++
 reference compares the combined unaligned streaming/enable case's actual buffers.
 Aligned and word probes check ordering and word-uniform response masking. The
-single-word probe has an independent 27-case native address reference. Full native
-comparisons for every converter/type combination and context lifecycle coverage
-remain pending; these tests do not establish M6A completion.
+single-word probe has an independent 27-case native address reference.
+``tests/models/tlm_endian_public.py`` compares all four request/response families
+and dispatcher pairs against native buffer results for 384 read/write cases.
+These cover masking, streaming, unaligned addresses, pointer-preserving paths,
+data word sizes from one through sixteen bytes, and a custom native word type.
+Additional context-reuse checks cross 32-bit and 64-bit address windows while
+preserving original enable buffers and previously completed read storage.

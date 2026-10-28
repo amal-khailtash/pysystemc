@@ -194,7 +194,8 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
         access
         if kind == "EnumDecl"
         else "private"
-        if kind == "CXXRecordDecl" and node.get("tagUsed") == "class"
+        if kind in {"CXXRecordDecl", "ClassTemplateSpecializationDecl", "ClassTemplatePartialSpecializationDecl"}
+        and node.get("tagUsed") == "class"
         else "public"
     )
     for child in node.get("inner", []):

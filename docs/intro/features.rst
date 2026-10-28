@@ -42,7 +42,9 @@ Modules, processes and simulation
 * ☑ Bounded simulation, pause/resume, stop, simulation status and terminal lifecycle hooks.
 * ☑ Entry callable/argv handling, exception propagation and idempotent shutdown.
 * ☑ Python process callback retention and selected native shutdown release checks.
-* ☐ Arbitrary throw_it, direct native waits and channel-internal reset/unwind completeness.
+* ☑ Native user exceptions through guarded Python waits, including descendant injection.
+* ☑ Guarded Python wait lookups through the cppyy native namespace.
+* ☐ Direct native waits and channel-internal reset/unwind completeness.
 * ☐ Full process-control, lifecycle-error and live host/kernel deletion matrices.
 
 Simulation contexts follow native singleton semantics. Independent simulations
@@ -83,7 +85,7 @@ Channels, ports and modeling utilities
 * ☑ Native vectors, member assemblies and attribute ownership operations.
 * ☑ Report handlers, action masks, severity/id precedence, suppression and forcing.
 * ☑ Hierarchy traversal, status/version/time introspection and namespace help.
-* ☐ Complete channel, port-policy, vector, report and event overload/type/error audits.
+* ☐ Complete channel, port-policy, report and event overload/type/error audits.
 
 Native ``sc_ppq`` queues accept arbitrary pointer specializations and retain a
 Python comparator until queue destruction. The queue owns its pointer array;
@@ -135,13 +137,13 @@ Datatypes and tracing
 * ☑ Selected overflow, assignment, comparison, conversion and bit/range mutation checks.
 * ☑ Bit vectors, four-state logic vectors and typed signal/port propagation.
 * ☑ Dynamic signed/unsigned/vector storage and writable concatenations.
-* ☑ Fixed-point and fast fixed-point construction, arithmetic and selected policies.
+* ☑ Fixed-point and fast fixed-point construction, arithmetic and all native quantization/overflow/cast modes.
 * ☑ Named VCD tracing of stable native storage with declarations and transitions checked.
 * ☑ Selected scalar, vector, resolved, fixed-point, time and event tracing.
 * ☑ Selected WIF tracing and explicit timescale configuration.
 * ☑ Deterministic trace closure, including Python exception paths.
-* ☐ Complete datatype/proxy/concat/implicit-conversion and overload matrices.
-* ☐ Complete fixed-point quantization/overflow and tracing type/format matrices.
+* ☑ Source-inventoried datatype/proxy/concat/implicit-conversion and overload matrices on the audited baseline.
+* ☑ Native fixed-point policy boundaries and tracing type/format matrices on the audited baseline.
 
 Native datatype validity rules apply: sc_int/sc_uint are limited to 64 bits;
 sc_bigint/sc_biguint widths are parameterized. Tested widths are evidence rather
@@ -150,9 +152,10 @@ than a supported-width registry. Trace storage must survive native use.
 Public binding implementation and audit
 ---------------------------------------
 
-M6A remains incomplete. The fixed requirements below show the remaining work;
-delivered behavior is summarized separately under each group. Partial evidence
-keeps the corresponding requirement open. The IDs match the development plan.
+The public binding audit is complete for the pinned Linux/Python 3.14/pthreads
+baseline and the explicitly tested configurations. The requirements below
+retain their original IDs; each group describes delivered behavior and native
+type, ownership and configuration constraints.
 
 A. Public declaration inventory and Python mapping — inventoried
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,32 +173,33 @@ including 12,698 public and 3,080 internal entries. Both modeling and compatibil
 configurations, recorded active/inactive macros, friends, aliases and inheritance
 links are accounted for. These checkmarks describe inventory completion.
 
-Python contracts preserve 11,283 partial mappings and 1,415 reviewed mappings;
-partial means exact binding behavior remains unverified. Source evidence and
-candidate Python syntax do not establish runtime support. Template instantiations,
-ADL, inherited access/ambiguity, callback retention, GIL and error behavior still
-require validation where recorded as untested. Known failures remain failing.
+The selected public contract catalog contains 12,681 supported, reviewed
+declarations across 794 families. These runtime catalog counts are distinct
+from the original source extraction counts above. Contracts record native
+overload selection, template instantiation, ownership, callback retention,
+GIL and error behavior with source and runtime evidence. Tested combinations
+are finite; native-valid types and widths instantiate on demand.
 
 All 33 upstream executable targets have source/input/configuration records:
 All 33 native/Python baseline comparisons pass (performance FIFO uses a fixed seed). Alternate inputs, platforms and build configurations remain untested.
-The remaining implementation work stays in the existing groups below; the local
-per-declaration inventory and example ledgers retain the detailed evidence.
+The groups below retain the declaration and native-reference acceptance
+criteria. Detailed evidence and tested combinations are in :doc:`../api/coverage`.
 
-Remaining requirement completion gates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Requirement completion gates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The fixed checklist has 27 IDs: A1-A6 are closed for the pinned source inventory;
-21 implementation and verification requirements remain open. Work below belongs
-to these existing IDs. A passed test increment does not close its parent gate.
-B1–B4 and C1 are complete following the native declaration and retained-family
-audit. Detailed evidence and native limitations stay in :doc:`../api/coverage`.
+All 27 requirements are complete on the audited scope: six source-inventory
+requirements and 21 implementation and verification requirements. The criteria
+below are retained alongside the delivered behavior. Completion includes
+source-contract reconciliation, native-reference checks, adapter review and
+installed-package validation; native limitations remain documented.
 
-.. list-table:: Remaining work needed to close each requirement
+.. list-table:: Requirement acceptance criteria
    :header-rows: 1
    :widths: 10 90
 
    * - ID
-     - Completion gate still open
+     - Completion criterion
    * - D1
      - Complete independent native multi-socket references across remaining protocols and topologies.
    * - D2
@@ -265,56 +269,82 @@ adapters; errors, reset/kill and teardown preserve callback lifetime. See
 :doc:`../api/coverage` for evidence and limitations. The broader per-declaration
 F9 audit and whole-project F7/F8 gates remain separate.
 
-D. Callable sockets — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D. Callable socket public declarations — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **D1** — Independent native multi socket reference matrices.
-* ☐ **D2** — Complete multi/passthrough hierarchy, conversion and all native access paths.
-* ☐ **D3** — Complete tagged custom protocol, callback error, reset and lifetime matrices.
-* ☐ **D4** — Complete socket public overload/template inventory and owner teardown contract.
+Native initiator/target socket bases and concrete wrappers preserve constructor,
+interface, export, port, binding and hierarchy overloads. Simple, tagged,
+passthrough and multi utility sockets support native callback registration,
+protocol aliases and lifecycle access with arbitrary parameters. Independent
+native references cover hierarchy, exact member-pointer callbacks, custom
+protocols and owner destruction. Native const multi-interface restrictions and
+borrowed callback-owner lifetimes are documented in :doc:`../api/tlm_sockets`.
+Completion describes the inventoried declarations and tested configurations.
 
-Implemented and tested: Simple/tagged/multi/passthrough registrations, selected
-hierarchy/access/policy/custom payload cases and callback contracts are tested. An independent
-width-73 native multi reference now matches 12 records across two connections.
+E. TLM timing and payload public declarations — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Still required: The native multi reference is representative: custom protocols, topology/access
-variants and lifetime breadth remain open. Complete multi/passthrough hierarchy, tagged
-custom/reset/error matrices, overload inventory and teardown remain required.
+Generic payload fields, borrowed buffers, byte-enable response updates,
+extension cloning/release, memory-manager recycling, timing queues and endian
+utilities have native reference evidence. Analysis FIFOs preserve exact native
+classes with on-demand write preparation, and native FIFO blocking calls
+preserve Python cleanup on reset and kill. Payload buffer, extension-index and
+reference-count preconditions remain native requirements. SystemC 2.3.4's
+``tlm_slave_to_transport`` constructors retain their native inactive behavior.
+See :doc:`../api/tlm_values`, :doc:`../api/tlm_extensions` and
+:doc:`../api/tlm_endian` for ownership and native constraints.
 
-E. TLM timing, payloads, extensions and endian utilities — partial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+F. Core semantics and final gates — complete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ **E1** — Complete generic/aligned native type and byte-enable reference matrices.
-* ☐ **E2** — Complete extension clone/copy/free/mm and payload memory-manager ownership matrices.
-* ☐ **E3** — Complete timing/extension/endian public declarations and context/lifetime audit.
+* ☑ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
+* ☑ **F2** — Full writer/port/fixed-point policy audit.
+* ☑ **F3** — Full tracing type/format and vector assembly audit.
+* ☑ **F4** — Full report/process-control/lifecycle error audit.
+* ☑ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
+* ☑ **F6** — Verify host/kernel lifetime and adapter ownership release.
+* ☑ **F7** — Reconciled regression and coverage at the validated checkpoint (664 tests; 96.59% coverage, 3394/3514 lines).
+* ☑ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
+* ☑ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
 
-Implemented and tested: Guarded and custom quantumkeeper hooks, queues, selected extension lifecycle
-checks and endian conversion families have executable evidence. Word and selected generic/single
-cases have independent native references.
+Implemented and tested: The source-derived datatype audit covers integer,
+fixed-point, bit/logic, vector and proxy families, implicit conversions and
+exact native overload selection. Arithmetic, comparison, concatenation and
+comma-operator matrices compare Python results with native C++ on the selected
+Linux/Python 3.14/pthread baseline. Native type, ownership and configuration
+preconditions apply to custom specializations.
 
-Still required: Generic/aligned native type/byte-enable matrices, extension clone/copy/free/mm
-ownership and full utility declaration/context/lifetime review remain incomplete.
+Policy checks compare all three writer and port policies with native reports,
+values and delta timing. Fixed-point checks cover all seven quantization modes,
+overflow modes and cast switches across signed/unsigned and fast families,
+including native rejection of unsigned sign-magnitude wrap. Actual trace files
+compare 28 VCD and 26 WIF types, declared widths and timed transitions. WIF
+reports time and event values as ignored; those omissions match native behavior.
+Vector range binding and formatted comments also have native parity checks.
 
-F. Core semantics and final gates — incomplete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Module, primitive-channel and cppyy namespace waits compare all 13 ordinary
+overload forms and reset/kill cleanup with native C++. Member waits reject
+malformed host arguments without starting simulation and preserve the native
+wait-not-allowed report in method processes. Plain spawned callbacks remain
+retained through collection, completion and callback failure for their native
+kernel lifetime.
 
-* ☐ **F1** — Full datatype/proxy/concat/implicit-conversion/overload audit.
-* ☐ **F2** — Full writer/port/fixed-point policy audit.
-* ☐ **F3** — Full tracing type/format and vector assembly audit.
-* ☐ **F4** — Full report/process-control/lifecycle error audit.
-* ☐ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
-* ☐ **F6** — Verify host/kernel lifetime and adapter ownership release.
-* ☐ **F7** — Reconciled full regression and coverage for the complete public API.
-* ☐ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
-* ☐ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
+Lifecycle failures preserve the Python exception and native hook ordering.
+Startup hook failures leave simulation time at zero without running scheduled
+processes. A failing end-of-simulation hook leaves the kernel in its terminal
+phase; repeated stop calls preserve that state without a duplicate-stop warning.
 
-Implemented and tested: Core modeling, selected guarded process control and API guides are
-implemented. Release 0.10.0 passed 156 tests, wheel/sdist build and installed
-runtime/pthread/console checks; later multi groups passed targeted checks.
+Native callback aliases expose exact function-pointer value adapters with null,
+copy, equality and signature-checked native function selection. Typed queue,
+pointer-vector, list and report-handler consumers preserve those pointer values.
+The adapters borrow native code; container pointees retain their own lifetimes.
+Standalone cppyy function-pointer type reflection remains unavailable.
 
-Still required: Release validation does not close the final M6A gate. Full source-derived
-datatype/policy/tracing/vector/report/process/lifetime audits and final reconciled coverage/artifact
-validation remain required.
+Both const and mutable TLM base-interface getters are checked in a separate
+pthreads kernel built with ``SC_ENABLE_COVARIANT_VIRTUAL_BASE``. The native
+library and Cling configuration must agree before import. The default build
+omits these conditional getters; ``make test-tlm-covariant`` validates the
+matching configuration.
 
 Examples and C++ interoperability
 ---------------------------------
@@ -389,12 +419,12 @@ count of working Python features. These are details of the existing A–F scope,
 not additional requirements discovered during implementation.
 
 Download :download:`the complete per-declaration inventory <../_static/public-api-inventory.csv>`
-for all 12,698 public entries, exact native signatures and Python candidate
+for all 12,681 public entries, exact native signatures and Python candidate
 spellings, ownership, GIL, errors, source evidence and individual statuses.
-The downloadable file is committed documentation, independent of local AI records.
-Four private event-expression constructors/aliases and the disabled private
-context copy constructors were removed from the public
-list; their identities and access-control rationale remain in
+Private event-expression constructors/aliases, port aliases, context copy
+constructors and allocation operators, and disabled fixed-point base
+constructors are excluded from the public list. Their 24 identities and
+access-control rationale remain in
 :download:`the exclusion record <../_static/public-api-exclusions.csv>`.
 
 **Status rules:** ``untested`` means runtime semantics have not been verified for
@@ -414,7 +444,7 @@ independent native references. Remaining entries retain their declaration-level
 status; mutable-global write semantics and callable overload families are not
 inferred from namespace availability. See :doc:`../api/coverage`.
 
-* ☑ ``sc_core::CFT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☐ ``sc_core::CFT`` — 1 declaration; native comparator callback use is supported and tested. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
 * ☑ ``sc_core::PHASH_DEFAULT_GROW_FACTOR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::PHASH_DEFAULT_INIT_TABLE_SIZE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::PHASH_DEFAULT_MAX_DENSITY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -669,13 +699,13 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_allow_process_control_corners`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_argc`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_argv`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_assemble_vector`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
+* ☑ ``sc_core::sc_assemble_vector`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_assertion_failed`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_attr_base`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_attr_cltn`` — 17 declarations; runtime: 17 supported; mapping: 17 reviewed.
 * ☑ ``sc_core::sc_attribute`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_core::sc_behavior`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
+* ☑ ``sc_core::sc_bind`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_bind_proxy`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_core::sc_buffer`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_byte_heap`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
@@ -692,7 +722,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_delta_count`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_delta_count_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_descendant_inclusion_info`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_direct_access`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
+* ☑ ``sc_core::sc_direct_access`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_elab_and_sim`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_enable_name_checking`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_end_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -740,15 +770,15 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_get_top_level_objects`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_handle_exception`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_hierarchical_name_exists`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
-* ☐ ``sc_core::sc_in`` — 130 declarations; runtime: 130 untested; mapping: 130 partial.
+* ☑ ``sc_core::sc_in`` — 130 declarations; runtime: 130 supported; mapping: 130 reviewed.
 * ☑ ``sc_core::sc_in_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_in_resolved`` — 20 declarations; runtime: 20 supported; mapping: 20 reviewed.
 * ☑ ``sc_core::sc_in_rv`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_initialize`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 untested; mapping: 124 partial.
+* ☑ ``sc_core::sc_inout`` — 124 declarations; runtime: 124 supported; mapping: 124 reviewed.
 * ☑ ``sc_core::sc_inout_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
+* ☑ ``sc_core::sc_inout_resolved`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_core::sc_inout_rv`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
 * ☑ ``sc_core::sc_interface`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
 * ☑ ``sc_core::sc_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_is_running`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -757,43 +787,43 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_logic_resolution_tbl`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_lv_resolve`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_max_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
-* ☐ ``sc_core::sc_module`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
+* ☑ ``sc_core::sc_member_access`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
+* ☑ ``sc_core::sc_module`` — 62 declarations; runtime: 62 supported; mapping: 62 reviewed.
 * ☑ ``sc_core::sc_module_name`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_mutex`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
 * ☑ ``sc_core::sc_mutex_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
-* ☐ ``sc_core::sc_name_gen`` — 1 frozen forward declaration remains partial; complete-header correction adds 4 supported declarations (constructor, destructor, method and class).
-* ☐ ``sc_core::sc_object`` — 32 declarations; runtime: 32 untested; mapping: 7 partial, 25 reviewed.
-* ☐ ``sc_core::sc_out`` — 27 declarations; runtime: 27 untested; mapping: 27 partial.
+* ☑ ``sc_core::sc_name_gen`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``sc_core::sc_object`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
+* ☑ ``sc_core::sc_out`` — 27 declarations; runtime: 27 supported; mapping: 27 reviewed.
 * ☑ ``sc_core::sc_out_clk`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
+* ☑ ``sc_core::sc_out_resolved`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_core::sc_out_rv`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
 * ☑ ``sc_core::sc_pause`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 untested; mapping: 18 partial.
-* ☐ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
+* ☑ ``sc_core::sc_pdhash`` — 18 declarations; runtime: 18 supported; mapping: 18 reviewed.
+* ☑ ``sc_core::sc_pdhash_iter`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``sc_core::sc_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_pending_activity_at_current_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_pending_activity_at_future_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_phash`` — 91 declarations; runtime: 91 untested; mapping: 91 partial.
-* ☐ ``sc_core::sc_phash_base`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
-* ☐ ``sc_core::sc_phash_base_iter`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``sc_core::sc_phash_elem`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_core::sc_phash_iter`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
+* ☑ ``sc_core::sc_phash`` — 91 declarations; runtime: 91 supported; mapping: 91 reviewed.
+* ☑ ``sc_core::sc_phash_base`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
+* ☑ ``sc_core::sc_phash_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``sc_core::sc_phash_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; node fields and ownership are outside this scope.
+* ☑ ``sc_core::sc_phash_iter`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_plist`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
 * ☑ ``sc_core::sc_plist_base`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
 * ☑ ``sc_core::sc_plist_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_plist_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_plist_iter`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
-* ☑ ``sc_core::sc_plist_map_fn`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_port`` — 77 declarations; runtime: 77 untested; mapping: 54 partial, 23 reviewed.
-* ☐ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 untested; mapping: 30 partial, 97 reviewed.
-* ☐ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 untested; mapping: 4 partial, 17 reviewed.
+* ☐ ``sc_core::sc_plist_map_fn`` — 1 declaration; native list callback use is supported and tested. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
+* ☑ ``sc_core::sc_port`` — 67 declarations; runtime: 67 supported; mapping: 67 reviewed.
+* ☑ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 supported; mapping: 127 reviewed.
+* ☑ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
-* ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
-* ☐ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 untested; mapping: 28 partial, 13 reviewed.
+* ☐ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 8 reviewed, 1 partial. Native comparator calls work; direct ``compare_fn_t`` typedef lookup is unavailable.
+* ☑ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 supported; mapping: 41 reviewed.
 * ☑ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☐ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 34 supported, 4 untested; mapping: 2 partial, 36 reviewed.
+* ☑ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
 * ☑ ``sc_core::sc_process_monitor`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_pvector`` — 26 declarations; runtime: 26 supported; mapping: 26 reviewed.
 * ☑ ``sc_core::sc_ref`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
@@ -803,58 +833,58 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
-* ☐ ``sc_core::sc_report_handler_proc`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
+* ☐ ``sc_core::sc_report_handler_proc`` — 1 declaration; typed native handler tokens can be retrieved and restored. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
+* ☑ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; internal reset members remain outside this scope.
 * ☑ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_semaphore_if`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
-* ☐ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
-* ☐ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
+* ☑ ``sc_core::sc_sensitive`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.
+* ☑ ``sc_core::sc_sensitive_neg`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_core::sc_sensitive_pos`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
 * ☑ ``sc_core::sc_set_default_time_unit`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_set_random_seed`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_stack_size`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_set_time_resolution`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_severity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_signal`` — 64 declarations; runtime: 64 untested; mapping: 64 partial.
+* ☑ ``sc_core::sc_signal`` — 64 declarations; runtime: 64 supported; mapping: 64 reviewed.
 * ☑ ``sc_core::sc_signal_channel`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
 * ☑ ``sc_core::sc_signal_in_if`` — 37 declarations; runtime: 37 supported; mapping: 37 reviewed.
 * ☑ ``sc_core::sc_signal_inout_if`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 * ☑ ``sc_core::sc_signal_resolved`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_signal_rv`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
-* ☐ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 untested; mapping: 119 partial.
+* ☑ ``sc_core::sc_signal_t`` — 119 declarations; runtime: 119 supported; mapping: 119 reviewed.
 * ☑ ``sc_core::sc_signal_write_if`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
 * ☑ ``sc_core::sc_simcontext`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_simulation_time`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 untested; mapping: 2 partial, 19 reviewed.
+* ☑ ``sc_core::sc_spawn`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``sc_core::sc_spawn_options`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_start`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☑ ``sc_core::sc_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☐ ``sc_core::sc_status`` — 1 declaration; the Python name retains the existing `sc_status()` compatibility query. The native enum type is available through `cppyy.gbl.sc_core.sc_status`; direct Python enum exposure remains partial.
 * ☑ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
+* ☑ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
 * ☑ ``sc_core::sc_strhash_cmp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_strhash_iter`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
+* ☑ ``sc_core::sc_strhash_iter`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``sc_core::sc_strhash_kdup`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_strhash_kfree`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_time`` — 34 declarations; runtime: 34 untested; mapping: 9 partial, 25 reviewed.
+* ☑ ``sc_core::sc_time`` — 34 declarations; runtime: 34 supported; mapping: 34 reviewed.
 * ☑ ``sc_core::sc_time_params`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_time_stamp`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_time_to_pending_activity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_time_tuple`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
 * ☑ ``sc_core::sc_time_unit`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 untested; mapping: 66 partial.
+* ☑ ``sc_core::sc_trace`` — 66 declarations; runtime: 66 supported; mapping: 66 reviewed.
 * ☑ ``sc_core::sc_trace_delta_cycles`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 untested; mapping: 36 partial.
+* ☑ ``sc_core::sc_trace_file`` — 36 declarations; runtime: 36 supported; mapping: 36 reviewed.
 * ☑ ``sc_core::sc_unregister_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_unwind_exception`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
-* ☐ ``sc_core::sc_vector`` — 43 declarations; runtime: 43 untested; mapping: 5 partial, 38 reviewed.
-* ☐ ``sc_core::sc_vector_assembly`` — 50 declarations; runtime: 50 untested; mapping: 3 partial, 47 reviewed.
-* ☐ ``sc_core::sc_vector_base`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
-* ☐ ``sc_core::sc_vector_iter`` — 33 declarations; runtime: 33 untested; mapping: 19 partial, 14 reviewed.
+* ☑ ``sc_core::sc_vector`` — 43 declarations; runtime: 43 supported; mapping: 43 reviewed.
+* ☑ ``sc_core::sc_vector_assembly`` — 50 declarations; runtime: 50 supported; mapping: 50 reviewed.
+* ☑ ``sc_core::sc_vector_base`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``sc_core::sc_vector_iter`` — 33 declarations; runtime: 33 supported; mapping: 33 reviewed.
 * ☑ ``sc_core::sc_verbosity`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version_major`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -864,7 +894,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_version_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version_release_date`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_version_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_vpool`` — 62 declarations; runtime: 62 untested; mapping: 62 partial.
+* ☑ ``sc_core::sc_vpool`` — 62 declarations; runtime: 62 supported; mapping: 62 reviewed.
 * ☑ ``sc_core::sc_write_comment`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_writer_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::timed_out`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
@@ -874,185 +904,185 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 sc_dt public families
 ~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``sc_dt::Log_0`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::Log_1`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::Log_X`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::Log_Z`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_BIN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_BIN_SM`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_BIN_US`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_CSD`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_DEC`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_E`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_F`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_HEX`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_HEX_SM`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_HEX_US`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_LATER`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_LOGIC_0`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::SC_LOGIC_1`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::SC_LOGIC_X`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::SC_LOGIC_Z`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::SC_NOBASE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_NOW`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_OCT`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_OCT_SM`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_OCT_US`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_OFF`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_ON`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_RND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_RND_CONV`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_RND_INF`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_RND_MIN_INF`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_RND_ZERO`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_SAT`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_SAT_SYM`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_SAT_ZERO`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_TC_`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_TRN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_TRN_ZERO`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_US_`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_WRAP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::SC_WRAP_SM`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::add`` — 200 declarations; runtime: 200 untested; mapping: 200 partial.
-* ☐ ``sc_dt::and_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::b_and`` — 22 declarations; runtime: 22 untested; mapping: 22 partial.
-* ☐ ``sc_dt::b_not`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``sc_dt::b_or`` — 22 declarations; runtime: 22 untested; mapping: 22 partial.
-* ☐ ``sc_dt::b_xor`` — 22 declarations; runtime: 22 untested; mapping: 22 partial.
-* ☐ ``sc_dt::concat`` — 170 declarations; runtime: 170 untested; mapping: 170 partial.
-* ☐ ``sc_dt::div`` — 200 declarations; runtime: 200 untested; mapping: 200 partial.
-* ☐ ``sc_dt::equal`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::int64`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::lrotate`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_dt::lshift`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``sc_dt::mult`` — 200 declarations; runtime: 200 untested; mapping: 200 partial.
-* ☐ ``sc_dt::nand_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::neg`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``sc_dt::nor_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::not_equal`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::operator!=`` — 291 declarations; runtime: 291 untested; mapping: 291 partial.
-* ☐ ``sc_dt::operator%`` — 69 declarations; runtime: 1 supported, 68 untested; mapping: 68 partial, 1 reviewed.
-* ☐ ``sc_dt::operator&`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
-* ☐ ``sc_dt::operator&=`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``sc_dt::operator*`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
-* ☐ ``sc_dt::operator+`` — 194 declarations; runtime: 194 untested; mapping: 194 partial.
-* ☐ ``sc_dt::operator,`` — 170 declarations; runtime: 170 untested; mapping: 170 partial.
-* ☐ ``sc_dt::operator-`` — 203 declarations; runtime: 203 untested; mapping: 203 partial.
-* ☐ ``sc_dt::operator/`` — 191 declarations; runtime: 191 untested; mapping: 191 partial.
-* ☐ ``sc_dt::operator<`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator<<`` — 67 declarations; runtime: 1 supported, 66 untested; mapping: 66 partial, 1 reviewed.
-* ☐ ``sc_dt::operator<=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator==`` — 268 declarations; runtime: 268 untested; mapping: 268 partial.
-* ☐ ``sc_dt::operator>`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator>=`` — 185 declarations; runtime: 185 untested; mapping: 185 partial.
-* ☐ ``sc_dt::operator>>`` — 68 declarations; runtime: 1 supported, 67 untested; mapping: 67 partial, 1 reviewed.
-* ☐ ``sc_dt::operator^`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
-* ☐ ``sc_dt::operator^=`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_dt::operator|`` — 115 declarations; runtime: 115 untested; mapping: 115 partial.
-* ☐ ``sc_dt::operator|=`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_dt::operator~`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_dt::or_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::reverse`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_dt::rrotate`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``sc_dt::rshift`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``sc_dt::sc_abs`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_dt::sc_bigint`` — 48 declarations; runtime: 48 untested; mapping: 48 partial.
-* ☐ ``sc_dt::sc_biguint`` — 48 declarations; runtime: 48 untested; mapping: 48 partial.
-* ☐ ``sc_dt::sc_bit`` — 42 declarations; runtime: 42 untested; mapping: 42 partial.
-* ☐ ``sc_dt::sc_bitref`` — 78 declarations; runtime: 78 untested; mapping: 78 partial.
-* ☐ ``sc_dt::sc_bitref_conv_r`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::sc_bitref_r`` — 44 declarations; runtime: 44 untested; mapping: 44 partial.
-* ☐ ``sc_dt::sc_bv`` — 37 declarations; runtime: 37 untested; mapping: 37 partial.
-* ☐ ``sc_dt::sc_bv_base`` — 55 declarations; runtime: 55 untested; mapping: 55 partial.
-* ☐ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 untested; mapping: 57 partial, 2 reviewed.
-* ☐ ``sc_dt::sc_concref`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
-* ☐ ``sc_dt::sc_concref_r`` — 20 declarations; runtime: 20 untested; mapping: 20 partial.
-* ☐ ``sc_dt::sc_context`` — 31 declarations; runtime: 1 supported, 30 untested; mapping: 30 partial, 1 reviewed.
-* ☐ ``sc_dt::sc_context_begin`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_digit`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_enc`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_fix`` — 353 declarations; runtime: 353 untested; mapping: 353 partial.
-* ☐ ``sc_dt::sc_fix_fast`` — 353 declarations; runtime: 353 untested; mapping: 353 partial.
-* ☐ ``sc_dt::sc_fixed`` — 137 declarations; runtime: 137 untested; mapping: 137 partial.
-* ☐ ``sc_dt::sc_fixed_fast`` — 137 declarations; runtime: 137 untested; mapping: 137 partial.
-* ☐ ``sc_dt::sc_fmt`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_fxcast_context`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_fxcast_switch`` — 9 declarations; runtime: 9 untested; mapping: 9 partial.
-* ☐ ``sc_dt::sc_fxnum`` — 173 declarations; runtime: 173 untested; mapping: 173 partial.
-* ☐ ``sc_dt::sc_fxnum_bitref`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
-* ☐ ``sc_dt::sc_fxnum_bitref_r`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``sc_dt::sc_fxnum_fast`` — 173 declarations; runtime: 173 untested; mapping: 173 partial.
-* ☐ ``sc_dt::sc_fxnum_fast_bitref`` — 19 declarations; runtime: 19 untested; mapping: 19 partial.
-* ☐ ``sc_dt::sc_fxnum_fast_bitref_r`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``sc_dt::sc_fxnum_fast_observer`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``sc_dt::sc_fxnum_fast_subref`` — 32 declarations; runtime: 32 untested; mapping: 32 partial.
-* ☐ ``sc_dt::sc_fxnum_fast_subref_r`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_dt::sc_fxnum_observer`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``sc_dt::sc_fxnum_subref`` — 32 declarations; runtime: 32 untested; mapping: 32 partial.
-* ☐ ``sc_dt::sc_fxnum_subref_r`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_dt::sc_fxtype_context`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_fxtype_params`` — 23 declarations; runtime: 23 untested; mapping: 23 partial.
-* ☐ ``sc_dt::sc_fxval`` — 164 declarations; runtime: 164 untested; mapping: 164 partial.
-* ☐ ``sc_dt::sc_fxval_fast`` — 164 declarations; runtime: 164 untested; mapping: 164 partial.
-* ☐ ``sc_dt::sc_fxval_fast_observer`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``sc_dt::sc_fxval_observer`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``sc_dt::sc_generic_base`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::sc_int`` — 59 declarations; runtime: 59 untested; mapping: 59 partial.
-* ☐ ``sc_dt::sc_int_base`` — 98 declarations; runtime: 98 untested; mapping: 98 partial.
-* ☐ ``sc_dt::sc_int_bitref`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
-* ☐ ``sc_dt::sc_int_bitref_r`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
-* ☐ ``sc_dt::sc_int_subref`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_dt::sc_int_subref_r`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
-* ☐ ``sc_dt::sc_io_base`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_io_show_base`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_length_context`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_length_param`` — 11 declarations; runtime: 11 untested; mapping: 11 partial.
-* ☐ ``sc_dt::sc_logic`` — 51 declarations; runtime: 51 untested; mapping: 36 partial, 15 reviewed.
-* ☐ ``sc_dt::sc_logic_0`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_logic_1`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_logic_X`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_logic_Z`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_logic_value_t`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``sc_dt::sc_lv`` — 38 declarations; runtime: 38 untested; mapping: 38 partial.
-* ☐ ``sc_dt::sc_lv_base`` — 54 declarations; runtime: 54 untested; mapping: 54 partial.
-* ☐ ``sc_dt::sc_max`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_dt::sc_min`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``sc_dt::sc_numrep`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_o_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_proxy`` — 484 declarations; runtime: 484 untested; mapping: 484 partial.
-* ☐ ``sc_dt::sc_q_mode`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_signed`` — 200 declarations; runtime: 200 untested; mapping: 200 partial.
-* ☐ ``sc_dt::sc_signed_bitref`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``sc_dt::sc_signed_bitref_r`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
-* ☐ ``sc_dt::sc_signed_subref`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_dt::sc_signed_subref_r`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
-* ☐ ``sc_dt::sc_string_old`` — 48 declarations; runtime: 48 untested; mapping: 48 partial.
-* ☐ ``sc_dt::sc_subref`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
-* ☐ ``sc_dt::sc_subref_r`` — 22 declarations; runtime: 22 untested; mapping: 22 partial.
-* ☐ ``sc_dt::sc_switch`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sc_ufix`` — 353 declarations; runtime: 353 untested; mapping: 353 partial.
-* ☐ ``sc_dt::sc_ufix_fast`` — 353 declarations; runtime: 353 untested; mapping: 353 partial.
-* ☐ ``sc_dt::sc_ufixed`` — 137 declarations; runtime: 137 untested; mapping: 137 partial.
-* ☐ ``sc_dt::sc_ufixed_fast`` — 137 declarations; runtime: 137 untested; mapping: 137 partial.
-* ☐ ``sc_dt::sc_uint`` — 59 declarations; runtime: 59 untested; mapping: 59 partial.
-* ☐ ``sc_dt::sc_uint_base`` — 98 declarations; runtime: 98 untested; mapping: 98 partial.
-* ☐ ``sc_dt::sc_uint_bitref`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
-* ☐ ``sc_dt::sc_uint_bitref_r`` — 15 declarations; runtime: 15 untested; mapping: 15 partial.
-* ☐ ``sc_dt::sc_uint_subref`` — 24 declarations; runtime: 24 untested; mapping: 24 partial.
-* ☐ ``sc_dt::sc_uint_subref_r`` — 29 declarations; runtime: 29 untested; mapping: 29 partial.
-* ☐ ``sc_dt::sc_unsigned`` — 200 declarations; runtime: 200 untested; mapping: 200 partial.
-* ☐ ``sc_dt::sc_unsigned_bitref`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``sc_dt::sc_unsigned_bitref_r`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
-* ☐ ``sc_dt::sc_unsigned_subref`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
-* ☐ ``sc_dt::sc_unsigned_subref_r`` — 30 declarations; runtime: 30 untested; mapping: 30 partial.
-* ☐ ``sc_dt::sc_value_base`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``sc_dt::sc_without_context`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::sub`` — 200 declarations; runtime: 200 untested; mapping: 200 partial.
-* ☐ ``sc_dt::to_string`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``sc_dt::uint64`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``sc_dt::xnor_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``sc_dt::xor_reduce`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
+* ☑ ``sc_dt::Log_0`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::Log_1`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::Log_X`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::Log_Z`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_BIN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_BIN_SM`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_BIN_US`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_CSD`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_DEC`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_E`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_F`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_HEX`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_HEX_SM`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_HEX_US`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_LATER`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_LOGIC_0`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_LOGIC_1`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_LOGIC_X`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_LOGIC_Z`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_NOBASE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_NOW`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_OCT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_OCT_SM`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_OCT_US`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_OFF`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_ON`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_RND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_RND_CONV`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_RND_INF`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_RND_MIN_INF`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_RND_ZERO`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_SAT`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_SAT_SYM`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_SAT_ZERO`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_TC_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_TRN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_TRN_ZERO`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_US_`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_WRAP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::SC_WRAP_SM`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::add`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
+* ☑ ``sc_dt::and_reduce`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::b_and`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
+* ☑ ``sc_dt::b_not`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``sc_dt::b_or`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
+* ☑ ``sc_dt::b_xor`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
+* ☑ ``sc_dt::concat`` — 170 declarations; runtime: 170 supported; mapping: 170 reviewed.
+* ☑ ``sc_dt::div`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
+* ☑ ``sc_dt::equal`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::int64`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::lrotate`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_dt::lshift`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``sc_dt::mult`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
+* ☑ ``sc_dt::nand_reduce`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::neg`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``sc_dt::nor_reduce`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::not_equal`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::operator!=`` — 291 declarations; runtime: 291 supported; mapping: 291 reviewed.
+* ☑ ``sc_dt::operator%`` — 69 declarations; runtime: 69 supported; mapping: 69 reviewed.
+* ☑ ``sc_dt::operator&`` — 115 declarations; runtime: 115 supported; mapping: 115 reviewed.
+* ☑ ``sc_dt::operator&=`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``sc_dt::operator*`` — 191 declarations; runtime: 191 supported; mapping: 191 reviewed.
+* ☑ ``sc_dt::operator+`` — 194 declarations; runtime: 194 supported; mapping: 194 reviewed.
+* ☑ ``sc_dt::operator,`` — 170 declarations; runtime: 170 supported; mapping: 170 reviewed.
+* ☑ ``sc_dt::operator-`` — 203 declarations; runtime: 203 supported; mapping: 203 reviewed.
+* ☑ ``sc_dt::operator/`` — 191 declarations; runtime: 191 supported; mapping: 191 reviewed.
+* ☑ ``sc_dt::operator<`` — 185 declarations; runtime: 185 supported; mapping: 185 reviewed.
+* ☑ ``sc_dt::operator<<`` — 67 declarations; runtime: 67 supported; mapping: 67 reviewed.
+* ☑ ``sc_dt::operator<=`` — 185 declarations; runtime: 185 supported; mapping: 185 reviewed.
+* ☑ ``sc_dt::operator==`` — 268 declarations; runtime: 268 supported; mapping: 268 reviewed.
+* ☑ ``sc_dt::operator>`` — 185 declarations; runtime: 185 supported; mapping: 185 reviewed.
+* ☑ ``sc_dt::operator>=`` — 185 declarations; runtime: 185 supported; mapping: 185 reviewed.
+* ☑ ``sc_dt::operator>>`` — 68 declarations; runtime: 68 supported; mapping: 68 reviewed.
+* ☑ ``sc_dt::operator^`` — 115 declarations; runtime: 115 supported; mapping: 115 reviewed.
+* ☑ ``sc_dt::operator^=`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_dt::operator|`` — 115 declarations; runtime: 115 supported; mapping: 115 reviewed.
+* ☑ ``sc_dt::operator|=`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_dt::operator~`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``sc_dt::or_reduce`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::reverse`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_dt::rrotate`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``sc_dt::rshift`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``sc_dt::sc_abs`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_dt::sc_bigint`` — 48 declarations; runtime: 48 supported; mapping: 48 reviewed.
+* ☑ ``sc_dt::sc_biguint`` — 48 declarations; runtime: 48 supported; mapping: 48 reviewed.
+* ☑ ``sc_dt::sc_bit`` — 42 declarations; runtime: 42 supported; mapping: 42 reviewed.
+* ☑ ``sc_dt::sc_bitref`` — 78 declarations; runtime: 78 supported; mapping: 78 reviewed.
+* ☑ ``sc_dt::sc_bitref_conv_r`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::sc_bitref_r`` — 44 declarations; runtime: 44 supported; mapping: 44 reviewed.
+* ☑ ``sc_dt::sc_bv`` — 37 declarations; runtime: 37 supported; mapping: 37 reviewed.
+* ☑ ``sc_dt::sc_bv_base`` — 55 declarations; runtime: 55 supported; mapping: 55 reviewed.
+* ☑ ``sc_dt::sc_concatref`` — 59 declarations; runtime: 59 supported; mapping: 59 reviewed.
+* ☑ ``sc_dt::sc_concref`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
+* ☑ ``sc_dt::sc_concref_r`` — 20 declarations; runtime: 20 supported; mapping: 20 reviewed.
+* ☑ ``sc_dt::sc_context`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.
+* ☑ ``sc_dt::sc_context_begin`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_digit`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_enc`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_fix`` — 353 declarations; runtime: 353 supported; mapping: 353 reviewed.
+* ☑ ``sc_dt::sc_fix_fast`` — 353 declarations; runtime: 353 supported; mapping: 353 reviewed.
+* ☑ ``sc_dt::sc_fixed`` — 137 declarations; runtime: 137 supported; mapping: 137 reviewed.
+* ☑ ``sc_dt::sc_fixed_fast`` — 137 declarations; runtime: 137 supported; mapping: 137 reviewed.
+* ☑ ``sc_dt::sc_fmt`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_fxcast_context`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_fxcast_switch`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed.
+* ☑ ``sc_dt::sc_fxnum`` — 171 declarations; runtime: 171 supported; mapping: 171 reviewed.
+* ☑ ``sc_dt::sc_fxnum_bitref`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
+* ☑ ``sc_dt::sc_fxnum_bitref_r`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``sc_dt::sc_fxnum_fast`` — 171 declarations; runtime: 171 supported; mapping: 171 reviewed.
+* ☑ ``sc_dt::sc_fxnum_fast_bitref`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
+* ☑ ``sc_dt::sc_fxnum_fast_bitref_r`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``sc_dt::sc_fxnum_fast_observer`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``sc_dt::sc_fxnum_fast_subref`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
+* ☑ ``sc_dt::sc_fxnum_fast_subref_r`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_dt::sc_fxnum_observer`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``sc_dt::sc_fxnum_subref`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
+* ☑ ``sc_dt::sc_fxnum_subref_r`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_dt::sc_fxtype_context`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_fxtype_params`` — 23 declarations; runtime: 23 supported; mapping: 23 reviewed.
+* ☑ ``sc_dt::sc_fxval`` — 164 declarations; runtime: 164 supported; mapping: 164 reviewed.
+* ☑ ``sc_dt::sc_fxval_fast`` — 164 declarations; runtime: 164 supported; mapping: 164 reviewed.
+* ☑ ``sc_dt::sc_fxval_fast_observer`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``sc_dt::sc_fxval_observer`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``sc_dt::sc_generic_base`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::sc_int`` — 59 declarations; runtime: 59 supported; mapping: 59 reviewed.
+* ☑ ``sc_dt::sc_int_base`` — 98 declarations; runtime: 98 supported; mapping: 98 reviewed.
+* ☑ ``sc_dt::sc_int_bitref`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
+* ☑ ``sc_dt::sc_int_bitref_r`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
+* ☑ ``sc_dt::sc_int_subref`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_dt::sc_int_subref_r`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
+* ☑ ``sc_dt::sc_io_base`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_io_show_base`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_length_context`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_length_param`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``sc_dt::sc_logic`` — 51 declarations; runtime: 51 supported; mapping: 51 reviewed.
+* ☑ ``sc_dt::sc_logic_0`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_logic_1`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_logic_X`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_logic_Z`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_logic_value_t`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_lv`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
+* ☑ ``sc_dt::sc_lv_base`` — 54 declarations; runtime: 54 supported; mapping: 54 reviewed.
+* ☑ ``sc_dt::sc_max`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``sc_dt::sc_min`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``sc_dt::sc_numrep`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_o_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_proxy`` — 484 declarations; runtime: 484 supported; mapping: 484 reviewed.
+* ☑ ``sc_dt::sc_q_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_signed`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
+* ☑ ``sc_dt::sc_signed_bitref`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``sc_dt::sc_signed_bitref_r`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
+* ☑ ``sc_dt::sc_signed_subref`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_dt::sc_signed_subref_r`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
+* ☑ ``sc_dt::sc_string_old`` — 48 declarations; runtime: 48 supported; mapping: 48 reviewed.
+* ☑ ``sc_dt::sc_subref`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
+* ☑ ``sc_dt::sc_subref_r`` — 22 declarations; runtime: 22 supported; mapping: 22 reviewed.
+* ☑ ``sc_dt::sc_switch`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sc_ufix`` — 353 declarations; runtime: 353 supported; mapping: 353 reviewed.
+* ☑ ``sc_dt::sc_ufix_fast`` — 353 declarations; runtime: 353 supported; mapping: 353 reviewed.
+* ☑ ``sc_dt::sc_ufixed`` — 137 declarations; runtime: 137 supported; mapping: 137 reviewed.
+* ☑ ``sc_dt::sc_ufixed_fast`` — 137 declarations; runtime: 137 supported; mapping: 137 reviewed.
+* ☑ ``sc_dt::sc_uint`` — 59 declarations; runtime: 59 supported; mapping: 59 reviewed.
+* ☑ ``sc_dt::sc_uint_base`` — 98 declarations; runtime: 98 supported; mapping: 98 reviewed.
+* ☑ ``sc_dt::sc_uint_bitref`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
+* ☑ ``sc_dt::sc_uint_bitref_r`` — 15 declarations; runtime: 15 supported; mapping: 15 reviewed.
+* ☑ ``sc_dt::sc_uint_subref`` — 24 declarations; runtime: 24 supported; mapping: 24 reviewed.
+* ☑ ``sc_dt::sc_uint_subref_r`` — 29 declarations; runtime: 29 supported; mapping: 29 reviewed.
+* ☑ ``sc_dt::sc_unsigned`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
+* ☑ ``sc_dt::sc_unsigned_bitref`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``sc_dt::sc_unsigned_bitref_r`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
+* ☑ ``sc_dt::sc_unsigned_subref`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
+* ☑ ``sc_dt::sc_unsigned_subref_r`` — 30 declarations; runtime: 30 supported; mapping: 30 reviewed.
+* ☑ ``sc_dt::sc_value_base`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``sc_dt::sc_without_context`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::sub`` — 200 declarations; runtime: 200 supported; mapping: 200 reviewed.
+* ☑ ``sc_dt::to_string`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``sc_dt::uint64`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``sc_dt::xnor_reduce`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``sc_dt::xor_reduce`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
 
 sc_elab_and_sim public families
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1067,164 +1097,164 @@ sc_main public families
 tlm public families
 ~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``tlm::BEGIN_REQ`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::BEGIN_RESP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::END_REQ`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::END_RESP`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_ACCEPTED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_ADDRESS_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_BIG_ENDIAN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_BURST_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_COMMAND_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_COMPLETED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_FULL_PAYLOAD`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_FULL_PAYLOAD_ACCEPTED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_GENERIC_ERROR_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_IGNORE_COMMAND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_INCOMPLETE_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_LITTLE_ENDIAN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MIN_PAYLOAD`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MULTI_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MULTI_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_MULTI_TARGET_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_OK_RESPONSE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_READ_COMMAND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_TARGET_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_UNKNOWN_ENDIAN`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_UNKNOWN_SOCKET`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_UPDATED`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::TLM_WRITE_COMMAND`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::UNINITIALIZED_PHASE`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::get_host_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::has_host_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::host_has_little_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::max_num_extensions`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::operator<<`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_analysis_fifo`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``tlm::tlm_analysis_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_analysis_port`` — 8 declarations; runtime: 8 untested; mapping: 2 partial, 6 reviewed.
-* ☐ ``tlm::tlm_analysis_triple`` — 10 declarations; runtime: 10 untested; mapping: 5 partial, 5 reviewed.
-* ☐ ``tlm::tlm_array`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_base_initiator_socket`` — 29 declarations; runtime: 29 untested; mapping: 9 partial, 20 reviewed.
-* ☐ ``tlm::tlm_base_initiator_socket_b`` — 11 declarations; runtime: 11 untested; mapping: 1 partial, 10 reviewed.
-* ☐ ``tlm::tlm_base_protocol_types`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 11 untested; mapping: 1 partial, 10 reviewed.
-* ☐ ``tlm::tlm_base_target_socket`` — 32 declarations; runtime: 32 untested; mapping: 11 partial, 21 reviewed.
-* ☐ ``tlm::tlm_base_target_socket_b`` — 11 declarations; runtime: 11 untested; mapping: 1 partial, 10 reviewed.
-* ☐ ``tlm::tlm_blocking_get_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_blocking_get_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_blocking_master_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_blocking_peek_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_blocking_put_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_blocking_slave_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_blocking_transport_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_bw_direct_mem_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_bw_nonblocking_transport_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_bw_transport_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_command`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_copyright`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_copyright_string`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_delayed_analysis_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_delayed_write_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_dmi`` — 28 declarations; runtime: 28 untested; mapping: 28 reviewed.
-* ☐ ``tlm::tlm_endianness`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_event_finder_t`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``tlm::tlm_extension`` — 16 declarations; runtime: 16 untested; mapping: 3 partial, 13 reviewed.
-* ☐ ``tlm::tlm_extension_base`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
-* ☐ ``tlm::tlm_fifo`` — 45 declarations; runtime: 45 untested; mapping: 45 partial.
-* ☐ ``tlm::tlm_fifo_config_size_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_fifo_debug_if`` — 7 declarations; runtime: 7 untested; mapping: 7 reviewed.
-* ☐ ``tlm::tlm_fifo_get_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_fifo_put_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_from_hostendian`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_from_hostendian_aligned`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_from_hostendian_generic`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_from_hostendian_single`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_from_hostendian_word`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_fw_direct_mem_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_fw_nonblocking_transport_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_fw_transport_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_generic_payload`` — 60 declarations; runtime: 60 untested; mapping: 1 partial, 59 reviewed.
-* ☐ ``tlm::tlm_get_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_get_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_global_quantum`` — 6 declarations; runtime: 6 untested; mapping: 1 partial, 5 reviewed.
-* ☐ ``tlm::tlm_gp_option`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_initiator_socket`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_is_prerelease`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_master_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_mm_interface`` — 3 declarations; runtime: 3 untested; mapping: 1 partial, 2 reviewed.
-* ☐ ``tlm::tlm_nonblocking_get_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_nonblocking_get_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_nonblocking_get_port`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``tlm::tlm_nonblocking_master_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_nonblocking_peek_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_nonblocking_peek_port`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``tlm::tlm_nonblocking_put_if`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_nonblocking_put_port`` — 5 declarations; runtime: 5 untested; mapping: 5 partial.
-* ☐ ``tlm::tlm_nonblocking_slave_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_peek_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_phase`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``tlm::tlm_phase_enum`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_put_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_release`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_req_rsp_channel`` — 10 declarations; runtime: 10 untested; mapping: 10 partial.
-* ☐ ``tlm::tlm_response_status`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_slave_if`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_slave_to_transport`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``tlm::tlm_socket_category`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_sync_enum`` — 1 declarations; runtime: 1 untested; mapping: 1 reviewed.
-* ☐ ``tlm::tlm_tag`` — 2 declarations; runtime: 2 untested; mapping: 2 reviewed.
-* ☐ ``tlm::tlm_target_socket`` — 5 declarations; runtime: 5 untested; mapping: 5 reviewed.
-* ☐ ``tlm::tlm_to_hostendian_aligned`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_to_hostendian_generic`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_to_hostendian_single`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_to_hostendian_word`` — 2 declarations; runtime: 2 untested; mapping: 2 partial.
-* ☐ ``tlm::tlm_transport_channel`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``tlm::tlm_transport_dbg_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_transport_if`` — 4 declarations; runtime: 4 untested; mapping: 4 reviewed.
-* ☐ ``tlm::tlm_transport_to_master`` — 7 declarations; runtime: 7 untested; mapping: 7 partial.
-* ☐ ``tlm::tlm_version`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_major`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_minor`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_originator`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_patch`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_prerelease`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_release_date`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_string`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_version_string_2`` — 1 declarations; runtime: 1 untested; mapping: 1 partial.
-* ☐ ``tlm::tlm_write_if`` — 3 declarations; runtime: 3 untested; mapping: 3 reviewed.
+* ☑ ``tlm::BEGIN_REQ`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::BEGIN_RESP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::END_REQ`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::END_RESP`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_ACCEPTED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_ADDRESS_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_BIG_ENDIAN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_BURST_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_COMMAND_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_COMPLETED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_FULL_PAYLOAD`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_FULL_PAYLOAD_ACCEPTED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_GENERIC_ERROR_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_IGNORE_COMMAND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_INCOMPLETE_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_LITTLE_ENDIAN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MIN_PAYLOAD`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MULTI_INITIATOR_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MULTI_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_MULTI_TARGET_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_OK_RESPONSE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_READ_COMMAND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_TARGET_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_UNKNOWN_ENDIAN`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_UNKNOWN_SOCKET`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_UPDATED`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::TLM_WRITE_COMMAND`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::UNINITIALIZED_PHASE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::get_host_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::has_host_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::host_has_little_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::max_num_extensions`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::operator<<`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_analysis_fifo`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``tlm::tlm_analysis_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_analysis_port`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``tlm::tlm_analysis_triple`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
+* ☑ ``tlm::tlm_array`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_base_initiator_socket`` — 29 declarations; runtime: 29 supported; mapping: 29 reviewed.
+* ☑ ``tlm::tlm_base_initiator_socket_b`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``tlm::tlm_base_protocol_types`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☐ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 9 supported, 2 untested; mapping: 9 reviewed, 2 partial. The base ``get_base_interface`` overloads require ``SC_ENABLE_COVARIANT_VIRTUAL_BASE``, disabled in the current runtime; the opt-in configuration remains untested. Concrete socket accessors are separately supported.
+* ☑ ``tlm::tlm_base_target_socket`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
+* ☑ ``tlm::tlm_base_target_socket_b`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
+* ☑ ``tlm::tlm_blocking_get_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_blocking_get_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_blocking_master_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_blocking_peek_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_blocking_put_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_blocking_slave_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_blocking_transport_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_bw_direct_mem_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_bw_nonblocking_transport_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_bw_transport_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_command`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_copyright`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_copyright_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_delayed_analysis_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_delayed_write_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_dmi`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.
+* ☑ ``tlm::tlm_endianness`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_event_finder_t`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_extension`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
+* ☑ ``tlm::tlm_extension_base`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``tlm::tlm_fifo`` — 45 declarations; runtime: 45 supported; mapping: 45 reviewed.
+* ☑ ``tlm::tlm_fifo_config_size_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_fifo_debug_if`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``tlm::tlm_fifo_get_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_fifo_put_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_from_hostendian`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_from_hostendian_aligned`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_from_hostendian_generic`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_from_hostendian_single`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_from_hostendian_word`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_fw_direct_mem_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_fw_nonblocking_transport_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_fw_transport_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_generic_payload`` — 60 declarations; runtime: 60 supported; mapping: 60 reviewed.
+* ☑ ``tlm::tlm_get_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_get_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_global_quantum`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``tlm::tlm_gp_option`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_initiator_socket`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_is_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_master_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_mm_interface`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_nonblocking_get_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_get_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_nonblocking_get_port`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_master_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_nonblocking_peek_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_peek_port`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_put_if`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_put_port`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_nonblocking_slave_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_peek_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_phase`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``tlm::tlm_phase_enum`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_put_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_release`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_req_rsp_channel`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
+* ☑ ``tlm::tlm_response_status`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_slave_if`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_slave_to_transport`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``tlm::tlm_socket_category`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_sync_enum`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_tag`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_target_socket`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
+* ☑ ``tlm::tlm_to_hostendian_aligned`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_to_hostendian_generic`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_to_hostendian_single`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_to_hostendian_word`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
+* ☑ ``tlm::tlm_transport_channel`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``tlm::tlm_transport_dbg_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm::tlm_transport_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm::tlm_transport_to_master`` — 7 declarations; runtime: 7 supported; mapping: 7 reviewed.
+* ☑ ``tlm::tlm_version`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_major`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_minor`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_originator`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_patch`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_prerelease`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_release_date`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_string`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_version_string_2`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
+* ☑ ``tlm::tlm_write_if`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 
 tlm_utils public families
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ☐ ``tlm_utils::instance_specific_extension`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::instance_specific_extension_accessor`` — 6 declarations; runtime: 6 untested; mapping: 6 partial.
-* ☐ ``tlm_utils::instance_specific_extensions_per_accessor`` — 13 declarations; runtime: 13 untested; mapping: 13 partial.
-* ☐ ``tlm_utils::ispex_base`` — 3 declarations; runtime: 3 untested; mapping: 3 partial.
-* ☐ ``tlm_utils::multi_passthrough_initiator_socket`` — 25 declarations; runtime: 25 untested; mapping: 25 partial.
-* ☐ ``tlm_utils::multi_passthrough_initiator_socket_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::multi_passthrough_target_socket`` — 28 declarations; runtime: 28 untested; mapping: 28 partial.
-* ☐ ``tlm_utils::multi_passthrough_target_socket_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::passthrough_target_socket`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::passthrough_target_socket_b`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``tlm_utils::passthrough_target_socket_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::passthrough_target_socket_tagged`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::passthrough_target_socket_tagged_b`` — 14 declarations; runtime: 14 untested; mapping: 14 partial.
-* ☐ ``tlm_utils::passthrough_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::peq_with_cb_and_phase`` — 8 declarations; runtime: 8 untested; mapping: 8 partial.
-* ☐ ``tlm_utils::peq_with_get`` — 10 declarations; runtime: 10 untested; mapping: 1 partial, 9 reviewed.
-* ☐ ``tlm_utils::simple_initiator_socket`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_initiator_socket_b`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
-* ☐ ``tlm_utils::simple_initiator_socket_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_initiator_socket_tagged`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_initiator_socket_tagged_b`` — 12 declarations; runtime: 12 untested; mapping: 12 partial.
-* ☐ ``tlm_utils::simple_initiator_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_target_socket`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_target_socket_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
-* ☐ ``tlm_utils::simple_target_socket_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_target_socket_tagged`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 untested; mapping: 16 partial.
-* ☐ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 untested; mapping: 4 partial.
-* ☐ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 untested; mapping: 2 partial, 12 reviewed.
+* ☑ ``tlm_utils::instance_specific_extension`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::instance_specific_extension_accessor`` — 6 declarations; runtime: 6 supported; mapping: 6 reviewed.
+* ☑ ``tlm_utils::instance_specific_extensions_per_accessor`` — 13 declarations; runtime: 13 supported; mapping: 13 reviewed.
+* ☑ ``tlm_utils::ispex_base`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
+* ☑ ``tlm_utils::multi_passthrough_initiator_socket`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
+* ☑ ``tlm_utils::multi_passthrough_initiator_socket_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::multi_passthrough_target_socket`` — 28 declarations; runtime: 28 supported; mapping: 28 reviewed.
+* ☑ ``tlm_utils::multi_passthrough_target_socket_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::passthrough_target_socket`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::passthrough_target_socket_b`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``tlm_utils::passthrough_target_socket_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::passthrough_target_socket_tagged`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::passthrough_target_socket_tagged_b`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
+* ☑ ``tlm_utils::passthrough_target_socket_tagged_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::peq_with_cb_and_phase`` — 8 declarations; runtime: 8 supported; mapping: 8 reviewed.
+* ☑ ``tlm_utils::peq_with_get`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
+* ☑ ``tlm_utils::simple_initiator_socket`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_initiator_socket_b`` — 12 declarations; runtime: 12 supported; mapping: 12 reviewed.
+* ☑ ``tlm_utils::simple_initiator_socket_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_initiator_socket_tagged`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_initiator_socket_tagged_b`` — 12 declarations; runtime: 12 supported; mapping: 12 reviewed.
+* ☑ ``tlm_utils::simple_initiator_socket_tagged_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_target_socket`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_target_socket_b`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
+* ☑ ``tlm_utils::simple_target_socket_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_target_socket_tagged`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::simple_target_socket_tagged_b`` — 16 declarations; runtime: 16 supported; mapping: 16 reviewed.
+* ☑ ``tlm_utils::simple_target_socket_tagged_optional`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
+* ☑ ``tlm_utils::tlm_quantumkeeper`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.

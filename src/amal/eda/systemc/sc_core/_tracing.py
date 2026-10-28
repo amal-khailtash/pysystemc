@@ -5,6 +5,7 @@ Signals retain native storage; callers keep traced objects alive until closure.
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+import ctypes
 import pathlib
 from typing import Any
 
@@ -64,6 +65,9 @@ def _trace_close(close):
         address = 0 if trace is None else cppyy.addressof(trace)
         close(cppyy.nullptr if trace is None else trace)
         _open_trace_files.pop(address, None)
+        if address:
+            trace.__dict__.pop("_trace_value_owners", None)
+            trace.__dict__.pop("_trace_char_pointer_owners", None)
 
     return wrapped
 
@@ -108,6 +112,59 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
 
 
 _native_sc_trace = cppyy.gbl.sc_core.sc_trace
+_native_sc_trace_overload = _native_sc_trace.__overload__
+_CHAR_POINTER_OVERLOAD = "sc_core::sc_trace_file*,const char*,const std::string&,int"
+
+
+def _char_pointer_address(value):
+    """Return the address and lifetime owner for a typed ctypes char pointer.
+
+    The accepted forms deliberately exclude integer and void pointers. Native
+    tracing borrows a single char at the address until file closure.
+    """
+    if isinstance(value, ctypes._Pointer) and value._type_ is ctypes.c_char:
+        address = ctypes.cast(value, ctypes.c_void_p).value or 0
+        return address, value
+    if isinstance(value, ctypes.Array) and value._type_ is ctypes.c_char:
+        if ctypes.sizeof(value) < ctypes.sizeof(ctypes.c_char):
+            raise TypeError("char pointer tracing requires at least one char of storage")
+        return ctypes.addressof(value), value
+    return None
+
+
+def _trace_char_pointer(file, value, name, *args):
+    """Dispatch a typed ctypes char pointer through the exact native overload."""
+    pointer = _char_pointer_address(value)
+    if pointer is None:
+        return None, False
+    address, owner = pointer
+    if address == 0 and file:
+        raise ValueError("char pointer tracing requires nonnull storage for a live trace file")
+    result = cppyy.gbl.pysystemc_tracing.trace_char_pointer(file, address, name, *args)
+    if file and cppyy.addressof(file) in _open_trace_files:
+        file.__dict__.setdefault("_trace_char_pointer_owners", []).append(owner)
+    return result, True
+
+
+def _trace_overload(*selector_args, **selector_kwargs):
+    """Keep native overload selection while adapting only typed char pointers."""
+    overload = _native_sc_trace_overload(*selector_args, **selector_kwargs)
+    signature = selector_args[0] if selector_args else selector_kwargs.get("signature")
+    if not isinstance(signature, str):
+        return overload
+    normalized = "".join(str(signature).split())
+    if normalized != "".join(_CHAR_POINTER_OVERLOAD.split()):
+        return overload
+
+    def selected(*args, **kwargs):
+        """Route a typed char pointer through the native pointer adapter."""
+        if len(args) >= 3 and not kwargs:
+            result, handled = _trace_char_pointer(args[0], args[1], args[2], *args[3:])
+            if handled:
+                return result
+        return overload(*args, **kwargs)
+
+    return selected
 
 
 def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
@@ -115,22 +172,45 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
 
     Args:
         file: Open SystemC trace file.
-        value: Native signal/interface or scalar accepted by SystemC.
+        value: Native signal/interface, sc_trace_value[Type] holder, or native
+            scalar reference accepted by SystemC; a ctypes char pointer or
+            nonempty char array is also accepted for the native char overload.
         name: Name to record in the waveform.
-        *args: Additional native scalar tracing arguments.
+        *args: Optional native width or holder enumeration label sequence.
 
-    Signal template types are instantiated on demand. Keep the traced object
-    alive until the trace file closes; Python scalar temporaries are unsuitable
-    for tracking mutable native state.
+    Returns:
+        None after native registration.
+
+    Raises:
+        TypeError: Arguments lack a compatible native tracing overload.
+        ValueError: A typed char pointer is null while the trace file is live.
+        sc_report: Native tracing rejects registration.
+
+    Calls hold the GIL. Signal and holder types are instantiated on demand.
+    Holders and copied enum labels are retained until matching closure. Keep
+    ordinary traced objects alive until closure; Python scalar temporaries are
+    unsuitable for tracking mutable native state. Keep ctypes char storage alive
+    until closure when passing a char pointer; the wrapper retains the pointer or
+    array object for Python-created ownership paths.
     """
+    from ._trace_values import register, value_type
+
+    if value_type(value) is not None:
+        return register(file, value, name, *args, native_free=True)
+    result, handled = _trace_char_pointer(file, value, name, *args)
+    if handled:
+        return result
     if hasattr(value, "read"):
-        sample = value.read()
-        # Python float/int conversion loses the native signal specialization.
-        # Resolve the inherited native input interface before falling back to
-        # the callback value type (for wrappers lacking native class metadata).
-        value_type = bool if isinstance(sample, bool) else type(sample)
+        signal_type = None
         for cls in type(value).__mro__:
             native_name = getattr(cls, "__cpp_name__", "")
+            for prefix, method in (("sc_core::sc_in<", "input"), ("sc_core::sc_inout<", "inout")):
+                if native_name.startswith(prefix):
+                    if args:
+                        raise TypeError("native port tracing does not accept width arguments")
+                    datatype = native_name[len(prefix) : -1]
+                    dispatch = cppyy.gbl.pysystemc_tracing.port_dispatch[datatype]
+                    return getattr(dispatch, method)(file, value, name)
             if native_name.startswith(
                 ("sc_core::sc_signal_in_if<", "sc_core::sc_signal_inout_if<", "sc_core::sc_signal<")
             ):
@@ -141,9 +221,19 @@ def sc_trace(file: Any, value: Any, name: str, *args: Any) -> Any:
                     if char == "," and depth == 0:
                         arguments = arguments[:index]
                         break
-                value_type = arguments.strip()
+                signal_type = arguments.strip()
                 break
-        if value_type == "long double":
+        if signal_type is None:
+            # Do not probe arbitrary read() methods: FIFO reads consume samples
+            # and user-defined readers may block or have other side effects.
+            return _native_sc_trace(file, value, name, *args)
+        if signal_type == "long double":
             raise TypeError("native SystemC tracing does not provide a long double overload")
-        return cppyy.gbl.sc_core.trace_signal[value_type](file, value, name)
+        if args and signal_type not in ("char", "short", "int", "long"):
+            raise TypeError("native signal tracing accepts explicit widths only for char, short, int and long")
+        return cppyy.gbl.pysystemc_tracing.signal_dispatch[signal_type].trace(file, value, name, *args)
     return _native_sc_trace(file, value, name, *args)
+
+
+# Keep exact native pointer/reference overload selection available.
+sc_trace.__overload__ = _trace_overload

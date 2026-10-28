@@ -5,11 +5,14 @@ until interpreter shutdown because SystemC ports borrow their interfaces.
 """
 
 import inspect
+from pathlib import Path
 from typing import get_type_hints
 
 import cppyy
 
 from ._channel_interfaces import declare_interface, _reference_callbacks, _SCALAR_TYPES
+
+cppyy.include(str(Path(__file__).with_name("owned_copy.h")))
 
 _owners = []
 _classes = {}
@@ -498,8 +501,8 @@ def _adapt(interface, implementation, factory):
                     and _method in ("write", "nb_write", "put", "nb_put", "nb_poke")
                     and hasattr(type(args[0]), "__cpp_name__")
                 ):
-                    copy = type(args[0])()
-                    copy.__assign__(args[0])
+                    native_type = type(args[0]).__cpp_name__
+                    copy = cppyy.gbl.pysystemc_interfaces.owned_callback_copy[native_type].copy(args[0])
                     args = (copy, *args[1:])
                 result = getattr(self._implementation, _method)(*args)
                 if transport_value_pair is not None and _method == "transport":

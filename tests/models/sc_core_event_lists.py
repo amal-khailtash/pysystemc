@@ -23,6 +23,30 @@ for cls, combine in ((sc.sc_event_or_list, "or"), (sc.sc_event_and_list, "and"))
         expression_event = first & events[2]
         expression_list = first & second
     assert first.size() == 2
+    extra_list = cls(events[2])
+    other_type = sc.sc_event_and_list if combine == "or" else sc.sc_event_or_list
+    wrong_list = other_type(events[2])
+    for right in (events[2], extra_list):
+        initial = first | events[0] if combine == "or" else first & events[0]
+        chained = initial | right if combine == "or" else initial & right
+        result = cls(chained)
+        assert result.size() == 3
+        # A successful append transferred the automatic list out of initial.
+        initial.__destruct__()
+        chained.__destruct__()
+        assert result.size() == 3 and first.size() == 2
+    invalid = first | events[0] if combine == "or" else first & events[0]
+    try:
+        if combine == "or":
+            invalid | wrong_list
+        else:
+            invalid & wrong_list
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("mixed event-list kinds were accepted")
+    assert cls(invalid).size() == 2
+    invalid.__destruct__()
     expression_event.push_back(events[2])
     expression_event.push_back(second)
     expression_type = sc.sc_event_expr[cls]

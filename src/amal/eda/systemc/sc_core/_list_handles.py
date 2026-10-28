@@ -33,8 +33,8 @@ def _insertion(operation):
             TypeError: Handle or value conversion is incompatible.
 
         GIL stays held; lists own nodes, not pointees. Node handles invalidate on
-        removal. Native insert_after requires an interior handle or null handle;
-        its tail-handle path is unsafe in SystemC 2.3.4.
+        removal. Pass only an interior handle or null to native insert_after;
+        its tail-handle path dereferences the null successor.
         """
         return operation(values, cppyy.nullptr if handle is None else handle, value)
 

@@ -2,19 +2,19 @@
 
 Callbacks are retained for their native process lifetime. Blocking scheduler
 operations release the GIL. Guarded Python waits preserve native reset/kill
-unwind in tested cases; direct native waits and arbitrary throw_it require
-further compatibility validation.
+unwind in tested cases. User-exception injection accepts native copyable
+exception values; targets must catch them before returning to the kernel.
 """
 
 import atexit
-from collections.abc import Callable
-from typing import Any
-from enum import Enum
+import ctypes
 import pathlib
 import sys
+from collections.abc import Callable
+from enum import Enum
+from typing import Any
 
 # The parent package selects the JIT C++ standard before importing cppyy.
-
 import cppyy
 
 from .._logging import log
@@ -32,34 +32,52 @@ from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
 from . import _tracing
+from ._report_policy import install_report_policy as _install_report_policy
 
-# Compile first-party bridges before publishing native aliases or configuring
-# their methods. The parent package has already loaded SystemC and selected C++17.
-SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-for _bridge in (
-    "sc_main.cpp",
-    "native_entry.cpp",
-    "sc_module_new.cpp",
-    "interface_teardown.cpp",
-    "hash_helpers.cpp",
-    "report_legacy.cpp",
-    "report_handler.cpp",
-    "event_lists.cpp",
-    "event_finders.cpp",
-    "trace_printf.cpp",
-    "time_operations.cpp",
-    "byte_heap.cpp",
-    "process_utilities.cpp",
-    "event_expressions.cpp",
-    "pvector_access.cpp",
-):
-    with (SCRIPT_PATH / _bridge).open() as _source:
-        cppyy.cppdef(_source.read())
-
+# Compile bridges before importing adapters that reflect their native types.
+from . import _native_setup  # noqa: F401
+from ._trace_values import install as _install_trace_values
+from ._signal_values import sc_signal_value as _python_sc_signal_value, sc_port_value as _python_sc_port_value
 from ._event_finders import (
     EventFinderTemplate as _EventFinderTemplate,
     CachedFinderCreator as _CachedFinderCreator,
 )
+from ._event_expressions import install as _install_event_expressions
+from ._clock import install as _install_clock
+from ._vectors import install as _install_vectors, assemble_vector as _assemble_vector
+from ._vector_policies import install as _install_vector_policies, MemberAccessTemplate as _MemberAccessTemplate
+from ._pvector import install as _install_pvector
+from ._list_handles import install as _install_list_handles
+from ._fifo import FifoTemplate as _FifoTemplate
+from ._exports import ExportTemplate as _ExportTemplate
+from ._streams import install_fifo_streams as _install_fifo_streams
+from ._blocking import guard_native_channels as _guard_native_channels
+from ._blocking import ScopedLock as _ScopedLock
+from ._native_call import native_blocking_call as native_blocking_call
+from ._time import install as _install_time
+from ._byte_heap import allocate as _byte_heap_allocate
+from ._trace_printf import tprintf as _python_tprintf
+from ._scheduler import (
+    sc_start as _python_sc_start,
+    at_posedge as _python_at_posedge,
+    at_negedge as _python_at_negedge,
+    timed_out as _python_timed_out,
+)
+from ._references import sc_ref as _python_sc_ref, sc_cref as _python_sc_cref
+from ._kernel_flags import install as _install_kernel_flags
+from ._member_scheduler import install as _install_member_scheduler
+from ._callback_pointers import install as _install_callback_pointers
+
+cppyy.include(str(pathlib.Path(__file__).with_name("callback_pointers.h")))
+CFT, sc_plist_map_fn, sc_report_handler_proc = _install_callback_pointers()
+
+SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
+
+_install_trace_values()
+sc_trace_value = cppyy.gbl.pysystemc_tracing.trace_value
+
+sc_signal_value = _python_sc_signal_value
+sc_port_value = _python_sc_port_value
 
 sc_event_finder_t = _EventFinderTemplate()
 sc_event_finder_cache = cppyy.gbl.pysystemc_public.event_finder_cache
@@ -95,14 +113,9 @@ def _event_list_constructor(list_type):
 for _event_list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list):
     _event_list_constructor(_event_list_type)
 
-from ._event_expressions import install as _install_event_expressions
-
 _install_event_expressions()
-
-from ._clock import install as _install_clock
-from ._pvector import install as _install_pvector
-from ._list_handles import install as _install_list_handles
-
+_install_vectors()
+_install_vector_policies()
 _install_clock()
 _install_pvector()
 _install_list_handles()
@@ -167,13 +180,11 @@ def add_sc_core_members():
 # Add all sc_core members to this module
 add_sc_core_members()
 
-
 # Manually add each public member of the `sc_core` namespace to the module"s globals
 for name, member in sc_core_namespace.__dict__.items():
     # Filter out internal or irrelevant attributes
     if not name.startswith("__"):
         globals()[name] = member
-
 
 # Publish Python helpers after namespace copying so native overloads cannot
 # overwrite the adapters. Native C++ sc_module remains intact.
@@ -188,12 +199,8 @@ sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
 signal_channel = cppyy.gbl.sc_core.PythonSignalChannel
-from ._fifo import FifoTemplate as _FifoTemplate
 
 fifo_channel = _FifoTemplate(cppyy.gbl.sc_core.PythonFifoChannel)
-from ._exports import ExportTemplate as _ExportTemplate
-
-from ._streams import install_fifo_streams as _install_fifo_streams
 
 _install_fifo_streams()
 sc_fifo = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo)
@@ -203,10 +210,8 @@ sc_fifo_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_in_if)
 sc_fifo_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_out_if)
 sc_fifo_blocking_in_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_in_if)
 sc_fifo_blocking_out_if = _FifoTemplate(cppyy.gbl.sc_core.sc_fifo_blocking_out_if)
-from ._blocking import guard_native_channels as _guard_native_channels
 
 _guard_native_channels()
-from ._blocking import ScopedLock as _ScopedLock
 
 sc_scoped_lock = _ScopedLock
 
@@ -225,6 +230,7 @@ def _legacy_report_method(name):
 
         Args:
             args: Native method arguments: an ID/message, ID/bool, or bool.
+                For register_id, cppyy.nullptr selects a native null message.
 
         Returns:
             Native result; message strings are copied, suppression is bool, setters
@@ -232,11 +238,15 @@ def _legacy_report_method(name):
 
         Raises:
             TypeError: Arguments cannot convert to native parameters.
+            sc_report: Native policy rejects an invalid or conflicting report ID
+                or a null message.
             Exception: Native report policy rejects registration or a callback fails.
 
         Hold the GIL; no ownership transfer. Native deprecation reports and any
         configured callback execute synchronously with their native action policy.
         """
+        if name == "register_id" and len(args) == 2 and args[1] is cppyy.nullptr:
+            return cppyy.gbl.pysystemc.report_register_null_id(args[0])
         return native(*args)
 
     return staticmethod(method)
@@ -274,6 +284,46 @@ def _assign_report(self, source):
 
 
 cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
+
+
+def _report(severity, message_type, message, *args):
+    """Emit one native report using message, verbosity or legacy identifier form.
+
+    Args:
+        severity: Native report severity.
+        message_type: Message-type string or registered integer identifier.
+        message: Diagnostic string borrowed during the call.
+        *args: File and line, or verbosity, file and line for message reports.
+
+    Returns:
+        None when the configured native handler completes normally.
+
+    Raises:
+        sc_report: Native actions require throwing the emitted report.
+        Exception: A configured Python handler fails; its error propagates once.
+        TypeError: Arguments do not match a native report signature.
+
+    Policy counters, caches and handlers execute once, including on failure.
+    Call on the simulation thread with the GIL held; handlers must not wait.
+    Report policy owns copied diagnostics and retains no caller string storage.
+    """
+    bridge = cppyy.gbl.pysystemc
+    if len(args) == 2:
+        operation = bridge.report_identifier if isinstance(message_type, int) else bridge.report_message
+    elif len(args) == 3 and not isinstance(message_type, int):
+        operation = bridge.report_message_verbosity
+    else:
+        raise TypeError("report expects severity/message/message/file/line with optional verbosity before file")
+    return operation(severity, message_type, message, *args)
+
+
+cppyy.gbl.sc_core.sc_report_handler.report = staticmethod(_report)
+_install_report_policy(
+    cppyy.gbl.sc_core.sc_report_handler,
+    cppyy.gbl.sc_core.sc_severity,
+    cppyy.gbl.pysystemc.report_clear_log_file_name,
+    cppyy.nullptr,
+)
 
 
 def _report_stop_after(subject, *args):
@@ -586,11 +636,13 @@ def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> A
 
     Raises:
         TypeError: Callback is not callable or native value conversion fails.
+        Exception: The callback's original exception propagates from notify_changed().
 
     Callback and channel must survive simulation. Callback retention lasts through
-    interpreter shutdown. notify_changed samples the callback and schedules a native signal update; reads
-    never invoke Python. Call it from the simulation thread after changing state.
-    Native bool/logic edge interfaces use the same stable signal storage.
+    interpreter shutdown. notify_changed samples the callback and schedules a
+    native signal update; reads never invoke Python. Call it from the simulation
+    thread after changing state. Native bool/logic edge interfaces use the same
+    stable signal storage.
     """
     if not callable(callback):
         raise TypeError("read interface callback must be callable")
@@ -616,6 +668,8 @@ def _time_modulo(self: Any, other: Any) -> Any:
 
 
 cppyy.gbl.sc_core.sc_time.__mod__ = _time_modulo
+
+_install_time(cppyy.gbl.sc_core.sc_time)
 
 
 def __getattr__(name):
@@ -695,14 +749,33 @@ def sc_elab_and_sim(argc=None, argv=None) -> int:
 
     log(f"Entering native simulation with {argc} arguments")
 
-    return cppyy.gbl.sc_core.sc_elab_and_sim(argc, argv)
+    try:
+        return cppyy.gbl.sc_core.sc_elab_and_sim(argc, argv)
+    except cppyy.gbl.sc_core.python_entry_callback_error as carrier:
+        error = ctypes.cast(carrier.address(), ctypes.py_object).value
+    # Release the native carrier before adding this frame to the traceback.
+    # Raising within its except block would retain it through __context__.
+    raise error
 
 
 def sc_stop() -> None:
-    """Request kernel stop unless already stopped; also used at interpreter exit."""
-    if cppyy.gbl.sc_core.sc_get_status() != cppyy.gbl.sc_core.SC_STOPPED:
+    """Request kernel stop once, including when an end-of-simulation hook fails.
+
+    Returns:
+        None after requesting stop, or when the kernel is already stopping/stopped.
+
+    Raises:
+        Exception: A Python end-of-simulation callback fails; its error propagates.
+        sc_report: Native stop restrictions report an error.
+
+    Calls from simulation callbacks or interpreter exit retain native stop
+    timing. An end-of-simulation error leaves the native status at that phase;
+    subsequent calls do not repeat the stop request or lifecycle callbacks.
+    """
+    native = cppyy.gbl.sc_core
+    if native.sc_get_status() not in (native.SC_STOPPED, native.SC_END_OF_SIMULATION):
         log("Stopping simulation")
-        cppyy.gbl.sc_core.sc_stop()
+        native.sc_stop()
 
 
 # Register the cleanup function to be called at exit
@@ -744,6 +817,10 @@ def sc_status() -> ScStatus:
     return ScStatus(status)  # Convert to Python enum
 
 
+# Keep the native enum available without replacing the established query function.
+sc_status_type = cppyy.gbl.sc_core.sc_status
+
+
 # Native waits suspend an OS thread. Release the GIL for every overload so
 # other Python SystemC processes can acquire it while this process waits.
 cppyy.gbl.sc_core.wait.__release_gil__ = True
@@ -775,29 +852,132 @@ cppyy.gbl.sc_core.sc_join.wait = _join_wait
 cppyy.gbl.sc_core.sc_join.wait_clocked = _join_wait_clocked
 _spawn_callbacks = []
 
+cppyy.include(str(pathlib.Path(__file__).with_name("bind.cpp")))
+sc_placeholder = cppyy.gbl.sc_core.python_placeholder
+_bind_owners = []
 
-def sc_spawn(callback: Callable[[], Any], name: str = "", options: Any = None) -> Any:
-    """Spawn a Python callable as a native dynamic SystemC process.
+
+def sc_bind(callback: Any, *arguments: Any) -> Any:
+    """Bind native callable arguments with copying, references and placeholders.
 
     Args:
-        callback: No-argument callable. Return values are ignored; use a Python
-            closure to retain results when joining processes.
-        name: Optional native process name.
-        options: Optional native sc_spawn_options object.
+        callback: Native functor, function pointer or typed std::function proxy.
+        *arguments: Native values, numeric/string scalars, sc_ref/sc_cref wrappers,
+            nested bindings or sc_placeholder[index] instances.
+
+    Returns:
+        Owning native callable, suitable for direct calls or sc_spawn.
+
+    Raises:
+        TypeError: Callable or arguments cannot select a native value type.
+
+    Values are copied by std::bind; reference wrappers borrow their targets.
+    Proxies remain retained for the single kernel lifetime. Python callbacks in
+    typed std::function values must also remain alive through their invocations.
+    Guarded waits preserve reset/kill cleanup. Placeholder indices are one-based
+    and instantiate on demand. Native conversion and callback errors propagate.
+    """
+    function_type = getattr(callback, "__cpp_name__", None) or getattr(type(callback), "__cpp_name__", None)
+    if function_type is None or not callable(callback):
+        raise TypeError("sc_bind requires a native callable or typed std::function")
+    types = []
+    for argument in arguments:
+        native_type = getattr(type(argument), "__cpp_name__", None)
+        if native_type is None:
+            native_type = {bool: "bool", float: "double", str: "std::string"}.get(type(argument))
+            if type(argument) is int:
+                native_type = "int" if -(1 << 31) <= argument < (1 << 31) else "long long"
+        if native_type is None:
+            raise TypeError("sc_bind arguments require native values or numeric/string scalars")
+        types.append(native_type)
+    bound = cppyy.gbl.sc_core.python_bound[function_type, *types](callback, *arguments)
+    _bind_owners.append((bound, callback, arguments))
+    return bound
+
+
+cppyy.include(str(pathlib.Path(__file__).with_name("spawn_result.cpp")))
+
+
+def sc_spawn(callback: Any, *args: Any, name: str = "", options: Any = None) -> Any:
+    """Spawn a dynamic process, optionally storing its typed native result.
+
+    Args:
+        callback: No-argument callable, or caller-owned native result storage
+            for the ``sc_spawn(result, callback, name, options)`` overload.
+        *args: Callback after result storage, then optional name and options.
+        name: Optional native process name (positional or keyword).
+        options: Optional native sc_spawn_options (positional or keyword).
 
     Returns:
         Native sc_process_handle with termination event and process controls.
 
-    Callbacks remain retained for this interpreter's single simulation lifetime.
-    Blocking native calls within callbacks must release the GIL.
+    Raises:
+        TypeError: Callback is not callable, arguments are duplicated/invalid,
+            or result storage has no writable native value type.
+        sc_report: Native process creation or execution reports a failure.
+
+    Without result storage, return values are ignored. Result storage may be a
+    native C++ value proxy supporting SystemC's result assignment, or a ctypes
+    bool/numeric scalar using a supported native scalar format. Pointer and
+    character-buffer ctypes values are rejected. The callback must return a value
+    convertible to the selected type. The result is assigned only after a successful
+    callback return. Reset/kill executes Python cleanup before restoring native
+    scheduler unwind. Callbacks and result proxies remain retained for the
+    interpreter's single kernel lifetime. Use fresh processes for unrelated runs.
     """
-    if not callable(callback):
-        raise TypeError("sc_spawn callback must be callable")
-    if options is None:
-        handle = cppyy.gbl.sc_core.spawn_callback(callback, name)
+    result = None
+    if not callable(callback) or (args and callable(args[0])):
+        result = callback
+        if result is None:
+            raise TypeError("sc_spawn result storage cannot be null")
+        if not args or not callable(args[0]):
+            raise TypeError("sc_spawn callback must be callable")
+        callback, args = args[0], args[1:]
+    if len(args) > 2:
+        raise TypeError("sc_spawn accepts a callback, optional name and options")
+    if args:
+        if name:
+            raise TypeError("sc_spawn name supplied twice")
+        name = args[0]
+    if len(args) == 2:
+        if options is not None:
+            raise TypeError("sc_spawn options supplied twice")
+        options = args[1]
+    if result is None:
+        operation = (
+            cppyy.gbl.sc_core.sc_spawn[type(callback).__cpp_name__]
+            if getattr(type(callback), "__cpp_name__", None)
+            else cppyy.gbl.sc_core.spawn_callback
+        )
+        handle = operation(callback, name) if options is None else operation(callback, name, options)
+        owners = callback
     else:
-        handle = cppyy.gbl.sc_core.spawn_callback(callback, name, options)
-    _spawn_callbacks.append(callback)
+        result_type = getattr(type(result), "__cpp_name__", None)
+        if result_type is None:
+            if not isinstance(result, ctypes._SimpleCData):
+                raise TypeError("sc_spawn result must be a native C++ value or ctypes scalar")
+            result_type = {
+                "?": "bool",
+                "b": "signed char",
+                "B": "unsigned char",
+                "h": "short",
+                "H": "unsigned short",
+                "i": "int",
+                "I": "unsigned int",
+                "l": "long",
+                "L": "unsigned long",
+                "q": "long long",
+                "Q": "unsigned long long",
+                "f": "float",
+                "d": "double",
+                "g": "long double",
+            }.get(result._type_)
+            if result_type is None:
+                raise TypeError("sc_spawn result requires scalar value storage, not a pointer")
+        operation = cppyy.gbl.sc_core.python_spawn_result[result_type]
+        handle = operation(result, callback, name) if options is None else operation(result, callback, name, options)
+        owners = (result, callback)
+    _spawn_callbacks.append(owners)
     return handle
 
 
@@ -807,8 +987,24 @@ _report_callback = None
 def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> None:
     """Install a retained Python report handler, or restore the native default.
 
+    Args:
+        callback: Callable receiving a native sc_report and its integer action
+            bitmask, or None to restore the native default handler.
+
+    Returns:
+        None after the native handler is installed or restored.
+
+    Raises:
+        TypeError: A non-callable, non-None callback is supplied.
+        Exception: A report raised during synchronous callback dispatch propagates.
+
     The callback receives a native sc_report and an integer action bitmask.
     This adapter avoids cppyy's const-reference scalar callback conversion.
+    The module retains the callback while it is installed. Installing another
+    callback or restoring the native default releases the module's ownership of
+    the previous callback; retained exception tracebacks may delay its final
+    collection. Call on the simulation thread with the GIL held; handlers must
+    not block or enter the scheduler.
     """
     global _report_callback
     if callback is None:
@@ -822,6 +1018,7 @@ def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> No
 
 
 _native_next_trigger = cppyy.gbl.sc_core.next_trigger
+_next_trigger_adapters = {}
 
 
 def next_trigger(*args: Any) -> Any:
@@ -837,16 +1034,37 @@ def next_trigger(*args: Any) -> Any:
 
     Raises:
         sc_report: The native process context does not permit dynamic sensitivity.
-        TypeError: Arguments do not match a native sensitivity overload, or cppyy
-            wraps an invalid-process native report; its diagnostic is retained.
+        TypeError: Arguments do not match a native sensitivity overload.
     """
-    if any(
-        isinstance(value, cppyy.gbl.sc_core.sc_event_expr[list_type])
-        for value in args
-        for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
-    ):
-        return cppyy.gbl.sc_core.python_next_trigger(*args)
-    return _native_next_trigger(*args)
+    native = cppyy.gbl.sc_core
+    context = native.sc_get_curr_simcontext()
+    if args and isinstance(args[-1], native.sc_simcontext):
+        context, args = args[-1], args[:-1]
+    types, values = [], []
+    for index, value in enumerate(args):
+        for list_type in (native.sc_event_or_list, native.sc_event_and_list):
+            if isinstance(value, native.sc_event_expr[list_type]):
+                value = value.release()
+                break
+        if index == 0 and isinstance(value, (int, float)):
+            name = "double"
+        elif index == 1 and types[0] == "double":
+            name = "sc_core::sc_time_unit"
+        else:
+            for argument_type in (native.sc_time, native.sc_event, native.sc_event_or_list, native.sc_event_and_list):
+                if isinstance(value, argument_type):
+                    name = f"const {argument_type.__cpp_name__}&"
+                    break
+            else:
+                raise TypeError("next_trigger requires native time/event arguments or a numeric duration")
+        types.append(name)
+        values.append(value)
+    signature = ", ".join((*types, "sc_core::sc_simcontext*"))
+    operation = _next_trigger_adapters.get(signature)
+    if operation is None:
+        operation = _native_next_trigger.__overload__(signature)
+        _next_trigger_adapters[signature] = operation
+    return operation(*values, context)
 
 
 def _process_control(adapter):
@@ -863,8 +1081,47 @@ def _process_control(adapter):
     return control
 
 
+cppyy.include(str(pathlib.Path(__file__).with_name("process_exceptions.cpp")))
+_throw_adapters = {}
+
+
+def _process_throw_it(self, exception: Any, descendants: Any = None) -> None:
+    """Inject a native exception into a process, optionally including descendants.
+
+    Args:
+        exception: Copyable native C++ exception value, caught by the target.
+        descendants: Native descendant policy; omitted means SC_NO_DESCENDANTS.
+
+    Raises:
+        TypeError: Exception has no native C++ type.
+        sc_report: Native process restrictions or an uncaught exception fail.
+
+    The kernel copies the borrowed exception during this call. Target Python
+    callbacks can catch native exception classes around guarded waits. Injection
+    releases the GIL until the target yields, and preserves reset/kill cleanup.
+    Keep the handle and target dependencies alive through process termination.
+    """
+    exception_type = getattr(type(exception), "__cpp_name__", None)
+    if exception_type is None:
+        raise TypeError("throw_it requires a native C++ exception value")
+    adapter = _throw_adapters.get(exception_type)
+    if adapter is None:
+        adapter = cppyy.gbl.sc_core.python_throw_helper[exception_type].invoke
+        adapter.__release_gil__ = True
+        _throw_adapters[exception_type] = adapter
+    if descendants is None:
+        descendants = cppyy.gbl.sc_core.SC_NO_DESCENDANTS
+    if not adapter(self, exception, descendants):
+        raise _ProcessUnwind()
+
+
+cppyy.gbl.sc_core.sc_process_handle.throw_it = _process_throw_it
+
 cppyy.gbl.sc_core.sc_process_handle.kill = _process_control(cppyy.gbl.sc_core.python_kill)
 cppyy.gbl.sc_core.sc_process_handle.reset = _process_control(cppyy.gbl.sc_core.python_reset)
+# Native sticky synchronous-reset controls retain their descendant policy.
+cppyy.gbl.sc_core.sc_process_handle.sync_reset_on.__release_gil__ = True
+cppyy.gbl.sc_core.sc_process_handle.sync_reset_off.__release_gil__ = True
 
 _native_process_suspend = cppyy.gbl.sc_core.sc_process_handle.suspend
 _running_process_suspend = _process_control(cppyy.gbl.sc_core.python_suspend)
@@ -887,7 +1144,6 @@ def _process_suspend(self, *args):
 
 
 cppyy.gbl.sc_core.sc_process_handle.suspend = _process_suspend
-
 
 cppyy.gbl.sc_core.python_wait.__release_gil__ = True
 
@@ -928,6 +1184,10 @@ def wait(*args: Any) -> None:
         raise _ProcessUnwind()
 
 
+# Python namespace lookups need the same guard; native C++ calls remain native.
+cppyy.gbl.sc_core.wait = wait
+
+
 def _time_left_multiply(time, factor):
     """Return native factor * time, preserving rounding and leaving time unchanged.
 
@@ -938,8 +1198,6 @@ def _time_left_multiply(time, factor):
 
 
 cppyy.gbl.sc_core.sc_time.__rmul__ = _time_left_multiply
-
-from ._byte_heap import allocate as _byte_heap_allocate
 
 cppyy.gbl.sc_core.sc_byte_heap.allocate = _byte_heap_allocate
 
@@ -1008,22 +1266,41 @@ def sc_set_stack_size(thread_h, size):
     return operation(thread_h, size)
 
 
-from ._trace_printf import tprintf as tprintf
+tprintf = _python_tprintf
 
-from ._scheduler import sc_start as sc_start, at_posedge as at_posedge, at_negedge as at_negedge, timed_out as timed_out
+sc_start = _python_sc_start
+at_posedge = _python_at_posedge
+at_negedge = _python_at_negedge
+timed_out = _python_timed_out
 
 # Publish native classes/enums and Python adapters for wildcard imports.
 
-from ._references import sc_ref as sc_ref, sc_cref as sc_cref
+sc_ref = _python_sc_ref
+sc_cref = _python_sc_cref
+
+sc_assemble_vector = _assemble_vector
+sc_member_access = _MemberAccessTemplate()
 
 __all__ = sorted(
     set(_public_names(cppyy.gbl.sc_core))
     | {
+        "CFT",
+        "sc_plist_map_fn",
+        "sc_report_handler_proc",
         "ScStatus",
         "sc_status",
+        "sc_status_type",
         "sc_trace",
         "sc_spawn",
+        "sc_bind",
+        "sc_placeholder",
+        "sc_trace_value",
+        "sc_signal_value",
+        "sc_port_value",
+        "sc_assemble_vector",
+        "sc_member_access",
         "wait",
+        "native_blocking_call",
         "set_report_handler",
         "sc_elab_and_sim",
         "sc_stop",
@@ -1041,6 +1318,5 @@ __all__ = sorted(
 
 __doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
 
-from ._kernel_flags import install as _install_kernel_flags
-
 _install_kernel_flags(sys.modules[__name__])
+_install_member_scheduler(sc_module, sc_prim_channel, _ProcessUnwind)

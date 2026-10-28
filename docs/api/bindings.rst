@@ -9,20 +9,148 @@ pass-through availability does not by itself establish tested support.
 
 ``sc_module.sensitive(interface_or_port_or_event)``
    Add static native sensitivity, including edge finders.
+   ``sensitive_pos`` and ``sensitive_neg`` expose the module's borrowed native
+   edge builders and accept ``<<`` registration before process execution.
+
+``sc_module.wait(*args)`` / ``sc_prim_channel.wait(*args)``
+   Invoke the owner's native scheduling member, using its simulation context.
+   Cycle, time, event and OR/AND list forms release the GIL during suspension.
+   Reset and kill run Python cleanup before restoring native scheduler unwind.
+   Keep the owner and events alive; do not wait during unwind cleanup.
+
+``wait(*args)`` / ``cppyy.gbl.sc_core.wait(*args)``
+   After importing the bindings, Python lookups through either namespace use
+   the guarded wait adapter. Cycle, time, event and event-list overloads release
+   the GIL and preserve Python cleanup during reset and kill. The original
+   native scheduler exception is then restored to the kernel. Event and context
+   arguments remain borrowed throughout suspension. This routing applies to
+   Python calls; blocking methods inside third-party C++ channels require their
+   own native unwind adapters.
+
+``native_blocking_call(operation)``
+   Invoke a zero-argument native C++ functor with the GIL released. Use this
+   adapter for blocking methods in third-party C++ channels, including inherited
+   methods, or for original native function pointers retained before importing
+   the bindings. The functor's const call operator must execute the operation
+   entirely in C++. It may return void or a copyable native value; the returned
+   value has independent storage; borrowed storage inside that value retains
+   its normal native lifetime. Pointer, reference and move-only returns are
+   rejected before execution. Capture arguments in the functor and retain
+   borrowed channels, events, and output buffers throughout the call. Copy Python
+   scalar inputs into the functor; a native reference to a cppyy conversion
+   temporary does not retain its storage after the factory returns.
+
+   Reset and kill run Python ``finally`` blocks before restoring native scheduler
+   unwind. Ordinary native exceptions propagate and subsequent guarded calls
+   remain usable. Call from a SystemC thread process; never block in unwind
+   cleanup or suppress ``BaseException``.
+
+   For example, wrap an arbitrary native acquisition method in a native functor::
+
+      cppyy.cppdef("""
+      struct NativeAcquire {
+          sc_core::sc_mutex_if& mutex;
+          explicit NativeAcquire(sc_core::sc_mutex_if& value) : mutex(value) {}
+          int operator()() const { return mutex.lock(); }
+      };
+      """)
+      operation = cppyy.gbl.NativeAcquire(mutex)
+      # Within a registered SystemC thread:
+      status = sc_core.native_blocking_call(operation)
+
+   Python callables and raw cppyy function/overload objects are rejected before
+   execution. Importing the bindings replaces subsequent Python lookups of
+   ``wait``; it cannot replace previously retained raw objects. Calling those
+   objects directly during reset or kill bypasses the native guard and can
+   cause SystemC's fatal F539 unwind report. A Python lambda around such a call
+   does not solve the boundary: use the C++ functor adapter above. Python
+   overrides inside the functor must themselves use guarded scheduling calls.
+
+``sc_module.next_trigger(*args)`` / ``sc_prim_channel.next_trigger(*args)``
+   Configure dynamic method sensitivity through the native member without
+   suspending. Event expressions are consumed once; reuse explicit native event
+   lists when registering the same sensitivity repeatedly. ``timed_out()``
+   reports whether the current process resumed because its timeout expired;
+   querying it outside a process raises native ``std::runtime_error`` before
+   pointer access, matching the free timeout helper.
+
+``sc_module.at_posedge(interface)`` / ``at_negedge(interface)`` / ``halt()``
+   Preserve native sampled bool/logic edge waits and clocked-thread halt.
+   These helpers require a native clocked-thread process context.
+   Blocking calls release the GIL and retain reset/kill/halt cleanup behavior.
+   Keep module and interfaces alive throughout suspension. Configure native
+   stack size and synchronous/asynchronous reset before process execution.
+
+``sc_prim_channel(name)`` / ``sc_prim_channel()``
+   Register a named or native automatically named primitive channel. Python
+   subclasses can override update and elaboration/simulation lifecycle hooks;
+   cppyy acquires the GIL for callbacks. ``request_update()`` coalesces requests
+   for the next update phase. Update callbacks must not wait. Retain the channel
+   while the kernel or any external requester can use it.
+
+``sc_prim_channel.async_request_update()``
+   Request an update from outside the simulator. Attach/detach suspending support
+   retains the native kernel's asynchronous wake behavior. Foreign native
+   threads may request an update; Python callbacks run on the simulation thread.
+   Join external requesters before destroying their borrowed channel.
 
 ``sc_spawn(callback, name='', options=None)``
-   Spawn a retained Python callable and return a native process handle. Python
-   closures can retain results; callback return values are ignored.
+   Spawn a retained Python callable or a native C++ functor and return a native
+   process handle. Callback return values are ignored. Native functors execute
+   directly in the kernel, including native waits.
+
+``sc_spawn(result, callback, name='', options=None)``
+   Assign the callback return value into caller-owned native C++ value storage
+   or a ctypes numeric scalar. Templates accept arbitrary native result types,
+   including wide integers and custom classes. Assignment happens only after
+   successful return; reset, kill and callback errors leave the result unchanged.
+   Callbacks and result proxies are retained for the single kernel lifetime.
+
+``sc_spawn_options``
+   Configure method/thread execution, initialization, stack size, static
+   sensitivity and synchronous/asynchronous reset. Sensitivity accepts events,
+   interfaces, ports, exports and event finders; reset accepts boolean signal
+   interfaces and input/inout/output ports. Keep borrowed sources alive through
+   simulation. Configure options before spawning.
+
+``sc_process_handle.sync_reset_on()`` / ``sync_reset_off()``
+   Enable or disable sticky synchronous reset, optionally including descendants.
+   Reset takes effect when the process resumes; Python cleanup preserves native
+   reset unwind. These controls release the GIL during native execution.
+
+``sc_inout_resolved`` / ``sc_out_resolved`` / ``sc_inout_rv[width]`` / ``sc_out_rv[width]``
+   Construct and bind resolved scalar/vector ports, initialize values and assign
+   from values, interfaces or compatible ports using ``__assign__``. Vector
+   widths instantiate on demand. Native resolution, elaboration diagnostics and
+   trace transitions are preserved; bound interfaces must outlive their ports.
 
 ``wait(*args)``
    Suspend the native thread with GIL release. No arguments selects a cycle wait;
    arguments select guarded native timed/event overloads, including OR/AND
    expressions. Reset/kill unwind executes Python cleanup before the original
    scheduler exception is restored. Do not suppress unwind or wait in cleanup.
+   Nonpositive cycle counts emit native E525; empty OR/AND event lists emit E565.
+   With ``SC_THROW`` selected, the original ``sc_report`` propagates to the caller.
 
 ``set_report_handler(callback=None)``
    Install a retained callback receiving a native report and integer action mask;
    no callback restores the native default handler.
+
+``next_trigger(*args)``
+   Select exact native time, event or event-list overloads, with an optional
+   simulation context. Event expressions are consumed once. Calling from a
+   thread raises the native E520 ``sc_report`` without changing time or sensitivity.
+   Empty OR/AND event lists emit native E565, preserving report metadata and counts.
+
+``sc_report_handler.report(severity, message_type, message, ...)``
+   Emit a message report with file/line and optional verbosity, or a legacy
+   integer-ID report with file/line. Each call executes native policy counters,
+   cache updates and the configured handler once, including when it throws.
+   Incompatible Python arguments raise ``TypeError``; integers outside the native
+   parameter range raise ``OverflowError`` before report counters, cache or handler
+   state changes. Verbosity accepts the full native signed-int range. Only info
+   reports are filtered by the current verbosity level; other severities retain
+   their native actions even above that level.
 
 ``sc_report``
    Copy a borrowed callback report before retaining it. Copies own their message,
@@ -31,14 +159,34 @@ pass-through availability does not by itself establish tested support.
    process-name context and can be false for populated reports outside a process.
    Legacy static methods ``register_id``, ``get_message``, ``is_suppressed``,
    ``suppress_id``, ``suppress_infos``, ``suppress_warnings`` and
-   ``make_warnings_errors`` preserve native diagnostics and policy. These settings
-   persist in the singleton kernel; restore them when finished. Destruction
+   ``make_warnings_errors`` preserve native diagnostics and policy.
+   ``register_id`` accepts ``cppyy.nullptr`` to select the native null-message
+   error. Invalid, conflicting and null-message registrations raise E800 under
+   the default handler without changing registered messages. An empty message
+   uses the predefined native message and does not register the requested new ID.
+   Policy settings persist in the singleton kernel; restore them when finished. Destruction
    releases copy-owned fields. Borrowed views must not outlive their report.
 
 ``sc_report_handler.stop_after(subject, ...)``
    Select severity-wide, message-wide or message/severity limits using native
    severity enums. An omitted limit is -1 and removes that selected limit.
    This adapter avoids treating a severity enum as an integer message limit.
+
+``sc_report_handler.set_actions(...)`` / ``suppress(...)`` / ``force(...)`` / ``set_catch_actions(mask)``
+   ``set_actions`` accepts severity, message and message/severity scopes. Omitting
+   its mask installs ``SC_UNSPECIFIED`` and returns the previous scoped actions,
+   matching the native default argument and fallback policy.
+   Action masks must be integer-like and fit native unsigned int. Negative or
+   oversized masks raise ``OverflowError`` before changing policy; incompatible
+   types raise ``TypeError``. Native custom action bits remain available. Calling
+   ``suppress()`` or ``force()`` without a mask resets it to zero and returns its
+   previous value. Settings persist for the kernel lifetime; restore them after use.
+
+``sc_report_handler.set_log_file_name(filename)``
+   Set a copied native log filename. ``None`` and ``cppyy.nullptr`` clear the
+   name through the native null setter, which returns ``False``. A new name
+   returns ``True``; a second non-null name is refused while one is configured.
+   Close any active default log stream before changing its filename.
 
 ``sc_report_handler.get_handler()`` / ``set_handler(token_or_none)``
    Save and restore borrowed native handler pointer tokens. ``None`` restores
@@ -64,6 +212,11 @@ pass-through availability does not by itself establish tested support.
 ``sc_status()``
    Query the native current status and convert it to ``ScStatus``.
 
+``sc_status_type``
+   The native ``sc_core::sc_status`` enum type is exported under this distinct
+   name so the existing ``sc_status()`` query keeps its callable behavior.
+   Native enum members and conversions retain cppyy semantics.
+
 ``sc_argc()`` / ``sc_argv()``
    During ``sc_main``, read the native argument count and an immutable tuple of
    original argument strings, including argument zero. The tuple copies native
@@ -79,6 +232,11 @@ pass-through availability does not by itself establish tested support.
    nonstring selected entries and embedded NULs fail before native entry.
    The native integer status is returned, including nonzero results. Use a
    fresh process for each independent simulation; entry does not reset the kernel.
+   Copied native arguments are released and the active argument snapshot is
+   restored on every exit. Python report callback failures preserve their original
+   exception and traceback, including during native exception translation and
+   the final deprecation notice. Retaining a caught exception also retains its
+   callback traceback until that exception is released.
 
 ``amal.eda.systemc.sc_main(argc=None, argv=None)``
    Call the global native callback bridge directly with the same argument
@@ -94,6 +252,13 @@ pass-through availability does not by itself establish tested support.
    starvation policy and avoiding overload retries after simulation errors.
    Omit all arguments for unbounded simulation. Events exactly at a bounded
    run's end execute on the next simulation call, matching native SystemC.
+   Starting after the kernel has stopped emits native E546.
+
+``sc_stop()``
+   Request native stop once. Python lifecycle callback errors propagate; if an
+   end-of-simulation hook fails, the kernel retains its native terminal phase.
+   Further stop calls and interpreter cleanup leave that phase unchanged and
+   do not repeat the callback or emit a duplicate-stop warning.
 
 ``at_posedge(signal, simc=None)`` / ``at_negedge(signal, simc=None)``
    Use native sampled-edge waits for bool or logic input interfaces inside a
@@ -106,6 +271,52 @@ pass-through availability does not by itself establish tested support.
    referent until wrapper destruction. Native consumers preserve mutable/const
    contracts. Keep the wrapper alive while using borrowed ``get()`` results.
 
+Native callback typedefs
+------------------------
+
+``sc_core.CFT``, ``sc_plist_map_fn``, ``sc_report_handler_proc`` and
+``sc_ppq_base.compare_fn_t`` expose native pointer-value adapters. They store
+the exact native function-pointer typedef, rather than converting it to
+``std::function``. cppyy does not reflect these typedefs as standalone type
+objects; the Python aliases name their value adapters. ``CFT`` and
+``compare_fn_t`` share a type because their native signatures are identical.
+
+Default construction creates a null value. Copy construction and equality
+preserve native pointer identity. Select a qualified native function with
+``CFT.from_function("model::compare")`` or ``CFT.from_function("::compare")``.
+Overloaded names select the exact native callback signature; malformed names
+and incompatible signatures raise ``TypeError``. Keep the selected native code
+loaded through every consumer. Adapters do not retain Python callables; existing native
+consumer APIs continue accepting Python callbacks with their documented
+retention requirements.
+
+Pass a ``CFT`` value to ``sc_pvector.sort`` or a ``sc_plist_map_fn`` value to
+``sc_plist.mapcar``. Vector comparators receive pointer-slot addresses; list
+mappers receive borrowed payload/context pointers. A comparator's
+``create_queue(sc_ppq[T], size)`` method returns a Python-owned native queue
+that borrows pointees and the selected native comparator code. Null values
+raise ``ValueError`` in these adapter consumers. Report-handler values work
+with ``sc_report_handler.get_handler`` and ``set_handler``; use
+``set_report_handler`` to install retained Python callbacks.
+
+TLM base socket interface
+-------------------------
+
+``tlm_base_socket_if.get_base_interface()`` is conditional on
+``SC_ENABLE_COVARIANT_VIRTUAL_BASE`` and is absent from the default runtime.
+Both const and nonconst base-interface overloads are supported with a matching
+native build and Cling configuration. Select that installation with
+``SYSTEMC_INSTALL_DIR`` and add ``-DSC_ENABLE_COVARIANT_VIRTUAL_BASE`` to
+``EXTRA_CLING_ARGS`` before importing the package; retain the C++17 compiler
+flag and any existing compiler options. All translation units must agree with
+the linked library. Changing this macro after import is not supported.
+
+Invoke the virtual getter on a bound socket/base proxy. Its returned native
+``sc_interface`` reference borrows the bound endpoint and its module owner;
+keep both alive. Default and custom protocols are tested before and after
+elaboration using exact const/nonconst base-member calls. Run
+``make test-tlm-covariant`` for the separate compatible-build validation.
+
 Time arithmetic and temporary storage
 -------------------------------------
 
@@ -114,13 +325,46 @@ multiplication in either order, scalar division and time/time ratios. Results
 preserve native tick rounding and leave their operands unchanged. A product of
 two times is not defined; divisors must satisfy the native nonzero contract.
 
+Time constructors accept all six native enum units and string symbols, including
+``"SC_NS"`` and explicit live simulation-context pointers. String-unit failures
+propagate native ``sc_report`` exceptions. Legacy ``sc_time(integer, False)``
+preserves the full unsigned 64-bit tick value; floating legacy inputs retain
+native rounding and default-unit scaling. Prefer ``from_value``, ``from_seconds``
+and ``from_string`` for explicit conversions. In-place arithmetic mutates the
+owned duration and returns the same native object. Configuration and resolution
+remain shared by the native kernel; contexts are borrowed during construction.
+
+
 ``sc_byte_heap.allocate(bytes_n)`` returns a mutable borrowed byte view instead
 of a copied string. The view has exactly the requested length, and allocations
 retain native eight-byte alignment and wrapping reuse. Keep the heap alive while
 accessing a view. Reinitializing or destroying the heap invalidates existing
 views; wrapping allocations can overwrite their contents. An uninitialized heap,
 a negative request or an aligned request larger than capacity raises
-``ValueError``. Noninteger sizes raise ``TypeError``.
+``ValueError``. Noninteger sizes raise ``TypeError``. An explicitly initialized
+zero-capacity heap supports ``allocate(0)`` and returns an empty borrowed view;
+a default, uninitialized heap still raises ``ValueError``. Serialize access to a
+shared heap from native threads; holding the GIL does not protect its native
+allocation cursor.
+
+For signed native byte trace storage, initialize and update
+``sc_trace_value["char"]`` with a one-byte ``bytes`` object. This preserves the
+native bit pattern. cppyy's Unicode conversion cannot read negative native
+``char`` values through the holder's field getter; trace registration reads the
+native storage directly.
+
+For borrowed native ``char`` storage, pass a typed
+``ctypes.POINTER(ctypes.c_char)`` or a nonempty ``ctypes.c_char`` array to
+``sc_trace(file, value, name, width)``. Omitting the width uses the native
+8-bit default. The exact ``const char*`` overload selector accepts the same
+typed forms. Registration preserves the original address and samples live
+mutations without interpreting the byte as text. For Python-managed trace files, the wrapper retains the
+ctypes pointer or array until matching closure. With an externally created
+native trace file, retain the ctypes object yourself. A pointer created
+from a native address still borrows its independent owner. Keep that owner
+alive until closure. Null pointers with a live trace file raise ``ValueError`` and empty arrays raise
+``TypeError``. Raw ``const char*`` results are converted to Python strings by
+cppyy and do not provide a stable scalar trace address.
 
 Trace comments and file ownership
 ---------------------------------
@@ -128,7 +372,12 @@ Trace comments and file ownership
 ``tprintf(file, format, *args)`` writes a C printf formatted trace comment.
 Numeric length modifiers, dynamic width/precision, positional arguments, string,
 character, hexadecimal-float and pointer conversions follow native formatting.
-For ``%n``, supply a compatible writable native pointer or buffer. Arguments
+For ``%n``, supply a compatible writable native pointer or contiguous signed
+integer buffer matching the required native element type and width. Native typedef
+aliases and ctypes integral aliases follow the host ABI. All count lengths,
+including ``%hhn``, borrow aligned storage and write counts only during the output
+pass. Count conversions cannot use flags, width or precision. Null, read-only, empty,
+noncontiguous and incompatible Python buffers raise ``TypeError``. Arguments
 remain alive during the call; invalid formats or argument conversions raise
 ``ValueError`` or ``TypeError``. Comment buffers grow to the required size.
 ``sc_write_comment(file, text)`` writes unformatted text.
@@ -143,6 +392,182 @@ file exactly once after tracing ends, keeping traced values alive until then.
 Closing invalidates all file aliases and flushes output. Both close helpers
 accept ``None`` as a null no-op; native file opening can be deferred until the
 first traced cycle.
+
+Stable trace values and native trace-file methods
+-------------------------------------------------
+
+``sc_trace_value[Type](initial)`` owns mutable native storage with its exact
+C++ type. Use it when tracing scalar values that cppyy otherwise converts to
+Python numbers::
+
+    value = sc_core.sc_trace_value["float"](1.5)
+    file.trace(value, "sample")
+    value.value = 2.75
+
+Both ``file.trace`` and ``sc_trace(file, value, name)`` accept these holders,
+with an optional native integer width. Enumeration tracing accepts an
+``unsigned int`` holder and a sequence of string labels, optionally terminated
+by ``None``. The file retains holders and copied enumeration labels until its
+matching close helper succeeds. Types and template widths are instantiated on
+demand. Ordinary native reference arguments remain caller-owned; Python scalar
+temporaries do not provide persistent waveform storage.
+
+``sc_trace_file`` is abstract, with a public constructor and protected virtual
+destructor. Native-derived files expose all native trace overloads, comment,
+space, delta-cycle and time-unit methods; native-derived bridges can implement
+the protected cycle hook. This does not provide Python virtual subclassing.
+Direct native destruction requires caller-managed holder lifetimes.
+
+Free tracing supports native reference and pointer overloads. Explicit native
+selection remains available through ``sc_trace.__overload__``; pointed-to values
+must remain alive until file closure. Integer holders use native default widths
+when the width is omitted. Signal interfaces accept explicit widths for the
+native ``char``, ``short``, ``int`` and ``long`` overloads; unsupported signal
+width arguments raise ``TypeError``.
+
+``sc_trace(file, port, name)`` supports input and inout/output ports before
+binding or elaboration. Registration is deferred through the native port until
+elaboration resolves its interface. Bind every required port before starting
+simulation and keep ports and interfaces alive through tracing. Once a file
+has begun recording, adding a new waveform preserves the native trace-file
+report; create another file if additional traces are needed.
+
+Signals and ordinary signal ports
+---------------------------------
+
+``sc_signal[Type, Policy]`` supports native construction, assignment, value and
+event access for generic datatypes and the bool/logic specializations. Values
+written to a signal become current during the kernel update phase. Native writer
+policies, edge detection and value-change notifications remain in force.
+Datatype widths are instantiated on demand, including widths above 128 bits.
+
+``sc_signal_value(signal)`` invokes the signal's native conversion to a
+``const Type&``. Fundamental values become Python scalar copies; native datatype
+results borrow the signal's current storage and reflect subsequent updates.
+Keep the signal alive and treat these references as read-only. Use ``read()``
+or this explicit helper for signal values: ``bool(signal)`` checks cppyy proxy
+validity, and arbitrary native signals do not acquire Python ``int()`` coercion.
+The helper accepts native signal subclasses and their actual writer policy;
+conversion does not advance simulation.
+
+``sc_in[Type]``, ``sc_inout[Type]`` and ``sc_out[Type]`` preserve native interface
+and parent-port constructor/binding forms. Input ports provide value/event
+access; inout/output ports provide native value, interface and port assignment
+and initialization. Initialization can be supplied before binding and is applied
+when elaboration resolves the interface. Bool and logic ports expose native
+positive/negative edges and cached sensitivity finders. Keep ports, bound
+interfaces, parent ports and borrowed finder/value views alive for their native
+consumers. Required ports must be bound before simulation starts.
+
+``sc_port_value(port)`` invokes the native value conversion for bound input,
+inout and output ports. Fundamental values become Python copies; native
+datatype results borrow the bound interface's current storage. Keep both the
+port and interface alive, treat the result as read-only and bind before calling.
+The helper holds the GIL without advancing simulation or changing proxy
+truthiness. Native interface access errors propagate.
+
+Objects, port bases and temporary pools
+---------------------------------------
+
+``sc_object`` exposes hierarchy, attributes, printing, context and phase-mask
+operations. Its native assignment deliberately returns the destination without
+changing its name, attributes or children. Hierarchy and attribute views borrow
+their native owners. Protected construction and phase hooks require a native
+subclass; keep objects alive while any borrowed views are used.
+
+``sc_port_base`` exposes interface access, type information, binding counts and
+native binding operations. Construct ports inside an active module hierarchy,
+respect their binding policy and keep bound interfaces and parent ports alive.
+Protected constructors, sensitivity helpers and lifecycle hooks require native
+derived access and preserve native report behavior.
+
+``sc_port[Interface, N, SC_ALL_BOUND]`` requires all ``N`` slots to be bound
+before elaboration completes. With ``N=0``, the native unlimited port still
+requires at least one binding. Missing bindings produce native report 109
+(``complete binding failed``); ignoring that report does not supply an interface.
+
+``sc_vpool[Type]`` allocates native temporary-array slots, wraps at its capacity
+and resets the allocation index without destroying values. Its native destructor
+does not free default-allocated storage. An external array must contain live
+values and outlive the pool and its borrowed slot views. Reused slots can
+replace prior temporary values; reference-proxy slots require native setup
+before dereferencing. Allocation, reset and size operations support arbitrary
+native types, including the native datatype-proxy specializations.
+
+``sc_pvector[PointerType]`` indexing grows native slots and initializes new
+pointer slots to null. Pointees remain borrowed. Negative indices raise
+``IndexError``; indices whose count would overflow native ``unsigned int``
+raise ``OverflowError`` before accessing or changing storage. ``fetch()`` reads
+an existing slot without growing the vector and checks its bounds.
+
+``sc_phash[Key, Contents]`` and its iterators preserve native typed output slots,
+copy and removal overloads. Tables borrow pointer contents; duplicated-key
+callbacks control key copying and release. Keep contents and callback state
+alive for every native use, and discard iterators after invalidating mutations.
+
+Owner lifetimes and shutdown
+----------------------------
+
+Native pointer and reference APIs preserve their C++ borrowing rules. Keep the
+referent alive for every native borrower; deleting a Python variable does not
+end a process, close a trace, or detach a port. ``sc_stop()`` ends simulation
+without resetting the singleton kernel or clearing process callback owners.
+
+.. list-table:: Python adapter ownership boundaries
+   :header-rows: 1
+   :widths: 28 38 34
+
+   * - Adapter
+     - Retained storage
+     - Release boundary
+   * - Module process registration
+     - Registered Python callable on its module
+     - Native module lifetime; destroy only after its processes and borrowers finish
+   * - ``sc_spawn`` and ``sc_bind``
+     - Registered callback, typed result storage, and bound native input proxies
+     - Interpreter's single kernel lifetime, including after stop or callback error
+   * - Structural interfaces
+     - Implementation and returned reference storage
+     - ``release_interface_callbacks()`` after stop and final reads; native adapter deletion requires ``teardown_interfaces()``
+   * - Blocking call frames
+     - Channel, input, tag, and output proxies passed to the call
+     - Return or unwind; retaining an exception traceback can retain its call frame
+   * - Callable TLM sockets
+     - Accepted socket and callback registrations; ignored duplicate candidates are dropped
+     - Interpreter's single kernel lifetime; stopping simulation does not release active callbacks
+   * - Callback PEQ
+     - Queue and callback; payload addresses remain borrowed while phases and scheduling times are copied
+     - Queue and callback stay retained for the kernel lifetime; retain payloads until final delivery or cancellation
+   * - Callback quantumkeeper
+     - Callback and copied native time slot
+     - Last keeper proxy; a synchronization call retains its keeper through suspension
+   * - ``sc_scoped_lock``
+     - Its mutex proxy
+     - Lock destruction; ``release()`` unlocks without destroying the lock
+   * - ``sc_ref`` and ``sc_cref``
+     - Referent proxy, with no native value copy
+     - Last wrapper reference; borrowed ``get()`` results still require a live referent
+   * - Vector creator
+     - Returned native element proxies after ownership transfers to the vector
+     - Vector destruction; the creator callable is used synchronously during initialization
+   * - Trace value holders
+     - Holder storage and copied enumeration labels
+     - Matching trace-file close; ordinary traced sources remain caller-owned
+   * - Hash table callbacks
+     - Python constructor and setter callbacks on the table proxy
+     - Table proxy destruction; native-created table views need externally retained callbacks
+
+A Python callable converted directly to a raw cppyy ``std::function`` still
+needs an external Python owner throughout every possible invocation, including
+when that native function proxy is passed to ``sc_bind``. Retaining the native
+proxy does not acquire ownership of its original Python callable.
+
+Finish end-of-simulation hooks and final reads before releasing structural
+callbacks. Close trace files before deleting traced storage. Destroy native
+ports and exports and terminate thread processes before deleting their
+structural adapters. ``teardown_interfaces()`` checks those visible borrowers
+before mutation; close traces created directly in C++ separately. Borrowed
+adapter, event, and result aliases become invalid after native deletion.
 
 Process joins
 -------------
@@ -324,8 +749,8 @@ failures raise ``OSError`` with the native diagnostic.
 
 Events returned by different adapter specializations retain the owner's event
 identity. Each specialization remains a distinct native interface/module.
-Returned native objects and owners are retained through shutdown. Full scalar conversion/range/trace matrices, signal reset registration,
-full reset/error matrices and pre-shutdown teardown remain open.
+Returned native objects and owners remain retained until their documented
+callback-release or interface-teardown operation.
 
 The separate ``sc_fifo_blocking_in_if[T]``, ``sc_fifo_blocking_out_if[T]``,
 ``sc_fifo_nonblocking_in_if[T]`` and ``sc_fifo_nonblocking_out_if[T]`` templates
@@ -364,7 +789,7 @@ The default event callback returns retained native event storage.
 ``sc_port[sc_signal_write_if[T]]`` requires ``write(value)`` and
 ``get_writer_policy``. Write callbacks receive a value copy. The owner provides
 native update scheduling and writer policy; the adapter does not enforce a policy
-independently. Full reset/error/type and teardown matrices remain open.
+independently.
 
 Synchronization callbacks return signed native 32-bit integers; Python bools,
 non-integers and out-of-range values raise ``TypeError``. Signal event/edge flags
@@ -378,6 +803,12 @@ Structural TLM ``nb_put``, ``nb_can_put``, ``nb_can_get``, ``nb_can_peek`` and
 strings and other truthy objects raise ``TypeError`` rather than being converted
 implicitly. Later valid callbacks remain usable. Callback mutations of payloads,
 DMI descriptors or owner state are not rolled back when result validation fails.
+
+Blocking TLM ``peek()`` and ``peek(tag)`` select the native value overload
+directly, including ``cppyy.nullptr`` tags. Callback exceptions
+propagate without being replaced by an output-overload conversion error.
+Calls after structural callback release raise ``RuntimeError``; failed output
+calls preserve caller storage.
 
 Structural TLM FIFO ``nb_expand`` and ``nb_unbound`` callbacks return None, matching
 the native void interface. ``nb_reduce``, ``nb_bound`` and debug ``nb_poke`` return
@@ -397,6 +828,17 @@ native update/notification scheduling.
 Write-only signal and native FIFO blocking/nonblocking output callbacks also
 receive Python-owned native copies. Owners can retain the callback object after
 the call; caller reassignment or deletion does not invalidate that object.
+Write and put callbacks use the native value's copy constructor, including
+copy-only types without a default constructor or assignment operator. FIFO
+write-only interfaces instantiate only the write guard, leaving read-type
+requirements to interfaces that expose reads.
+
+Guarded FIFO ``read()`` uses the native value-returning overload and returns an
+independently owned copy without requiring default construction. A supplied
+``read(output)`` selects the native output-parameter overload using a copy of
+the output's initial value. Reset or kill leaves the caller's output unchanged;
+the completed value is assigned only after the read succeeds. An incompatible
+initial output is rejected before consuming a sample.
 
 Structural TLM analysis ``write``, blocking/nonblocking ``put`` and debug
 ``nb_poke`` callbacks receive Python-owned value copies. Retained arguments remain
@@ -491,8 +933,12 @@ select the exact zero-argument const event signature. For example::
    event = finder.find_event()
 
 The finder borrows its port, interface and returned event. Keep those objects
-alive through all sensitivity/wait consumers. Explicit interface lookup retains
-native dynamic-cast checks; an incompatible or unbound interface reports E118.
+alive through all sensitivity/wait consumers. Static sensitivity borrows the
+finder itself until elaboration completes. Retain a direct finder, or its cached
+finder and cache owner, through that boundary; store it on the module rather
+than passing a temporary finder. Once elaboration resolves sensitivity to the
+native event, the event and its channel must still outlive the process.
+Explicit interface lookup retains native dynamic-cast checks; an incompatible or unbound interface reports E118.
 If the report handler continues, the result is ``sc_event.none``.
 
 ``sc_event_finder_cache()`` supplies an owning pointer slot for
@@ -508,10 +954,106 @@ the native kernel switches pthreads, then preserves reset/kill unwind and Python
 cleanup. Resume, reset and kill during suspension match native timing, including
 reset and termination event delivery. Suspension before simulation or while
 paused retains native behavior. Descendant inclusion policies preserve native
-control propagation. Sticky synchronous reset and arbitrary ``throw_it`` remain
-untested in the process-handle family.
+control propagation. Sticky synchronous reset controls release the GIL and
+preserve Python thread cleanup.
+
+``handle.throw_it(native_exception, descendants=SC_NO_DESCENDANTS)`` injects a
+copyable native C++ exception into a thread process. Python threads can catch
+the native exception class around a guarded wait, inspect its values and wait
+again. Injection releases the GIL while target callbacks acquire it; descendant
+injection preserves native ordering. Python exception instances raise
+``TypeError``. Native process restrictions and uncaught-exception reports apply.
 
 The base interface and mutex/semaphore families now have complete declaration
 checks, including protected construction/state/report members exercised through
 native-derived models. Ports borrow interfaces and channels; retain their Python
 callback and event owners until consumers stop and release their views.
+
+
+Native vectors and member assemblies
+------------------------------------
+
+``sc_vector[Element](prefix, count, creator)`` and ``vector.init(count, creator)``
+accept native creator functors or synchronous Python callables taking an element
+name and index. Element types are instantiated on demand. Python creators must
+return newly allocated native elements: the vector owns their allocations and
+retains their Python callback hosts. Do not delete those elements separately.
+Creator failures propagate and native partial initialization deletes elements
+already created; initialization can then be retried under native elaboration rules.
+
+``vector.assemble("port")`` and ``sc_assemble_vector(vector, "port")`` construct
+native member pointers for public data members. Native member-pointer arguments
+also remain accepted. Assemblies retain their known Python vector owner across
+copy construction, assignment, self-assignment and swap. Views created entirely
+in native code remain borrowed unless a Python owner is attached. Keep bound
+channels alive through port destruction, and retain owners while using iterators.
+
+Assembly ``bind(first, last, destination)`` and ``assembly(first, last, destination)``
+consume the source range starting at the supplied destination iterator. Binding
+stops when either range ends and returns the next destination iterator. A short
+source leaves the remaining destinations unbound; a short destination leaves
+unused source entries untouched. Source subranges and nonzero destination
+positions preserve these rules. Bind any required remaining ports before
+elaboration; the range operation does not relax their binding policy.
+
+``sc_member_access[Element, Member]("member")`` creates a native access policy;
+policy copies and mutable-to-const conversions preserve native type rules.
+``sc_direct_access`` remains a native template. Iterator ``__follow__()`` invokes
+native ``operator->`` and returns a borrowed element or scalar member pointer.
+For a scalar pointer, index zero accesses the member. Range checks and diagnostics
+remain native; dereferencing end or invalid iterators has native undefined behavior.
+
+Native callable binding
+-----------------------
+
+``sc_bind(native_callable, *arguments)`` supports native functions, functors and
+typed ``std::function`` objects. ``sc_placeholder[index]()`` supplies arbitrary
+positive, one-based native placeholders, including reordered, repeated and nested
+bindings. Native values are copied; ``sc_ref`` and ``sc_cref`` borrow their targets.
+Reference results remain borrowed and void results become ``None``. Value results
+support copy-only and move-only types; they must be copyable or movable through
+the adapter's temporary storage. Bound proxies and input owners are retained
+for the kernel lifetime.
+
+Raw Python callables must first be wrapped in an explicitly typed native
+``std::function``. Keep the original Python callback alive through all uses of
+that wrapper and any spawned process. Guarded waits inside bound Python thread
+callbacks preserve reset/kill unwinding and cleanup. Direct binding calls hold
+the GIL; simulation callbacks acquire it at Python entry.
+
+
+Hash containers and callback ownership
+--------------------------------------
+
+Native hash tables retain Python hash and comparison callbacks supplied to
+constructors or ``set_hash_fn`` / ``set_cmpr_fn`` until their Python table proxy
+is released. Calls hold the GIL and callbacks execute synchronously. Views of
+tables created in native code require an external callback owner. Iterators,
+returned key pointers and content pointers borrow their table and referents.
+Retain those owners while using the views; removal and erasure invalidate nodes.
+
+``sc_phash_base`` borrows keys and contents. Its explicit duplication/free
+overloads manage key allocations only when requested. ``sc_pdhash[Key, Content]``
+uses configured duplicate/free functions; ``sc_strhash[Content]`` owns copied
+string keys. Content pointees remain borrowed in all three families. Use the
+explicit ``copy`` methods between distinct tables to preserve each family's
+key-copy semantics. Template types are instantiated on demand. Lookup and
+removal output parameters retain their native pointer-slot signatures.
+
+
+Static sensitivity builders
+---------------------------
+
+Module-owned ``sc_sensitive`` builders accept events, interfaces, ports and
+event finders through both ``builder(source)`` and ``builder << source``.
+Process-handle insertion selects the process; ``reset()`` clears that selection.
+``make_static_sensitivity(process_pointer, source)`` attaches sensitivity directly
+to a native process. Keep the process and every event source alive while the
+simulation uses them.
+
+The legacy positive and negative builders accept bool/logic input interfaces,
+input ports and inout ports through either operator. Their native process-handle,
+method-handle and thread-handle selectors retain native type semantics. Clocked
+``sc_sensitive`` helpers take a native clocked-thread handle plus an event finder
+or bool/logic interface or port. Builders borrow their module and sources;
+Python process registration retains callbacks for the native process lifetime.

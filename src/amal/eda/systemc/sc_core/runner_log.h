@@ -12,6 +12,8 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <memory>
+#include <string>
 
 namespace pysystemc
 {

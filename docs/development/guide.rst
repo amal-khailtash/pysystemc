@@ -39,8 +39,8 @@ Run the regression suite in independent native simulation processes::
    make test
    make test-verbose
    make coverage
-   make test-parallel TEST_WORKERS=4
-   make coverage-parallel TEST_WORKERS=4
+   make test-parallel
+   make coverage-parallel
    make docs
 
 The coverage target prints a terminal summary and writes an HTML report to
@@ -48,6 +48,19 @@ The coverage target prints a terminal summary and writes an HTML report to
 coverage by module and line. Parallel coverage combines worker and simulation
 subprocess data; each simulation remains isolated. See :doc:`releases` for CI
 validation, publication ordering and recovery.
+Both parallel targets default to four workers. Override the count with
+``TEST_WORKERS``, for example ``make test-parallel TEST_WORKERS=2``.
+
+Conditional TLM socket getters have a separate validation target::
+
+   make test-tlm-covariant
+
+It builds a temporary pthreads kernel with
+``SC_ENABLE_COVARIANT_VIRTUAL_BASE`` enabled, then compares exact const and
+nonconst base-interface calls in native C++ and a fresh Python process. The
+ordinary test suite uses the default kernel. To reuse an existing matching
+installation, set ``PYSYSTEMC_COVARIANT_TEST_PREFIX`` to its prefix. The target
+does not replace the normal development installation.
 
 Tests verify callbacks, lifecycle, sensitivity, integer wraparound and VCD
 transitions. Upstream fork/join, report and barrier ports are compared with native

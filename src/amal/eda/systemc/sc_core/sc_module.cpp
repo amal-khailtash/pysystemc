@@ -1,5 +1,5 @@
 /**
- * @file sc_module_new.cpp
+ * @file sc_module.cpp
  * @brief Native process and tracing adapters for cppyy Python modules.
  * @details Callers release the GIL for blocking waits; cppyy reacquires it on Python callback entry. Callback
  * exceptions propagate through the simulation boundary. Guarded waits preserve reset/kill scheduler unwind.
@@ -12,11 +12,14 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <systemc>
+#include <utility>
 
 #include "binding_log.h"
+#include "native_blocking.h"
 
 namespace sc_core
 {
@@ -41,26 +44,40 @@ class PythonInterface : public virtual sc_interface
 class PythonPrimChannel : public sc_prim_channel
 {
  public:
+  /** @brief Register an unnamed channel using the native generated name. */
+  PythonPrimChannel() : sc_prim_channel()
+  {
+  }
+  /** @brief Register a named channel; the kernel borrows its live owner. */
   explicit PythonPrimChannel(const char* name) : sc_prim_channel(name)
   {
   }
+  /** @brief Unregister the channel; external requesters must already be joined. */
   ~PythonPrimChannel() override = default;
 
   using sc_prim_channel::async_attach_suspending;
   using sc_prim_channel::async_detach_suspending;
+  using sc_prim_channel::next_trigger;
+  using sc_prim_channel::timed_out;
+  using sc_prim_channel::wait;
 
+  /** @brief Override in Python for update-phase work; callbacks must not wait. */
   void update() override
   {
   }
+  /** @brief Override before elaboration ends; cppyy acquires GIL for callbacks. */
   void before_end_of_elaboration() override
   {
   }
+  /** @brief Override after elaboration; borrowed channel owners remain live. */
   void end_of_elaboration() override
   {
   }
+  /** @brief Override at simulation start; native callback exceptions propagate. */
   void start_of_simulation() override
   {
   }
+  /** @brief Override on native stop, before destroying channel-owned storage. */
   void end_of_simulation() override
   {
   }
@@ -185,24 +202,33 @@ bool python_guarded_operation(const std::function<void()>& operation)
 }
 
 /** @brief Halt a clocked thread while preserving Python cleanup and native control flow.
- * @param context Borrowed current simulation context, retained by the caller.
+ * @param operation Borrowed native halt operation, retaining its target during suspension.
  * @return False requests Python cleanup and native halt/reset/kill restoration.
  * @details Caller releases GIL across the native suspension. A halt resumes at
  * the next clock edge and throws sc_halt; reset/kill retains its original unwind.
  * Other native reports propagate. No borrowed context or exception escapes its
  * process lifetime; callback dispatch consumes and clears pending control state.
  */
-bool python_halt(sc_simcontext* context)
+bool python_guarded_halt_operation(const std::function<void()>& operation)
 {
   try
   {
-    return python_guarded_operation([&] { halt(context); });
+    return python_guarded_operation(operation);
   }
   catch (const sc_halt&)
   {
     python_unwind = std::current_exception();
     return false;
   }
+}
+
+/** @brief Guard the native free halt with one shared scheduler exception owner.
+ * @param context Borrowed context retained throughout suspension.
+ * @details Caller releases GIL; false requires Python cleanup before dispatch.
+ */
+bool python_halt(sc_simcontext* context)
+{
+  return python_guarded_halt_operation([&] { halt(context); });
 }
 
 /** @brief Query native timeout state in a live selected process context.
@@ -335,16 +361,41 @@ bool guarded_wait(Operation operation)
   }
 }
 
-/** @brief Guard native FIFO read against cppyy consuming scheduler unwind.
- * @details Borrow channel for this call, release GIL before entry. On unwind
- * Python must raise its private unwind signal; output is assigned only on success.
+/** @brief Guard a native value-return FIFO read against cppyy consuming scheduler unwind.
+ * @details Borrow channel for this call and release the GIL before entry. The
+ * disengaged optional denotes interruption; the native value overload only
+ * requires T to be copy-constructible, not default-constructible or assignable.
+ * On unwind Python must raise its private unwind signal before exposing a value.
  */
 template <class T>
-std::pair<T, bool> python_fifo_read(sc_fifo_blocking_in_if<T>& channel)
+std::pair<std::optional<T>, bool> python_fifo_read(sc_fifo_blocking_in_if<T>& channel)
 {
-  T value{};
-  bool complete = python_guarded_operation([&] { channel.read(value); });
+  std::optional<T> value;
+  bool complete = python_guarded_operation(
+    [&]
+    {
+      T sample = channel.read();
+      value.emplace(sample);
+    });
   return {value, complete};
+}
+
+/** @brief Guard a native output-parameter FIFO read using private staged storage.
+ * @details Copy the caller's initial value before entering the guarded call,
+ * then dispatch to the native void read(T&) overload. This avoids default
+ * construction and keeps the caller's target unchanged if reset or kill
+ * interrupts the read. Call with the GIL released; exceptions propagate.
+ */
+template <class T>
+std::pair<std::optional<T>, bool> python_fifo_read_output(sc_fifo_blocking_in_if<T>& channel, const T& initial)
+{
+  std::optional<T> staged(initial);
+  bool complete = python_guarded_operation([&] { channel.read(*staged); });
+  if (!complete)
+  {
+    staged.reset();
+  }
+  return {staged, complete};
 }
 
 /** @brief Guard native FIFO writes; borrowed input is copied by the channel.
@@ -768,6 +819,7 @@ sc_process_handle spawn_callback(std::function<void()> callback, const char* nam
 /**
  * @brief Trace a signal's native storage rather than a temporary Python value.
  * @tparam T Signal value type, instantiated on demand by cppyy.
+ * @tparam Arguments Optional native width arguments selected by typed dispatch.
  * @param file Open native trace file.
  * @param signal Signal retained by the caller for the simulation lifetime.
  * @details A native method refreshes structural scalar reference storage on
@@ -776,10 +828,11 @@ sc_process_handle spawn_callback(std::function<void()> callback, const char* nam
  * Structural signals must outlive the refresh method.
  * @param name Waveform variable name.
  */
-template <class T>
-void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const std::string& name)
+template <class T, class... Arguments>
+void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const std::string& name,
+                  Arguments... arguments)
 {
-  sc_trace(file, signal.read(), name);
+  sc_trace(file, signal.read(), name, arguments...);
   if (!file || dynamic_cast<const sc_signal_channel*>(&signal)) return;
   // Structural scalar references are refreshed by read(), unlike sc_signal
   // storage which is updated directly by the primitive channel.
@@ -859,8 +912,18 @@ class ScModule : public sc_module
   }
 
   using sc_module::async_reset_signal_is;
+  using sc_module::at_negedge;
+  using sc_module::at_posedge;
   using sc_module::dont_initialize;
+  using sc_module::end_module;
+  using sc_module::halt;
+  using sc_module::next_trigger;
   using sc_module::reset_signal_is;
+  using sc_module::sensitive_neg;
+  using sc_module::sensitive_pos;
+  using sc_module::set_stack_size;
+  using sc_module::timed_out;
+  using sc_module::wait;
 
   /**
    * @brief Add static sensitivity to an interface default event; caller retains the object.
@@ -946,6 +1009,93 @@ class ScModule : public sc_module
     sc_module::sensitive_pos << handle;
     sc_module::sensitive_neg << handle;
     return handle;
+  }
+};
+
+/** @brief Invoke native module/channel scheduling members with exact argument types.
+ * @tparam Owner Public bridge type exposing native protected scheduling members.
+ * @details Owners, events and interfaces are borrowed throughout suspension.
+ * Blocking callers release the GIL; dispatch_python restores retained native
+ * reset/kill/halt after Python frame cleanup. Other native exceptions propagate.
+ * Method sensitivity calls keep the GIL and do not suspend the caller.
+ */
+template <class Owner>
+struct python_member_scheduler
+{
+  /** @brief Suspend until the native clocked halt, preserving Python cleanup. */
+  static bool halt(Owner& owner)
+  {
+    return python_guarded_halt_operation([&] { owner.halt(); });
+  }
+};
+
+/** @brief Exact native sampled edge members with guarded scheduler unwind.
+ * @tparam Owner Public module bridge.
+ * @tparam Value Native bool or logic datatype.
+ * @details Module/interface are borrowed through suspension; caller releases
+ * GIL. False requires Python cleanup; native errors otherwise propagate.
+ */
+template <class Owner, class Value>
+struct python_member_edge
+{
+  /** @brief Perform the owner's sampled edge wait with scheduler unwind intact. */
+  static bool posedge(Owner& owner, const sc_signal_in_if<Value>& signal)
+  {
+    return python_guarded_operation([&] { owner.at_posedge(signal); });
+  }
+
+  /** @brief Perform the owner's sampled falling-edge wait with unwind intact. */
+  static bool negedge(Owner& owner, const sc_signal_in_if<Value>& signal)
+  {
+    return python_guarded_operation([&] { owner.at_negedge(signal); });
+  }
+};
+
+/** @brief Concrete wait entry point for one exact native member signature.
+ * @tparam Owner Public module/channel bridge retaining native context.
+ * @tparam Arguments Native argument types; events are borrowed through suspension.
+ * @details Caller releases GIL. False requires Python frame cleanup before
+ * dispatch_python restores native unwind; ordinary exceptions propagate.
+ */
+template <class Owner, class... Arguments>
+struct python_member_wait
+{
+  /** @brief Invoke the actual native member without overload retry. */
+  static bool invoke(Owner& owner, const Arguments&... arguments)
+  {
+    return python_guarded_operation([&] { owner.wait(arguments...); });
+  }
+};
+
+/** @brief Concrete native method-sensitivity member entry point.
+ * @tparam Owner Public module/channel bridge retaining native context.
+ * @tparam Arguments Native time/event types, borrowed until trigger completion.
+ * @details GIL stays held; native reports propagate without overload retry.
+ */
+template <class Owner, class... Arguments>
+struct python_member_next_trigger
+{
+  /** @brief Register sensitivity through the actual native member. */
+  static void invoke(Owner& owner, const Arguments&... arguments)
+  {
+    owner.next_trigger(arguments...);
+  }
+};
+
+/** @brief Query an actual timeout member without dereferencing a missing process.
+ * @tparam Owner Public native module or primitive-channel bridge.
+ * @details Owner/context are borrowed for this GIL-held, non-suspending call.
+ * Invalid process context raises std::runtime_error before native null access.
+ */
+template <class Owner>
+struct python_member_timeout
+{
+  /** @brief Return the current process's native timeout flag through its owner. */
+  static bool invoke(Owner& owner)
+  {
+    if (!owner.simcontext()->get_curr_proc_info()->process_handle)
+      throw std::runtime_error("timed_out requires a running SystemC process");
+    return owner.timed_out();
   }
 };
 

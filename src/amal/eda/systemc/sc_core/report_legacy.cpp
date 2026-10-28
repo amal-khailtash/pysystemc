@@ -8,6 +8,16 @@
 #include <sysc/utils/sc_report.h>
 namespace pysystemc
 {
+/** @brief Register a null diagnostic through the native legacy error path.
+ * @details No message storage is borrowed. Call with the GIL held on the
+ * simulation thread; the configured report handler executes synchronously.
+ * Native registration reports and Python callback exceptions propagate once.
+ */
+void report_register_null_id(int id)
+{
+  sc_core::sc_report::register_id(id, nullptr);
+}
+
 /** @brief Register a native legacy report ID; propagate duplicate/invalid errors. */
 void report_register_id(int id, const char* message)
 {

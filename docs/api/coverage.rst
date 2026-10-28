@@ -42,17 +42,20 @@ Kernel and modeling
      - Duplicate timed queue notifications, cancellation, resolved contention and port propagation
      - Independent zero/one writers resolve to X; resolved port reads are checked
    * - Signal writer policies
-     - One/many/unchecked template arguments, same-delta conflicts and later-delta ownership
+     - One/many/unchecked policies, equal/different-value same-delta conflicts, later-delta ownership and sampled value/time checks
      - Suppressed native reports accept writes and transfer ownership
+   * - Required port binding
+     - One-or-more, zero-or-more and all-bound policies at 21 empty/partial/full/excess/unlimited binding cases
+     - Native elaboration report 109, interface values and binding counts
    * - sc_vector, sc_attribute
-     - Signal indexing, generated names, values, native member assemblies and attribute add/remove ownership
-     - Retain vector elements and attributes for native use
+     - Signal indexing, generated names, values, native member assemblies, range termination and attribute add/remove ownership
+     - Retain vector elements and attributes; range binding stops at either end and returns the next destination iterator
    * - sc_export
      - Hierarchical interface forwarding
      - Upstream native comparison; use get_interface explicitly
    * - sc_mutex, sc_semaphore, sc_scoped_lock
      - Blocking mutex wakeup at 2 ns, semaphore wakeup at 2.5 ns and idempotent scoped release
-     - Blocking methods require GIL release; reset inside channel waits unverified
+     - Guarded Python mutex/semaphore waits preserve native reset/kill cleanup through direct, port and structural access; direct C++ calls retain native behavior
    * - Reports and hierarchy helpers
      - Action masks, handler restoration, indexed hierarchy traversal
      - 40 native report/field pairs, namespace/help, hierarchy child paths and status tests
@@ -67,24 +70,67 @@ Datatypes and tracing
    * - API
      - Verified combinations
      - Limits
+   * - Integer concatenation references
+     - Exact member overloads, wide packing/scatter, X/Z controls, overlap, conversions, reductions and pooled-shell lifetimes
+     - Operands remain borrowed; copy numeric snapshots before shell or temporary storage reuse
+   * - Native shifts
+     - Typed integer/count and fixed-point overloads, native result widths/signs and independently owned results
+     - Native shift-count conversion and preconditions apply
+   * - Datatype streams
+     - Insertion and mutable extraction, policy enums, numeric/bit/range/concat proxies, formatting flags, stream identity and exceptions
+     - Keep streams and target parents live; native input validity and exception masks apply
+   * - Range and concatenation references
+     - Native integer/fixed/vector slices, nested concatenation views, exact source assignment, conversions, copies and pooled-shell behavior
+     - Wide native parity, reversed-range rules, retained fixed parents and owned vector conversion snapshots; native proxy traits required
+   * - Integer and fixed-point bit references
+     - Mutable/read views, copy/assignment/compound operations, scans, bounds reports, pooled integer shell reuse and Python truth conversion
+     - Native parity at 19/63/137/191 bits; copied views borrow live parents; fixed .bit() retains its parent
+   * - Free vector and numeric operations
+     - Rotations/reversals/shifts, reductions/equality, scalar/fixed bitwise/negation, normal/reflected vector expressions and compounds
+     - Four-state native parity, owned result lifetime, native result widths and fast fixed-point precision
    * - sc_uint, sc_int
-     - Construction at 1/4/17/63/64 bits; mutation and typed ports at 1/4/17/64 unsigned and 4/17/64 signed
+     - Exact constructor/assignment overloads at 19/59/63/64 bits, fixed-point sources, compound arithmetic and prefix/postfix mutation; typed ports
      - Pass native objects to assignment to avoid ambiguous scalar overloads
    * - sc_biguint, sc_bigint
-     - Widths 65, 137, 257; exact string construction, bit/range mutation, overflow and typed ports; 137-bit comparison
-     - Large Python integers should use exact binary/decimal strings
+     - Exact constructor/assignment overloads at 48/137/191/257 bits, generic and fixed-point sources, Python integer precision, independent copies and native reports
+     - Template constructors preserve exact Python integers before native width wrapping
    * - sc_bv, sc_lv
-     - 137-bit vectors, 17-bit four-state vectors and native signals
-     - Full-width vector strings avoid implicit extension assumptions
+     - Constructor/assignment overloads, cross-state proxies, numeric sources, storage hooks and independent copies at 37/38/137/191/257 bits
+     - Native X/Z reports and extension rules; legacy base numeric constructors preserve source width
+   * - sc_string_old
+     - Copy-on-write, formatting, character mutation, substring operations, concatenation and native streams
+     - Native printf type/format preconditions; borrowed character storage requires a live owner
    * - sc_fixed, sc_fixed_fast
-     - 8/4 truncation, saturation/wrap, 73/19 construction and 16/8 arithmetic
-     - Complete quantization/overflow policy matrix untested
+     - All seven quantizers and native overflow/cast policies at positive/negative boundaries; wide construction and arithmetic
+     - 1,848 native/Python value/flag records and 14 unsigned sign-magnitude-wrap rejections; cast ON/OFF and wrap n_bits effects
    * - concat and dynamic datatypes
      - Writable integer concatenation; dynamic signed/unsigned and bv/lv storage
      - Dynamic widths 7/73/193; retain concatenated operands
    * - sc_trace, vcd_trace
      - Native signal storage, declarations and transitions; explicit timescale; closure on exceptions
-     - Boolean, integers, vectors, resolved logic, fixed/fast, time and event VCD; resolved/fixed WIF; scalar Python temporaries unsuitable
+     - 28 VCD and 26 WIF type declarations and timed transitions; native WIF time/event omissions are reported explicitly; scalar Python temporaries unsuitable
+
+TLM public families
+--------------------
+
+Native socket bases and concrete wrappers are compared in
+``tests/test_tlm_native_sockets_public.py``; ports, finders and analysis delivery
+are compared in ``tests/test_tlm_ports_analysis_public.py``. Pointer and 191-bit
+analysis transactions additionally check copied values and borrowed pointee
+identity in ``tests/test_tlm_analysis_values_public.py``.
+
+``tests/test_tlm_payload_public.py`` compares field conversions, response status,
+byte-enable copy rules, extension ownership and memory-manager release counts.
+``tests/test_tlm_channels_public.py`` compares FIFO capacity/debug operations,
+readiness events, destruction, request/response and transport traffic. Native
+``tlm_slave_to_transport`` inactivity in SystemC 2.3.4 is preserved.
+
+``tests/test_tlm_fifo_blocking_public.py`` exercises actual Python threads with
+191-bit get/peek value and output forms, blocked puts, retained copies after
+collection, and reset/kill cleanup with unchanged interrupted output storage.
+Native buffer, binding, index and reference-count preconditions remain required.
+These matrices cover inventoried declarations with representative arbitrary
+types; they do not enumerate every possible native template configuration.
 
 Remaining features are accounted for
 ------------------------------------
@@ -94,13 +140,12 @@ Availability is not semantic support. Basic custom Python channel/interface and
 TLM transport callback paths are tested; complete port/fixed-point policy and
 platform/compiler matrices remain open. The tables above describe the exercised
 combinations; they do not imply coverage of every overload. Direct export conversion, kernel restart and deletion of live module
-hosts are unsupported. Arbitrary process ``throw_it`` and reset inside other native
-blocking channel operations remain outside the verified reset contract. Python
-FIFO direct/port read/write now use guarded native operations.
+hosts are unsupported. Native blocking operations require the appropriate guarded binding for Python
+reset/kill cleanup. Python FIFO direct/port read/write and native TLM FIFO
+get/peek/put use guarded native operations.
 
-The private development plan records these separately from milestone checks;
-the remaining upstream example inventory continues under later interoperability
-and extension work. No namespace export is counted as an executed example.
+Further upstream examples and platform combinations remain unverified. No
+namespace export is counted as an executed example.
 
 Trace errors and ownership
 --------------------------

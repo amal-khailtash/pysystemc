@@ -62,8 +62,6 @@ Do not restrict template widths or types to a precompiled list.
   them; worker completion alone does not establish correctness or feature
   completion. Queue tasks when the session's concurrency limit is reached.
 
-Maintain local `.ai/DEVELOPMENT_PLAN.md` and `.ai/EXAMPLE_COVERAGE.md`.
-These records are ignored and are not part of published documentation.
 Record supported, failing, untested, and deferred features distinctly. Port all
 upstream examples incrementally, preserving meaningful native reference checks.
 

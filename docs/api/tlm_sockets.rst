@@ -53,6 +53,12 @@ Forward target indices and backward initiator indices can differ on the same
 multi-to-multi connection. Duplicate multi registrations warn and keep the first
 callback. Passthrough duplicates also keep the first callback; tagged passthrough
 registration updates its user ID even when warning about a duplicate callback.
+Simple socket duplicates also preserve the first callback, except that native
+tagged target DMI registration replaces it after warning. Tagged simple
+registrations update their user ID according to the native setter. Ignored
+callback candidates are released; installed callbacks remain retained for the
+socket's native lifetime. If the warning throws, registration leaves the prior
+callback installed.
 
 Binding and simulation
 ----------------------
@@ -83,6 +89,12 @@ Returned concrete forward interfaces configure automatic GIL release for blockin
 calls. Multi initiators use ``initiator[index]`` after elaboration; multi targets
 use ``target[index]`` for backward calls. Hierarchical bindings resolve during
 native elaboration, so access the resolved interface after zero-time ``sc_start``.
+The native const ``get_base_interface()`` overloads on multi sockets deliberately
+report an error; use the mutable overload for interface access. Const export
+access retains the upstream implementation's hierarchy behavior.
+Mutable multi-initiator export access can bind the native dummy interface. Calling
+it again on an export that is already bound reports the native binding error;
+use the hierarchy-disabled socket or the const overload to inspect that export.
 
 Payloads, phases, delays and DMI outputs are borrowed native objects. Keep payloads
 and any referenced data buffers alive throughout transport and asynchronous
@@ -93,15 +105,53 @@ guarded waits; nonblocking, debug, DMI and invalidation callbacks must not wait.
 Callback errors propagate. Tested blocking reset/kill paths execute Python cleanup
 before native scheduler unwind.
 
+Native member-pointer callbacks
+-------------------------------
+
+Native ``multi_passthrough_initiator_socket[MODULE, ...]`` and
+``multi_passthrough_target_socket[MODULE, ...]`` retain the native registration
+signature ``(owner, member_pointer)``. Their callback typedefs are exposed as
+native value holders because cppyy cannot reflect C++ member-pointer types
+directly. For example, with a native ``Owner::transport`` member::
+
+   Socket = tlm_utils.multi_passthrough_target_socket[Owner, 73]
+   callback = Socket.b_cb.from_member("Owner::transport")
+   socket = Socket("target")
+   socket.register_b_transport(owner, callback)
+
+``from_member`` requires a qualified native member name without a leading ``&``.
+C++ checks the exact callback signature; incompatible signatures raise cppyy
+template conversion errors. Holders support default null construction, copying
+and ``valid()``. Registering a null holder raises ``TypeError`` before changing
+the native callback slot. Initiator
+aliases are ``nb_cb`` and ``dmi_cb``; target aliases are ``nb_cb``, ``b_cb``,
+``dbg_cb`` and ``dmi_cb``. These values store the native pointer and do not own
+the callback module. Keep ``owner`` alive until the socket is no longer used.
+Registration runs with the GIL held and does not invoke the callback.
+
 Verification scope
 ------------------
 
 Regression models under ``tests/models/tlm_*`` check connected callback state,
 connection IDs, timing, error propagation and selected reset/kill paths. Custom
 payload probes preserve 137-bit native fields and transaction identity. Simple
-and passthrough custom probes have independent C++ references. These checks do
-not establish complete socket overload, protocol, hierarchy or lifetime coverage.
-M6A remains incomplete.
+and passthrough custom probes have independent C++ references.
+``tests/models/tlm_socket_wrappers_public.py`` checks default and named
+constructors for simple, tagged, passthrough and optional multi wrappers with
+native custom protocol types and a 73-bit bus width. Required sockets elaborate
+with bindings; optional wrappers permit unbound ports subject to their native
+export requirements. Selected connected paths compare payload values, phases
+and callback times with a native reference. Wrapper construction coverage does
+not establish complete inherited socket overload or callback lifetime support.
+
+The ``tlm_utils_simple_b_public``, ``tlm_utils_passthrough_b_public`` and
+``tlm_utils_multi_public`` models cover the declared socket base and multi-socket
+families. Native MODULE callbacks exercise all registration signatures; both
+multi hierarchy binding forms resolve two indexed connections. The models check
+native protocol aliases, constructor defaults, protected lifecycle hooks,
+forward/backward values and phases, debug counts, DMI fields, invalidations and
+owner destruction. Each has an independent C++ reference. Exact const accessors
+retain native restrictions, and borrowed proxies are released before teardown.
 
 Callback return contracts
 ~~~~~~~~~~~~~~~~~~~~~~~~~
