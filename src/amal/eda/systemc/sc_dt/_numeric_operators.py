@@ -36,8 +36,12 @@ def named_function(name):
             Native exception: Allocation or configured arithmetic reports throw.
         Calls hold the GIL. All operands are borrowed for the call; native
         aliasing, precision, observer and arithmetic preconditions apply.
-        An arbitrary-precision sc_fxnum output must be distinct from both
-        inputs; native named functions invalidate aliased input representation.
+        Arbitrary-precision sc_fxnum and sc_fxval outputs must not alias
+        either input owner. Their native named overloads can delete or replace
+        output representation before completing a calculation, invalidating
+        an aliased input read. Fast fixed-point outputs retain their
+        overload-specific native alias behavior; no blanket alias guarantee is
+        made.
         """
         adapter = cppyy.gbl.pysystemc_datatypes.NumericFunctions[
             type(target), _argument_type(left), _argument_type(right)

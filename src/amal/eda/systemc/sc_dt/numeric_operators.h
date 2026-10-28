@@ -78,8 +78,11 @@ struct NumericMutation
 /** @brief Dispatch native output-parameter arithmetic through argument lookup.
  * @details All three operands are borrowed for a GIL-held call. The output
  * retains its native representation, precision, observer and aliasing rules.
- * An arbitrary-precision sc_fxnum output must not alias either input: native
- * named functions delete output representation before reading input storage.
+ * Arbitrary-precision sc_fxnum and sc_fxval outputs must not alias either
+ * input owner: native named functions can delete or replace output
+ * representation before completing the calculation.
+ * Fast fixed-point outputs follow their exact overload bodies; no blanket
+ * alias guarantee applies to them.
  * Native allocation exceptions and configured reports propagate. No Python
  * references, callbacks or kernel state are retained; callers keep owners live.
  */

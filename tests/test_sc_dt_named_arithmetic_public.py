@@ -136,12 +136,16 @@ def test_sc_dt_named_arithmetic_native_parity(tmp_path, output_index, output, mo
     selected = ordered[:midpoint] if mode == 0 else ordered[midpoint:]
     assert len(python_records) == len(native_records) == 4 * len(selected)
     assert python_records == native_records
-    alias_count = 0 if mode != 0 or output == "sc_dt::sc_fxnum" else 8
+    alias_count = 8 if mode == 0 and output in ("sc_dt::sc_fxval_fast", "sc_dt::sc_fxnum_fast") else 0
     assert len(python_alias) == len(native_alias) == alias_count
     assert python_alias == native_alias
+    unsupported_reasons = {
+        "sc_dt::sc_fxval": "SC_FXVAL_OUTPUT_MUST_NOT_ALIAS_INPUT",
+        "sc_dt::sc_fxnum": "DEFN_BIN_FNC_OUTPUT_MUST_NOT_ALIAS_INPUT",
+    }
     expected_alias_limit = (
-        ["NAR_ALIAS_UNSUPPORTED\tsc_dt::sc_fxnum\tDEFN_BIN_FNC_OUTPUT_MUST_NOT_ALIAS_INPUT"]
-        if mode == 0 and output == "sc_dt::sc_fxnum"
+        [f"NAR_ALIAS_UNSUPPORTED\t{output}\t{unsupported_reasons[output]}"]
+        if mode == 0 and output in unsupported_reasons
         else []
     )
     assert python_alias_limits == native_alias_limits == expected_alias_limit

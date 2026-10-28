@@ -381,36 +381,25 @@ void run_case(const char* output_name, const char* left_name, const char* right_
   (void)sources;
 }
 
-/** @brief Exercise both legal output/input alias directions through exact native pointers.
+/** @brief Exercise fast-output/input alias directions through exact native pointers.
  * @tparam Base The native output and input base type.
  * @param output_name Stable native output name from the independent matrix.
  * @details Each result is compared with a separate native reference process.
- * The target owns its representation while the other operand remains borrowed.
+ * Only fast outputs are permitted: arbitrary-precision sc_fxval and sc_fxnum
+ * functions delete or replace output representation before completing reads.
+ * The target owns its storage while the other operand remains borrowed.
  * The native observer remains live until the target is destroyed.
  */
 template <class Base>
 void run_alias_cases(const char* output_name)
 {
+  static_assert(std::is_same_v<Base, sc_dt::sc_fxval_fast> || std::is_same_v<Base, sc_dt::sc_fxnum_fast>,
+                "output/input alias probes are supported only for fast fixed-point outputs");
   using Factory = Output<Base>;
   using Fn = void (*)(Base&, const Base&, const Base&);
   auto run = [&](const char* operation, const char* direction, Fn function)
   {
-    if constexpr (std::is_same_v<Base, sc_dt::sc_fxnum>)
-    {
-      Observer observer;
-      auto target = Factory::make(&observer);
-      const Base& alias = target;
-      const Base& independent = source<const Base&>(1);
-      const auto* identity = &target;
-      if (direction[0] == 'l')
-        function(target, alias, independent);
-      else
-        function(target, independent, alias);
-      std::cout << "NARA\t" << output_name << '\t' << operation << '\t' << direction << '\t' << Factory::render(target)
-                << '\t' << int(&target == identity) << '\t' << int(Factory::observer_matches(target, &observer)) << '\t'
-                << int(observers_enabled()) << '\n';
-    }
-    else if constexpr (std::is_same_v<Base, sc_dt::sc_fxnum_fast>)
+    if constexpr (std::is_same_v<Base, sc_dt::sc_fxnum_fast>)
     {
       FastObserver observer;
       auto target = Factory::make(&observer);

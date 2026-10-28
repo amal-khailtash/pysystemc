@@ -166,7 +166,9 @@ def call_and_capture(output, operation, selector, args, observer):
 
 
 def run_alias(output, operation, direction, observer, left, right, signature):
-    """Exercise target identity as the left or right operand through both paths."""
+    """Exercise fast target identity as an operand through both native paths."""
+    if output not in ("sc_dt::sc_fxval_fast", "sc_dt::sc_fxnum_fast"):
+        raise ValueError("alias parity is defined only for fast fixed-point outputs")
     alias_types = arguments(signature)
     exact = getattr(dt, operation).__overload__(", ".join(alias_types))
     target = new_target(output, observer)
@@ -241,9 +243,13 @@ def main():
             if output == "sc_dt::sc_fxnum"
             else (probe.FastObserver if output == "sc_dt::sc_fxnum_fast" else None)
         )
-        if output == "sc_dt::sc_fxnum":
-            # Native DEFN_BIN_FNC deletes c.m_rep before reading a.m_rep/b.m_rep.
-            print("NAR_ALIAS_UNSUPPORTED\tsc_dt::sc_fxnum\tDEFN_BIN_FNC_OUTPUT_MUST_NOT_ALIAS_INPUT")
+        if output in ("sc_dt::sc_fxval", "sc_dt::sc_fxnum"):
+            reason = (
+                "SC_FXVAL_OUTPUT_MUST_NOT_ALIAS_INPUT"
+                if output == "sc_dt::sc_fxval"
+                else "DEFN_BIN_FNC_OUTPUT_MUST_NOT_ALIAS_INPUT"
+            )
+            print(f"NAR_ALIAS_UNSUPPORTED\t{output}\t{reason}")
         else:
             alias_pair = (f"const {output} &", f"const {output} &")
             for operation in OPERATIONS:

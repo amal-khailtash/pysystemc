@@ -235,7 +235,8 @@ int sc_main(int, char **)
 #endif
 #if NAMED_ARITH_MODE == 0
 #if NAMED_ARITH_OUTPUT == 0
-  sc_dt_named_arithmetic_probe::run_alias_cases<sc_dt::sc_fxval>("sc_dt::sc_fxval");
+  // DEFN_BIN_FNC deletes sc_fxval output representation before reading inputs.
+  std::cout << "NAR_ALIAS_UNSUPPORTED\tsc_dt::sc_fxval\tSC_FXVAL_OUTPUT_MUST_NOT_ALIAS_INPUT\n";
 #elif NAMED_ARITH_OUTPUT == 1
   sc_dt_named_arithmetic_probe::run_alias_cases<sc_dt::sc_fxval_fast>("sc_dt::sc_fxval_fast");
 #elif NAMED_ARITH_OUTPUT == 2
