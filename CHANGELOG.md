@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Add a native `pysystemc_public::print_hierarchy` helper with readable module types, nested instance names and internal-module filtering; show the hierarchy in Python and C++ FIFO examples.
 - Add `systemc-cpp run SOURCE.cpp -- ARGS...` with source/include handling and native argument/status forwarding.
 - Add `systemc-py run SOURCE.py -- ARGS...` to execute Python models with script arguments and sibling imports.
 

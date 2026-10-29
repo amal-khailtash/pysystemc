@@ -435,8 +435,14 @@ example-counter-py:
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: example-simple_fifo-py
 example-simple_fifo-py:
-	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-		uv run examples/simple_fifo/py/simple_fifo.py
+	$(run) systemc-py run examples/simple_fifo/py/simple_fifo.py
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-simple_fifo-cpp: ## Run the native simple_fifo example and print its hierarchy
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-simple_fifo-cpp
+example-simple_fifo-cpp:
+	$(run) systemc-cpp run examples/simple_fifo/cpp/simple_fifo.cpp
 
 # ----------------------------------------------------------------------------------------------------------------------
 # example-pipe-cpp: ## Run the pipe example in C++

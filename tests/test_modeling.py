@@ -88,7 +88,7 @@ def test_trace_setup_and_output_failure_cleanup(tmp_path):
 
 
 def test_hierarchy_children_and_status_helpers(tmp_path):
-    """Native hierarchy paths and helper output preserve child module ownership."""
+    """Native hierarchy text preserves module ownership, filtering and lifecycle."""
     assert "HIERARCHY_CHECKS_OK" in run_example(tmp_path, "tests/models/hierarchy_checks.py")
 
 

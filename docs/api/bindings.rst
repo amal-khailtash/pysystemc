@@ -580,6 +580,22 @@ waiter has exited. Register threads before they terminate: adding an already
 terminated handle leaves its join count pending. Method handles are rejected by
 the native join report.
 
+Module hierarchy
+----------------
+
+``print_hierarchy(all_modules=False)`` prints the current design's module tree.
+Rows show demangled native module types and full instance names, with indentation
+for nested modules. Channels and other non-module objects are omitted. The
+native type prefix ``cynw::`` is filtered by default; pass ``all_modules=True``
+to include those modules.
+
+The traversal lives in ``pysystemc_public::print_hierarchy`` and is also usable
+from C++ through ``hierarchy.h``. The Python wrapper writes the native formatted
+result through Python's output stream, so ``contextlib.redirect_stdout`` works.
+``print_module_hierarchy(obj, level=0, all_modules=False)`` prints a single
+module subtree. Call from elaboration or a paused simulation on the simulation
+thread while the inspected objects remain alive.
+
 Diagnostics
 -----------
 

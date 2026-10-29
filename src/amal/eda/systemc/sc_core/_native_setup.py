@@ -34,5 +34,8 @@ for _bridge in (
     with (_directory / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
 
+cppyy.include(str(_directory / "hierarchy.h"))
+cppyy.include(str(_directory / "hierarchy.cpp"))
+
 cppyy.include(str(_directory / "vector_creator.cpp"))
 cppyy.include(str(_directory / "vector_policies.cpp"))

@@ -6,7 +6,6 @@ simulations. Native templates are instantiated by cppyy on demand.
 """
 
 import os
-import builtins as _builtins
 import sys
 from importlib.metadata import version as _package_version
 from ._logging import log, show_banner
@@ -60,60 +59,63 @@ from . import tlm as tlm
 
 
 def print_module_hierarchy(obj: sc_core.sc_object, level: int = 0, all_modules: bool = False) -> None:
-    """Print a module and recursively visit its child modules.
+    """Print a native module subtree using the full SystemC object hierarchy.
 
     Args:
-        obj: Native object whose module hierarchy is inspected.
-        level: Initial indentation depth.
-        all_modules: Include modules with the internal cynw prefix when true.
+        obj: Borrowed native SystemC object whose module subtree is inspected.
+            Non-module objects produce no output.
+        level: Nonnegative two-space indentation depth for the root module.
+        all_modules: Whether to include ``cynw::`` modules and their subtrees.
+
+    Returns:
+        None. The returned native text is written to the current Python stdout.
+
+    Raises:
+        TypeError: If ``obj`` is not a native ``sc_object``, ``level`` is not an
+            integer, or ``all_modules`` is not a boolean.
+        ValueError: If ``level`` is negative.
+
+    The native traversal borrows the object tree for this call and retains no
+    modules or callbacks. Call on the simulation thread while the hierarchy is
+    stable. The Python print preserves ``redirect_stdout`` and flushes text
+    before subsequent native scheduler output.
     """
+    if not isinstance(obj, sc_core.sc_object):
+        raise TypeError("obj must be a native SystemC sc_object")
+    if isinstance(level, bool) or not isinstance(level, int):
+        raise TypeError("level must be an integer")
+    if level < 0:
+        raise ValueError("level must be nonnegative")
+    if not isinstance(all_modules, bool):
+        raise TypeError("all_modules must be a bool")
 
-    # print(f"kind     : {obj.kind()}")
-    # print(f"name     : {obj.name()}")
-    # print(f"basename : {obj.basename()}")
-
-    if obj.kind() != "sc_module":
-        return
-
-    mod_name = obj.name()  # cppyy.gbl.boost.core.demangle(type(obj).__name__)
-    inst_name = obj.basename()
-    is_mod_stratus = mod_name.startswith("cynw::")
-
-    # print(f"mod_name: {mod_name}, inst_name: {inst_name}, is_mod_stratus: {is_mod_stratus}")
-
-    if not all_modules and is_mod_stratus:
-        return
-
-    print("  " * level + f"{mod_name:<50} ({inst_name})")
-
-    children = obj.get_child_objects()
-    for index in _builtins.range(children.size()):
-        print_module_hierarchy(children[index], level + 1, all_modules)
+    text = _decode_hierarchy_text(cppyy.gbl.pysystemc_public.module_hierarchy_text(obj, level, all_modules))
+    print(text, end="", flush=True)
 
 
 def print_hierarchy(all_modules: bool = False) -> None:
-    """Print top-level modules and descendants in the current kernel context.
+    """Print native module hierarchy text for the current kernel context.
 
     Args:
-        all_modules: Include internal cynw modules when true.
+        all_modules: Whether to include ``cynw::`` modules and their subtrees.
+
+    Returns:
+        None. Native plain text is written to the current Python stdout.
+
+    Raises:
+        TypeError: If ``all_modules`` is not a boolean.
+
+    The native traversal borrows the object tree for this call and retains no
+    modules or callbacks. Call on the simulation thread while the hierarchy is
+    stable. Printing the returned native string through Python preserves
+    ``redirect_stdout`` and flushes text before subsequent native scheduler
+    output.
     """
-    print("=" * 80)
-    print("Design Hierarchy:")
+    if not isinstance(all_modules, bool):
+        raise TypeError("all_modules must be a bool")
 
-    simcontext = cppyy.gbl.sc_core.sc_get_curr_simcontext()
-    print(cppyy.gbl.sc_core.sc_get_status())
-    # print("1")
-    top_level_objects = cppyy.gbl.sc_core.sc_get_top_level_objects(simcontext)
-    # top_level_objects = cppyy.gbl.sc_core.sc_get_top_level_objects()
-    # print(type(top_level_objects))
-    print(top_level_objects.size())
-    # print(dir(top_level_objects))
-    # print(f"Len: {len(top_level_objects[0])}")
-    # Indexing avoids cppyy iterator conversion on an empty native vector.
-    for index in _builtins.range(top_level_objects.size()):
-        print_module_hierarchy(top_level_objects[index], 1, all_modules)
-
-    print("=" * 80)
+    text = _decode_hierarchy_text(cppyy.gbl.pysystemc_public.hierarchy_text(all_modules))
+    print(text, end="", flush=True)
 
 
 def sc_main(argc=None, argv=None) -> int:
@@ -160,6 +162,11 @@ def main() -> None:
     except Exception as e:
         log(f"Exception while executing sc_main: {e}", error=True)
         sys.exit(1)  # Exit with a general error code
+
+
+def _decode_hierarchy_text(text: str | bytes) -> str:
+    """Convert cppyy's owned native hierarchy string into Python text."""
+    return text.decode("utf-8") if isinstance(text, bytes) else str(text)
 
 
 sc_elab_and_sim = sc_core.sc_elab_and_sim
