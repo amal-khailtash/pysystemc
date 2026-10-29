@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "binding_log.h"
+#include "hierarchy.h"
 #include "native_blocking.h"
 
 namespace sc_core
@@ -844,11 +845,13 @@ void trace_signal(sc_trace_file* file, const sc_signal_in_if<T>& signal, const s
 }
 
 /**
- * @brief SystemC module with callbacks supplied by Python. Python retains bound callbacks on its module proxy. Native
- * processes use this object as their host; callback identity is the native process object. cppyy manages callback entry
- * into Python. Coroutine backend compatibility must be verified separately for suspended Python threads.
+ * @brief SystemC module with callbacks supplied by Python and an owned hierarchy display label.
+ * @details Python retains bound callbacks on its module proxy. Native processes use this object as their host; callback
+ * identity is the native process object. cppyy manages callback entry into Python. The hierarchy-label base stores a
+ * copied display name without retaining Python references or adding virtual callbacks. Coroutine backend compatibility
+ * must be verified separately for suspended Python threads.
  */
-class ScModule : public sc_module
+class ScModule : public sc_module, public pysystemc_public::detail::hierarchy_label
 {
  public:
   /**

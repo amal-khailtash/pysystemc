@@ -13,18 +13,59 @@
 namespace pysystemc_public
 {
 
+namespace detail
+{
+
+/**
+ * @brief Store a caller-supplied display name for a SystemC module type.
+ *
+ * This non-polymorphic base owns its `std::string` value. Its lifetime is controlled by the owning `sc_module`; do
+ * not delete an object through a `hierarchy_label` pointer. It holds no Python reference and installs no callback.
+ * Python constructors may call `set_hierarchy_type_name` after native module construction; the native hierarchy
+ * formatter then displays the owned label while continuing to use native RTTI for adapter filtering.
+ */
+class hierarchy_label
+{
+ public:
+  /**
+   * @brief Replace the owned display name.
+   * @param name Type label copied into this object.
+   * @throws std::bad_alloc If the owned string cannot be allocated.
+   *
+   * Call with the GIL held when called from Python. This function copies its input and retains no Python object,
+   * callback, or borrowed character pointer.
+   */
+  void set_hierarchy_type_name(const std::string& name);
+
+  /**
+   * @brief Return the stored display name, or an empty string if no label is set.
+   * @return Borrowed reference valid only while this hierarchy-label base remains alive and unchanged.
+   *
+   * The reference is intended for immediate native formatting; callers must not retain it after the module owner
+   * is destroyed. This function does not access the GIL or invoke Python callbacks.
+   */
+  const std::string& hierarchy_type_name() const noexcept;
+
+ private:
+  std::string hierarchy_type_name_;
+};
+
+}  // namespace detail
+
 /**
  * @brief Write the full current design hierarchy to a stream.
  * @param output Borrowed output stream; it remains owned by the caller.
  * @param all_modules Include native modules whose dynamic type begins with `cynw::`.
  * @throws std::ios_base::failure If the output stream is configured to throw on write failure.
  *
- * Output is plain text with one `Design Hierarchy:` header and an 80-character separator. Rows contain the
- * dynamically demangled module type followed by the full SystemC object name in parentheses. The top-level
- * rows are indented by two spaces. A filtered module and its entire subtree are omitted unless `all_modules`
- * is true. The object tree is borrowed and is not retained. Call on the simulation thread while the hierarchy
- * is stable (during elaboration or while simulation is paused). When called from Python, keep the GIL held;
- * this function does not release or otherwise access the GIL and does not invoke Python callbacks.
+ * Output is plain text with a blank line, one `Design Hierarchy:` header, an 80-character separator, the rows,
+ * and a trailing blank line. Rows contain a registered hierarchy label when present, otherwise a sanitized
+ * dynamically demangled native module type, followed by the full SystemC object name in parentheses. The
+ * top-level rows are indented by two spaces. A module whose native RTTI begins with `cynw::` and its entire
+ * subtree are omitted unless `all_modules` is true. The object tree is borrowed and is not retained. Call on the
+ * simulation thread while the hierarchy is stable (during elaboration or while simulation is paused). When
+ * called from Python, keep the GIL held; this function does not release or otherwise access the GIL and does not
+ * invoke Python callbacks.
  */
 void print_hierarchy(std::ostream& output, bool all_modules = false);
 
@@ -96,5 +137,11 @@ std::string hierarchy_text(bool all_modules = false);
 std::string module_hierarchy_text(const sc_core::sc_object* root, int level = 0, bool all_modules = false);
 
 }  // namespace pysystemc_public
+
+/**
+ * @brief Make every native hierarchy printer overload callable without a namespace qualifier.
+ * @details This using-declaration adds no wrapper and preserves the overloads documented above.
+ */
+using pysystemc_public::print_hierarchy;
 
 #endif  // PYSYSTEMC_SC_CORE_HIERARCHY_H

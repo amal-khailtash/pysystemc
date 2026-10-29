@@ -195,6 +195,32 @@ sc_create_wif_trace_file = _tracing.sc_create_wif_trace_file
 sc_close_vcd_trace_file = _tracing.sc_close_vcd_trace_file
 sc_close_wif_trace_file = _tracing.sc_close_wif_trace_file
 sc_module = cppyy.gbl.sc_core.ScModule
+
+
+_native_sc_module_init = sc_module.__init__
+
+
+def _label_python_module(self, *args, **kwargs):
+    """Construct a native module and copy its Python class name into native storage.
+
+    Args:
+        args: Positional arguments accepted by the native module constructor.
+        kwargs: Keyword arguments accepted by the native module constructor.
+
+    Returns:
+        None after native construction and label registration succeed.
+
+    Raises:
+        Exception: Propagates native construction or label allocation failures.
+
+    The copied label is owned by the native module and retains no Python reference.
+    Call with the GIL held on the simulation thread during elaboration.
+    """
+    _native_sc_module_init(self, *args, **kwargs)
+    sc_module.set_hierarchy_type_name(self, type(self).__name__)
+
+
+sc_module.__init__ = _label_python_module
 sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel

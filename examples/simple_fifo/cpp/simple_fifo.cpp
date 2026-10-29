@@ -101,7 +101,7 @@ int sc_main(int argc, char* argv[])
   (void)argc;
   (void)argv;
   Top top("top");
-  pysystemc_public::print_hierarchy();
+  print_hierarchy();
   sc_core::sc_start();
   assert(top.consumer.received == MESSAGE);
   assert(sc_core::sc_time_stamp() == sc_core::SC_ZERO_TIME);

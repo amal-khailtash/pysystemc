@@ -41,6 +41,18 @@ class Child(sc.sc_module):
         self.signal = sc.sc_signal[bool]("signal")
 
 
+class SetterShadow(sc.sc_module):
+    """Ensure hierarchy labels bypass any Python method with the native setter name."""
+
+    def __init__(self, name):
+        """Construct a module while its Python setter name is shadowed."""
+        super().__init__(sc.sc_module_name(name))
+
+    def set_hierarchy_type_name(self, name):
+        """Fail if the constructor hook dispatches through a Python override."""
+        raise AssertionError(f"Python setter override unexpectedly called with {name!r}")
+
+
 class Parent(sc.sc_module):
     """Own Python and native C++ modules alongside native channels."""
 
@@ -51,6 +63,7 @@ class Parent(sc.sc_module):
         self.fifo = sc.sc_fifo[int]("fifo", 2)
         self.child = Child("child")
         self.unicode_child = Child("café")
+        self.setter_shadow = SetterShadow("setter_shadow")
         self.filtered = cppyy.gbl.cynw.FilteredModule(sc.sc_module_name("internal"))
         self.kind_override = cppyy.gbl.pysystemc_hierarchy_test.KindOverrideModule(sc.sc_module_name("custom_kind"))
 
@@ -58,7 +71,7 @@ class Parent(sc.sc_module):
 empty_output = StringIO()
 with redirect_stdout(empty_output):
     print_hierarchy()
-assert empty_output.getvalue() == f"Design Hierarchy:\n{'=' * 80}\n"
+assert empty_output.getvalue() == f"\nDesign Hierarchy:\n{'=' * 80}\n\n"
 
 model = Parent("parent")
 assert model.child.name() == "parent.child"
@@ -68,10 +81,21 @@ default_output = StringIO()
 with redirect_stdout(default_output):
     print_hierarchy()
 text = default_output.getvalue()
-assert text.startswith(f"Design Hierarchy:\n{'=' * 80}\n")
-for module_path in ("parent", "parent.child", "parent.café", "parent.custom_kind"):
+assert text.startswith(f"\nDesign Hierarchy:\n{'=' * 80}\n")
+assert text.endswith("\n\n")
+for module_path in ("parent", "parent.child", "parent.café", "parent.setter_shadow", "parent.custom_kind"):
     assert text.count(f"({module_path})") == 1, text
+for type_label, module_path in (
+    ("Parent", "parent"),
+    ("Child", "parent.child"),
+    ("Child", "parent.café"),
+    ("SetterShadow", "parent.setter_shadow"),
+    ("pysystemc_hierarchy_test::KindOverrideModule", "parent.custom_kind"),
+):
+    assert f"{type_label} ({module_path})" in text
 assert "KindOverrideModule" in text
+assert "__cppyy_internal" not in text
+assert "(anonymous namespace)" not in text
 assert model.kind_override.kind() == "fixture_module"
 assert "cynw::FilteredModule" not in text
 assert "cynw::NestedModule" not in text
@@ -84,10 +108,13 @@ all_output = StringIO()
 with redirect_stdout(all_output):
     print_hierarchy(all_modules=True)
 all_text = all_output.getvalue()
+assert all_text.startswith(f"\nDesign Hierarchy:\n{'=' * 80}\n")
+assert all_text.endswith("\n\n")
 for module_path in (
     "parent",
     "parent.child",
     "parent.café",
+    "parent.setter_shadow",
     "parent.custom_kind",
     "parent.internal",
     "parent.internal.nested",
@@ -95,6 +122,8 @@ for module_path in (
     assert all_text.count(f"({module_path})") == 1, all_text
 assert "cynw::FilteredModule" in all_text
 assert "cynw::NestedModule" in all_text
+assert "__cppyy_internal" not in all_text
+assert "(anonymous namespace)" not in all_text
 assert "(parent.fifo)" not in all_text
 assert "(parent.child.signal)" not in all_text
 

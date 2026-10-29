@@ -16,6 +16,11 @@ def _hierarchy_paths(output: str) -> list[str]:
     return re.findall(r"\((top(?:\.[^()\s]+)*)\)\s*$", output, re.MULTILINE)
 
 
+def _hierarchy_rows(output: str) -> list[tuple[str, str]]:
+    """Extract displayed module type labels and full `top` instance paths."""
+    return re.findall(r"^[ \t]*(.+?) \((top(?:\.[^()\s]+)*)\)\s*$", output, re.MULTILINE)
+
+
 def _run_console(
     name: str,
     arguments: list[str],
@@ -83,4 +88,15 @@ def test_simple_fifo_python_and_cpp_hierarchy_and_values(tmp_path):
     python_paths = _hierarchy_paths(python_output)
     native_paths = _hierarchy_paths(native_result.stdout)
     assert python_paths == native_paths == expected_paths
+    expected_rows = [("Top", "top"), ("Producer", "top.producer"), ("Consumer", "top.consumer")]
+    assert _hierarchy_rows(python_output) == expected_rows
+    assert _hierarchy_rows(native_result.stdout) == expected_rows
+    for output in (python_output, native_result.stdout):
+        last_row = "Consumer (top.consumer)"
+        last_row_end = output.index(last_row) + len(last_row)
+        hierarchy = output[output.index("Design Hierarchy:") - 1 : last_row_end + 2]
+        assert hierarchy.startswith("\nDesign Hierarchy:\n")
+        assert hierarchy.endswith("\n\n")
+        assert "__cppyy_internal" not in hierarchy
+        assert "(anonymous namespace)" not in hierarchy
     assert all("fifo" not in path for path in python_paths + native_paths)
