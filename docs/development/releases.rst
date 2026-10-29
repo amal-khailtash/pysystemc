@@ -80,13 +80,15 @@ Release validation and publication
 1. Release Please collects release-worthy merged changes. ``fix`` and ``perf``
    request a patch, ``feat`` requests a minor, and breaking changes request a
    major, including below 1.0.
-2. The generated PR updates the project version, manifest and changelog. A
-   follow-up automation runs ``uv lock``, moves pending ``Unreleased`` changelog
-   details into the new release section, and commits changed metadata to the same
-   PR. It leaves exactly one empty ``Unreleased`` section at the top. This may
-   restart the short metadata check. Write user-visible changes under that one
-   pending section while developing; release summaries and detailed notes remain
-   together after publication.
+2. The generated PR updates the project version, manifest, changelog and the
+   editable project's version in ``uv.lock`` together. A follow-up automation
+   runs ``uv lock``, moves pending ``Unreleased`` changelog details into the new
+   release section, and commits changed metadata to the same PR. It leaves
+   exactly one empty ``Unreleased`` section at the top. This may
+   restart the short metadata check. The initial commit already has matching
+   project and lockfile versions; dependency records remain unchanged.
+   Write user-visible changes under that one pending section while developing;
+   release summaries and detailed notes remain together after publication.
 3. The metadata check compares the actual Git trees. Only ``pyproject.toml``,
    ``uv.lock``, the release manifest and ``CHANGELOG.md`` may change. Project
    settings and dependency records must remain identical apart from the local
