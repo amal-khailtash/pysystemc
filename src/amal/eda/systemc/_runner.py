@@ -1,11 +1,9 @@
 """Compile native SystemC sources and invoke their entry in a fresh interpreter."""
 
-import argparse
 from collections.abc import Sequence
 from pathlib import Path
 import sys
 
-from . import __version__
 from ._runtime import cppyy
 from .sc_core import sc_elab_and_sim
 
@@ -70,19 +68,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     Returns:
         Native status, or 1 after displaying file/compilation/runtime errors.
+
+    Raises:
+        SystemExit: For help, version, or malformed command-line arguments.
     """
-    values = list(sys.argv[1:] if argv is None else argv)
-    separator = values.index("--") if "--" in values else len(values)
-    parser = argparse.ArgumentParser(prog="pysystemc-cpp", description=__doc__)
-    parser.add_argument("--version", action="version", version=__version__)
-    parser.add_argument("-I", "--include", action="append", default=[])
-    parser.add_argument("source", nargs="+")
-    options = parser.parse_args(values[:separator])
-    try:
-        return run_sources(options.source, values[separator + 1 :], options.include)
-    except Exception as error:
-        print(f"pysystemc-cpp: {error}", file=sys.stderr)
-        return 1
+    from amal.eda.cli.cpp import main as cli_main
+
+    return cli_main(argv)
 
 
 if __name__ == "__main__":

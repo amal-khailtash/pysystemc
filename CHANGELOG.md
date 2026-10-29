@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Fixed
+- Handle `pysystemc-cpp` help, version output and missing-source errors before loading the native SystemC kernel.
+
 ## [1.0.0](https://github.com/amal-khailtash/pysystemc/compare/v0.16.0...v1.0.0) (2026-10-28)
 
 

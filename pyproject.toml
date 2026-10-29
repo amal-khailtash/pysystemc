@@ -24,7 +24,7 @@ Issues = "https://github.com/amal-khailtash/pysystemc/issues"
 
 [project.scripts]
 pysystemc = "amal.eda.cli:main"
-pysystemc-cpp = "amal.eda.systemc._runner:main"
+pysystemc-cpp = "amal.eda.cli.cpp:main"
 
 [tool.uv.build-backend]
 module-name = "amal"

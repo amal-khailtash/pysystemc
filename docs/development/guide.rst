@@ -100,6 +100,10 @@ native ``sc_main`` through the packaged startup adapter::
 
    uv run pysystemc-cpp -I include helper.cpp model.cpp -- --cycles 20
 
+Help, version output and argument errors are handled before loading cppyy or
+SystemC. Running the command without sources reports the required-source usage
+error without initializing the native kernel.
+
 Each source directory is also an include directory. Arguments after ``--``
 are passed unchanged; ``argv[0]`` is the first source filename. Native return
 status becomes the command exit status. File, compilation and runtime errors

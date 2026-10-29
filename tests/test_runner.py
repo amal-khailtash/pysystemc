@@ -1,8 +1,11 @@
 """Validate SystemC runner in isolated subprocesses."""
 
+import json
 import os
 import subprocess
 import sys
+
+import pytest
 
 from .support import ROOT
 
@@ -33,6 +36,80 @@ def test_cpp_runner_kernel_banner(tmp_path):
     assert "Hello world using approach 2" in result.stdout
 
 
+@pytest.mark.parametrize(
+    ("arguments", "expected_status"),
+    [([], 2), (["-h"], 0), (["--help"], 0), (["--version"], 0), (["--invalid-option", "model.cpp"], 2)],
+)
+def test_installed_cpp_entrypoint_metadata_paths_stay_lightweight(arguments, expected_status):
+    """Load the installed console entry point and reject eager native imports."""
+    script = r"""
+import importlib.metadata
+import json
+import sys
+from importlib.abc import MetaPathFinder
+
+
+class NativeImportBlocker(MetaPathFinder):
+    "Fail immediately if CLI dispatch attempts to load native modules."
+
+    def find_spec(self, fullname, path=None, target=None):
+        "Reject native module loading while the dispatcher parses metadata-only commands."
+        if fullname == "amal.eda.systemc" or fullname.startswith("amal.eda.systemc."):
+            raise AssertionError(f"native package imported during CLI parsing: {fullname}")
+        if fullname == "cppyy" or fullname.startswith("cppyy."):
+            raise AssertionError(f"cppyy imported during CLI parsing: {fullname}")
+        return None
+
+
+sys.meta_path.insert(0, NativeImportBlocker())
+distribution = importlib.metadata.distribution("pysystemc")
+entry_point = next(
+    entry
+    for entry in distribution.entry_points
+    if entry.group == "console_scripts" and entry.name == "pysystemc-cpp"
+)
+scenario = json.loads(sys.argv[1])
+sys.argv = ["pysystemc-cpp", *scenario["arguments"]]
+try:
+    status = entry_point.load()()
+except SystemExit as error:
+    status = error.code
+assert status == scenario["expected_status"], (status, sys.argv)
+assert not any(
+    name == "cppyy"
+    or name.startswith("cppyy.")
+    or name == "amal.eda.systemc"
+    or name.startswith("amal.eda.systemc.")
+    for name in sys.modules
+), "native modules remained loaded after CLI parsing"
+"""
+    scenario = json.dumps({"arguments": arguments, "expected_status": expected_status})
+    result = subprocess.run(
+        [sys.executable, "-c", script, scenario],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, output
+    if arguments in (["-h"], ["--help"]):
+        assert "usage: pysystemc-cpp" in output
+        assert "Compile native SystemC sources" in output
+    elif arguments == ["--version"]:
+        assert output.startswith("pysystemc-cpp ")
+    elif not arguments:
+        assert "usage: pysystemc-cpp" in output
+        assert "the following arguments are required: source" in output
+    else:
+        assert "unrecognized arguments: --invalid-option" in output
+
+    assert "SystemC 2.3.4" not in output
+    assert "Accellera" not in output
+    assert "Copyright" not in output
+    assert "OSCI/SystemC" not in output
+    assert "Simulation stopped" not in output
+
+
 def test_packaged_cpp_runner_arguments_and_status(tmp_path):
     """Native runner forwards '--' arguments and propagates nonzero native status."""
     source = tmp_path / "entry.cpp"
@@ -43,8 +120,19 @@ int sc_main(int argc, char** argv) {
   return 7;
 }
 """)
+    script = """
+import importlib.metadata
+import sys
+
+entry_point = next(
+    entry
+    for entry in importlib.metadata.distribution("pysystemc").entry_points
+    if entry.group == "console_scripts" and entry.name == "pysystemc-cpp"
+)
+sys.exit(entry_point.load()())
+"""
     result = subprocess.run(
-        [sys.executable, "-m", "amal.eda.systemc._runner", str(source), "--", "café", "--flag"],
+        [sys.executable, "-c", script, str(source), "--", "café", "--flag"],
         cwd=tmp_path,
         capture_output=True,
         text=True,
