@@ -24,7 +24,7 @@ def main() -> None:
             '&& std::string(v[2]) == "--flag" ? 7 : 9; }\n'
         )
         result = subprocess.run(
-            [executable, str(source), "--", "café", "--flag"],
+            [executable, "run", str(source), "--", "café", "--flag"],
             cwd=work,
             capture_output=True,
             text=True,

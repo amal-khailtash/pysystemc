@@ -1,10 +1,16 @@
 """Validate SystemC runtime in isolated subprocesses."""
 
 import os
+import re
 import subprocess
 import sys
 
 from .support import ROOT
+
+
+def _strip_ansi(text: str) -> str:
+    """Remove ANSI SGR sequences while retaining the rendered banner text."""
+    return re.sub(r"\x1b\[[0-9;]*m", "", text)
 
 
 def test_banner_version_colors_and_disable(tmp_path):
@@ -18,10 +24,26 @@ def test_banner_version_colors_and_disable(tmp_path):
         command, cwd=tmp_path, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60
     )
     assert result.returncode == 0, result.stdout
-    banner = f"pysystemc {version('pysystemc')}"
-    assert result.stdout.index(banner) < result.stdout.index("SystemC 2.3.4-Accellera")
+    installed_version = version("pysystemc")
+    banner = f"systemc v{installed_version} — SystemC Python bindings"
+    plain_output = _strip_ansi(result.stdout)
+    assert plain_output.index(banner) < plain_output.index("SystemC 2.3.4-Accellera")
     assert "\x1b[" in result.stdout
+    assert "\x1b[35msystemc\x1b[0m" in result.stdout
+    assert f"\x1b[36mv{installed_version}\x1b[0m" in result.stdout
+    assert "\x1b[37m — SystemC Python bindings" in result.stdout
     assert "[pysystemc:C++:DEBUG]" in result.stdout
+
+    env.update(PYSYSTEMC_COLOR="never")
+    env.pop("NO_COLOR", None)
+    result = subprocess.run(
+        command, cwd=tmp_path, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stdout
+    assert banner in result.stdout
+    assert result.stdout.index(banner) < result.stdout.index("SystemC 2.3.4-Accellera")
+    assert "\x1b[" not in result.stdout
+
     env.update(PYSC_COPYRIGHT_MESSAGE="DISABLE", PYSYSTEMC_COLOR="never")
     result = subprocess.run(
         command, cwd=tmp_path, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60

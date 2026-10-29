@@ -8,12 +8,18 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+### Added
+
+- Add `systemc-cpp run SOURCE.cpp -- ARGS...` with source/include handling and native argument/status forwarding.
+- Add `systemc-py run SOURCE.py -- ARGS...` to execute Python models with script arguments and sibling imports.
+
 ### Fixed
 - Handle `systemc-cpp` help, version output and argument errors before loading the native SystemC kernel.
 - Show help successfully when `systemc-cpp` is invoked without arguments.
 
 ### Changed
 
+- Show `systemc vVERSION` in the runtime banner, with a magenta name, cyan version and white description.
 - Rename the executable commands to `systemc-py` and `systemc-cpp` and group help/version flags under `Global options`, adding `-V` as a version alias. Use uv-style help colors with muted magenta program names and cyan versions.
 
 ## [1.0.0](https://github.com/amal-khailtash/pysystemc/compare/v0.16.0...v1.0.0) (2026-10-28)

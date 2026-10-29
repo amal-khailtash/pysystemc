@@ -28,6 +28,7 @@ def test_cpp_runner_kernel_banner(tmp_path):
     assert result.returncode == 0, result.stdout
     assert "[pysystemc:C++:info]" in result.stdout
     assert "Reading " in result.stdout
+    assert "\n\n[pysystemc:C++:info] Reading " in result.stdout
     assert result.stdout.index("SystemC 2.3.4-Accellera") < result.stdout.index("Hello world using approach 1")
     env["SC_COPYRIGHT_MESSAGE"] = "DISABLE"
     result = subprocess.run(
@@ -109,6 +110,12 @@ sys.exit(status)
         (["--help"], 0),
         (["-V"], 0),
         (["--version"], 0),
+        (["version"], 0),
+        (["version", "-h"], 0),
+        (["help", "-h"], 0),
+        (["help", "run"], 0),
+        (["help", "help"], 0),
+        (["help", "version"], 0),
         (["-I"], 2),
         (["--invalid-option", "model.cpp"], 2),
     ],
@@ -123,13 +130,24 @@ def test_installed_cpp_entrypoint_metadata_paths_stay_lightweight(arguments, exp
     assert result.returncode == expected_status, output
     if arguments in (["-h"], ["--help"]) or not arguments:
         assert "Usage: systemc-cpp" in output
-        assert "Compile native SystemC sources" in output
+        assert "Run native SystemC C++ models" in output
     elif arguments in (["-V"], ["--version"]):
         assert output.startswith("systemc-cpp ")
     elif arguments == ["-I"]:
         assert "argument -I/--include: expected one argument" in output
+    elif arguments == ["version"]:
+        assert output.startswith("systemc-cpp v")
+    elif arguments == ["version", "-h"]:
+        assert "Display the installed SystemC C++ runner version and exit." in output
+        assert "Usage: systemc-cpp version [OPTIONS]" in output
+    elif arguments == ["help", "-h"]:
+        assert "Show help for systemc-cpp or one of its commands." in output
+        assert "Optional command (run, help, version)" in output
+        assert "Usage: systemc-cpp help [OPTIONS] [<COMMAND>]" in output
+    elif arguments[:1] == ["help"]:
+        assert "Usage: systemc-cpp" in output
     else:
-        assert "unrecognized arguments: --invalid-option" in output
+        assert "systemc-cpp: error:" in output
 
     assert "SystemC 2.3.4" not in output
     assert "Accellera" not in output
@@ -171,24 +189,38 @@ def test_installed_cpp_help_uses_shared_usage_tokens_without_native_imports():
     assert result.returncode == 0, result.stdout + result.stderr
     plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
     collapsed_output = " ".join(plain_output.split())
-    assert plain_output.index("Compile native SystemC sources") < plain_output.index("Usage:")
-    assert plain_output.startswith("Compile native SystemC sources")
+    assert plain_output.index("Run native SystemC C++ models") < plain_output.index("Usage:")
+    assert plain_output.startswith("Run native SystemC C++ models")
     assert "Positional arguments:" in plain_output
-    assert "Options:" in plain_output
     assert "Global options:" in plain_output
     assert "Show this message and exit" in collapsed_output
     assert "Show version and exit" in collapsed_output
-    assert re.search(r"(?m)^Usage: systemc-cpp \[OPTIONS\] source \[source \.\.\.\]$", plain_output)
-    assert "-I, --include <INCLUDE>" in plain_output
+    assert re.search(r"(?m)^Usage: systemc-cpp \[OPTIONS\] <COMMAND>$", plain_output)
     assert re.search(r"\x1b\[34mUsage:", result.stdout)
     assert re.search(r"\x1b\[35msystemc-cpp", result.stdout)
     assert re.search(r"\x1b\[2;36m\[OPTIONS\]", result.stdout)
-    assert re.search(r"\x1b\[2;38;5;247m\[", result.stdout)
+    assert re.search(r"\x1b\[96m<COMMAND>", result.stdout)
+    assert len(re.findall(r"\x1b\[96mrun", result.stdout)) >= 2
+    assert re.search(r"\x1b\[2;38;5;247mRun native SystemC C\+\+ models", result.stdout)
+
+
+def test_installed_cpp_run_help_is_lightweight_and_styles_options():
+    """Render native run help without importing SystemC or cppyy."""
+    environment = dict(os.environ)
+    environment["PYSYSTEMC_COLOR"] = "always"
+    environment["NO_COLOR"] = "1"
+    result = _run_blocked_entrypoint("systemc-cpp", ["run", "--help"], environment=environment)
+    assert result.returncode == 0, result.stdout + result.stderr
+    plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
+    assert "Usage: systemc-cpp run [OPTIONS] source [source ...]" in plain_output
+    assert "-I, --include <INCLUDE>" in plain_output
+    assert re.search(r"\x1b\[35msystemc-cpp", result.stdout)
+    assert re.search(r"\x1b\[96mrun", result.stdout)
+    assert re.search(r"\x1b\[2;36m\[OPTIONS\]", result.stdout)
     assert len(re.findall(r"\x1b\[2;36m-I", result.stdout)) >= 1
-    assert len(re.findall(r"\x1b\[33m<INCLUDE>\x1b\[0m", result.stdout)) >= 1
-    assert len(re.findall(r"\x1b\[32msource", result.stdout)) >= 2
     assert len(re.findall(r"\x1b\[2;36m--include", result.stdout)) >= 1
-    assert re.search(r"\x1b\[2;38;5;247mCompile native SystemC sources", result.stdout)
+    assert re.search(r"\x1b\[33m<INCLUDE>\x1b\[0m", result.stdout)
+    assert re.search(r"\x1b\[32msource", result.stdout)
 
 
 def test_installed_python_help_styles_command_rows_and_placeholders():
@@ -202,7 +234,7 @@ def test_installed_python_help_styles_command_rows_and_placeholders():
     plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
     assert plain_output.index("Explore native SystemC") < plain_output.index("Usage:")
     assert "Usage: systemc-py" in plain_output
-    assert "{repl,help,version}" in plain_output
+    assert "<COMMAND>" in plain_output
     assert re.search(r"\x1b\[35msystemc-py", result.stdout)
     assert len(re.findall(r"\x1b\[96mrepl", result.stdout)) >= 2
     assert len(re.findall(r"\x1b\[96mhelp", result.stdout)) >= 2
@@ -211,11 +243,12 @@ def test_installed_python_help_styles_command_rows_and_placeholders():
     assert placeholder.returncode == 0, placeholder.stdout + placeholder.stderr
     placeholder_plain = re.sub(r"\x1b\[[0-9;]*m", "", placeholder.stdout)
     assert "Usage: systemc-py help" in placeholder_plain
-    assert "COMMAND" in placeholder_plain
-    assert re.search(r"\x1b\[2;38;5;247mCOMMAND", placeholder.stdout)
+    assert "<COMMAND>" in placeholder_plain
+    assert re.search(r"\x1b\[96m<COMMAND>\x1b\[0m", placeholder.stdout)
 
 
-def test_packaged_cpp_runner_arguments_and_status(tmp_path):
+@pytest.mark.parametrize("explicit_run", [True, False])
+def test_packaged_cpp_runner_arguments_and_status(tmp_path, explicit_run):
     """Native runner forwards '--' arguments and propagates nonzero native status."""
     source = tmp_path / "entry.cpp"
     source.write_text("""#include <systemc>
@@ -237,7 +270,7 @@ entry_point = next(
 sys.exit(entry_point.load()())
 """
     result = subprocess.run(
-        [sys.executable, "-c", script, str(source), "--", "café", "--flag"],
+        [sys.executable, "-c", script, *(["run"] if explicit_run else []), str(source), "--", "café", "--flag"],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -266,7 +299,16 @@ int sc_main(int argc, char** argv) {
   return result_value();
 }
 """)
-    command = [sys.executable, "-m", "amal.eda.systemc._runner"]
+    entrypoint = """
+import importlib.metadata
+import sys
+entry_point = next(
+    entry for entry in importlib.metadata.distribution("pysystemc").entry_points
+    if entry.group == "console_scripts" and entry.name == "systemc-cpp"
+)
+sys.exit(entry_point.load()())
+"""
+    command = [sys.executable, "-c", entrypoint, "run"]
     result = subprocess.run(
         [*command, "-I", str(includes), str(helper), str(source), "--", "native"],
         cwd=tmp_path,

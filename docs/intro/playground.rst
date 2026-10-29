@@ -10,7 +10,9 @@ and an interactive Python playground:
    uv run systemc-py version
    uv run systemc-py --help
    uv run systemc-py help repl
+   uv run systemc-py help help
    uv run systemc-py repl
+   uv run systemc-py run examples/helloworld/py/helloworld.py
 
 From a source checkout, ``make cli`` shows help, ``make cli ARGS=version``
 prints the version, and ``make repl`` launches the playground. Both targets
@@ -20,6 +22,25 @@ The command synopsis is ``Usage: systemc-py [OPTIONS] <COMMAND>``.
 
 Version and help commands do not load the native simulation kernel. The existing
 ``systemc-cpp`` command remains available for compiling and running C++ models.
+
+Running Python models
+---------------------
+
+Use ``systemc-py run SOURCE.py`` to run a Python model as ``__main__``. Arguments
+after the filename are available through ``sys.argv``; use ``--`` to separate
+script arguments explicitly::
+
+   uv run systemc-py run model.py -- --cycles 20
+
+The source directory is available for sibling imports. The command preserves
+the working directory and the script's exit status. Each invocation runs in a
+fresh interpreter; use a separate invocation for an independent SystemC kernel.
+``systemc-py help run`` describes the command without loading native bindings.
+``systemc-py help help`` explains help targets, and ``systemc-py help version``
+explains the version command.
+
+Interactive playground
+----------------------
 
 The playground preloads ``sc_core``, ``sc_dt``, ``tlm``, ``tlm_utils`` and
 ``cppyy``, together with public kernel names such as ``sc_time``, ``sc_start``

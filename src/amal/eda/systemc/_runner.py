@@ -46,7 +46,7 @@ def run_sources(sources: Sequence[str], arguments: Sequence[str] = (), includes:
         for filename in sources:
             path = Path(filename).resolve(strict=True)
             cppyy.add_include_path(str(path.parent))
-            print(f"[pysystemc:C++:info] Reading {filename}", file=sys.stderr)
+            print(f"\n[pysystemc:C++:info] Reading {filename}", file=sys.stderr)
             if not cppyy.cppdef(path.read_text(encoding="utf-8")):
                 raise RuntimeError(f"C++ compilation failed: {filename}")
     finally:

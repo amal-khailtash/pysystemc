@@ -89,18 +89,23 @@ Native model output remains on its original streams.
 keep their original form.
 
 The binding exposes ``amal.eda.systemc.__version__`` and prints it before the
-kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
+kernel banner as ``systemc vVERSION — SystemC Python bindings``, with a magenta
+name, cyan version and white description. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
 ``SC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the native SystemC banner.
 
 Native C++ source runner
 ------------------------
 
-The synopsis is ``Usage: systemc-cpp [OPTIONS] source [source ...]``.
+The synopsis is ``Usage: systemc-cpp [OPTIONS] <COMMAND>``.
 
 ``systemc-cpp`` compiles source files in the order supplied and runs their
 native ``sc_main`` through the packaged startup adapter::
 
-   uv run systemc-cpp -I include helper.cpp model.cpp -- --cycles 20
+   uv run systemc-cpp run -I include helper.cpp model.cpp -- --cycles 20
+
+Use ``systemc-cpp help run`` for source and include options,
+``systemc-cpp help help`` for help targets, and ``systemc-cpp help version``
+for version-command information.
 
 Help, version output and argument errors are handled before loading cppyy or
 SystemC. Running the command without arguments prints help and exits successfully

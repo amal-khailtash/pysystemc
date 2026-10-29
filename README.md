@@ -93,7 +93,9 @@ Use `systemc-py help repl` for history options.
 The Makefile provides `make cli`, `make cli ARGS=version` and `make repl`;
 both targets forward `ARGS` for additional command options.
 
-`uv run systemc-cpp model.cpp -- --cycles 20` compiles native C++ sources
+`uv run systemc-py run model.py -- --cycles 20` runs a Python model with script arguments.
+
+`uv run systemc-cpp run model.cpp -- --cycles 20` compiles native C++ sources
 and forwards arguments after `--` to `sc_main`. The compatibility script
 `examples/run_sysc_cpp.py` uses the same packaged runner.
 

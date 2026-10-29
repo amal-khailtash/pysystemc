@@ -30,14 +30,19 @@ def test_cli_help_version_and_help_command() -> None:
     assert help_result.returncode == 0, help_result.stderr
     assert "Usage: systemc-py [OPTIONS] <COMMAND>" in help_result.stdout
     assert help_result.stdout.index("Explore native SystemC") < help_result.stdout.index("Usage:")
+    run_row = "run a Python file with optional arguments"
     repl_row = "start the interactive SystemC Python playground"
     help_row = "show help for systemc-py or a command"
     version_row = "print the installed systemc-py version"
+    assert run_row in help_result.stdout
     assert repl_row in help_result.stdout
     assert help_row in help_result.stdout
     assert version_row in help_result.stdout
     assert (
-        help_result.stdout.index(repl_row) < help_result.stdout.index(help_row) < help_result.stdout.index(version_row)
+        help_result.stdout.index(run_row)
+        < help_result.stdout.index(repl_row)
+        < help_result.stdout.index(help_row)
+        < help_result.stdout.index(version_row)
     )
 
     colored_help = run_cli("--help", env=os.environ | {"PYSYSTEMC_COLOR": "always"})
