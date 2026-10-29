@@ -13,7 +13,7 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     libraries = list((Path(systemc.__file__).parent / "_native/lib").glob("libsystemc.so*"))
     assert [path.name for path in libraries] == ["libsystemc.so"], libraries
-    executable = shutil.which("pysystemc-cpp")
+    executable = shutil.which("systemc-cpp")
     assert executable, "installed console entry is missing"
     with tempfile.TemporaryDirectory() as directory:
         work = Path(directory)

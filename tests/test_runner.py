@@ -1,9 +1,11 @@
 """Validate SystemC runner in isolated subprocesses."""
 
 import json
+import re
 import os
 import subprocess
 import sys
+from importlib.metadata import version as distribution_version
 
 import pytest
 
@@ -36,12 +38,22 @@ def test_cpp_runner_kernel_banner(tmp_path):
     assert "Hello world using approach 2" in result.stdout
 
 
-@pytest.mark.parametrize(
-    ("arguments", "expected_status"),
-    [([], 2), (["-h"], 0), (["--help"], 0), (["--version"], 0), (["--invalid-option", "model.cpp"], 2)],
-)
-def test_installed_cpp_entrypoint_metadata_paths_stay_lightweight(arguments, expected_status):
-    """Load the installed console entry point and reject eager native imports."""
+def _run_blocked_entrypoint(
+    entry_name: str,
+    arguments: list[str],
+    *,
+    environment: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Invoke an installed console entry in a fresh process with native imports blocked.
+
+    Args:
+        entry_name: Installed console script name.
+        arguments: Arguments passed to that script.
+        environment: Optional child environment.
+
+    Returns:
+        Captured child output and exit status.
+    """
     script = r"""
 import importlib.metadata
 import json
@@ -50,10 +62,10 @@ from importlib.abc import MetaPathFinder
 
 
 class NativeImportBlocker(MetaPathFinder):
-    "Fail immediately if CLI dispatch attempts to load native modules."
+    "Fail if a lightweight CLI path imports native modules."
 
     def find_spec(self, fullname, path=None, target=None):
-        "Reject native module loading while the dispatcher parses metadata-only commands."
+        "Block SystemC package and cppyy imports."
         if fullname == "amal.eda.systemc" or fullname.startswith("amal.eda.systemc."):
             raise AssertionError(f"native package imported during CLI parsing: {fullname}")
         if fullname == "cppyy" or fullname.startswith("cppyy."):
@@ -62,44 +74,60 @@ class NativeImportBlocker(MetaPathFinder):
 
 
 sys.meta_path.insert(0, NativeImportBlocker())
+scenario = json.loads(sys.argv[1])
 distribution = importlib.metadata.distribution("pysystemc")
 entry_point = next(
     entry
     for entry in distribution.entry_points
-    if entry.group == "console_scripts" and entry.name == "pysystemc-cpp"
+    if entry.group == "console_scripts" and entry.name == scenario["entry_name"]
 )
-scenario = json.loads(sys.argv[1])
-sys.argv = ["pysystemc-cpp", *scenario["arguments"]]
+sys.argv = [scenario["entry_name"], *scenario["arguments"]]
 try:
     status = entry_point.load()()
 except SystemExit as error:
     status = error.code
-assert status == scenario["expected_status"], (status, sys.argv)
-assert not any(
-    name == "cppyy"
-    or name.startswith("cppyy.")
-    or name == "amal.eda.systemc"
-    or name.startswith("amal.eda.systemc.")
-    for name in sys.modules
-), "native modules remained loaded after CLI parsing"
+sys.exit(status)
 """
-    scenario = json.dumps({"arguments": arguments, "expected_status": expected_status})
-    result = subprocess.run(
+    child_environment = dict(os.environ)
+    if environment is not None:
+        child_environment.update(environment)
+    scenario = json.dumps({"entry_name": entry_name, "arguments": arguments})
+    return subprocess.run(
         [sys.executable, "-c", script, scenario],
         capture_output=True,
         text=True,
+        env=child_environment,
         timeout=30,
     )
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected_status"),
+    [
+        ([], 0),
+        (["-h"], 0),
+        (["--help"], 0),
+        (["-V"], 0),
+        (["--version"], 0),
+        (["-I"], 2),
+        (["--invalid-option", "model.cpp"], 2),
+    ],
+)
+def test_installed_cpp_entrypoint_metadata_paths_stay_lightweight(arguments, expected_status):
+    """Load the installed console entry point and reject eager native imports."""
+    environment = dict(os.environ)
+    environment["PYSYSTEMC_COLOR"] = "never"
+    environment.pop("NO_COLOR", None)
+    result = _run_blocked_entrypoint("systemc-cpp", arguments, environment=environment)
     output = result.stdout + result.stderr
-    assert result.returncode == 0, output
-    if arguments in (["-h"], ["--help"]):
-        assert "usage: pysystemc-cpp" in output
+    assert result.returncode == expected_status, output
+    if arguments in (["-h"], ["--help"]) or not arguments:
+        assert "Usage: systemc-cpp" in output
         assert "Compile native SystemC sources" in output
-    elif arguments == ["--version"]:
-        assert output.startswith("pysystemc-cpp ")
-    elif not arguments:
-        assert "usage: pysystemc-cpp" in output
-        assert "the following arguments are required: source" in output
+    elif arguments in (["-V"], ["--version"]):
+        assert output.startswith("systemc-cpp ")
+    elif arguments == ["-I"]:
+        assert "argument -I/--include: expected one argument" in output
     else:
         assert "unrecognized arguments: --invalid-option" in output
 
@@ -108,6 +136,82 @@ assert not any(
     assert "Copyright" not in output
     assert "OSCI/SystemC" not in output
     assert "Simulation stopped" not in output
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "no_color", "expect_ansi"),
+    [("always", True, True), ("never", False, False), ("auto", True, False)],
+)
+def test_installed_cpp_version_color_modes_stay_lightweight(color_mode, no_color, expect_ansi):
+    """Render version colors according to environment without native startup."""
+    environment = dict(os.environ)
+    environment.pop("NO_COLOR", None)
+    environment["PYSYSTEMC_COLOR"] = color_mode
+    if no_color:
+        environment["NO_COLOR"] = "1"
+    result = _run_blocked_entrypoint("systemc-cpp", ["--version"], environment=environment)
+    assert result.returncode == 0, result.stdout + result.stderr
+    plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
+    installed_version = distribution_version("pysystemc")
+    assert plain_output == f"systemc-cpp v{installed_version}\n"
+    if expect_ansi:
+        assert re.search(r"\x1b\[35msystemc-cpp ?\x1b\[[0-9;]*m", result.stdout)
+        assert re.search(r"\x1b\[36mv" + re.escape(installed_version) + r"\x1b\[[0-9;]*m", result.stdout)
+    else:
+        assert "\x1b[" not in result.stdout
+
+
+def test_installed_cpp_help_uses_shared_usage_tokens_without_native_imports():
+    """Preserve wrapped help wording and render each C++ usage token by syntax."""
+    environment = dict(os.environ)
+    environment["PYSYSTEMC_COLOR"] = "always"
+    environment["NO_COLOR"] = "1"
+    environment["COLUMNS"] = "40"
+    result = _run_blocked_entrypoint("systemc-cpp", ["--help"], environment=environment)
+    assert result.returncode == 0, result.stdout + result.stderr
+    plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
+    collapsed_output = " ".join(plain_output.split())
+    assert plain_output.index("Compile native SystemC sources") < plain_output.index("Usage:")
+    assert plain_output.startswith("Compile native SystemC sources")
+    assert "Positional arguments:" in plain_output
+    assert "Options:" in plain_output
+    assert "Global options:" in plain_output
+    assert "Show this message and exit" in collapsed_output
+    assert "Show version and exit" in collapsed_output
+    assert "[--version]" in plain_output
+    assert re.search(r"\n +source \[source \.\.\.\]", plain_output)
+    assert re.search(r"\x1b\[34mUsage:", result.stdout)
+    assert re.search(r"\x1b\[35msystemc-cpp", result.stdout)
+    assert re.search(r"\x1b\[2;38;5;247m\[", result.stdout)
+    assert len(re.findall(r"\x1b\[2;36m-I", result.stdout)) >= 2
+    assert len(re.findall(r"\x1b\[33mINCLUDE", result.stdout)) >= 2
+    assert len(re.findall(r"\x1b\[32msource", result.stdout)) >= 2
+    assert len(re.findall(r"\x1b\[2;36m--include", result.stdout)) >= 1
+    assert re.search(r"\x1b\[2;38;5;247mCompile native SystemC sources", result.stdout)
+
+
+def test_installed_python_help_styles_command_rows_and_placeholders():
+    """Style Python command choices in usage and detail rows without native imports."""
+    environment = dict(os.environ)
+    environment["PYSYSTEMC_COLOR"] = "always"
+    environment["NO_COLOR"] = "1"
+    environment["COLUMNS"] = "42"
+    result = _run_blocked_entrypoint("systemc-py", ["--help"], environment=environment)
+    assert result.returncode == 0, result.stdout + result.stderr
+    plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
+    assert plain_output.index("Explore native SystemC") < plain_output.index("Usage:")
+    assert "Usage: systemc-py" in plain_output
+    assert "{repl,help,version}" in plain_output
+    assert re.search(r"\x1b\[35msystemc-py", result.stdout)
+    assert len(re.findall(r"\x1b\[96mrepl", result.stdout)) >= 2
+    assert len(re.findall(r"\x1b\[96mhelp", result.stdout)) >= 2
+
+    placeholder = _run_blocked_entrypoint("systemc-py", ["help", "--help"], environment=environment)
+    assert placeholder.returncode == 0, placeholder.stdout + placeholder.stderr
+    placeholder_plain = re.sub(r"\x1b\[[0-9;]*m", "", placeholder.stdout)
+    assert "Usage: systemc-py help" in placeholder_plain
+    assert "COMMAND" in placeholder_plain
+    assert re.search(r"\x1b\[2;38;5;247mCOMMAND", placeholder.stdout)
 
 
 def test_packaged_cpp_runner_arguments_and_status(tmp_path):
@@ -127,7 +231,7 @@ import sys
 entry_point = next(
     entry
     for entry in importlib.metadata.distribution("pysystemc").entry_points
-    if entry.group == "console_scripts" and entry.name == "pysystemc-cpp"
+    if entry.group == "console_scripts" and entry.name == "systemc-cpp"
 )
 sys.exit(entry_point.load()())
 """
@@ -173,7 +277,7 @@ int sc_main(int argc, char** argv) {
     source.write_text("this is invalid C++\n")
     result = subprocess.run([*command, str(source)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
     assert result.returncode == 1
-    assert "pysystemc-cpp:" in result.stderr
+    assert "systemc-cpp:" in result.stderr
     source.write_text(
         '#include <systemc>\n#include <stdexcept>\nint sc_main(int, char**) { throw std::runtime_error("runner_failure_marker"); }\n'
     )

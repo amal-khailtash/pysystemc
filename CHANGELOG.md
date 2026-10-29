@@ -9,7 +9,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ## [Unreleased]
 
 ### Fixed
-- Handle `pysystemc-cpp` help, version output and missing-source errors before loading the native SystemC kernel.
+- Handle `systemc-cpp` help, version output and argument errors before loading the native SystemC kernel.
+- Show help successfully when `systemc-cpp` is invoked without arguments.
+
+### Changed
+
+- Rename the executable commands to `systemc-py` and `systemc-cpp` and group help/version flags under `Global options`, adding `-V` as a version alias. Use uv-style help colors with muted magenta program names and cyan versions.
 
 ## [1.0.0](https://github.com/amal-khailtash/pysystemc/compare/v0.16.0...v1.0.0) (2026-10-28)
 

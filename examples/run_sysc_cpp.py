@@ -1,6 +1,6 @@
 """Compatibility entry for the packaged native SystemC source runner.
 
-Use pysystemc-cpp with source files, optional -I directories, and '--' before
+Use systemc-cpp with source files, optional -I directories, and '--' before
 native arguments. Each invocation runs one independent native kernel.
 """
 

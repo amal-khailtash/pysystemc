@@ -1,4 +1,4 @@
-"""Fresh-process checks for the lightweight pysystemc CLI."""
+"""Fresh-process checks for the lightweight systemc-py CLI."""
 
 import subprocess
 import sys
@@ -25,8 +25,15 @@ def test_cli_help_version_and_help_command() -> None:
     """Show top-level and command help and version without native imports."""
     help_result = run_cli()
     assert help_result.returncode == 0, help_result.stderr
-    assert "usage: pysystemc" in help_result.stdout
+    assert "Usage: systemc-py" in help_result.stdout
+    assert help_result.stdout.index("Explore native SystemC") < help_result.stdout.index("Usage:")
+    assert "{repl,help,version}" in help_result.stdout
     assert "repl" in help_result.stdout and "version" in help_result.stdout
+    assert "Global options:" in help_result.stdout
+    assert "-h, --help" in help_result.stdout
+    assert "Show this message and exit" in help_result.stdout
+    assert "-V, --version" in help_result.stdout
+    assert "Show version and exit" in help_result.stdout
 
     option_help = run_cli("--help")
     assert option_help.returncode == 0, option_help.stderr
@@ -34,29 +41,56 @@ def test_cli_help_version_and_help_command() -> None:
 
     repl_help = run_cli("help", "repl")
     assert repl_help.returncode == 0, repl_help.stderr
+    assert "Usage: systemc-py repl" in repl_help.stdout
+    assert "Options:" in repl_help.stdout
     assert "--history PATH" in repl_help.stdout
     assert "--no-history" in repl_help.stdout
 
-    version_option = run_cli("--version")
+    help_command_help = run_cli("help", "--help")
+    assert help_command_help.returncode == 0, help_command_help.stderr
+    assert "Usage: systemc-py help" in help_command_help.stdout
+    assert "Positional arguments:" in help_command_help.stdout
+
+    short_version_option = run_cli("-V")
+    long_version_option = run_cli("--version")
     version_command = run_cli("version")
-    assert version_option.returncode == version_command.returncode == 0
-    assert version_option.stdout.startswith("pysystemc ")
-    assert version_command.stdout.startswith("pysystemc v")
+    assert short_version_option.returncode == long_version_option.returncode == version_command.returncode == 0
+    assert short_version_option.stdout.startswith("systemc-py v")
+    assert long_version_option.stdout.startswith("systemc-py v")
+    assert version_command.stdout.startswith("systemc-py v")
 
 
 def test_cli_metadata_commands_do_not_import_native_runtime() -> None:
-    """Importing or running version metadata leaves SystemC unloaded."""
+    """Load the installed entry point and run version without native imports."""
     script = """
 import sys
+from importlib.metadata import entry_points
+class BlockNativeImports:
+    '''Reject imports that would initialize either native dependency.'''
+
+    def find_spec(self, fullname, path=None, target=None):
+        '''Raise if import resolution requests cppyy or the SystemC package.'''
+        if fullname == 'cppyy' or fullname.startswith('cppyy.'):
+            raise AssertionError(f'unexpected native import: {fullname}')
+        if fullname == 'amal.eda.systemc' or fullname.startswith('amal.eda.systemc.'):
+            raise AssertionError(f'unexpected native import: {fullname}')
+        return None
+sys.meta_path.insert(0, BlockNativeImports())
 from amal.eda.cli import main
+console_entry = next(entry for entry in entry_points(group='console_scripts') if entry.name == 'systemc-py')
+assert console_entry.value == 'amal.eda.cli:main'
+assert console_entry.load() is main
 assert 'amal.eda.systemc' not in sys.modules
-try:
-    main(['--version'])
-except SystemExit as error:
-    assert error.code == 0
-else:
-    raise AssertionError('--version did not exit through argparse')
+assert 'cppyy' not in sys.modules
+for version_flag in ('-V', '--version'):
+    try:
+        console_entry.load()([version_flag])
+    except SystemExit as error:
+        assert error.code == 0
+    else:
+        raise AssertionError(f'{version_flag} did not exit through argparse')
 assert 'amal.eda.systemc' not in sys.modules
+assert 'cppyy' not in sys.modules
 """
     result = subprocess.run(
         [sys.executable, "-c", script],
@@ -65,4 +99,5 @@ assert 'amal.eda.systemc' not in sys.modules
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.startswith("pysystemc ")
+    assert result.stdout.splitlines()
+    assert all(line.startswith("systemc-py v") for line in result.stdout.splitlines())

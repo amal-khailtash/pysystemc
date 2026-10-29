@@ -1,9 +1,11 @@
-"""Command-line entry point for the pysystemc Python playground."""
+"""Command-line entry point for the systemc-py Python playground."""
 
 import argparse
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from collections.abc import Sequence
+
+from ._formatting import HelpParser, add_version_argument, print_version
 
 
 def _version() -> str:
@@ -16,15 +18,12 @@ def _version() -> str:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build the lightweight CLI parser without importing SystemC or cppyy."""
-    parser = argparse.ArgumentParser(
-        prog="pysystemc",
+    parser = HelpParser(
+        prog="systemc-py",
         description="Explore native SystemC from an interactive Python session.",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {_version()}")
+    add_version_argument(parser)
     commands = parser.add_subparsers(dest="command")
-
-    version_parser = commands.add_parser("version", help="print the installed pysystemc version")
-    version_parser.set_defaults(action="version")
 
     repl_parser = commands.add_parser("repl", help="start the interactive SystemC Python playground")
     history = repl_parser.add_mutually_exclusive_group()
@@ -32,14 +31,17 @@ def _build_parser() -> argparse.ArgumentParser:
     history.add_argument("--no-history", action="store_true", help="keep prompt history in memory only")
     repl_parser.set_defaults(action="repl")
 
-    help_parser = commands.add_parser("help", help="show help for pysystemc or a command")
+    help_parser = commands.add_parser("help", help="show help for systemc-py or a command")
     help_parser.add_argument("command_name", nargs="?", choices=("repl", "version"), metavar="COMMAND")
     help_parser.set_defaults(action="help")
+
+    version_parser = commands.add_parser("version", help="print the installed systemc-py version")
+    version_parser.set_defaults(action="version")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the lightweight pysystemc command dispatcher.
+    """Run the lightweight systemc-py command dispatcher.
 
     Args:
         argv: Optional arguments, excluding the executable name. With no
@@ -61,7 +63,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return 0
     if args.action == "version":
-        print(f"pysystemc v{_version()}")
+        print_version(parser.prog, f"v{_version()}")
         return 0
     if args.action == "help":
         if args.command_name is None:

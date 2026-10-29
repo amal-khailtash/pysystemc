@@ -1,23 +1,23 @@
 Command line and playground
 ===========================
 
-The ``pysystemc`` command provides installed-version information, command help
+The ``systemc-py`` command provides installed-version information, command help
 and an interactive Python playground:
 
 .. code-block:: console
 
-   uv run pysystemc --version
-   uv run pysystemc version
-   uv run pysystemc --help
-   uv run pysystemc help repl
-   uv run pysystemc repl
+   uv run systemc-py --version
+   uv run systemc-py version
+   uv run systemc-py --help
+   uv run systemc-py help repl
+   uv run systemc-py repl
 
 From a source checkout, ``make cli`` shows help, ``make cli ARGS=version``
 prints the version, and ``make repl`` launches the playground. Both targets
 forward ``ARGS``; for example, ``make repl ARGS=--no-history``.
 
 Version and help commands do not load the native simulation kernel. The existing
-``pysystemc-cpp`` command remains available for compiling and running C++ models.
+``systemc-cpp`` command remains available for compiling and running C++ models.
 
 The playground preloads ``sc_core``, ``sc_dt``, ``tlm``, ``tlm_utils`` and
 ``cppyy``, together with public kernel names such as ``sc_time``, ``sc_start``
@@ -44,8 +44,8 @@ suggestions, arrow-key navigation and line editing. Ctrl+C clears unfinished
 input and returns to the prompt. Ctrl+D or ``exit()`` leaves the playground.
 History persists at ``$XDG_STATE_HOME/pysystemc/history`` when configured, or
 ``~/.local/state/pysystemc/history`` otherwise. Choose another location with
-``pysystemc repl --history PATH`` or keep history in memory with
-``pysystemc repl --no-history``.
+``systemc-py repl --history PATH`` or keep history in memory with
+``systemc-py repl --no-history``.
 
 Each process has one native SystemC kernel. Further ``sc_start`` calls advance
 the same design. Retain modules, channels and callback dependencies while the

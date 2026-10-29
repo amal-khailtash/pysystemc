@@ -95,14 +95,21 @@ kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
 Native C++ source runner
 ------------------------
 
-``pysystemc-cpp`` compiles source files in the order supplied and runs their
+``systemc-cpp`` compiles source files in the order supplied and runs their
 native ``sc_main`` through the packaged startup adapter::
 
-   uv run pysystemc-cpp -I include helper.cpp model.cpp -- --cycles 20
+   uv run systemc-cpp -I include helper.cpp model.cpp -- --cycles 20
 
 Help, version output and argument errors are handled before loading cppyy or
-SystemC. Running the command without sources reports the required-source usage
-error without initializing the native kernel.
+SystemC. Running the command without arguments prints help and exits successfully
+without initializing the native kernel. Help uses green headings, muted magenta
+program names and dim placeholders. Source arguments are green,
+all option names are dim cyan and include-directory placeholders are yellow in both the
+usage line and option descriptions. Command names are bright cyan. The ``Usage:`` label is blue. ``Global options``
+lists ``-h, --help`` and ``-V, --version``; version output uses a muted magenta
+program name and cyan version prefixed with ``v``. Color follows terminal detection by default. Set
+``PYSYSTEMC_COLOR=always`` or ``PYSYSTEMC_COLOR=never`` to override detection;
+``NO_COLOR`` disables automatic coloring.
 
 Each source directory is also an include directory. Arguments after ``--``
 are passed unchanged; ``argv[0]`` is the first source filename. Native return

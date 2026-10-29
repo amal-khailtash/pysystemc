@@ -2,25 +2,18 @@
 
 import argparse
 from collections.abc import Sequence
-from importlib.metadata import PackageNotFoundError, version
 import sys
 
-
-def _version() -> str:
-    """Read the installed package version without importing native bindings."""
-    try:
-        return version("pysystemc")
-    except PackageNotFoundError:
-        return "unknown"
+from amal.eda.cli._formatting import HelpParser, add_version_argument
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build the C++ runner parser without loading SystemC or cppyy."""
-    parser = argparse.ArgumentParser(
-        prog="pysystemc-cpp",
+    parser = HelpParser(
+        prog="systemc-cpp",
         description="Compile native SystemC sources and invoke their entry in a fresh interpreter.",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {_version()}")
+    add_version_argument(parser)
     parser.add_argument("-I", "--include", action="append", default=[])
     parser.add_argument("source", nargs="+")
     return parser
@@ -42,6 +35,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     values = list(sys.argv[1:] if argv is None else argv)
     separator = values.index("--") if "--" in values else len(values)
     parser = _build_parser()
+    if not values:
+        parser.print_help()
+        return 0
     options = parser.parse_args(values[:separator])
 
     # Keep argument parsing, help, and version independent from native startup.
@@ -50,5 +46,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return run_sources(options.source, values[separator + 1 :], options.include)
     except Exception as error:
-        print(f"pysystemc-cpp: {error}", file=sys.stderr)
+        print(f"systemc-cpp: {error}", file=sys.stderr)
         return 1
