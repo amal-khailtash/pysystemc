@@ -61,6 +61,12 @@ def print_version(program: str, version: str | None = None) -> None:
 
 def _usage_token_style(token: str, command_names: set[str]) -> str:
     """Choose a usage-token style by syntax and known command names."""
+    if token == "[OPTIONS]":
+        return "dim cyan"
+    if token == "<COMMAND>":
+        return "bright_cyan"
+    if token == "<INCLUDE>":
+        return "yellow"
     if token in {"[", "]", "{", "}", "<", ">", "|", ",", "...", "."}:
         return _MUTED
     if token in {"OPTIONS", "COMMAND"}:
@@ -83,7 +89,7 @@ def _append_usage_tokens(
 ) -> None:
     """Append token-aware argparse usage text without changing its spacing."""
     is_program = program_first
-    token_pattern = r"\s+|\.{3}|[<>\[\]{}|,]|[^\s.<>\[\]{}|,]+|\."
+    token_pattern = r"\s+|\.{3}|\[OPTIONS\]|<COMMAND>|<INCLUDE>|[<>\[\]{}|,]|[^\s.<>\[\]{}|,]+|\."
     for match in re.finditer(token_pattern, usage):
         token = match.group()
         if token.isspace():
@@ -98,7 +104,7 @@ def _append_usage_tokens(
 
 def _append_option_column(rendered: Text, option_names: str, command_names: set[str]) -> None:
     """Color option, positional, and choice names within an argparse help row."""
-    token_pattern = r"\s+|\.{3}|[<>\[\]{}|,]|[^\s.<>\[\]{}|,]+|\."
+    token_pattern = r"\s+|\.{3}|\[OPTIONS\]|<COMMAND>|<INCLUDE>|[<>\[\]{}|,]|[^\s.<>\[\]{}|,]+|\."
     for match in re.finditer(token_pattern, option_names):
         token = match.group()
         rendered.append(token, style=None if token.isspace() else _usage_token_style(token, command_names))

@@ -95,6 +95,8 @@ kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
 Native C++ source runner
 ------------------------
 
+The synopsis is ``Usage: systemc-cpp [OPTIONS] source [source ...]``.
+
 ``systemc-cpp`` compiles source files in the order supplied and runs their
 native ``sc_main`` through the packaged startup adapter::
 

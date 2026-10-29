@@ -12,9 +12,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = HelpParser(
         prog="systemc-cpp",
         description="Compile native SystemC sources and invoke their entry in a fresh interpreter.",
+        usage="%(prog)s [OPTIONS] source [source ...]",
     )
     add_version_argument(parser)
-    parser.add_argument("-I", "--include", action="append", default=[])
+    parser.add_argument("-I", "--include", action="append", default=[], metavar="<INCLUDE>")
     parser.add_argument("source", nargs="+")
     return parser
 

@@ -1,14 +1,16 @@
 """Fresh-process checks for the lightweight systemc-py CLI."""
 
+import os
 import subprocess
 import sys
 
 
-def run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
+def run_cli(*arguments: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     """Run the source-tree CLI in a child process.
 
     Args:
         *arguments: CLI arguments, excluding the Python module invocation.
+        env: Optional child-process environment; defaults to the current one.
 
     Returns:
         Captured child process output and status.
@@ -17,6 +19,7 @@ def run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
         [sys.executable, "-m", "amal.eda.cli", *arguments],
         capture_output=True,
         text=True,
+        env=env,
         timeout=30,
     )
 
@@ -25,9 +28,22 @@ def test_cli_help_version_and_help_command() -> None:
     """Show top-level and command help and version without native imports."""
     help_result = run_cli()
     assert help_result.returncode == 0, help_result.stderr
-    assert "Usage: systemc-py" in help_result.stdout
+    assert "Usage: systemc-py [OPTIONS] <COMMAND>" in help_result.stdout
     assert help_result.stdout.index("Explore native SystemC") < help_result.stdout.index("Usage:")
-    assert "{repl,help,version}" in help_result.stdout
+    repl_row = "start the interactive SystemC Python playground"
+    help_row = "show help for systemc-py or a command"
+    version_row = "print the installed systemc-py version"
+    assert repl_row in help_result.stdout
+    assert help_row in help_result.stdout
+    assert version_row in help_result.stdout
+    assert (
+        help_result.stdout.index(repl_row) < help_result.stdout.index(help_row) < help_result.stdout.index(version_row)
+    )
+
+    colored_help = run_cli("--help", env=os.environ | {"PYSYSTEMC_COLOR": "always"})
+    assert colored_help.returncode == 0, colored_help.stderr
+    assert "\x1b[2;36m[OPTIONS]\x1b[0m" in colored_help.stdout
+    assert "\x1b[96m<COMMAND>\x1b[0m" in colored_help.stdout
     assert "repl" in help_result.stdout and "version" in help_result.stdout
     assert "Global options:" in help_result.stdout
     assert "-h, --help" in help_result.stdout

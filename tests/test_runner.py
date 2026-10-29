@@ -166,7 +166,7 @@ def test_installed_cpp_help_uses_shared_usage_tokens_without_native_imports():
     environment = dict(os.environ)
     environment["PYSYSTEMC_COLOR"] = "always"
     environment["NO_COLOR"] = "1"
-    environment["COLUMNS"] = "40"
+    environment["COLUMNS"] = "80"
     result = _run_blocked_entrypoint("systemc-cpp", ["--help"], environment=environment)
     assert result.returncode == 0, result.stdout + result.stderr
     plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
@@ -178,13 +178,14 @@ def test_installed_cpp_help_uses_shared_usage_tokens_without_native_imports():
     assert "Global options:" in plain_output
     assert "Show this message and exit" in collapsed_output
     assert "Show version and exit" in collapsed_output
-    assert "[--version]" in plain_output
-    assert re.search(r"\n +source \[source \.\.\.\]", plain_output)
+    assert re.search(r"(?m)^Usage: systemc-cpp \[OPTIONS\] source \[source \.\.\.\]$", plain_output)
+    assert "-I, --include <INCLUDE>" in plain_output
     assert re.search(r"\x1b\[34mUsage:", result.stdout)
     assert re.search(r"\x1b\[35msystemc-cpp", result.stdout)
+    assert re.search(r"\x1b\[2;36m\[OPTIONS\]", result.stdout)
     assert re.search(r"\x1b\[2;38;5;247m\[", result.stdout)
-    assert len(re.findall(r"\x1b\[2;36m-I", result.stdout)) >= 2
-    assert len(re.findall(r"\x1b\[33mINCLUDE", result.stdout)) >= 2
+    assert len(re.findall(r"\x1b\[2;36m-I", result.stdout)) >= 1
+    assert len(re.findall(r"\x1b\[33m<INCLUDE>\x1b\[0m", result.stdout)) >= 1
     assert len(re.findall(r"\x1b\[32msource", result.stdout)) >= 2
     assert len(re.findall(r"\x1b\[2;36m--include", result.stdout)) >= 1
     assert re.search(r"\x1b\[2;38;5;247mCompile native SystemC sources", result.stdout)

@@ -20,6 +20,7 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build the lightweight CLI parser without importing SystemC or cppyy."""
     parser = HelpParser(
         prog="systemc-py",
+        usage="%(prog)s [OPTIONS] <COMMAND>",
         description="Explore native SystemC from an interactive Python session.",
     )
     add_version_argument(parser)

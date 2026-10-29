@@ -16,6 +16,8 @@ From a source checkout, ``make cli`` shows help, ``make cli ARGS=version``
 prints the version, and ``make repl`` launches the playground. Both targets
 forward ``ARGS``; for example, ``make repl ARGS=--no-history``.
 
+The command synopsis is ``Usage: systemc-py [OPTIONS] <COMMAND>``.
+
 Version and help commands do not load the native simulation kernel. The existing
 ``systemc-cpp`` command remains available for compiling and running C++ models.
 
