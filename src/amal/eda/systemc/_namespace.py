@@ -216,7 +216,10 @@ def namespace_help(module_globals, namespace):
             lines.append(f"{title}: " + ", ".join(names))
 
     for name in groups["Enums"]:
-        enum = getattr(namespace, name)
+        if name in module_globals:
+            enum = module_globals[name]
+        else:
+            enum = getattr(namespace, name)
         values = [(key, value) for key, value in vars(enum).items() if not key.startswith("_") and not callable(value)]
         lines.append(name + ": " + ", ".join(f"{key}={int(value)}" for key, value in values))
     lines.append(

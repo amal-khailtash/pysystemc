@@ -6,11 +6,17 @@ import cppyy
 cppyy.include(str(Path(__file__).with_name("stream_adapters.h")))
 _ostream = cppyy.gbl.std.ostream
 _istream = cppyy.gbl.std.istream
+_string = cppyy.gbl.std.string
 
 
 def _datatype(value):
     """Recognize native datatype sources without a specialization registry."""
     return getattr(type(value), "__cpp_name__", "").lstrip(":").startswith("sc_dt::")
+
+
+def _string_target(value):
+    """Recognize the mutable standard string extraction target."""
+    return isinstance(value, _string)
 
 
 def _wrap(native_type, name=""):
@@ -50,14 +56,16 @@ def _wrap(native_type, name=""):
                 The original input stream, retaining its Python owner.
             Raises:
                 Native exception: Native reporting, allocation or I/O fails.
-                TypeError: Native extraction is unavailable for the target.
+                TypeError: The target is immutable or native extraction is unavailable.
             The target and any proxy parent must remain live. Calls hold the GIL
             and never suspend or retain target references. Native stream state,
             exception masks and conversion reports remain in effect.
             """
-            if _datatype(value):
+            if _datatype(value) or _string_target(value):
                 cppyy.gbl.pysystemc_datatypes.StreamOperators[type(value)].extract(stream, value)
                 return stream
+            if isinstance(value, (bool, int, float, str)):
+                raise TypeError("stream extraction requires mutable native target")
             return original_extract(stream, value)
 
         native_type.__rshift__ = extract

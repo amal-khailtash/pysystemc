@@ -19,6 +19,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Preserve native reference return types for text/integer concatenation, avoiding forbidden copies of native concatenation views.
+- Avoid crashes when extracting into native `std::string` targets and reject immutable scalar stream targets with `TypeError`.
+- Render namespace enum details from the selected public adapter, preserving its member values.
 - Preserve literal `--` script arguments after the `systemc-py run` argument delimiter.
 - Reject unsupported fixed-point parameter constructor shapes with `TypeError` instead of silently producing a zero-valued number.
 - Preserve macro declaration header locations in API inventories when Clang omits repeated filenames across spelling, expansion and range locations.

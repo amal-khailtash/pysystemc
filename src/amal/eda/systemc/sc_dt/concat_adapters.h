@@ -6,21 +6,24 @@
 namespace pysystemc_datatypes
 {
 /** @brief Supply Python text through call-local native C-string storage.
- * @details Native concatenation copies the text into an owned vector while
- * borrowing the other operand's parent. Keep that parent live. Calls hold the
- * GIL, retain no Python text references and propagate native allocation and
- * conversion reports. All native vector widths and states remain available.
+ * @details Preserve the native return category. Integer owners produce a
+ * pool-managed ``sc_concatref`` reference. Binary-vector owners produce a
+ * value ``sc_concref_r`` shell containing cloned operand views. Both forms
+ * borrow native owner storage, which must remain live while the result is used;
+ * native temporary-pool lifetime rules apply to the integer form. Calls hold
+ * the GIL, retain no Python text references and propagate native allocation
+ * and conversion reports. All vector widths and states remain available.
  */
 template <class Owner>
 struct ConcatText
 {
   /** @brief Concatenate a borrowed native operand and copied text. */
-  static auto tail(Owner& owner, const std::string& text)
+  static decltype(auto) tail(Owner& owner, const std::string& text)
   {
     return sc_dt::concat(owner, text.c_str());
   }
   /** @brief Concatenate copied text and a borrowed native operand. */
-  static auto head(const std::string& text, Owner& owner)
+  static decltype(auto) head(const std::string& text, Owner& owner)
   {
     return sc_dt::concat(text.c_str(), owner);
   }
