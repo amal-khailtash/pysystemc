@@ -43,6 +43,10 @@ Run the regression suite in independent native simulation processes::
    make coverage-parallel
    make docs
 
+Coverage includes both the SystemC bindings and command-line modules.
+It measures Python statements; native API and example equivalence require
+their separate semantic tests.
+
 The coverage target prints a terminal summary and writes an HTML report to
 ``build/coverage/html/index.html``. Open that file in a browser to inspect
 coverage by module and line. Parallel coverage combines worker and simulation
@@ -50,6 +54,19 @@ subprocess data; each simulation remains isolated. See :doc:`releases` for CI
 validation, publication ordering and recovery.
 Both parallel targets default to four workers. Override the count with
 ``TEST_WORKERS``, for example ``make test-parallel TEST_WORKERS=2``.
+
+Startup measurements use fresh subprocesses and record the initial sample
+separately from ten measured repetitions::
+
+   make benchmark-startup
+   make benchmark-startup BENCHMARK_REPORT=build/startup/after.json
+   make benchmark-startup ARGS="--scenario systemc-import"
+
+The JSON report contains elapsed time, peak memory, environment metadata and
+first-use checks. Run benchmarks without coverage or concurrent tests/builds.
+Existing cppyy and operating-system caches are preserved; a fresh interpreter
+does not imply a cold filesystem cache. Compare repeated results on the same
+machine and configuration, including first-use latency as well as import time.
 
 Conditional TLM socket getters have a separate validation target::
 

@@ -364,7 +364,7 @@ def test_reconcile_preserves_configuration_and_source_occurrences():
 
 
 def test_example_inventory_preserves_fir_variants_and_shared_sources():
-    """Retain separate native FIR targets and TLM common-source dependencies."""
+    """Map native targets to runnable Python entry points and separate support."""
     import runpy
 
     api = runpy.run_path(str(ROOT / "tools/inventory_examples.py"))
@@ -390,6 +390,30 @@ def test_example_inventory_preserves_fir_variants_and_shared_sources():
     assert not inventory["family_references"]["absent::not_a_native_name"]["candidate_sources"]
     assert all(row["native_status"] == "untested" for row in inventory["build_targets"])
     assert all(not Path(path).is_absolute() for path in inventory["source_files"])
+
+    mapping = inventory["python_mapping"]
+    assert len(inventory["build_targets"]) == 33
+    assert mapping["entrypoint_count"] == 34
+    assert mapping["completeness"] == "complete"
+    assert mapping["missing_python_files"] == []
+    assert mapping["unmapped_python_files"] == []
+    assert mapping["missing_native_targets"] == []
+    assert mapping["unmatched_native_targets"] == []
+    rows = {(row["group"], row["target"]): row for row in inventory["build_targets"]}
+    assert rows[("sysc/2.1/sc_export", "sc_export")]["python_entrypoints"] == [
+        "examples/sysc/2.1/sc_export/main.py",
+        "examples/sysc/2.1/sc_export/main_protocol.py",
+    ]
+    assert rows[("sysc/2.1/sc_export", "sc_export")]["python_target_relationship"] == "shared_native_target"
+    assert rows[("sysc/fir", "fir")]["python_entrypoints"] == ["examples/sysc/fir/main.py"]
+    assert rows[("sysc/fir", "fir_rtl")]["python_entrypoints"] == ["examples/sysc/fir/main_rtl.py"]
+    assert {rows[("sysc/fir", target)]["python_variant_group"] for target in ("fir", "fir_rtl")} == {"sysc/fir"}
+    cpu = rows[("sysc/risc_cpu", "risc_cpu")]
+    assert "examples/sysc/risc_cpu/main.py" in cpu["python_entrypoints"]
+    assert "examples/sysc/risc_cpu/decode.py" in cpu["python_support_files"]
+    assert "examples/tlm/common/models.py" in rows[("tlm/at_1_phase", "at_1_phase")]["python_support_files"]
+    assert all(row["python_mapping_status"] == "mapped" for row in inventory["build_targets"])
+    assert all(row["equivalence_status"] == "not inferred from port presence" for row in inventory["build_targets"])
 
 
 def test_remaining_report_distinguishes_mapping_from_semantic_validation(tmp_path):

@@ -54,7 +54,7 @@ docs = [
 
 # Simulation tests spawn fresh interpreters to isolate SystemC kernel state.
 [tool.coverage.run]
-source = ["amal.eda.systemc"]
+source = ["amal.eda.systemc", "amal.eda.cli"]
 patch = ["subprocess"]
 # The pytest parent intentionally never imports the singleton native kernel;
 # coverage data is collected by its simulation subprocesses instead.

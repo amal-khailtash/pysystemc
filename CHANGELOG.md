@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Add `make benchmark-startup` to measure fresh-process CLI, imports, model/template construction and REPL setup, with checked outputs, peak memory and retained failure diagnostics.
 - Add a native `pysystemc_public::print_hierarchy` helper with readable Python/native module types, global C++ calls, nested instance names and internal-module filtering; show the hierarchy in Python and C++ FIFO examples.
 - Add `systemc-cpp run SOURCE.cpp -- ARGS...` with source/include handling and native argument/status forwarding.
 - Add `systemc-py run SOURCE.py -- ARGS...` to execute Python models with script arguments and sibling imports.
@@ -20,6 +21,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Include CLI modules in local and CI coverage reports, and explicitly map upstream native example targets to Python entry points and support files.
 - Show `systemc vVERSION` in the runtime banner, with a magenta name, cyan version and white description.
 - Rename the executable commands to `systemc-py` and `systemc-cpp` and group help/version flags under `Global options`, adding `-V` as a version alias. Use uv-style help colors with muted magenta program names and cyan versions.
 

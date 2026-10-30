@@ -439,12 +439,12 @@ excluded from the public feature list.
 sc_core public families
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The constant/proxy/comparator/table audit verifies 249 declarations against
-independent native references. Remaining entries retain their declaration-level
-status; mutable-global write semantics and callable overload families are not
-inferred from namespace availability. See :doc:`../api/coverage`.
+The selected sc_core catalog contains 2,738 supported, reviewed declarations.
+The family entries below include callable overloads, mutable-global contracts
+and exact native callback pointer-value adapters. Native ownership and lifecycle
+preconditions apply; tested combinations are recorded in :doc:`../api/coverage`.
 
-* ☐ ``sc_core::CFT`` — 1 declaration; native comparator callback use is supported and tested. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
+* ☑ ``sc_core::CFT`` — 1 declaration; exact native comparator pointer values support null/copy/equality, signature-checked function selection and typed consumers. The Python value adapter does not require standalone cppyy typedef reflection.
 * ☑ ``sc_core::PHASH_DEFAULT_GROW_FACTOR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::PHASH_DEFAULT_INIT_TABLE_SIZE`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::PHASH_DEFAULT_MAX_DENSITY`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
@@ -814,13 +814,13 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_plist_base_iter`` — 14 declarations; runtime: 14 supported; mapping: 14 reviewed.
 * ☑ ``sc_core::sc_plist_elem`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_plist_iter`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
-* ☐ ``sc_core::sc_plist_map_fn`` — 1 declaration; native list callback use is supported and tested. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
+* ☑ ``sc_core::sc_plist_map_fn`` — 1 declaration; exact native mapper pointer values support null/copy/equality and signature-checked function selection. List consumers accept the typed value adapter; native code and pointee lifetimes remain borrowed.
 * ☑ ``sc_core::sc_port`` — 67 declarations; runtime: 67 supported; mapping: 67 reviewed.
 * ☑ ``sc_core::sc_port_b`` — 127 declarations; runtime: 127 supported; mapping: 127 reviewed.
 * ☑ ``sc_core::sc_port_base`` — 21 declarations; runtime: 21 supported; mapping: 21 reviewed.
 * ☑ ``sc_core::sc_port_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_ppq`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
-* ☐ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 8 reviewed, 1 partial. Native comparator calls work; direct ``compare_fn_t`` typedef lookup is unavailable.
+* ☑ ``sc_core::sc_ppq_base`` — 9 declarations; runtime: 9 supported; mapping: 9 reviewed. ``compare_fn_t`` exposes the exact native comparator pointer-value adapter; queue pointees remain caller-owned.
 * ☑ ``sc_core::sc_prim_channel`` — 41 declarations; runtime: 41 supported; mapping: 41 reviewed.
 * ☑ ``sc_core::sc_process_b`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
 * ☑ ``sc_core::sc_process_handle`` — 38 declarations; runtime: 38 supported; mapping: 38 reviewed.
@@ -833,7 +833,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
-* ☐ ``sc_core::sc_report_handler_proc`` — 1 declaration; typed native handler tokens can be retrieved and restored. Direct Python/cppyy typedef lookup is unavailable; mapping remains partial.
+* ☑ ``sc_core::sc_report_handler_proc`` — 1 declaration; typed native handler pointer values support null/copy/equality, function selection and handler retrieval/restoration. Native code must remain loaded while the handler is installed.
 * ☑ ``sc_core::sc_reset`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed. Borrowed native forward type; internal reset members remain outside this scope.
 * ☑ ``sc_core::sc_scoped_lock`` — 5 declarations; runtime: 5 supported; mapping: 5 reviewed.
 * ☑ ``sc_core::sc_semaphore`` — 10 declarations; runtime: 10 supported; mapping: 10 reviewed.
@@ -862,7 +862,7 @@ inferred from namespace availability. See :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_start`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.
 * ☑ ``sc_core::sc_start_of_simulation_invoked`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_starvation_policy`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
-* ☐ ``sc_core::sc_status`` — 1 declaration; the Python name retains the existing `sc_status()` compatibility query. The native enum type is available through `cppyy.gbl.sc_core.sc_status`; direct Python enum exposure remains partial.
+* ☑ ``sc_core::sc_status`` — 1 declaration; ``sc_status_type`` exposes the exact native enum type, while ``sc_status()`` retains the established lifecycle query returning ``ScStatus``.
 * ☑ ``sc_core::sc_stop`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_stop_mode`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_strhash`` — 19 declarations; runtime: 19 supported; mapping: 19 reviewed.
@@ -1140,7 +1140,7 @@ tlm public families
 * ☑ ``tlm::tlm_base_initiator_socket`` — 29 declarations; runtime: 29 supported; mapping: 29 reviewed.
 * ☑ ``tlm::tlm_base_initiator_socket_b`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``tlm::tlm_base_protocol_types`` — 3 declarations; runtime: 3 supported; mapping: 3 reviewed.
-* ☐ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 9 supported, 2 untested; mapping: 9 reviewed, 2 partial. The base ``get_base_interface`` overloads require ``SC_ENABLE_COVARIANT_VIRTUAL_BASE``, disabled in the current runtime; the opt-in configuration remains untested. Concrete socket accessors are separately supported.
+* ☑ ``tlm::tlm_base_socket_if`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed. Both base ``get_base_interface`` overloads are verified with a matching ``SC_ENABLE_COVARIANT_VIRTUAL_BASE`` kernel and Cling configuration; the default build omits them.
 * ☑ ``tlm::tlm_base_target_socket`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.
 * ☑ ``tlm::tlm_base_target_socket_b`` — 11 declarations; runtime: 11 supported; mapping: 11 reviewed.
 * ☑ ``tlm::tlm_blocking_get_if`` — 4 declarations; runtime: 4 supported; mapping: 4 reviewed.

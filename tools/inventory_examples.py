@@ -12,6 +12,102 @@ import shlex
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# Upstream executable targets and Python ports do not always share a filename.
+# Keep this mapping explicit so a directory scan cannot mistake support modules
+# for runnable ports or silently omit alternate entry points.
+PYTHON_ENTRYPOINTS = {
+    ("sysc/2.1/dpipe", "dpipe"): ["examples/sysc/2.1/dpipe/main.py"],
+    ("sysc/2.1/forkjoin", "forkjoin"): ["examples/sysc/2.1/forkjoin/forkjoin.py"],
+    ("sysc/2.1/reset_signal_is", "reset_signal_is"): ["examples/sysc/2.1/reset_signal_is/reset_signal_is.py"],
+    ("sysc/2.1/sc_export", "sc_export"): [
+        "examples/sysc/2.1/sc_export/main.py",
+        "examples/sysc/2.1/sc_export/main_protocol.py",
+    ],
+    ("sysc/2.1/sc_report", "sc_report"): ["examples/sysc/2.1/sc_report/main.py"],
+    ("sysc/2.1/scx_barrier", "scx_barrier"): ["examples/sysc/2.1/scx_barrier/main.py"],
+    ("sysc/2.1/scx_mutex_w_policy", "scx_mutex_w_policy"): [
+        "examples/sysc/2.1/scx_mutex_w_policy/scx_mutex_w_policy.py"
+    ],
+    ("sysc/2.1/specialized_signals", "specialized_signals"): ["examples/sysc/2.1/specialized_signals/main.py"],
+    ("sysc/2.3/sc_rvd", "sc_rvd"): ["examples/sysc/2.3/sc_rvd/main.py"],
+    ("sysc/2.3/sc_ttd", "sc_ttd"): ["examples/sysc/2.3/sc_ttd/main.py"],
+    ("sysc/2.3/simple_async", "simple_async"): ["examples/sysc/2.3/simple_async/main.py"],
+    ("sysc/fft/fft_flpt", "fft_flpt"): ["examples/sysc/fft/fft_flpt/main.py"],
+    ("sysc/fft/fft_fxpt", "fft_fxpt"): ["examples/sysc/fft/fft_fxpt/main.py"],
+    ("sysc/fir", "fir"): ["examples/sysc/fir/main.py"],
+    ("sysc/fir", "fir_rtl"): ["examples/sysc/fir/main_rtl.py"],
+    ("sysc/pipe", "pipe"): ["examples/sysc/pipe/main.py"],
+    ("sysc/pkt_switch", "pkt_switch"): ["examples/sysc/pkt_switch/main.py"],
+    ("sysc/risc_cpu", "risc_cpu"): ["examples/sysc/risc_cpu/main.py"],
+    ("sysc/rsa", "rsa"): ["examples/sysc/rsa/rsa.py"],
+    ("sysc/simple_bus", "simple_bus"): ["examples/sysc/simple_bus/simple_bus_main.py"],
+    ("sysc/simple_fifo", "simple_fifo"): ["examples/sysc/simple_fifo/simple_fifo.py"],
+    ("sysc/simple_perf", "simple_perf"): ["examples/sysc/simple_perf/simple_perf.py"],
+    ("tlm/at_1_phase", "at_1_phase"): ["examples/tlm/at_1_phase/src/at_1_phase.py"],
+    ("tlm/at_2_phase", "at_2_phase"): ["examples/tlm/at_2_phase/src/at_2_phase.py"],
+    ("tlm/at_4_phase", "at_4_phase"): ["examples/tlm/at_4_phase/src/at_4_phase.py"],
+    ("tlm/at_extension_optional", "at_extension_optional"): [
+        "examples/tlm/at_extension_optional/src/at_extension_optional.py"
+    ],
+    ("tlm/at_mixed_targets", "at_mixed_targets"): ["examples/tlm/at_mixed_targets/src/at_mixed_targets.py"],
+    ("tlm/at_ooo", "at_ooo"): ["examples/tlm/at_ooo/src/at_ooo.py"],
+    ("tlm/lt", "lt"): ["examples/tlm/lt/src/lt.py"],
+    ("tlm/lt_dmi", "lt_dmi"): ["examples/tlm/lt_dmi/src/lt_dmi.py"],
+    ("tlm/lt_extension_mandatory", "lt_extension_mandatory"): [
+        "examples/tlm/lt_extension_mandatory/src/lt_extension_mandatory.py"
+    ],
+    ("tlm/lt_mixed_endian", "lt_mixed_endian"): ["examples/tlm/lt_mixed_endian/src/lt.py"],
+    ("tlm/lt_temporal_decouple", "lt_temporal_decouple"): [
+        "examples/tlm/lt_temporal_decouple/src/lt_temporal_decouple.py"
+    ],
+}
+
+# These files are imported by their mapped entry point, directly or through a
+# local helper. CMake runtime input detection remains in runtime_review below.
+PYTHON_SUPPORT_FILES = {
+    ("sysc/risc_cpu", "risc_cpu"): [
+        f"examples/sysc/risc_cpu/{name}.py"
+        for name in ("bios", "dcache", "decode", "exec", "fetch", "floating", "icache", "mmxu", "paging", "pic")
+    ],
+    ("tlm/at_1_phase", "at_1_phase"): ["examples/tlm/common/models.py", "examples/tlm/common/runtime.py"],
+    ("tlm/at_2_phase", "at_2_phase"): ["examples/tlm/common/models.py", "examples/tlm/common/runtime.py"],
+    ("tlm/at_4_phase", "at_4_phase"): ["examples/tlm/common/models.py", "examples/tlm/common/runtime.py"],
+    ("tlm/at_extension_optional", "at_extension_optional"): [
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+    ("tlm/at_mixed_targets", "at_mixed_targets"): [
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+    ("tlm/at_ooo", "at_ooo"): ["examples/tlm/common/models.py", "examples/tlm/common/runtime.py"],
+    ("tlm/lt", "lt"): [
+        "examples/tlm/common/lt_models.py",
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+    ("tlm/lt_dmi", "lt_dmi"): [
+        "examples/tlm/common/dmi_models.py",
+        "examples/tlm/common/lt_models.py",
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+    ("tlm/lt_extension_mandatory", "lt_extension_mandatory"): [
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+    ("tlm/lt_mixed_endian", "lt_mixed_endian"): [
+        "examples/tlm/common/lt_models.py",
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+    ("tlm/lt_temporal_decouple", "lt_temporal_decouple"): [
+        "examples/tlm/common/lt_models.py",
+        "examples/tlm/common/models.py",
+        "examples/tlm/common/runtime.py",
+    ],
+}
+
 
 def source_dependencies(directory, arguments):
     """Resolve literal target sources and recursive quoted includes.
@@ -130,16 +226,70 @@ def inventory_examples(api_inventory):
                     "line": content.count("\n", 0, match.start()) + 1,
                     "variant_status": "requires review of variables, conditions, shared sources and runtime inputs",
                     "native_status": "untested",
-                    "python_ports": [
-                        port.relative_to(ROOT).as_posix()
-                        for port in sorted((ROOT / "examples" / path.parent.relative_to(upstream)).glob("*.py"))
-                    ],
+                    "python_entrypoints": [],
+                    "python_support_files": [],
+                    "python_mapping_status": "unmapped",
+                    "python_target_relationship": "unmapped",
+                    "python_variant_group": None,
                     "equivalence_status": "not inferred from port presence",
                 }
             )
+    target_keys = {(row["group"], row["target"]) for row in builds}
+    expected_keys = set(PYTHON_ENTRYPOINTS)
+    unknown_mapping_keys = sorted(expected_keys - target_keys)
+    for row in builds:
+        key = (row["group"], row["target"])
+        if key not in PYTHON_ENTRYPOINTS:
+            continue
+        entrypoints = PYTHON_ENTRYPOINTS[key]
+        row["python_entrypoints"] = entrypoints
+        row["python_support_files"] = PYTHON_SUPPORT_FILES.get(key, [])
+        row["python_mapping_status"] = "mapped" if entrypoints else "no_entrypoint"
+        if row["group"] == "sysc/fir":
+            row["python_target_relationship"] = "native_variant"
+            row["python_variant_group"] = "sysc/fir"
+        elif row["group"] == "sysc/2.1/sc_export":
+            row["python_target_relationship"] = "shared_native_target"
+            row["python_variant_group"] = "sysc/2.1/sc_export"
+        else:
+            row["python_target_relationship"] = "one_to_one"
+            row["python_variant_group"] = None
+
+    mapped_entrypoints = sorted(path for paths in PYTHON_ENTRYPOINTS.values() for path in paths)
+    mapped_support_files = sorted({path for paths in PYTHON_SUPPORT_FILES.values() for path in paths})
+    python_scope = {
+        path.relative_to(ROOT).as_posix()
+        for parent in (ROOT / "examples/sysc", ROOT / "examples/tlm")
+        for path in parent.rglob("*.py")
+    }
+    unmapped_python_files = sorted(python_scope - set(mapped_entrypoints) - set(mapped_support_files))
+    unmatched_native_targets = sorted(target_keys - expected_keys)
+    missing_python_files = sorted(
+        path for path in [*mapped_entrypoints, *mapped_support_files] if not (ROOT / path).is_file()
+    )
     return {
         "systemc_revision": api_inventory["systemc_revision"],
         "build_targets": builds,
+        "python_mapping": {
+            "schema_version": 1,
+            "entrypoint_count": len(mapped_entrypoints),
+            "support_file_count": len(mapped_support_files),
+            "entrypoints": mapped_entrypoints,
+            "support_files": mapped_support_files,
+            "unmapped_python_files": unmapped_python_files,
+            "missing_python_files": missing_python_files,
+            "unmatched_native_targets": unmatched_native_targets,
+            "missing_native_targets": unknown_mapping_keys,
+            "completeness": (
+                "complete"
+                if not missing_python_files
+                and not unknown_mapping_keys
+                and not unmatched_native_targets
+                and not unmapped_python_files
+                else "requires_review"
+            ),
+            "scope": "Explicit upstream executable mapping; support modules listed separately. Presence does not imply execution or equivalence.",
+        },
         "source_files": [path.relative_to(ROOT).as_posix() for path in sources],
         "family_references": {
             family: {
@@ -148,7 +298,7 @@ def inventory_examples(api_inventory):
             }
             for family in api_inventory["families"]
         },
-        "limits": "Literal CMake target declarations and lexical references; variant expansion and equivalence need review.",
+        "limits": "Literal CMake target declarations and lexical references; CMake conditional expansion and equivalence need review.",
     }
 
 

@@ -262,14 +262,22 @@ format-python:
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage
 coverage:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov=amal.eda.cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
 
 # ----------------------------------------------------------------------------------------------------------------------
 # coverage-parallel: ## Run coverage in isolated pytest workers (TEST_WORKERS defaults to 4)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage-parallel
 coverage-parallel:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -n $(TEST_WORKERS) --dist=worksteal --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml $(ARGS)
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -n $(TEST_WORKERS) --dist=worksteal --cov=amal.eda.systemc --cov=amal.eda.cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml $(ARGS)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# benchmark-startup: ## Measure fresh-process startup and first-use latency
+# ----------------------------------------------------------------------------------------------------------------------
+BENCHMARK_REPORT ?= build/startup/baseline.json
+.PHONY: benchmark-startup
+benchmark-startup:
+	uv run python tools/benchmark_startup.py --output "$(BENCHMARK_REPORT)" $(ARGS)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # native-sanitize: ## Run optional ASan/UBSan first-party native references
