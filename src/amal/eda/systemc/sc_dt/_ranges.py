@@ -6,48 +6,6 @@ import cppyy
 cppyy.include(str(Path(__file__).with_name("ranges.h")))
 
 
-def _binary_vector_constructor(native):
-    """Select native fixed-range conversion before constructing a binary vector."""
-
-    def construct(owner, *args):
-        """Initialize independent vector storage from a native fixed range.
-
-        Args:
-            args: Native constructor arguments. A single fixed-point range
-                uses its exact native binary-vector conversion operator.
-        Returns:
-            None, matching native construction.
-        Raises:
-            TypeError: Native construction/conversion is unavailable.
-            Native exception: Allocation or a configured report throws.
-        Calls hold the GIL and do not suspend. The source is borrowed only
-        during construction; the resulting vector owns copied native storage.
-        """
-        if len(args) == 1 and isinstance(
-            args[0],
-            (
-                cppyy.gbl.sc_dt.sc_fxnum_subref_r,
-                cppyy.gbl.sc_dt.sc_fxnum_fast_subref_r,
-            ),
-        ):
-            value = cppyy.gbl.pysystemc_datatypes.range_to_vector[type(args[0])](args[0])
-            return native(owner, value)
-        return native(owner, *args)
-
-    construct.__overload__ = native.__overload__
-    return construct
-
-
-def _vector_pythonization(native_type, name):
-    """Adapt arbitrary-width binary vector constructors without changing types."""
-    if name == "sc_bv_base" or name.startswith("sc_bv<"):
-        native_type.__init__ = _binary_vector_constructor(native_type.__init__)
-
-
-_vector_pythonization(cppyy.gbl.sc_dt.sc_bv_base, "sc_bv_base")
-cppyy.py.add_pythonization(_vector_pythonization, "sc_dt")
-
-
 def _legacy_signed(view):
     """Return native signed conversion using the deprecated alias name.
 
