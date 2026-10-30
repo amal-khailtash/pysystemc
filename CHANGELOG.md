@@ -19,6 +19,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Preserve literal `--` script arguments after the `systemc-py run` argument delimiter.
 - Reject unsupported fixed-point parameter constructor shapes with `TypeError` instead of silently producing a zero-valued number.
 - Preserve macro declaration header locations in API inventories when Clang omits repeated filenames across spelling, expansion and range locations.
 

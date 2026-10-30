@@ -113,10 +113,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         from ._run import run_file
 
-        script_args = args.script_args
-        if script_args and script_args[0] == "--":
-            script_args = script_args[1:]
-        run_file(args.source, script_args)
+        run_file(args.source, args.script_args)
         return 0
     if args.action == "repl":
         # Importing this module first imports amal.eda.systemc and initializes
