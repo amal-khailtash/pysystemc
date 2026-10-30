@@ -192,7 +192,11 @@ def namespace_help(module_globals, namespace):
     """
     groups = {"Classes": [], "Templates": [], "Enums": [], "Functions": [], "Constants": []}
     for name in public_names(namespace):
-        member = document_member(module_globals.get(name, getattr(namespace, name)))
+        if name in module_globals:
+            member = module_globals[name]
+        else:
+            member = getattr(namespace, name)
+        member = document_member(member)
         if isinstance(member, type) and hasattr(member, "__underlying"):
             category = "Enums"
         elif type(member).__name__ == "Template":

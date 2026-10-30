@@ -2,10 +2,6 @@
 
 from amal.eda.systemc import main, print_hierarchy, sc_core
 
-# Blocking native FIFO calls must release the GIL so other processes can run.
-sc_core.sc_fifo_out[int].write.__release_gil__ = True
-sc_core.sc_fifo_in[int].read.__release_gil__ = True
-
 MESSAGE = "Visit www.accellera.org and see what SystemC can do for you today!\n"
 
 

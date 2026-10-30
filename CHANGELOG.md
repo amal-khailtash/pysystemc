@@ -10,17 +10,23 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Add `make profile-startup` to attribute startup costs to module imports, library/header loading and bridge compilation, with separate reflection/template probes and retained failure output.
+- Add `make test-wheel-examples` to stage runnable examples and reuse native/tutorial comparison assertions against an installed wheel, with subprocess import guards and persistent reports.
 - Add `make benchmark-startup` to measure fresh-process CLI, imports, model/template construction and REPL setup, with checked outputs, peak memory and retained failure diagnostics.
 - Add a native `pysystemc_public::print_hierarchy` helper with readable Python/native module types, global C++ calls, nested instance names and internal-module filtering; show the hierarchy in Python and C++ FIFO examples.
 - Add `systemc-cpp run SOURCE.cpp -- ARGS...` with source/include handling and native argument/status forwarding.
 - Add `systemc-py run SOURCE.py -- ARGS...` to execute Python models with script arguments and sibling imports.
 
 ### Fixed
+
+- Normalize the packaged SystemC library name so separately linked native executables can load the wheel's single shared-library payload.
+- Avoid native re-reflection of existing Python adapters when generating namespace help, including adapters with falsy values.
 - Handle `systemc-cpp` help, version output and argument errors before loading the native SystemC kernel.
 - Show help successfully when `systemc-cpp` is invoked without arguments.
 
 ### Changed
 
+- Align the export examples' member names and hierarchical bindings with their native references, and remove redundant native-call flags from the Python FIFO example.
 - Include CLI modules in local and CI coverage reports, and explicitly map upstream native example targets to Python entry points and support files.
 - Show `systemc vVERSION` in the runtime banner, with a magenta name, cyan version and white description.
 - Rename the executable commands to `systemc-py` and `systemc-cpp` and group help/version flags under `Global options`, adding `-V` as a version alias. Use uv-style help colors with muted magenta program names and cyan versions.

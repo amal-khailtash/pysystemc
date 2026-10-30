@@ -280,6 +280,14 @@ benchmark-startup:
 	uv run python tools/benchmark_startup.py --output "$(BENCHMARK_REPORT)" $(ARGS)
 
 # ----------------------------------------------------------------------------------------------------------------------
+# profile-startup: ## Attribute startup time to imports and cppyy operations
+# ----------------------------------------------------------------------------------------------------------------------
+STARTUP_PROFILE_REPORT ?= build/startup/profile.json
+.PHONY: profile-startup
+profile-startup:
+	uv run python tools/profile_startup.py --output "$(STARTUP_PROFILE_REPORT)" $(ARGS)
+
+# ----------------------------------------------------------------------------------------------------------------------
 # native-sanitize: ## Run optional ASan/UBSan first-party native references
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: native-sanitize
@@ -302,6 +310,21 @@ test-wheel:
 	env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
 		uv run --no-project --with "$$wheel" \
 		python "$(MAKEFILE_DIR)/tools/check_installed_examples.py"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-wheel-examples: ## Compare all runnable examples using an installed wheel
+# ----------------------------------------------------------------------------------------------------------------------
+INSTALLED_EXAMPLE_REPORT_DIR ?= $(MAKEFILE_DIR)/build/verification/installed
+.PHONY: test-wheel-examples
+test-wheel-examples:
+	@set -e; \
+	example_wheel=$$(find "$(WHEEL_DIR)" -maxdepth 1 -name 'pysystemc-$(PACKAGE_VERSION)-*.whl' -print -quit); \
+	test -n "$$example_wheel" || { echo "No wheel for $(PACKAGE_VERSION) in $(WHEEL_DIR); run uv build --out-dir $(WHEEL_DIR)" >&2; exit 1; }; \
+	example_wheel=$$(realpath "$$example_wheel"); \
+	cd /tmp; \
+	env -u PYTHONPATH -u PYTHONHOME -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
+		uv run --no-project --with "$$example_wheel" --with pytest --with pytest-xdist \
+		python -I "$(MAKEFILE_DIR)/tools/check_installed_examples.py" --all --output-dir "$(INSTALLED_EXAMPLE_REPORT_DIR)"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)

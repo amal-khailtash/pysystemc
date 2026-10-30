@@ -68,6 +68,37 @@ Existing cppyy and operating-system caches are preserved; a fresh interpreter
 does not imply a cold filesystem cache. Compare repeated results on the same
 machine and configuration, including first-use latency as well as import time.
 
+To attribute startup costs to module imports and cppyy operations, run::
+
+   make profile-startup
+   make profile-startup ARGS="--case reflection"
+   make profile-startup ARGS="--case first-use --probe sc_biguint_257"
+
+The profiler preserves initialization order and records library loading,
+header inclusion and JIT declaration calls in fresh interpreters. Module
+durations include nested imports and must not be summed. Failed samples retain
+their output and are excluded from timing summaries. Instrumentation adds
+overhead; use the separate benchmark to assess changes in startup latency.
+
+For installed-wheel example validation, build the artifact and run::
+
+   uv build --out-dir build/installed-example-validation
+   make test-wheel-examples WHEEL_DIR=build/installed-example-validation
+
+This target stages Python examples, their support/data files and native
+references outside the checkout. It reuses the upstream and tutorial regression
+assertions in a wheel environment with four workers, checks the package import
+origin in each subprocess, verifies installed runtime source bytes against the
+checkout, and writes JUnit, logs and a JSON summary under
+``build/verification/installed``. The summary separates runnable entries from
+support modules and installed behavior from native comparisons. The existing
+``make test-wheel`` target retains the shorter console and tutorial checks.
+
+The build environment uses ``patchelf`` to normalize the packaged SystemC
+SONAME to ``libsystemc.so``. Only a temporary copy is modified; the native
+installation remains unchanged. This keeps separately linked C++ executables
+compatible with the wheel's single shared-library payload.
+
 Conditional TLM socket getters have a separate validation target::
 
    make test-tlm-covariant
