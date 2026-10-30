@@ -62,25 +62,57 @@ def source_text(filename):
 
 
 def restore_source_files(roots):
-    """Expand Clang's stream-wide omitted file locations before tree traversal.
+    """Restore omitted Clang filenames in serialized source-location order.
 
-    Clang compresses consecutive locations across siblings, not just descendants.
-    Keeping a stream cursor prevents attributing inline definitions to an earlier
-    namespace header. Expansion locations take precedence for macro declarations.
+    Clang elides repeated filenames across the JSON stream, including within a
+    macro location: ``spellingLoc`` is serialized before ``expansionLoc``. Walk
+    each node's fields in their JSON order so an explicit spelling filename can
+    restore an elided expansion filename. The cursor spans source locations in
+    ``loc`` and ``range`` fields and sibling AST nodes.
     """
     current = None
 
-    def visit(node):
-        """Restore declaration locations in AST serialization order."""
+    def restore_location(location):
+        """Fill one ordinary or macro source location in serialization order."""
         nonlocal current
-        location = node.get("loc", {})
-        location = location.get("expansionLoc", location.get("spellingLoc", location))
+
+        if not isinstance(location, dict) or not location:
+            return
+        if "spellingLoc" in location or "expansionLoc" in location:
+            # Preserve Clang's emitted order (normally spelling, then expansion).
+            # `includedFrom.file` is include metadata, not this location's file.
+            for key, child in location.items():
+                if key in {"spellingLoc", "expansionLoc"}:
+                    restore_location(child)
+            return
         if "file" in location:
             current = location["file"]
-        elif location and current:
+        elif current:
             location["file"] = current
-        for child in node.get("inner", []):
-            visit(child)
+
+    def restore_range(source_range):
+        """Restore begin/end source points in the order Clang serialized them."""
+        if not isinstance(source_range, dict):
+            return
+        for key, location in source_range.items():
+            if key in {"begin", "end"}:
+                restore_location(location)
+
+    def visit(value):
+        """Walk AST JSON fields and child nodes without changing field order."""
+        if isinstance(value, list):
+            for child in value:
+                visit(child)
+            return
+        if not isinstance(value, dict):
+            return
+        for key, child in value.items():
+            if key == "loc":
+                restore_location(child)
+            elif key == "range":
+                restore_range(child)
+            else:
+                visit(child)
 
     for root in roots:
         visit(root)

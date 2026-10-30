@@ -19,6 +19,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Preserve macro declaration header locations in API inventories when Clang omits repeated filenames across spelling, expansion and range locations.
+
+- Report C++ runner initialization failures through the CLI diagnostic and exit status instead of an uncaught Python traceback.
+
 - Normalize the packaged SystemC library name so separately linked native executables can load the wheel's single shared-library payload.
 - Avoid native re-reflection of existing Python adapters when generating namespace help, including adapters with falsy values.
 - Handle `systemc-cpp` help, version output and argument errors before loading the native SystemC kernel.

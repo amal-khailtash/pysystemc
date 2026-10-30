@@ -58,7 +58,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             Arguments after -- are forwarded unchanged to native sc_main.
 
     Returns:
-        The native sc_main status, or 1 after displaying runner errors.
+        The native sc_main status, or 1 after displaying native initialization
+        or runner errors.
 
     Raises:
         SystemExit: For help, version, or malformed command-line arguments.
@@ -92,10 +93,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if options.command != "run":
         parser.error("no command selected")
 
-    # Keep argument parsing, help, and version independent from native startup.
-    from amal.eda.systemc._runner import run_sources
-
     try:
+        # Keep argument parsing, help, and version independent from native startup.
+        # Import here so runtime initialization failures use the runner's error format.
+        from amal.eda.systemc._runner import run_sources
+
         return run_sources(options.source, values[separator + 1 :], options.include)
     except Exception as error:
         print(f"systemc-cpp: {error}", file=sys.stderr)
