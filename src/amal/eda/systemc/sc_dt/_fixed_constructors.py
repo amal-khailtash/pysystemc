@@ -81,6 +81,8 @@ def _adapt(native_type):
         if configurable:
             selected = _configured_signature(arguments, observer_type, observer_signature)
             if selected is None:
+                if type(arguments[0]) is cppyy.gbl.sc_dt.sc_fxtype_params:
+                    raise TypeError("unsupported fixed-point parameter constructor shape")
                 return native_constructor(owner, *args, **kwargs)
             signatures, arguments = selected
             return native_constructor.__overload__(", ".join(signatures))(owner, *arguments)

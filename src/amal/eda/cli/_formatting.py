@@ -175,8 +175,6 @@ def _styled_help(help_text: str, command_names: set[str]) -> Text:
     in_usage = False
     for line in help_text.splitlines():
         in_usage = _append_help_line(rendered, line, in_usage=in_usage, command_names=command_names)
-    if help_text.endswith("\n") and not help_text.splitlines():
-        rendered.append("\n")
     return rendered
 
 
