@@ -9,6 +9,7 @@ import os
 import sys
 from importlib.metadata import version as _package_version
 from ._logging import log, show_banner
+from ._native_help import format_native_help as format_native_help, native_help as native_help
 
 __version__ = _package_version("pysystemc")
 show_banner(__version__)

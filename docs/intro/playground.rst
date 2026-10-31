@@ -62,6 +62,22 @@ callbacks. Incomplete statements show a continuation prompt; pasted multiline
 input is supported. Python and native binding exceptions are displayed while
 session variables remain available for inspection.
 
+Inspect native declarations with ``native_help``. It displays available native
+constructor or function overloads, template names and enum values without
+traversing cppyy's inherited proxy metadata::
+
+   native_help(sc_core.sc_time)
+   native_help(sc_core.sc_time.to_seconds)
+   native_help(sc_dt.sc_uint)
+   native_help(sc_dt.sc_uint[73])
+
+Both ``native_help`` and ``format_native_help`` are preloaded in the playground
+and available from ``amal.eda.systemc``. ``format_native_help`` returns the text;
+``native_help`` prints it, optionally to a text stream supplied with ``file=``.
+If native signature metadata is unavailable, the output says so and retains
+available documentation. These helpers preserve native objects and Python's
+ordinary ``help()`` behavior.
+
 The prompt provides Python syntax highlighting, tab completion, history
 suggestions, arrow-key navigation and line editing. Ctrl+C clears unfinished
 input and returns to the prompt. Ctrl+D or ``exit()`` leaves the playground.

@@ -32,6 +32,8 @@ Environment and runtime
 
 Python namespace export lists include native declarations and explicit Python adapters.
 First-party bridge utilities remain accessible through the raw ``cppyy.gbl`` namespaces.
+``native_help`` and ``format_native_help`` display available native overloads,
+template parameters and enum values while preserving the native proxies.
 
 Modules, processes and simulation
 ---------------------------------

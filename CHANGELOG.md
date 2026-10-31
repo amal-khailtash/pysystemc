@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Add `native_help` and `format_native_help` for native overloads, templates and enums, available from Python and the playground without inherited cppyy proxy metadata.
 - Add `make profile-startup` to attribute startup costs to module imports, library/header loading and bridge compilation, with separate reflection/template probes and retained failure output.
 - Add `make test-wheel-examples` to stage runnable examples and reuse native/tutorial comparison assertions against an installed wheel, with subprocess import guards and persistent reports.
 - Add `make benchmark-startup` to measure fresh-process CLI, imports, model/template construction and REPL setup, with checked outputs, peak memory and retained failure diagnostics.
