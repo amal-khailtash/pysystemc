@@ -26,8 +26,12 @@ Environment and runtime
 * ☑ Header/library discovery, external installation overrides and dependency diagnostics.
 * ☑ Cling configuration, native ABI configuration and CPyCppyy header compatibility repair.
 * ☑ Installed-header operation without reading kernel implementation source at import.
-* ☑ One-time native library/bridge loading and deliberate Python namespace exports/help.
+* ☑ One-time native library/bridge loading and consistent public exports, namespace
+  help summaries and REPL completion, including native aliases and unrestricted templates.
 * ☐ Broader operating-system, compiler, Python and SystemC version matrices.
+
+Python namespace export lists include native declarations and explicit Python adapters.
+First-party bridge utilities remain accessible through the raw ``cppyy.gbl`` namespaces.
 
 Modules, processes and simulation
 ---------------------------------

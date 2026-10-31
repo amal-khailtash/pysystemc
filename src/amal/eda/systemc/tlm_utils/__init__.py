@@ -8,7 +8,12 @@ ownership require native-compatible objects and retained Python callbacks.
 import cppyy
 from pathlib import Path
 from ..sc_core import _ProcessUnwind
-from .._namespace import public_names as _public_names, document_member as _document_member
+from .._namespace import (
+    is_public_name as _is_public_name,
+    presented_names as _presented_names,
+    document_member as _document_member,
+    namespace_help as _namespace_help,
+)
 
 for _header in (
     "tlm_quantumkeeper.h",
@@ -24,7 +29,6 @@ for _header in (
     cppyy.include(f"tlm_utils/{_header}")
 
 _namespace = cppyy.gbl.tlm_utils
-__all__ = _public_names(_namespace)
 cppyy.include(str(Path(__file__).with_name("callback_peq.h")))
 cppyy.include(str(Path(__file__).with_name("socket_callbacks.h")))
 cppyy.include(str(Path(__file__).with_name("socket_member_pointer.h")))
@@ -494,21 +498,13 @@ def callback_peq(name, callback, protocol=None):
     return queue
 
 
-__all__.append("callback_passthrough_target_socket")
-__all__.append("callback_multi_initiator_socket")
-__all__.append("callback_multi_target_socket")
-__all__.append("callback_peq")
-__all__.append("callback_target_socket")
-__all__.append("callback_initiator_socket")
-
-
 def __getattr__(name):
     """Resolve a native utility; unavailable names raise AttributeError.
 
     Returned native classes preserve constructor and template signatures.
     Callers retain queues, payloads and socket callback owners through simulation.
     """
-    if name.startswith("_"):
+    if not _is_public_name(_namespace, name):
         raise AttributeError(name)
     member = _document_member(getattr(_namespace, name))
     globals()[name] = member
@@ -516,8 +512,9 @@ def __getattr__(name):
 
 
 def __dir__():
-    """List utility names available in the native namespace."""
-    return sorted(set(globals()) | set(_public_names(_namespace)))
+    """List native utility names, Python globals and private metadata."""
+    module_names = {name for name in globals() if name.startswith("_") or _is_public_name(_namespace, name)}
+    return sorted(module_names | set(_presented_names(globals(), _namespace, adapters=_PYTHON_ADAPTERS)))
 
 
 cppyy.cppdef("""
@@ -618,4 +615,15 @@ def callback_quantumkeeper(callback):
     return Keeper(callback)
 
 
-__all__.append("callback_quantumkeeper")
+_PYTHON_ADAPTERS = (
+    "callback_initiator_socket",
+    "callback_target_socket",
+    "callback_passthrough_target_socket",
+    "callback_multi_initiator_socket",
+    "callback_multi_target_socket",
+    "callback_peq",
+    "callback_quantumkeeper",
+)
+
+__all__ = _presented_names(globals(), _namespace, adapters=_PYTHON_ADAPTERS)
+__doc__ = _namespace_help(globals(), _namespace)

@@ -19,6 +19,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Align namespace exports, help summaries, and REPL completion with public native declarations and Python adapters, keeping bridge utilities in the raw cppyy namespaces.
+- Include context adapters, analysis FIFOs, and TLM utility socket templates in wildcard imports and namespace help.
 - Reject const-to-mutable member-access policy conversions that cppyy previously accepted despite native SystemC const restrictions.
 - Keep Python kernel flag reads synchronized with native SystemC storage after Python or native assignments.
 - Preserve native reference return types for text/integer concatenation, avoiding forbidden copies of native concatenation views.

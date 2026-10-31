@@ -19,7 +19,8 @@ import cppyy
 
 from .._logging import log
 from .._namespace import (
-    public_names as _public_names,
+    presented_names as _presented_names,
+    is_public_name as _is_public_name,
     document_member as _document_member,
     namespace_help as _namespace_help,
 )
@@ -164,11 +165,11 @@ for _name in ("sc_method", "sc_thread", "sc_cthread"):
 sc_core_namespace = cppyy.gbl.sc_core
 
 
-def add_sc_core_members():
+def _add_sc_core_members():
     """Populate resolvable native names while preserving Python print()."""
     module_globals = globals()
     for name in dir(sc_core_namespace):
-        if name == "print":
+        if not _is_public_name(sc_core_namespace, name):
             continue
         try:
             member = getattr(sc_core_namespace, name)
@@ -178,12 +179,11 @@ def add_sc_core_members():
 
 
 # Add all sc_core members to this module
-add_sc_core_members()
+_add_sc_core_members()
 
 # Manually add each public member of the `sc_core` namespace to the module"s globals
 for name, member in sc_core_namespace.__dict__.items():
-    # Filter out internal or irrelevant attributes
-    if not name.startswith("__"):
+    if _is_public_name(sc_core_namespace, name):
         globals()[name] = member
 
 # Publish Python helpers after namespace copying so native overloads cannot
@@ -699,15 +699,18 @@ _install_time(cppyy.gbl.sc_core.sc_time)
 
 
 def __getattr__(name):
-    """Resolve a native kernel name or raise AttributeError."""
+    """Resolve a presented native kernel name or raise AttributeError."""
+    if not _is_public_name(cppyy.gbl.sc_core, name):
+        raise AttributeError(name)
     mod = _document_member(getattr(cppyy.gbl.sc_core, name))
     return mod
 
 
 # Define a custom __dir__ for listing available attributes
 def __dir__():
-    """List Python adapters and resolvable native kernel API names."""
-    return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
+    """List eligible Python adapters, metadata, and native kernel API names."""
+    module_names = {name for name in globals() if name.startswith("_") or _is_public_name(cppyy.gbl.sc_core, name)}
+    return sorted(module_names | set(_presented_names(globals(), cppyy.gbl.sc_core, adapters=_PYTHON_ADAPTERS)))
 
 
 def sc_argv() -> tuple[str, ...]:
@@ -1307,42 +1310,43 @@ sc_cref = _python_sc_cref
 sc_assemble_vector = _assemble_vector
 sc_member_access = _MemberAccessTemplate()
 
-__all__ = sorted(
-    set(_public_names(cppyy.gbl.sc_core))
-    | {
-        "CFT",
-        "sc_plist_map_fn",
-        "sc_report_handler_proc",
-        "ScStatus",
-        "sc_status",
-        "sc_status_type",
-        "sc_trace",
-        "sc_spawn",
-        "sc_bind",
-        "sc_placeholder",
-        "sc_trace_value",
-        "sc_signal_value",
-        "sc_port_value",
-        "sc_assemble_vector",
-        "sc_member_access",
-        "wait",
-        "native_blocking_call",
-        "set_report_handler",
-        "sc_elab_and_sim",
-        "sc_stop",
-        "vcd_trace",
-        "interface",
-        "release_interface_callbacks",
-        "teardown_interfaces",
-        "declare_interface",
-        "channel_interface",
-        "read_interface",
-        "signal_channel",
-        "fifo_channel",
-    }
+_PYTHON_ADAPTERS = (
+    "CFT",
+    "sc_plist_map_fn",
+    "sc_report_handler_proc",
+    "ScStatus",
+    "ScModule",
+    "sc_module",
+    "sc_status",
+    "sc_status_type",
+    "sc_trace",
+    "sc_spawn",
+    "sc_bind",
+    "sc_placeholder",
+    "sc_trace_value",
+    "sc_signal_value",
+    "sc_port_value",
+    "sc_assemble_vector",
+    "sc_member_access",
+    "wait",
+    "native_blocking_call",
+    "set_report_handler",
+    "sc_elab_and_sim",
+    "sc_stop",
+    "vcd_trace",
+    "interface",
+    "release_interface_callbacks",
+    "teardown_interfaces",
+    "declare_interface",
+    "channel_interface",
+    "read_interface",
+    "signal_channel",
+    "fifo_channel",
 )
-
-__doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
 
 _install_kernel_flags(sys.modules[__name__])
 _install_member_scheduler(sc_module, sc_prim_channel, _ProcessUnwind)
+
+# Publish only reviewed native names and explicit Python-facing adapters.
+__all__ = _presented_names(globals(), cppyy.gbl.sc_core, adapters=_PYTHON_ADAPTERS)
+__doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
