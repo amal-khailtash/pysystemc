@@ -843,6 +843,14 @@ preconditions apply; tested combinations are recorded in :doc:`../api/coverage`.
 * ☑ ``sc_core::sc_register_hierarchical_name`` — 2 declarations; runtime: 2 supported; mapping: 2 reviewed.
 * ☑ ``sc_core::sc_release`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report`` — 25 declarations; runtime: 25 supported; mapping: 25 reviewed.
+
+  The Python assignment adapter is called as
+  ``sc_report.__assign__(destination, source)`` and returns ``destination``.
+  Report copies own their message and timestamp storage. Assignment, including
+  self-assignment, replaces that storage and invalidates previously borrowed
+  field views. Copy needed values before assignment and obtain fresh views
+  afterward. Swapping reports transfers the storage to the other report; retain
+  its new owner while using a borrowed timestamp.
 * ☑ ``sc_core::sc_report_close_default_log`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_compose_message`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
 * ☑ ``sc_core::sc_report_handler`` — 32 declarations; runtime: 32 supported; mapping: 32 reviewed.

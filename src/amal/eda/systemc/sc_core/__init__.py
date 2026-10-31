@@ -291,22 +291,25 @@ for _method in (
 
 
 def _assign_report(self, source):
-    """Copy source report fields into this report and return the borrowed self.
+    """Copy source report fields into this report and return the destination.
 
     Args:
         source: Live native report; self-assignment preserves values.
 
     Returns:
-        Borrowed native reference to self. Both reports retain their own fields.
+        The same Python destination proxy. The destination owns copied fields.
 
     Raises:
         TypeError: source cannot convert to a native report.
         Exception: Native copying/allocation fails.
 
     Call on the simulation thread with the GIL held; no callbacks or ownership
-    transfer. Any borrowed field views require the owning report to remain alive.
+    transfer. Assignment invalidates the destination's borrowed field views,
+    including its timestamp, even on self-assignment. Copy needed values before
+    assignment and obtain fresh views afterward. Keep each view's owner alive.
     """
-    return cppyy.gbl.pysystemc.report_assign(self, source)
+    cppyy.gbl.pysystemc.report_assign(self, source)
+    return self
 
 
 cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
