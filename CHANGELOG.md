@@ -20,6 +20,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Reject Python `bytes` arguments to legacy string formatting with `TypeError` before native variadic dispatch, avoiding a native crash; use `str` or native `std::string` arguments.
 - Keep public nested declarations visible in native help when their names match an excluded top-level bridge declaration.
 
 - Return the original destination from the explicit Python report-assignment adapter without converting a native exception reference; document timestamp invalidation on assignment and ownership transfer on swap.
