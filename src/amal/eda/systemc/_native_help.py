@@ -44,7 +44,9 @@ def _hidden_declaration(cpp_name: str | None) -> str | None:
     if namespace not in _NATIVE_NAMESPACES:
         return None
     declaration_text = cpp_name[len(namespace) + 2 :].split("<", maxsplit=1)[0]
-    for member_name in re.findall(r"(?:^|::)([A-Za-z_]\w*)", declaration_text):
+    root_declaration = re.match(r"([A-Za-z_]\w*)", declaration_text)
+    if root_declaration:
+        member_name = root_declaration.group(1)
         if _is_exact_bridge_exclusion(namespace, member_name):
             return f"{namespace}::{member_name}"
     return None

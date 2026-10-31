@@ -20,6 +20,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Keep public nested declarations visible in native help when their names match an excluded top-level bridge declaration.
+
 - Return the original destination from the explicit Python report-assignment adapter without converting a native exception reference; document timestamp invalidation on assignment and ownership transfer on swap.
 
 - Reject missing, inaccessible and incompatible named vector members safely, preserve native error causes, and keep later valid member selection usable.
