@@ -5,6 +5,8 @@ import re
 import cppyy
 
 _members = {}
+_member_failures = {}
+_next_member_helper_id = 0
 _native_assemble = cppyy.gbl.sc_core.sc_assemble_vector
 
 
@@ -12,38 +14,164 @@ def _member_helper(element_type, member):
     """Compile an on-demand native member-pointer adapter for one valid identifier."""
     if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", member):
         raise ValueError("vector member must be a C++ identifier")
-    key = (element_type, member)
+    element_name = getattr(element_type, "__cpp_name__", element_type)
+    key = (element_name, member)
+    if key in _member_failures:
+        try:
+            getattr(element_type, member)
+        except AttributeError:
+            raise
+        raise TypeError(f"native name {member!r} on {element_name} is not an accessible non-static data member")
     if key not in _members:
-        helper_name = f"member_{len(_members)}"
+        global _next_member_helper_id
+        helper_index = _next_member_helper_id
+        _next_member_helper_id += 1
+        helper_name = f"member_{helper_index}"
+        metadata_name = f"member_metadata_{helper_index}"
         cppyy.cppdef(f"""
+
+#include <type_traits>
+#include <utility>
 
 namespace pysystemc_vectors
 {{
-/** @brief Borrow one native member assembly without transferring vector ownership. */
+/** @brief Detect whether a public name selects an accessible data member.
+ * @tparam Element Native vector element type, including arbitrary templates.
+ * @tparam Member Native value type requested by sc_member_access.
+ */
+template <class Element, class = void>
+struct {metadata_name} : std::false_type
+{{
+}};
+
+template <class Element>
+struct {metadata_name}<Element, std::void_t<decltype(&Element::{member}),
+                                        decltype(std::declval<Element&>().{member})>>
+  : std::bool_constant<
+      std::is_member_object_pointer_v<decltype(&Element::{member})> &&
+      std::is_convertible_v<decltype(&Element::{member}),
+                        std::remove_reference_t<decltype(std::declval<Element&>().{member})> Element::*>>
+{{
+  template <class Member>
+  static constexpr bool policy_compatible =
+    std::is_convertible_v<decltype(&Element::{member}), Member Element::*>;
+}};
+
+/** @brief Borrow one native member assembly without transferring vector ownership.
+ * @tparam Element Native vector element type.
+ */
 template <class Element>
 struct {helper_name}
 {{
-  /** @brief Assemble using the native member function. GIL held; vector is borrowed. */
+  /** @brief Assemble using the native member pointer; vector ownership is borrowed.
+   * @param vector Native vector whose members form the returned assembly.
+   * @return Native assembly retaining no ownership of the vector or elements.
+   * @throws sc_core::sc_report Native reports from SystemC pass through unchanged.
+   * @note Called with the GIL held; no Python callbacks or GIL transitions occur.
+   */
   static auto member(sc_core::sc_vector<Element>& vector)
   {{
-    return vector.assemble(&Element::{member});
+    using value_type = std::remove_reference_t<decltype(std::declval<Element&>().{member})>;
+    return vector.assemble(static_cast<value_type Element::*>(&Element::{member}));
   }}
-  /** @brief Construct a native member policy from the validated member identifier. */
+
+  /** @brief Check whether a requested value type accepts this native member pointer.
+   * @tparam Member Value type requested by the native member policy.
+   */
+  template <class Member>
+  static constexpr bool policy_compatible()
+  {{
+    return {metadata_name}<Element>::template policy_compatible<Member>;
+  }}
+
+  /** @brief Construct a native member policy from the validated public identifier.
+   * @tparam Member Value type requested by the native member policy.
+   * @return A policy borrowing the selected member.
+   */
   template <class Member>
   static sc_core::sc_member_access<Element, Member> policy()
   {{
-    return sc_core::sc_member_access<Element, Member>(&Element::{member});
+    using value_type = std::remove_reference_t<decltype(std::declval<Element&>().{member})>;
+    return sc_core::sc_member_access<Element, Member>(
+      static_cast<value_type Element::*>(&Element::{member}));
   }}
-  /** @brief Assemble using the native free function. GIL held; vector is borrowed. */
+
+  /** @brief Assemble through the native free function; vector ownership is borrowed.
+   * @param vector Native vector whose members form the returned assembly.
+   * @return Native assembly retaining no ownership of the vector or elements.
+   * @throws sc_core::sc_report Native reports from SystemC pass through unchanged.
+   * @note Called with the GIL held; no Python callbacks or GIL transitions occur.
+   */
   static auto free(sc_core::sc_vector<Element>& vector)
   {{
-    return sc_core::sc_assemble_vector(vector, &Element::{member});
+    using value_type = std::remove_reference_t<decltype(std::declval<Element&>().{member})>;
+    return sc_core::sc_assemble_vector(
+      vector, static_cast<value_type Element::*>(&Element::{member}));
   }}
 }};
 }}  // namespace pysystemc_vectors
 """)
-        _members[key] = getattr(cppyy.gbl.pysystemc_vectors, helper_name)[element_type]
+        metadata = getattr(cppyy.gbl.pysystemc_vectors, metadata_name)[element_type]
+        if not bool(metadata.value):
+            # A failed class-level lookup supplies the native AttributeError as
+            # the cause without instantiating an invalid member expression.
+            try:
+                getattr(element_type, member)
+            except AttributeError:
+                _member_failures[key] = "inaccessible"
+                raise
+            _member_failures[key] = "unsupported"
+            raise TypeError(f"native name {member!r} on {element_name} is not an accessible non-static data member")
+        helper = getattr(cppyy.gbl.pysystemc_vectors, helper_name)[element_type]
+        _members[key] = helper
     return _members[key]
+
+
+def _named_member_error(operation, member, accepted, exc):
+    """Raise a public named-member TypeError while retaining native detail in its cause."""
+    raise TypeError(f"{operation} cannot use member {member!r}; {accepted}") from exc
+
+
+def _named_assembly(vector, element_type, member, helper_method, operation, accepted):
+    """Select a named member then perform one callback-free native assembly call."""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", member):
+        raise ValueError(f"{operation} member {member!r} must be a public C++ identifier; {accepted}")
+    try:
+        helper = _member_helper(element_type, member)
+        native_operation = getattr(helper, helper_method)
+    except (AttributeError, TypeError) as exc:
+        _named_member_error(operation, member, accepted, exc)
+    try:
+        # This helper only calls sc_vector::assemble/sc_assemble_vector. It cannot
+        # invoke Python callbacks or execute SystemC report actions.
+        return native_operation(vector)
+    except TypeError as exc:
+        _named_member_error(operation, member, accepted, exc)
+
+
+def _named_member_policy(element_type, member_type, member, operation, accepted):
+    """Select and construct a named policy without hiding native overload detail."""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", member):
+        raise ValueError(f"{operation} member {member!r} must be a public C++ identifier; {accepted}")
+    try:
+        helper = _member_helper(element_type, member)
+        compatible = helper.policy_compatible[member_type]()
+    except (AttributeError, TypeError) as exc:
+        _named_member_error(operation, member, accepted, exc)
+    if not compatible:
+        try:
+            # Native overload selection reports candidate types without entering
+            # the generated member-pointer adapter or invoking user/SystemC code.
+            native_policy = cppyy.gbl.sc_core.sc_member_access[element_type, member_type]
+            return native_policy(member)
+        except TypeError as exc:
+            _named_member_error(operation, member, accepted, exc)
+    try:
+        # Policy construction is a synchronous native value conversion and does
+        # not call Python or execute SystemC report actions.
+        return helper.policy[member_type]()
+    except TypeError as exc:
+        _named_member_error(operation, member, accepted, exc)
 
 
 def _element_type(vector_type):
@@ -63,15 +191,23 @@ def assemble_vector(vector, member):
 
     Raises:
         ValueError: A member name is not a valid C++ identifier.
-        TypeError: The member is absent, inaccessible or not assemblable.
+        TypeError: The member is absent, inaccessible or not assemblable; the native
+            selection error is retained as the exception cause.
 
     The returned proxy retains the vector, including Python assembly copies,
     assignment and swap. Iterators remain borrowed; keep their owners alive. Calls hold the GIL and preserve
     native binding, range and diagnostic behavior.
     """
     if isinstance(member, str):
-        helper = _member_helper(_element_type(type(vector)), member)
-        assembly = helper.free(vector)
+        vector_element_type = type(vector).element_type
+        assembly = _named_assembly(
+            vector,
+            vector_element_type,
+            member,
+            "free",
+            "sc_assemble_vector",
+            "an accessible C++ data-member identifier or a native member pointer",
+        )
     else:
         assembly = _native_assemble(vector, member)
     assembly._vector_owner = vector
@@ -86,6 +222,7 @@ def _pythonize_vector(vector_type, name):
     native_initialize = vector_type.init
     native_member = vector_type.assemble
     element_type = _element_type(vector_type)
+    element_type_proxy = vector_type.element_type
 
     def initialize(self, size, creator=None):
         """Initialize owning native elements with an optional synchronous creator.
@@ -96,8 +233,8 @@ def _pythonize_vector(vector_type, name):
 
         Python creators must return newly allocated native elements of the vector
         type. Ownership transfers to the vector; do not delete them separately.
-        Callback hosts remain retained by the vector proxy. Native errors and
-        callback failures propagate, with native partial-construction rollback.
+        Callback hosts remain retained by the vector proxy. Native errors propagate;
+        Python creator exceptions preserve their identity after native rollback.
         Calls hold the GIL and must satisfy SystemC elaboration constraints.
         """
         if creator is None:
@@ -111,10 +248,16 @@ def _pythonize_vector(vector_type, name):
             raise TypeError("vector creator must be callable")
         owners = self.__dict__.setdefault("_vector_element_owners", [])
         start = len(owners)
+        callback_exception = None
 
         def create(name, index):
             """Transfer one freshly created native element to the owning vector."""
-            element = creator(name, index)
+            nonlocal callback_exception
+            try:
+                element = creator(name, index)
+            except BaseException as exc:
+                callback_exception = exc
+                raise
             if not isinstance(element, vector_type.element_type) or not element:
                 raise TypeError("vector creator must return a newly allocated native element")
             element.__python_owns__ = False
@@ -122,10 +265,20 @@ def _pythonize_vector(vector_type, name):
             return element
 
         try:
-            return cppyy.gbl.pysystemc_vectors.creator[element_type].initialize(self, size, create)
-        except BaseException:
+            result = cppyy.gbl.pysystemc_vectors.creator[element_type].initialize(self, size, create)
+        except BaseException as native_error:
             del owners[start:]
-            raise
+            if (
+                callback_exception is None
+                or type(native_error) is not type(callback_exception)
+                or str(callback_exception) not in str(native_error)
+            ):
+                raise
+            original_callback_exception = callback_exception
+            callback_exception = None
+        else:
+            return result
+        raise original_callback_exception
 
     def construct(self, *args):
         """Construct a native vector, including its templated creator overload."""
@@ -139,7 +292,14 @@ def _pythonize_vector(vector_type, name):
     def assemble(self, member):
         """Borrow a member assembly using its native pointer or public member name."""
         if isinstance(member, str):
-            assembly = _member_helper(element_type, member).member(self)
+            assembly = _named_assembly(
+                self,
+                element_type_proxy,
+                member,
+                "member",
+                "sc_vector.assemble",
+                "an accessible C++ data-member identifier or a native member pointer",
+            )
         else:
             assembly = native_member(self, member)
         assembly._vector_owner = self

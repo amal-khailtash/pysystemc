@@ -2,7 +2,7 @@
 
 import cppyy
 
-from ._vectors import _member_helper
+from ._vectors import _named_member_policy
 
 _native_member_template = cppyy.gbl.sc_core.sc_member_access
 
@@ -26,6 +26,7 @@ class _MemberPolicyType:
         self._native_type = native_type
         self.__cpp_name__ = native_type.__cpp_name__
         self._element, self._member = _split_policy(native_type)
+        self._element_type = native_type.element_type
 
     def __call__(self, source):
         """Construct from a public member name or copy/convert a native policy.
@@ -44,7 +45,13 @@ class _MemberPolicyType:
         using get(). Native aliases and conversion restrictions are preserved.
         """
         if isinstance(source, str):
-            return _member_helper(self._element, source).policy[self._member]()
+            return _named_member_policy(
+                self._element_type,
+                self._member,
+                source,
+                "sc_member_access[...]",
+                "an accessible C++ data-member identifier or a compatible native member policy",
+            )
         helper = cppyy.gbl.pysystemc_vectors.member_policy[self._element, self._member]
         if isinstance(source, self._native_type):
             return helper.copy(source)

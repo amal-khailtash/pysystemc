@@ -93,6 +93,13 @@ Channels, ports and modeling utilities
 * ☑ Hierarchy traversal, status/version/time introspection and namespace help.
 * ☐ Complete channel, port-policy, report and event overload/type/error audits.
 
+Named vector-member selection checks native member compatibility before
+instantiating an assembly or policy. Missing, inaccessible or incompatible
+members raise ``TypeError`` with the public operation and accepted form; the
+original selection error remains available through ``__cause__``. Assemblies
+continue to borrow their vector and elements, and creator callback exceptions
+retain their original identity.
+
 Native ``sc_ppq`` queues accept arbitrary pointer specializations and retain a
 Python comparator until queue destruction. The queue owns its pointer array;
 callers retain the pointed-to objects. The ``sc_event_timed*`` specialization

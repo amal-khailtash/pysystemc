@@ -20,6 +20,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Reject missing, inaccessible and incompatible named vector members safely, preserve native error causes, and keep later valid member selection usable.
+- Preserve the original Python creator exception after native vector construction rolls back.
+- Identify the fixed-point type and supported configuration forms when rejecting unsupported parameter constructor shapes.
 - Align namespace exports, help summaries, and REPL completion with public native declarations and Python adapters, keeping bridge utilities in the raw cppyy namespaces.
 - Include context adapters, analysis FIFOs, and TLM utility socket templates in wildcard imports and namespace help.
 - Reject const-to-mutable member-access policy conversions that cppyy previously accepted despite native SystemC const restrictions.
