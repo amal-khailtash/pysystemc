@@ -24,7 +24,9 @@ def run_sources(sources: Sequence[str], arguments: Sequence[str] = (), includes:
     Raises:
         ValueError: No sources are supplied or an include path is not a directory.
         OSError: Source/include access fails.
-        RuntimeError: Cling rejects a source or the native entry fails.
+        SyntaxError: Cling raises while parsing or compiling a source.
+        RuntimeError: The runner was already invoked, Cling reports failure
+            without raising, or the native entry fails.
 
     Invoke once per interpreter. Native models and kernel state remain alive
     until interpreter shutdown; unrelated runs require separate subprocesses.

@@ -106,7 +106,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.print_help()
             return 0
         parser.parse_args([args.command_name, "--help"])
-        return 0
     if args.action == "run":
         if not Path(args.source).is_file():
             print(f"{parser.prog} run: Python file not found: {args.source}", file=sys.stderr)
@@ -123,4 +122,3 @@ def main(argv: Sequence[str] | None = None) -> int:
         Repl(history_path=args.history, no_history=args.no_history).run()
         return 0
     parser.error("no command selected")
-    return 2

@@ -86,7 +86,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.print_help()
             return 0
         parser.parse_args([options.command_name, "--help"])
-        return 0
     if options.command == "version":
         print_version(parser.prog)
         return 0
