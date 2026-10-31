@@ -9,8 +9,10 @@ namespace pysystemc_interfaces
  * @tparam T Native copy-constructible value type; default construction and
  * assignment are not required.
  * @details The input is borrowed for this synchronous operation. The returned
- * value owns its storage and transfers by value to the Python proxy. Call with
- * the GIL held in the callback; no callback or Python reference is retained.
+ * value is copied according to T's native copy semantics and transfers by
+ * value to the Python proxy; pointer or reference members are not deep-copied,
+ * so their referents remain borrowed and must outlive their use. Call with the
+ * GIL held in the callback; no callback or Python reference is retained.
  * Native allocation and copy-constructor exceptions propagate before dispatch
  * to the Python implementation. The caller's input is never assigned.
  */

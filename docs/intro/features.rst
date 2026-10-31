@@ -353,6 +353,10 @@ pointer-vector, list and report-handler consumers preserve those pointer values.
 The adapters borrow native code; container pointees retain their own lifetimes.
 Standalone cppyy function-pointer type reflection remains unavailable.
 
+Callback value copies follow the native type's copy-constructor semantics.
+Pointer and reference members retain borrowed storage; keep their referents
+alive while using the copied value.
+
 Both const and mutable TLM base-interface getters are checked in a separate
 pthreads kernel built with ``SC_ENABLE_COVARIANT_VIRTUAL_BASE``. The native
 library and Cling configuration must agree before import. The default build

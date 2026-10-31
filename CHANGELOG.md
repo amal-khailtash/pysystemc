@@ -47,6 +47,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Changed
 
+- Clarify borrowed storage requirements for pointer and reference members in native callback value copies.
+
 - Align the export examples' member names and hierarchical bindings with their native references, and remove redundant native-call flags from the Python FIFO example.
 - Include CLI modules in local and CI coverage reports, and explicitly map upstream native example targets to Python entry points and support files.
 - Show `systemc vVERSION` in the runtime banner, with a magenta name, cyan version and white description.
