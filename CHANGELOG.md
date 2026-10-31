@@ -19,6 +19,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Reject const-to-mutable member-access policy conversions that cppyy previously accepted despite native SystemC const restrictions.
 - Keep Python kernel flag reads synchronized with native SystemC storage after Python or native assignments.
 - Preserve native reference return types for text/integer concatenation, avoiding forbidden copies of native concatenation views.
 - Avoid crashes when extracting into native `std::string` targets and reject immutable scalar stream targets with `TypeError`.

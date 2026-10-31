@@ -48,6 +48,8 @@ class _MemberPolicyType:
         helper = cppyy.gbl.pysystemc_vectors.member_policy[self._element, self._member]
         if isinstance(source, self._native_type):
             return helper.copy(source)
+        if not isinstance(source, self._native_type.non_const_policy):
+            raise TypeError("source must use this member policy's non-const specialization")
         return helper.convert(source)
 
     def __getattr__(self, name):
