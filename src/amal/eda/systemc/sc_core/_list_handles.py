@@ -23,7 +23,8 @@ def _insertion(operation):
 
         Args:
             values: Owning native list.
-            handle: Borrowed live node handle, or None for the native null branch.
+            handle: Borrowed live node handle from values, or None for the native
+                null branch.
             value: Borrowed correctly typed pointer to store.
 
         Returns:
@@ -33,7 +34,8 @@ def _insertion(operation):
             TypeError: Handle or value conversion is incompatible.
 
         GIL stays held; lists own nodes, not pointees. Node handles invalidate on
-        removal. Pass only an interior handle or null to native insert_after;
+        removal; handles from another list are invalid. Pass only an interior
+        handle or null to native insert_after;
         its tail-handle path dereferences the null successor.
         """
         return operation(values, cppyy.nullptr if handle is None else handle, value)
