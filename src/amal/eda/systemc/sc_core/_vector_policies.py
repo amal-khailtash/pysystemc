@@ -29,17 +29,17 @@ class _MemberPolicyType:
         self._element_type = native_type.element_type
 
     def __call__(self, source):
-        """Construct from a public member name or copy/convert a native policy.
+        """Construct from a member name, typed token, or native member policy.
 
         Args:
-            source: C++ member identifier or native member-access policy.
+            source: C++ identifier, exact-signature member token, or native policy.
 
         Returns:
             Native policy borrowing selected element members.
 
         Raises:
-            ValueError: Member name is not a C++ identifier.
-            TypeError: Member or const conversion is invalid.
+            ValueError: Member name is malformed or a typed token is null.
+            TypeError: Token signature, member, or const conversion is invalid.
 
         GIL remains held. The policy owns no elements; retain every element while
         using get(). Native aliases and conversion restrictions are preserved.
@@ -52,6 +52,14 @@ class _MemberPolicyType:
                 "sc_member_access[...]",
                 "an accessible C++ data-member identifier or a compatible native member policy",
             )
+        source_name = getattr(type(source), "__cpp_name__", None)
+        if isinstance(source_name, str) and source_name.startswith("pysystemc_vectors::member_pointer<"):
+            token_type = cppyy.gbl.pysystemc_vectors.member_pointer[self._element, self._member]
+            if not isinstance(source, token_type):
+                raise TypeError("member pointer token must have this exact element and member signature")
+            if not source.valid():
+                raise ValueError("member pointer token is null")
+            return cppyy.gbl.pysystemc_vectors.member_pointer_access[self._element, self._member].make_policy(source)
         helper = cppyy.gbl.pysystemc_vectors.member_policy[self._element, self._member]
         if isinstance(source, self._native_type):
             return helper.copy(source)

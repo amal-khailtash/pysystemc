@@ -155,7 +155,11 @@ pass-through availability does not by itself establish tested support.
 ``sc_report``
    Copy a borrowed callback report before retaining it. Copies own their message,
    file, process name and timestamp. ``__assign__(source)`` copies fields into
-   an existing report; ``swap(other)`` exchanges them. ``valid()`` reflects native
+   an existing report and returns the original destination proxy, through either
+   ``destination.__assign__(source)`` or the explicit class spelling. Assignment
+   replaces borrowed field views, including the timestamp, even on self-assignment;
+   reacquire them afterward. ``swap(other)`` exchanges report fields and their
+   timestamp ownership. ``valid()`` reflects native
    process-name context and can be false for populated reports outside a process.
    Legacy static methods ``register_id``, ``get_message``, ``is_suppressed``,
    ``suppress_id``, ``suppress_infos``, ``suppress_warnings`` and
@@ -1026,8 +1030,13 @@ unused source entries untouched. Source subranges and nonzero destination
 positions preserve these rules. Bind any required remaining ports before
 elaboration; the range operation does not relax their binding policy.
 
-``sc_member_access[Element, Member]("member")`` creates a native access policy;
-policy copies and mutable-to-const conversions preserve native type rules.
+``sc_member_access[Element, Member]("member")`` creates a native access policy.
+The same constructor accepts a typed ``member_type.from_member("member")``
+value with the exact element/member signature. Null tokens raise ``ValueError``
+and mismatched signatures raise ``TypeError`` before policy construction.
+Policies own no elements: retain each element while using ``get()`` and its
+borrowed result. Policy copies and mutable-to-const conversions preserve native
+type rules.
 ``sc_direct_access`` remains a native template. Iterator ``__follow__()`` invokes
 native ``operator->`` and returns a borrowed element or scalar member pointer.
 For a scalar pointer, index zero accesses the member. Range checks and diagnostics

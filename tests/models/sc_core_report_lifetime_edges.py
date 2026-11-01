@@ -119,22 +119,24 @@ assert self_new_address != self_old_address
 assert self_new_time == self_old_time == source_time
 print("REPORT_TIME_SELF", 1, 1, self_new_time)
 
-# The instance spelling remains cppyy's native CPPOverload. It may produce a
-# distinct proxy to the same native destination or raise while converting the
-# returned sc_report&. Exercise it on a self-assignment and verify through the
-# original owner without using any pre-call timestamp view afterward.
-instance_old_address, instance_old_time = timestamp_snapshot(alias_target)
-try:
-    instance_result = alias_target.__assign__(alias_target)
-except TypeError as error:
-    assert "unknown object" in str(error)
-    instance_error = True
-else:
-    instance_error = False
-instance_new_address, instance_time = timestamp_snapshot(alias_target)
-assert instance_new_address != instance_old_address and instance_time == instance_old_time == alias_time
-if not instance_error:
-    del instance_result
+# The familiar instance spelling returns the exact Python destination proxy,
+# copies every native report field and invalidates only its former time view.
+instance_target = sc.sc_report(alias_target)
+instance_old_address, _ = timestamp_snapshot(instance_target)
+instance_result = instance_target.__assign__(source)
+assert instance_result is instance_target
+instance_new_address, instance_time = timestamp_snapshot(instance_target)
+assert instance_new_address != instance_old_address and instance_new_address != source_address
+assert instance_time == source_time
+assert report_record(instance_target) == report_record(source)
+
+# Instance self-assignment has the same destination identity and copy lifetime.
+instance_self_address, instance_self_time = timestamp_snapshot(instance_target)
+instance_self_result = instance_target.__assign__(instance_target)
+assert instance_self_result is instance_target
+instance_self_new_address, instance_self_new_time = timestamp_snapshot(instance_target)
+assert instance_self_new_address != instance_self_address
+assert instance_self_new_time == instance_self_time == source_time
 
 # The third-report copy used before swapping goes through the explicit class
 # adapter as well, so its returned owner identity is part of the supported API.

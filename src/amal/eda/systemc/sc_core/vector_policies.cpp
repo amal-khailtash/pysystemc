@@ -122,6 +122,18 @@ struct member_pointer_access
     if (!token.valid()) throw std::invalid_argument("member pointer token is null");
     return sc_core::sc_assemble_vector(vector, token.pointer_);
   }
+
+  /** @brief Construct a native member policy from one validated token.
+   * @param token Exact-signature member token storing Member Element::* by value.
+   * @return Native policy borrowing the selected member from caller-owned elements.
+   * @throws std::invalid_argument If the token is null.
+   * @note The policy owns no element; retain every element used with get(). GIL held.
+   */
+  static auto make_policy(const token_type& token)
+  {
+    if (!token.valid()) throw std::invalid_argument("member pointer token is null");
+    return sc_core::sc_member_access<Element, Member>(token.pointer_);
+  }
 };
 
 /** @brief Construct access policy copies with their exact native const rules. */

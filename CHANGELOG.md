@@ -10,7 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
-- Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies.
+- Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies and member-access policy construction.
 - Add `native_help` and `format_native_help` for native overloads, templates and enums, available from Python and the playground without inherited cppyy proxy metadata.
 - Add `make profile-startup` to attribute startup costs to module imports, library/header loading and bridge compilation, with separate reflection/template probes and retained failure output.
 - Add `make test-wheel-examples` to stage runnable examples and reuse native/tutorial comparison assertions against an installed wheel, with subprocess import guards and persistent reports.
@@ -26,7 +26,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Reject Python `bytes` arguments to legacy string formatting with `TypeError` before native variadic dispatch, avoiding a native crash; use `str` or native `std::string` arguments.
 - Keep public nested declarations visible in native help when their names match an excluded top-level bridge declaration.
 
-- Return the original destination from the explicit Python report-assignment adapter without converting a native exception reference; document timestamp invalidation on assignment and ownership transfer on swap.
+- Return the original destination from instance and explicit class report-assignment calls without converting a native exception reference; document timestamp invalidation on assignment and ownership transfer on swap.
 
 - Reject missing, inaccessible and incompatible named vector members safely, preserve native error causes, and keep later valid member selection usable.
 - Preserve the original Python creator exception after native vector construction rolls back.

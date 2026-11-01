@@ -314,6 +314,26 @@ def _assign_report(self, source):
 
 cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
 
+_native_report_getattribute = cppyy.gbl.sc_core.sc_report.__getattribute__
+
+
+def _report_getattribute(self, name):
+    """Bind the report copy adapter for the familiar instance spelling.
+
+    cppyy resolves ``__assign__`` through its native assignment special method
+    on instances, even when the class attribute has been replaced. Intercept
+    only that spelling so it uses the same native copy bridge and returns the
+    exact destination proxy. The type-local hook adds one name comparison per
+    report attribute access; every other name immediately delegates to cppyy's
+    original lookup, including native exception metadata.
+    """
+    if name == "__assign__":
+        return _assign_report.__get__(self, type(self))
+    return _native_report_getattribute(self, name)
+
+
+cppyy.gbl.sc_core.sc_report.__getattribute__ = _report_getattribute
+
 
 def _report(severity, message_type, message, *args):
     """Emit one native report using message, verbosity or legacy identifier form.
