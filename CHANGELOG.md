@@ -21,6 +21,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Preserve source and configuration metadata variants when combining API inventories, including information from definitions that follows forward declarations.
 - Validate comparators and leave empty pointer vectors unchanged without entering native sorting.
 - Clear pending Python callback errors before allocating a captured simulation report, preserving error cleanup if the report copy fails.
 - Reject Python `bytes` arguments to legacy string formatting with `TypeError` before native variadic dispatch, avoiding a native crash; use `str` or native `std::string` arguments.

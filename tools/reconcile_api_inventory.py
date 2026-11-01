@@ -6,16 +6,28 @@ Run after generating modeling and compatibility snapshots with inventory_public_
 """
 
 import argparse
+from copy import deepcopy
 import hashlib
 import json
 import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+_SEMANTIC_VARIANT_FIELDS = (
+    "static",
+    "virtual",
+    "pure",
+    "bases",
+    "parameters",
+    "template_parameters",
+    "template_arguments",
+    "template_context",
+    "access",
+)
 
 
 def reconcile(snapshots):
-    """Union declaration identities, preserving occurrences and configuration scope.
+    """Union identities while retaining each extracted semantic configuration variant.
 
     Parameters
     ----------
@@ -25,7 +37,15 @@ def reconcile(snapshots):
     Returns
     -------
     dict
-        Portable union with one review row per identity and explicit occurrences.
+        Portable union with one canonical row per identity, explicit occurrences,
+        and unique ``semantic_variants`` grouped by their source configurations.
+
+    The top-level declaration fields remain the first encountered snapshot's
+    canonical view for compatibility. Each variant separately deep-copies the
+    extracted static/virtual/pure flags, bases, parameter/default metadata,
+    template metadata and access. Missing fields remain absent, distinct from
+    explicit false or empty defaults. Variants are audit evidence; they do not
+    infer or update public support status.
 
     Raises
     ------
@@ -37,18 +57,39 @@ def reconcile(snapshots):
     if {item["schema_version"] for item in snapshots} != {4}:
         raise ValueError("Regenerate all snapshots with schema version 4")
     rows = {}
+    variant_indexes = {}
     for snapshot in snapshots:
         configuration = snapshot["configuration"]
         for entry in snapshot["declarations"]:
             identifier = entry["id"]
             if identifier not in rows:
-                rows[identifier] = {**entry, "occurrences": [], "configurations": []}
+                rows[identifier] = {**deepcopy(entry), "occurrences": [], "configurations": [], "semantic_variants": []}
+                variant_indexes[identifier] = {}
             row = rows[identifier]
             occurrence = {"source": entry["source"], "line": entry["line"], "access": entry["access"]}
             if occurrence not in row["occurrences"]:
                 row["occurrences"].append(occurrence)
             if configuration not in row["configurations"]:
-                row["configurations"].append(configuration)
+                row["configurations"].append(deepcopy(configuration))
+            semantic = {field: deepcopy(entry[field]) for field in _SEMANTIC_VARIANT_FIELDS if field in entry}
+            variant_key = json.dumps(semantic, sort_keys=True, separators=(",", ":"))
+            variants = variant_indexes[identifier]
+            if variant_key not in variants:
+                variant = {**semantic, "configurations": [], "occurrences": []}
+                variants[variant_key] = variant
+                row["semantic_variants"].append(variant)
+            variant = variants[variant_key]
+            variant_configurations = variant["configurations"]
+            if configuration not in variant_configurations:
+                variant_configurations.append(deepcopy(configuration))
+            variant_occurrence = {
+                "source": entry["source"],
+                "line": entry["line"],
+                "access": entry["access"],
+                "configuration": deepcopy(configuration),
+            }
+            if variant_occurrence not in variant["occurrences"]:
+                variant["occurrences"].append(variant_occurrence)
     families = {}
     for row in rows.values():
         family = "::".join(row["name"].split("::")[:2])
@@ -120,6 +161,8 @@ def write_remaining(inventory, output):
             work.append("Resolve explicitly partial binding mappings")
         if any(entry.get("status") != "supported" for entry in public):
             work.append("Complete semantic evidence for public overload scope")
+        if any(len(entry.get("semantic_variants", [])) > 1 for entry in entries):
+            work.append("Reconcile declaration/definition or configuration metadata variants")
         remaining = "; ".join(work) or "Internal source review recorded; confirm any access-only exclusions"
         lines.append(
             f"| `{family.replace('|', '&#124;')}` | {len(entries)} | {classifications} | {sources} | {remaining} |"
@@ -153,6 +196,7 @@ def write_remaining(inventory, output):
         "- Reconcile inactive platform/compiler/ABI branches against the Linux/C++17 baseline; broader platforms are deferred.",
         "- Review all recorded conditional directives and macro definition sites; include guards do not create APIs.",
         "- Review inherited access and using declarations, qualified friends, template instantiations and aliases.",
+        "- Reconcile semantic_variants across declaration/definition occurrences and configurations; these are source metadata differences, not behavioral contradictions or support evidence.",
         "- Review noninstalled implementation headers and installed internal kernel/datatype facilities.",
         "- Map native operators to Python protocols and distinguish overload resolution from native declaration availability.",
         "- Reconcile upstream example variants and APIs without example coverage.",
@@ -161,6 +205,11 @@ def write_remaining(inventory, output):
         "",
         "PUBLIC_API_UNION.json contains each identity, signature, template context, access,",
         "source occurrence, configurations, classification, mapping and semantic review state.",
+        "Its top-level declaration fields retain the first snapshot as the canonical view;",
+        "semantic_variants preserves configuration-specific extracted flags, bases, parameter defaults,",
+        "template metadata and access, with source/line/access/configuration occurrences for review.",
+        "Multiple variants can reflect declarations and definitions in one configuration; they are not",
+        "behavioral contradictions or support evidence and do not promote a support status.",
         "PUBLIC_API_SOURCE_INVENTORY.md and PUBLIC_API_COMPATIBILITY.md retain source order occurrences.",
         "",
     ]

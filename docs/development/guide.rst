@@ -184,6 +184,15 @@ feature defines: convenience socket and PEQ headers can enable dynamic processes
 Inheritance metadata and parameter default presence help reconcile inherited APIs
 and callable overloads. These records do not establish semantic support.
 
+Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
+SystemC revision. Each declaration retains its source occurrences and
+configurations. Its ``semantic_variants`` also retain extracted access, bases,
+parameter defaults and other type metadata with the source and configuration
+that produced them. A forward declaration and its definition can differ within
+the same configuration; multiple variants do not establish incompatible behavior.
+The remaining-work report identifies families whose variants need reconciliation.
+Declaration IDs and support status are preserved when metadata variants are added.
+
 To retain an audit, pass ``--reviews path/to/reviews.json``. The file is a JSON
 object keyed by the emitted declaration ``id``. IDs distinguish overloads and
 remain unchanged when source lines move; header, signature or template changes
@@ -196,7 +205,7 @@ Classified declarations require a rationale. Supported declarations must be
 public and supply nonempty Python spelling, ownership, GIL, errors and an evidence
 list identifying executable checks. Review validation checks the record structure;
 a reviewer must assess the cited evidence and source rationale. Unreviewed rows
-remain untested. Keep local audit records under the ignored ``.ai/`` directory.
+remain untested.
 
 The tool discovers every ``tlm_utils/*.h`` header in the selected checkout and
 records that list. ``macro_declarations`` attributes active preprocessor definitions
