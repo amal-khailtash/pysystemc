@@ -22,6 +22,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Omit compiler-local alias references from API inventory base-class metadata while preserving type spelling, access and inheritance flags.
+
 - Preserve source and configuration metadata variants when combining API inventories, including information from definitions that follows forward declarations.
 - Validate comparators and leave empty pointer vectors unchanged without entering native sorting.
 - Clear pending Python callback errors before allocating a captured simulation report, preserving error cleanup if the report copy fails.

@@ -64,6 +64,28 @@ def source_text(filename):
 _LEGACY_TEMPLATE_PARAMETER_ID_FIELDS = ("name", "kind", "type")
 
 
+def _portable_base_metadata(bases):
+    """Copy Clang base metadata while dropping only compiler-local alias IDs.
+
+    Clang embeds declaration pointer IDs for aliases used as base types. Those
+    values vary between compiler invocations, while the surrounding type
+    spellings and inheritance properties are useful source metadata.
+    """
+    portable = deepcopy(bases)
+
+    def remove_alias_ids(value):
+        if isinstance(value, dict):
+            value.pop("typeAliasDeclId", None)
+            for child in value.values():
+                remove_alias_ids(child)
+        elif isinstance(value, list):
+            for child in value:
+                remove_alias_ids(child)
+
+    remove_alias_ids(portable)
+    return portable
+
+
 def _resolved_location(location, fallback_filename=None, *, expansion=False):
     """Resolve one Clang source point without serializing compiler-local state.
 
@@ -571,7 +593,7 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
                 "access": access,
                 "virtual": node.get("virtual", False),
                 "pure": node.get("pure", False),
-                "bases": node.get("bases", []),
+                "bases": _portable_base_metadata(node.get("bases", [])),
                 "parameters": [
                     {
                         "name": child.get("name"),

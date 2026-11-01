@@ -190,6 +190,9 @@ an explicit unavailable reason. Defaults produced by declaration-generating macr
 retain the initializer spelling; inherited defaults retain the original declaration
 source. These records do not establish semantic support.
 Default metadata is excluded from declaration identity keys.
+Base-class metadata preserves spelled and desugared types, access and virtual
+inheritance flags. Compiler-local ``typeAliasDeclId`` references are omitted from
+base records so repeated compiler invocations retain comparable source metadata.
 
 Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
 SystemC revision. Each declaration retains its source occurrences and
