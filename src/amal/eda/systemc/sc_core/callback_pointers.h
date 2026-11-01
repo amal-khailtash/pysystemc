@@ -98,12 +98,15 @@ callback_pointer<Kind> make_callback_pointer()
 /** @brief Sort borrowed vector slots through an exact native comparator.
  * @details qsort passes pointers to pointer slots, not pointees. The vector owns
  * slots but never pointees. GIL remains held; comparator exceptions must not cross
- * the C qsort ABI. No callback or pointee is retained by this synchronous call.
+ * the C qsort ABI. Validate null before skipping empty vectors because upstream
+ * sc_pvector::sort indexes its first slot even when its slot array has size zero.
+ * No callback or pointee is retained by this synchronous call.
  */
 template <class Vector>
 void sort_callback_pointer(Vector& vector, const callback_pointer<0>& pointer)
 {
   pointer.require_valid();
+  if (vector.size() == 0) return;
   vector.sort(pointer.get());
 }
 

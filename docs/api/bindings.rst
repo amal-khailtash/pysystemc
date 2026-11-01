@@ -292,7 +292,9 @@ retention requirements.
 
 Pass a ``CFT`` value to ``sc_pvector.sort`` or a ``sc_plist_map_fn`` value to
 ``sc_plist.mapcar``. Vector comparators receive pointer-slot addresses; list
-mappers receive borrowed payload/context pointers. A comparator's
+mappers receive borrowed payload/context pointers. Sorting an empty vector
+validates the comparator and returns without invoking it. Null native comparators
+and non-callable Python comparators are still rejected. A comparator's
 ``create_queue(sc_ppq[T], size)`` method returns a Python-owned native queue
 that borrows pointees and the selected native comparator code. Null values
 raise ``ValueError`` in these adapter consumers. Report-handler values work
@@ -1001,8 +1003,17 @@ Creator failures propagate and native partial initialization deletes elements
 already created; initialization can then be retried under native elaboration rules.
 
 ``vector.assemble("port")`` and ``sc_assemble_vector(vector, "port")`` construct
-native member pointers for public data members. Native member-pointer arguments
-also remain accepted. Assemblies retain their known Python vector owner across
+native member pointers for public data members. For a reusable typed pointer value,
+select ``sc_member_access[Element, Member].member_type`` and call
+``from_member("port")`` on that alias. Pass the result to either assembly API.
+The alias also accepts default construction for a null pointer and copy
+construction from a token of the same type. Null assembly arguments raise
+``ValueError``; incompatible element types raise ``TypeError``. Member selection
+supports arbitrary native element templates and member types.
+
+These tokens store the exact native member pointer and own no elements. Raw
+cppyy member-pointer views cannot currently be marshalled into these overloads.
+Assemblies retain their known Python vector owner across
 copy construction, assignment, self-assignment and swap. Views created entirely
 in native code remain borrowed unless a Python owner is attached. Keep bound
 channels alive through port destruction, and retain owners while using iterators.

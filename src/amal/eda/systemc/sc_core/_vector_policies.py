@@ -2,7 +2,7 @@
 
 import cppyy
 
-from ._vectors import _named_member_policy
+from ._vectors import _named_member_policy, _named_member_token, _register_member_token
 
 _native_member_template = cppyy.gbl.sc_core.sc_member_access
 
@@ -61,10 +61,94 @@ class _MemberPolicyType:
 
     def __getattr__(self, name):
         """Expose native aliases and members, adapting policy constructors only."""
+        if name == "member_type":
+            try:
+                native_alias = getattr(self._native_type, name)
+            except AttributeError:
+                native_alias = None
+            return _MemberPointerType(
+                native_alias,
+                cppyy.gbl.pysystemc_vectors.member_pointer[self._element, self._member],
+                self._element_type,
+                self._member,
+            )
         attribute = getattr(self._native_type, name)
         if name in ("policy", "const_policy", "non_const_policy"):
             return _MemberPolicyType(attribute)
         return attribute
+
+
+class _MemberPointerType:
+    """Construct typed native pointer-to-member value tokens on demand."""
+
+    def __init__(self, native_alias, token_type, element_type, member_type):
+        """Retain the native alias and exact value-token specialization."""
+        self._native_alias = native_alias
+        self._token_type = token_type
+        self._element_type = element_type
+        self._member_type = member_type
+        self.__cpp_name__ = token_type.__cpp_name__
+        self.native_cpp_name = getattr(native_alias, "__cpp_name__", f"{member_type} {element_type.__cpp_name__}::*")
+        self.__name__ = getattr(native_alias, "__name__", "member_type")
+        _register_member_token(token_type, element_type, member_type)
+
+    def __call__(self, *args):
+        """Construct a null token or copy a token with this exact signature.
+
+        Args:
+            *args: No argument for a null value, or one same-signature token.
+
+        Returns:
+            A native value token storing the pointer-to-member by value.
+
+        Raises:
+            TypeError: The source is not a token with this exact signature.
+
+        Tokens own no element or member storage. Calls hold the GIL and do not
+        enter the SystemC kernel.
+        """
+        if not args:
+            return self._token_type()
+        if len(args) == 1 and isinstance(args[0], self._token_type):
+            return self._token_type(args[0])
+        raise TypeError("member_type accepts no arguments or a same-signature member token")
+
+    def from_member(self, member):
+        """Create a typed token for one public member identifier.
+
+        Args:
+            member: Bare C++ identifier, or this element's exact ``Type::name``.
+
+        Returns:
+            A native value token whose pointer type is exactly ``Member Element::*``.
+
+        Raises:
+            ValueError: The identifier is malformed or qualified for another type.
+            TypeError: The member is missing, inaccessible, static, or incompatible.
+
+        The token owns no vector or element. Keep vector elements alive while an
+        assembly made from the token is in use.
+        """
+        if not isinstance(member, str):
+            raise TypeError("member must be a public C++ data-member identifier")
+        element_name = self._element_type.__cpp_name__
+        if member.startswith(element_name + "::"):
+            member = member[len(element_name) + 2 :]
+        elif "::" in member:
+            raise ValueError("member qualification must exactly match the token element type")
+        return _named_member_token(
+            self._element_type,
+            self._member_type,
+            member,
+            "sc_member_access.member_type.from_member",
+            "an accessible data-member identifier compatible with this member_type",
+        )
+
+    def __getattr__(self, name):
+        """Expose metadata from the original native member-pointer alias."""
+        if self._native_alias is None:
+            raise AttributeError(name)
+        return getattr(self._native_alias, name)
 
 
 class MemberAccessTemplate:

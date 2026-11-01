@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies.
 - Add `native_help` and `format_native_help` for native overloads, templates and enums, available from Python and the playground without inherited cppyy proxy metadata.
 - Add `make profile-startup` to attribute startup costs to module imports, library/header loading and bridge compilation, with separate reflection/template probes and retained failure output.
 - Add `make test-wheel-examples` to stage runnable examples and reuse native/tutorial comparison assertions against an installed wheel, with subprocess import guards and persistent reports.
@@ -20,6 +21,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Validate comparators and leave empty pointer vectors unchanged without entering native sorting.
 - Clear pending Python callback errors before allocating a captured simulation report, preserving error cleanup if the report copy fails.
 - Reject Python `bytes` arguments to legacy string formatting with `TypeError` before native variadic dispatch, avoiding a native crash; use `str` or native `std::string` arguments.
 - Keep public nested declarations visible in native help when their names match an excluded top-level bridge declaration.

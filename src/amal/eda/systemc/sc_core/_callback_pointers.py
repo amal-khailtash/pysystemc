@@ -105,13 +105,21 @@ def _wrap_consumer(native, name=""):
             """Sort borrowed pointer slots using a native holder or existing callable.
 
             Native comparator receives slot addresses, not pointees. Keep code
-            and pointees alive; the GIL stays held. Null holders raise ValueError.
-            Native qsort callbacks must not throw across the C callback boundary.
+            and pointees alive; the GIL stays held. Empty vectors are unchanged
+            after comparator validation. Null holders raise ValueError and
+            non-callable Python comparators raise TypeError. Native qsort
+            callbacks must not throw across the C callback boundary.
             """
             if isinstance(comparator, pointer_type):
                 if not comparator.valid():
                     raise ValueError("cannot use a null native callback pointer")
+                if self.size() == 0:
+                    return None
                 return cppyy.gbl.pysystemc.sort_callback_pointer[native](self, comparator)
+            if not callable(comparator):
+                raise TypeError("sort comparator must be callable or a native callback pointer")
+            if self.size() == 0:
+                return None
             return native_sort(self, comparator)
 
         if hasattr(native_sort, "__overload__"):

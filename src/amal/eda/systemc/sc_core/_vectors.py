@@ -6,6 +6,7 @@ import cppyy
 
 _members = {}
 _member_failures = {}
+_member_tokens = {}
 _next_member_helper_id = 0
 _native_assemble = cppyy.gbl.sc_core.sc_assemble_vector
 
@@ -96,6 +97,19 @@ struct {helper_name}
       static_cast<value_type Element::*>(&Element::{member}));
   }}
 
+  /** @brief Create a token for this exact native pointer-to-member value.
+   * @tparam Member Value type requested by the public member_type alias.
+   * @return A typed value containing the compile-time pointer-to-member.
+   * @note The token owns no element, vector or member storage; GIL remains held.
+   */
+  template <class Member>
+  static auto token()
+  {{
+    using token_factory = member_pointer_factory<
+      Element, Member, static_cast<Member Element::*>(&Element::{member})>;
+    return token_factory::create();
+  }}
+
   /** @brief Assemble through the native free function; vector ownership is borrowed.
    * @param vector Native vector whose members form the returned assembly.
    * @return Native assembly retaining no ownership of the vector or elements.
@@ -174,6 +188,47 @@ def _named_member_policy(element_type, member_type, member, operation, accepted)
         _named_member_error(operation, member, accepted, exc)
 
 
+def _named_member_token(element_type, member_type, member, operation, accepted):
+    """Build and register a typed value token for one checked public member name."""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", member):
+        raise ValueError(f"{operation} member {member!r} must be a public C++ identifier; {accepted}")
+    try:
+        helper = _member_helper(element_type, member)
+        if not helper.policy_compatible[member_type]():
+            raise TypeError("the requested member value type is incompatible")
+        token = helper.token[member_type]()
+    except (AttributeError, TypeError) as exc:
+        _named_member_error(operation, member, accepted, exc)
+    _register_member_token(type(token), element_type, member_type)
+    return token
+
+
+def _register_member_token(token_type, element_type, member_type):
+    """Register one native token specialization for checked public routing."""
+    _member_tokens[token_type.__cpp_name__] = (token_type, element_type, member_type)
+
+
+def _assemble_member_token(vector, token, helper_method, operation):
+    """Validate a registered token signature then call its native assembly adapter."""
+    token_name = getattr(type(token), "__cpp_name__", None)
+    registration = _member_tokens.get(token_name)
+    if registration is None:
+        return None
+    token_type, element_type, member_type = registration
+    if not isinstance(token, token_type):
+        raise TypeError(f"{operation} requires the registered native member token type")
+    actual_element = type(vector).element_type
+    if actual_element.__cpp_name__ != element_type.__cpp_name__:
+        raise TypeError(
+            f"{operation} member token uses element {element_type.__cpp_name__}, "
+            f"but vector uses {actual_element.__cpp_name__}"
+        )
+    if not token.valid():
+        raise ValueError(f"{operation} member pointer token is null")
+    access = cppyy.gbl.pysystemc_vectors.member_pointer_access[element_type, member_type]
+    return getattr(access, helper_method)(vector, token)
+
+
 def _element_type(vector_type):
     """Return the unrestricted native element spelling from its vector specialization."""
     return vector_type.__cpp_name__[len("sc_core::sc_vector<") : -1]
@@ -209,7 +264,9 @@ def assemble_vector(vector, member):
             "an accessible C++ data-member identifier or a native member pointer",
         )
     else:
-        assembly = _native_assemble(vector, member)
+        assembly = _assemble_member_token(vector, member, "free", "sc_assemble_vector")
+        if assembly is None:
+            assembly = _native_assemble(vector, member)
     assembly._vector_owner = vector
     return assembly
 
@@ -301,7 +358,9 @@ def _pythonize_vector(vector_type, name):
                 "an accessible C++ data-member identifier or a native member pointer",
             )
         else:
-            assembly = native_member(self, member)
+            assembly = _assemble_member_token(self, member, "member", "sc_vector.assemble")
+            if assembly is None:
+                assembly = native_member(self, member)
         assembly._vector_owner = self
         return assembly
 
