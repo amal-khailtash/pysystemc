@@ -181,8 +181,15 @@ Run ``uv run python tools/inventory_public_api.py`` to extract the modeling
 configuration, or add ``--configuration baseline`` to omit explicit dynamic-process
 and fixed-point defines. The JSON records both requested configuration and effective
 feature defines: convenience socket and PEQ headers can enable dynamic processes.
-Inheritance metadata and parameter default presence help reconcile inherited APIs
-and callable overloads. These records do not establish semantic support.
+Inheritance metadata and parameter defaults help reconcile inherited APIs
+and callable overloads. Function and template parameter ``default_argument``
+records retain source text and portable byte-range provenance when available.
+Macro spelling and expansion locations are distinguished; a macro invocation
+is not treated as its expanded expression. Unreadable or ambiguous ranges carry
+an explicit unavailable reason. Defaults produced by declaration-generating macros
+retain the initializer spelling; inherited defaults retain the original declaration
+source. These records do not establish semantic support.
+Default metadata is excluded from declaration identity keys.
 
 Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
 SystemC revision. Each declaration retains its source occurrences and

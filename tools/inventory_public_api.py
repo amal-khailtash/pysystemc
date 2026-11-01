@@ -61,6 +61,389 @@ def source_text(filename):
     return Path(filename).read_bytes()
 
 
+_LEGACY_TEMPLATE_PARAMETER_ID_FIELDS = ("name", "kind", "type")
+
+
+def _resolved_location(location, fallback_filename=None, *, expansion=False):
+    """Resolve one Clang source point without serializing compiler-local state.
+
+    Clang offsets address bytes, not Unicode code points. For a macro point,
+    callers choose either the source spelling or the invocation expansion.
+    """
+    if not isinstance(location, dict):
+        return None
+    key = "expansionLoc" if expansion else "spellingLoc"
+    point = location.get(key, location) if ("spellingLoc" in location or "expansionLoc" in location) else location
+    if not isinstance(point, dict) or not isinstance(point.get("offset"), int):
+        return None
+    filename = point.get("file", fallback_filename)
+    if not filename:
+        return None
+    path = Path(filename)
+    if not path.is_absolute():
+        path = ROOT / path
+    path = path.resolve()
+    if not path.is_relative_to(ROOT):
+        return None
+    token_length = point.get("tokLen")
+    if not isinstance(token_length, int) or token_length < 0:
+        return None
+    return {
+        "source": path.relative_to(ROOT).as_posix(),
+        "offset": point["offset"],
+        "token_length": token_length,
+    }
+
+
+def _source_span(source_range, fallback_filename=None, *, expansion=False):
+    """Return a checked, portable byte span for one Clang source range."""
+    if not isinstance(source_range, dict):
+        return None, "source_range_missing"
+    begin = _resolved_location(source_range.get("begin"), fallback_filename, expansion=expansion)
+    end = _resolved_location(source_range.get("end"), fallback_filename, expansion=expansion)
+    if begin is None or end is None:
+        return None, "source_location_unavailable"
+    if begin["source"] != end["source"]:
+        return None, "source_range_crosses_files"
+    start = begin["offset"]
+    stop = end["offset"] + end["token_length"]
+    try:
+        contents = source_text(ROOT / begin["source"])
+    except OSError:
+        return None, "source_file_unavailable"
+    if start < 0 or stop < start or stop > len(contents):
+        return None, "source_range_out_of_bounds"
+    while start < stop and contents[start : start + 1].isspace():
+        start += 1
+    while stop > start and contents[stop - 1 : stop].isspace():
+        stop -= 1
+    if start == stop:
+        return None, "source_expression_empty"
+    try:
+        expression = contents[start:stop].decode("utf-8")
+    except UnicodeDecodeError:
+        return None, "source_expression_not_utf8"
+    start_line = contents.count(b"\n", 0, start) + 1
+    end_line = contents.count(b"\n", 0, stop) + 1
+    return {
+        "expression": expression,
+        "source": begin["source"],
+        "byte_range": [start, stop],
+        "line_range": [start_line, end_line],
+        "location_kind": "written_source",
+    }, None
+
+
+def _range_has_macro(source_range):
+    """Return whether either edge of a source range has macro provenance."""
+    return isinstance(source_range, dict) and any(
+        isinstance(source_range.get(edge), dict) and {"spellingLoc", "expansionLoc"} <= source_range[edge].keys()
+        for edge in ("begin", "end")
+    )
+
+
+def _range_within(inner_range, outer_range, filename):
+    """Check whether a macro expansion range belongs to this declaration site."""
+    inner_begin = _resolved_location(inner_range.get("begin"), filename, expansion=True)
+    inner_end = _resolved_location(inner_range.get("end"), filename, expansion=True)
+    outer_begin = _resolved_location(outer_range.get("begin"), filename, expansion=True)
+    outer_end = _resolved_location(outer_range.get("end"), filename, expansion=True)
+    if not all((inner_begin, inner_end, outer_begin, outer_end)):
+        return False
+    if len({item["source"] for item in (inner_begin, inner_end, outer_begin, outer_end)}) != 1:
+        return False
+    return outer_begin["offset"] <= inner_begin["offset"] and inner_end["offset"] <= (
+        outer_end["offset"] + outer_end["token_length"]
+    )
+
+
+def _default_separator(expression):
+    """Find a top-level template-default `=` while ignoring nested syntax."""
+    data = expression.encode("utf-8")
+    round_depth = square_depth = brace_depth = angle_depth = 0
+    quote = None
+    escaped = False
+    line_comment = block_comment = False
+    index = 0
+    while index < len(data):
+        char = data[index]
+        next_char = data[index + 1] if index + 1 < len(data) else None
+        if line_comment:
+            if char == 10:
+                line_comment = False
+        elif block_comment:
+            if char == 42 and next_char == 47:
+                block_comment = False
+                index += 1
+        elif quote is not None:
+            if escaped:
+                escaped = False
+            elif char == 92:
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char == 47 and next_char == 47:
+            line_comment = True
+            index += 1
+        elif char == 47 and next_char == 42:
+            block_comment = True
+            index += 1
+        elif char in (34, 39):
+            quote = char
+        elif char == 40:
+            round_depth += 1
+        elif char == 41:
+            round_depth = max(0, round_depth - 1)
+        elif char == 91:
+            square_depth += 1
+        elif char == 93:
+            square_depth = max(0, square_depth - 1)
+        elif char == 123:
+            brace_depth += 1
+        elif char == 125:
+            brace_depth = max(0, brace_depth - 1)
+        elif char == 60:
+            angle_depth += 1
+        elif char == 62:
+            angle_depth = max(0, angle_depth - 1)
+        elif char == 61 and not any((round_depth, square_depth, brace_depth, angle_depth)):
+            previous = data[index - 1] if index else None
+            if previous not in (33, 60, 62, 61) and next_char != 61:
+                return index
+        index += 1
+    return None
+
+
+def _macro_provenance(expression_node, fallback_filename):
+    """Collect compact spelling/expansion spans from a default expression AST."""
+    records = {}
+
+    def add_point(point):
+        if not isinstance(point, dict) or not {"spellingLoc", "expansionLoc"} <= point.keys():
+            return
+        spelling = _resolved_location(point["spellingLoc"], fallback_filename)
+        expansion = _resolved_location(point["expansionLoc"], fallback_filename, expansion=True)
+
+        def record(location):
+            if location is None:
+                return {"unavailable_reason": "source_location_unavailable"}
+            stop = location["offset"] + location["token_length"]
+            try:
+                contents = source_text(ROOT / location["source"])
+            except OSError:
+                return {"unavailable_reason": "source_file_unavailable"}
+            if location["offset"] < 0 or location["token_length"] <= 0 or stop > len(contents):
+                return {"unavailable_reason": "source_location_out_of_bounds"}
+            return {"source": location["source"], "byte_range": [location["offset"], stop]}
+
+        expansion_record = record(expansion)
+        key = json.dumps(expansion_record, sort_keys=True, separators=(",", ":"))
+        provenance = records.setdefault(key, {"expansion_token": expansion_record, "spelling_tokens": []})
+        spelling_record = record(spelling)
+        if spelling_record not in provenance["spelling_tokens"]:
+            provenance["spelling_tokens"].append(spelling_record)
+
+    def visit(node):
+        if isinstance(node, dict):
+            source_range = node.get("range")
+            if isinstance(source_range, dict):
+                for edge in ("begin", "end"):
+                    add_point(source_range.get(edge))
+            for child in node.get("inner", []):
+                visit(child)
+        elif isinstance(node, list):
+            for child in node:
+                visit(child)
+
+    visit(expression_node)
+    return [records[key] for key in sorted(records)]
+
+
+def _extended_macro_stop(source_range, filename, stop):
+    """Include call parentheses omitted from Clang's function-like macro range."""
+    end = source_range.get("end", {}) if isinstance(source_range, dict) else {}
+    if not isinstance(end, dict) or "expansionLoc" not in end:
+        return stop
+    location = _resolved_location(end, filename, expansion=True)
+    if location is None:
+        return stop
+    token_stop = location["offset"] + location["token_length"]
+    if token_stop != stop:
+        return stop
+    contents = source_text(ROOT / location["source"])
+    cursor = token_stop
+    while cursor < len(contents):
+        if contents[cursor] in b" \t\r\n":
+            cursor += 1
+        elif contents[cursor : cursor + 2] == b"//":
+            newline = contents.find(b"\n", cursor + 2)
+            cursor = len(contents) if newline < 0 else newline + 1
+        elif contents[cursor : cursor + 2] == b"/*":
+            close = contents.find(b"*/", cursor + 2)
+            if close < 0:
+                return None
+            cursor = close + 2
+        else:
+            break
+    if cursor >= len(contents) or contents[cursor] != 40:
+        return stop
+    depth = 0
+    quote = None
+    escaped = False
+    line_comment = block_comment = False
+    while cursor < len(contents):
+        char = contents[cursor]
+        next_char = contents[cursor + 1] if cursor + 1 < len(contents) else None
+        if line_comment:
+            if char == 10:
+                line_comment = False
+        elif block_comment:
+            if char == 42 and next_char == 47:
+                block_comment = False
+                cursor += 1
+        elif quote is not None:
+            if escaped:
+                escaped = False
+            elif char == 92:
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char == 47 and next_char == 47:
+            line_comment = True
+            cursor += 1
+        elif char == 47 and next_char == 42:
+            block_comment = True
+            cursor += 1
+        elif char in (34, 39):
+            if char == 34 and any(
+                contents[max(0, cursor - len(prefix)) : cursor] == prefix
+                for prefix in (b"R", b"uR", b"UR", b"LR", b"u8R")
+            ):
+                return None
+            quote = char
+        elif char == 40:
+            depth += 1
+        elif char == 41:
+            depth -= 1
+            if depth == 0:
+                return cursor + 1
+        cursor += 1
+    return None
+
+
+def _default_argument(node, filename, *, template_kind=None):
+    """Preserve written default source and compact macro provenance safely."""
+    expression_node = None
+    if template_kind is None:
+        expression_node = next(
+            (child for child in node.get("inner", []) if isinstance(child, dict) and "range" in child),
+            None,
+        )
+        declaration_span, declaration_reason = _source_span(node.get("range"), filename, expansion=True)
+        separator = _default_separator(declaration_span["expression"]) if declaration_span else None
+        if declaration_span and separator is not None:
+            left = declaration_span["byte_range"][0] + separator + 1
+            right = _extended_macro_stop(node.get("range"), filename, declaration_span["byte_range"][1])
+            if right is None:
+                return {"expression": None, "unavailable_reason": "macro_invocation_boundary_unavailable"}
+            span, reason = _source_slice(declaration_span["source"], left, right)
+            argument_origin = "written"
+        else:
+            source_range = expression_node.get("range") if expression_node else None
+            if _range_has_macro(source_range) and _range_within(source_range, node.get("range", {}), filename):
+                span, reason = _source_span(source_range, filename, expansion=False)
+                if span is not None:
+                    span["location_kind"] = "macro_spelling_source"
+                argument_origin = "macro_generated"
+            else:
+                span, reason = _source_span(source_range, filename, expansion=True)
+                if span is not None:
+                    stop = _extended_macro_stop(source_range, filename, span["byte_range"][1])
+                    if stop is None:
+                        return {"expression": None, "unavailable_reason": "macro_invocation_boundary_unavailable"}
+                    if stop != span["byte_range"][1]:
+                        span, reason = _source_slice(span["source"], span["byte_range"][0], stop)
+                argument_origin = "inherited"
+        if span is None:
+            return {"expression": None, "unavailable_reason": reason or declaration_reason}
+    else:
+        declaration_span, reason = _source_span(node.get("range"), filename, expansion=True)
+        if declaration_span is None:
+            return {"expression": None, "kind": template_kind, "unavailable_reason": reason}
+        declaration_stop = _extended_macro_stop(node.get("range"), filename, declaration_span["byte_range"][1])
+        if declaration_stop is None:
+            return {
+                "expression": None,
+                "kind": template_kind,
+                "unavailable_reason": "macro_invocation_boundary_unavailable",
+            }
+        if declaration_stop != declaration_span["byte_range"][1]:
+            declaration_span, reason = _source_slice(
+                declaration_span["source"], declaration_span["byte_range"][0], declaration_stop
+            )
+            if declaration_span is None:
+                return {"expression": None, "kind": template_kind, "unavailable_reason": reason}
+        separator = _default_separator(declaration_span["expression"])
+        if separator is None:
+            return {
+                "expression": None,
+                "kind": template_kind,
+                "unavailable_reason": "template_default_separator_unavailable",
+            }
+        start = declaration_span["byte_range"][0] + separator + 1
+        stop = declaration_span["byte_range"][1]
+        span, reason = _source_slice(declaration_span["source"], start, stop)
+        if span is None:
+            return {"expression": None, "kind": template_kind, "unavailable_reason": reason}
+        expression_node = next(
+            (
+                child
+                for child in reversed(node.get("inner", []))
+                if isinstance(child, dict) and child.get("kind") == "TemplateArgument"
+            ),
+            None,
+        )
+        argument_origin = "written"
+    result = {
+        "expression": span["expression"],
+        "expression_source": {key: span[key] for key in ("source", "byte_range", "line_range", "location_kind")},
+    }
+    if template_kind is not None:
+        result["kind"] = template_kind
+    else:
+        result["argument_origin"] = argument_origin
+    if expression_node is not None:
+        result["macro_provenance"] = _macro_provenance(expression_node, filename)
+    return result
+
+
+def _source_slice(source, start, stop):
+    """Extract and validate a trimmed UTF-8 slice using absolute byte offsets."""
+    try:
+        contents = source_text(ROOT / source)
+    except OSError:
+        return None, "source_file_unavailable"
+    if start < 0 or stop < start or stop > len(contents):
+        return None, "source_range_out_of_bounds"
+    while start < stop and contents[start : start + 1].isspace():
+        start += 1
+    while stop > start and contents[stop - 1 : stop].isspace():
+        stop -= 1
+    if start == stop:
+        return None, "source_expression_empty"
+    try:
+        expression = contents[start:stop].decode("utf-8")
+    except UnicodeDecodeError:
+        return None, "source_expression_not_utf8"
+    return {
+        "expression": expression,
+        "source": source,
+        "byte_range": [start, stop],
+        "line_range": [contents.count(b"\n", 0, start) + 1, contents.count(b"\n", 0, stop) + 1],
+        "location_kind": "written_source",
+    }, None
+
+
 def restore_source_files(roots):
     """Restore omitted Clang filenames in serialized source-location order.
 
@@ -161,7 +544,23 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
                     if child["kind"] == "TemplateArgument"
                 ],
                 "template_parameters": [
-                    {"name": child.get("name"), "kind": child["kind"], "type": child.get("type", {}).get("qualType")}
+                    {
+                        "name": child.get("name"),
+                        "kind": child["kind"],
+                        "type": child.get("type", {}).get("qualType"),
+                        "has_default": "defaultArg" in child,
+                        "default_argument": _default_argument(
+                            child,
+                            filename,
+                            template_kind={
+                                "TemplateTypeParmDecl": "type",
+                                "NonTypeTemplateParmDecl": "expression",
+                                "TemplateTemplateParmDecl": "template",
+                            }[child["kind"]],
+                        )
+                        if "defaultArg" in child
+                        else None,
+                    }
                     for child in node.get("inner", [])
                     if child["kind"] in {"TemplateTypeParmDecl", "NonTypeTemplateParmDecl", "TemplateTemplateParmDecl"}
                 ],
@@ -178,6 +577,7 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
                         "name": child.get("name"),
                         "type": child.get("type", {}).get("qualType"),
                         "has_default": "init" in child,
+                        "default_argument": _default_argument(child, filename) if "init" in child else None,
                     }
                     for child in node.get("inner", [])
                     if child["kind"] == "ParmVarDecl"
@@ -258,9 +658,41 @@ def reconcile_declarations(entries):
         if previous:
             for field in ("name", "access", "template_context"):
                 entry[field] = deepcopy(previous[field])
+            for field in ("parameters", "template_parameters"):
+                previous_parameters = previous.get(field, [])
+                for index, parameter in enumerate(entry.get(field, [])):
+                    default = parameter.get("default_argument")
+                    if not default or default.get("argument_origin") != "inherited":
+                        continue
+                    prior = (
+                        previous_parameters[index].get("default_argument") if index < len(previous_parameters) else None
+                    )
+                    if prior and prior.get("expression") is not None:
+                        parameter["default_argument"] = deepcopy(prior)
+                        parameter["default_argument"]["argument_origin"] = "inherited"
+                    else:
+                        parameter["default_argument"] = {
+                            "expression": None,
+                            "unavailable_reason": "inherited_default_source_unavailable",
+                            "argument_origin": "inherited",
+                        }
         elif parent:
             entry["name"] = parent["name"] + "::" + entry["name"].rsplit("::", 1)[-1]
             entry["template_context"] = deepcopy(parent["template_context"])
+    for entry in entries:
+        if not entry.get("previous_decl"):
+            continue
+        if indexed.get(entry["previous_decl"]) is not None:
+            continue
+        for field in ("parameters", "template_parameters"):
+            for parameter in entry.get(field, []):
+                default = parameter.get("default_argument")
+                if default and default.get("argument_origin") == "inherited" and default.get("macro_provenance"):
+                    parameter["default_argument"] = {
+                        "expression": None,
+                        "unavailable_reason": "inherited_macro_default_source_unavailable",
+                        "argument_origin": "inherited",
+                    }
     for entry in entries:
         for field in ("ast_id", "previous_decl", "parent_context"):
             entry.pop(field, None)
@@ -276,6 +708,11 @@ def declaration_id(entry):
     identity = {
         key: entry[key] for key in ("name", "kind", "signature", "template_parameters", "template_arguments", "source")
     }
+    if "template_parameters" in identity:
+        identity["template_parameters"] = [
+            {key: parameter[key] for key in _LEGACY_TEMPLATE_PARAMETER_ID_FIELDS if key in parameter}
+            for parameter in identity["template_parameters"]
+        ]
     identity["template_context"] = entry.get("template_context", [])
     return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 

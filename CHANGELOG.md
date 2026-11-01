@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Record function and template parameter defaults with source provenance in API inventories while preserving existing declaration identities.
 - Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies and member-access policy construction.
 - Add `native_help` and `format_native_help` for native overloads, templates and enums, available from Python and the playground without inherited cppyy proxy metadata.
 - Add `make profile-startup` to attribute startup costs to module imports, library/header loading and bridge compilation, with separate reflection/template probes and retained failure output.
