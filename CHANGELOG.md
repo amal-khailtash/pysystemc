@@ -20,6 +20,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Clear pending Python callback errors before allocating a captured simulation report, preserving error cleanup if the report copy fails.
 - Reject Python `bytes` arguments to legacy string formatting with `TypeError` before native variadic dispatch, avoiding a native crash; use `str` or native `std::string` arguments.
 - Keep public nested declarations visible in native help when their names match an excluded top-level bridge declaration.
 

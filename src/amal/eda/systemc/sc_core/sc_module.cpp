@@ -252,8 +252,10 @@ struct python_start
 {
   /** @brief Return an owning report address, deferring throwing until Python regains GIL.
    * @details On a native report, acquires and releases the GIL to clear cppyy's
-   * pending callback exception, whose diagnostic is already owned by the report.
-   * This prevents Python monitoring callbacks from observing a stale error.
+   * pending callback exception before allocating the owning report copy. The
+   * caught native report remains alive during cleanup, so a throwing copy/allocation
+   * cannot leave Python with a stale pending error. This prevents Python monitoring
+   * callbacks from observing a stale error.
    */
   static std::uintptr_t invoke(const std::function<void()>& operation)
   {
@@ -264,12 +266,12 @@ struct python_start
     }
     catch (const sc_report& report)
     {
-      auto copy = std::make_unique<sc_report>(report);
       // SystemC has captured the callback diagnostic in the native report.
-      // Clear cppyy's pending Python error before returning to monitored Python.
+      // Clear the pending Python error before a report-copy allocation can throw.
       const auto state = PyGILState_Ensure();
       PyErr_Clear();
       PyGILState_Release(state);
+      auto copy = std::make_unique<sc_report>(report);
       return reinterpret_cast<std::uintptr_t>(copy.release());
     }
   }
