@@ -27,6 +27,43 @@ _SEMANTIC_VARIANT_FIELDS = (
 )
 
 
+def reconcile_friend_relationships(snapshots):
+    """Union friend source sites without changing declaration ownership or IDs.
+
+    Each site retains every distinct relationship payload and the configurations
+    that observed it. The coverage list distinguishes a snapshot with an empty
+    sidecar from an older snapshot that did not collect friendship metadata.
+    Returned records are independent copies of the input snapshots.
+    """
+    sites = {}
+    indexes = {}
+    collected = []
+    unavailable = []
+    for snapshot in snapshots:
+        configuration = snapshot["configuration"]
+        coverage = collected if "friend_relationships" in snapshot else unavailable
+        if configuration not in coverage:
+            coverage.append(deepcopy(configuration))
+        for relationship in snapshot.get("friend_relationships", []):
+            identifier = relationship["occurrence_id"]
+            if identifier not in sites:
+                sites[identifier] = {"occurrence_id": identifier, "semantic_variants": []}
+                indexes[identifier] = {}
+            payload = {key: deepcopy(value) for key, value in relationship.items() if key != "occurrence_id"}
+            key = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+            if key not in indexes[identifier]:
+                variant = {**payload, "configurations": []}
+                indexes[identifier][key] = variant
+                sites[identifier]["semantic_variants"].append(variant)
+            configurations = indexes[identifier][key]["configurations"]
+            if configuration not in configurations:
+                configurations.append(deepcopy(configuration))
+    return {
+        "friend_relationships": [sites[key] for key in sorted(sites)],
+        "friend_relationship_coverage": {"collected": collected, "not_collected": unavailable},
+    }
+
+
 def reconcile(snapshots):
     """Union identities while retaining each extracted semantic configuration variant.
 
@@ -47,6 +84,8 @@ def reconcile(snapshots):
     template metadata, access and using-declaration targets. Missing fields remain
     absent, distinct from explicit false or empty defaults. Variants are audit evidence; they do not
     infer or update public support status.
+    Optional friendship sidecars retain independent source-site variants and
+    explicit collection coverage without altering declaration fields.
 
     Raises
     ------
@@ -96,7 +135,7 @@ def reconcile(snapshots):
         family = "::".join(row["name"].split("::")[:2])
         families.setdefault(family, []).append(row["id"])
     fingerprint = hashlib.sha256("\n".join(sorted(rows)).encode()).hexdigest()
-    return {
+    inventory = {
         "systemc_revision": snapshots[0]["systemc_revision"],
         "schema_version": 4,
         "fingerprint": fingerprint,
@@ -111,6 +150,9 @@ def reconcile(snapshots):
             )
         ],
     }
+    if any("friend_relationships" in snapshot for snapshot in snapshots):
+        inventory.update(reconcile_friend_relationships(snapshots))
+    return inventory
 
 
 def write_remaining(inventory, output):
@@ -214,6 +256,13 @@ def write_remaining(inventory, output):
         "PUBLIC_API_SOURCE_INVENTORY.md and PUBLIC_API_COMPATIBILITY.md retain source order occurrences.",
         "",
     ]
+    if "friend_relationships" in inventory:
+        lines += [
+            "Friend relationships retain lexical owners and exact or unresolved targets separately from declarations.",
+            "Their semantic_variants preserve configuration observations; friend_relationship_coverage records collection gaps.",
+            "Friendship source evidence does not establish Python visibility, ADL or binding support.",
+            "",
+        ]
     output.write_text("\n".join(lines))
 
 

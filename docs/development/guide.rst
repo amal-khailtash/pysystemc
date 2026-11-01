@@ -199,6 +199,14 @@ filtered targets carry an explicit unresolved reason. Dependent using node kinds
 not represented by the inventory remain outside this relationship metadata.
 Relationships are source metadata and do not establish Python exposure or
 inherited access.
+Friendship is recorded separately in ``friend_relationships`` source-site records.
+Each record distinguishes the lexical class owner from namespace-level targets;
+canonical target links require exact compiler declaration references. Type-only
+friends and filtered targets retain unresolved reasons. Owner template context
+is kept separate from target template parameters. Friendship metadata does not
+establish Python visibility, argument-dependent lookup or an inherited API.
+Friends without a portable source location are excluded. Type-only dependent
+friends retain their written type without an inferred declaration link.
 
 Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
 SystemC revision. Each declaration retains its source occurrences and
@@ -208,6 +216,9 @@ that produced them. A forward declaration and its definition can differ within
 the same configuration; multiple variants do not establish incompatible behavior.
 The remaining-work report identifies families whose variants need reconciliation.
 Declaration IDs and support status are preserved when metadata variants are added.
+Friend source sites retain their own configuration variants outside declaration
+rows. ``friend_relationship_coverage`` distinguishes configurations that collected
+an empty sidecar from older snapshots that did not collect friendship metadata.
 
 To retain an audit, pass ``--reviews path/to/reviews.json``. The file is a JSON
 object keyed by the emitted declaration ``id``. IDs distinguish overloads and

@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Record lexical friend owners and exact declaration targets in separate API inventory source relationships, preserving unresolved type-only friends and configuration variants.
 - Record using-declaration target relationships in API inventories, retaining unresolved targets explicitly and preserving declaration identities.
 - Record function and template parameter defaults with source provenance in API inventories while preserving existing declaration identities.
 - Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies and member-access policy construction.

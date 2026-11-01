@@ -550,6 +550,123 @@ def restore_source_files(roots):
     return roots
 
 
+def _friend_location(location, filename):
+    """Copy source points, retaining both macro spelling and expansion provenance."""
+    if not isinstance(location, dict):
+        return None
+    if "spellingLoc" in location or "expansionLoc" in location:
+        points = {
+            key: point
+            for key in ("spellingLoc", "expansionLoc")
+            if (point := _friend_location(location.get(key), filename)) is not None
+        }
+        return points or None
+    source = location.get("file", filename)
+    if not source:
+        return None
+    path = (ROOT / source).resolve()
+    if not path.is_relative_to(ROOT):
+        return None
+    point = {"source": path.relative_to(ROOT).as_posix()}
+    for key in ("line", "col", "offset", "tokLen"):
+        if key in location:
+            point[key] = location[key]
+    if "line" not in point and "offset" in point:
+        try:
+            point["line"] = source_text(path).count(b"\n", 0, point["offset"]) + 1
+        except OSError:
+            pass
+    return point if "offset" in point or "line" in point else None
+
+
+def _friend_template_metadata(node):
+    """Copy target or owner template spelling without importing AST pointer IDs."""
+    metadata = {}
+    parameters = []
+    arguments = []
+    for child in node.get("inner", []):
+        if child.get("kind") in {"TemplateTypeParmDecl", "NonTypeTemplateParmDecl", "TemplateTemplateParmDecl"}:
+            parameter = {
+                "name": child.get("name"),
+                "kind": child["kind"],
+                "type": child.get("type", {}).get("qualType"),
+            }
+            for key in ("isParameterPack", "depth", "index"):
+                if key in child:
+                    parameter[key] = child[key]
+            parameters.append(parameter)
+        elif child.get("kind") == "TemplateArgument":
+            arguments.append(
+                _portable_base_metadata({key: child[key] for key in ("type", "value", "isPack") if key in child})
+            )
+    if parameters:
+        metadata["template_parameters"] = parameters
+    if arguments:
+        metadata["template_arguments"] = arguments
+    return metadata
+
+
+def _friend_relationship(node, filename, owner):
+    """Collect one lexical friend occurrence with invocation-local endpoint references.
+
+    Source identity excludes the owner/target payload so extraction configurations
+    can retain several interpretations of the same occurrence. Only direct child
+    declarations and their template pattern children establish target references.
+    """
+    location = _friend_location(node.get("loc"), filename)
+    source_range = {
+        edge: point
+        for edge in ("begin", "end")
+        if (point := _friend_location(node.get("range", {}).get(edge), filename)) is not None
+    }
+    preferred = location
+    if location and ("spellingLoc" in location or "expansionLoc" in location):
+        preferred = location.get("expansionLoc", location.get("spellingLoc"))
+    if preferred is None:
+        preferred = source_range.get("begin")
+        if preferred and ("spellingLoc" in preferred or "expansionLoc" in preferred):
+            preferred = preferred.get("expansionLoc", preferred.get("spellingLoc"))
+    if preferred is None:
+        return None
+    occurrence = {key: preferred[key] for key in ("source", "line", "offset") if key in preferred}
+    occurrence["location_basis"] = "expansion" if location and "expansionLoc" in location else "spelling"
+    if location:
+        occurrence["location"] = location
+    if source_range:
+        occurrence["source_range"] = source_range
+    direct = [child for child in node.get("inner", []) if child.get("kind") in DECLARATIONS]
+    references = []
+    for child in direct:
+        references.append(child.get("id"))
+        if child["kind"] in {"ClassTemplateDecl", "FunctionTemplateDecl"}:
+            references.extend(
+                pattern.get("id")
+                for pattern in child.get("inner", [])
+                if pattern.get("kind") in {"CXXRecordDecl", "FunctionDecl"} and not pattern.get("isImplicit")
+            )
+    if direct:
+        child = direct[0]
+        target = {
+            "kind": child["kind"],
+            "name": child.get("name"),
+            "signature": child.get("type", {}).get("qualType"),
+            **_friend_template_metadata(child),
+        }
+    else:
+        target = {"kind": "type", "written_type": node.get("type", {}).get("qualType")}
+        if "desugaredQualType" in node.get("type", {}):
+            target["desugared_type"] = node["type"]["desugaredQualType"]
+    return {
+        "occurrence_id": hashlib.sha256(json.dumps(occurrence, sort_keys=True).encode()).hexdigest(),
+        "source_occurrence": occurrence,
+        "owner": deepcopy(owner) if owner else {"name": None, "kind": None, "template_context": [], "_ast_ids": []},
+        "target": target,
+        "_target_ast_ids": references,
+        "target_declaration_ids": [],
+        "resolution": "child_declaration" if direct else "type_only_unresolved",
+    }
+
+
 def declarations(
     node,
     scope=(),
@@ -558,12 +675,18 @@ def declarations(
     namespace=(),
     template_context=(),
     using_target_refs=(),
+    friend_relationships=None,
+    _friend_owner=None,
+    _friend_template_context=(),
 ):
     """Walk declaration contexts, retaining protected/private candidates for review.
 
     Function bodies, implicit declarations and locationless AST cross-references
     are excluded. Template patterns
     retain their original dependent signatures rather than a fixed type matrix.
+    An optional ``friend_relationships`` list receives lexical source edges;
+    reconcile it with these entries within the same compiler invocation.
+    Friends with no portable source point or range are excluded from that sink.
     """
     location = node.get("loc", {})
     location = location.get("expansionLoc", location.get("spellingLoc", location))
@@ -681,6 +804,48 @@ def declarations(
         template_context = (*template_context, {"name": "::".join(nested_scope), "arguments": arguments})
     if kind == "NamespaceDecl" and name:
         namespace = (*namespace, name)
+    if friend_relationships is not None:
+        if kind == "ClassTemplateDecl" and name:
+            _friend_template_context = (
+                *_friend_template_context,
+                {"name": "::".join((*scope, name)), **_friend_template_metadata(node)},
+            )
+        elif kind in {"ClassTemplateSpecializationDecl", "ClassTemplatePartialSpecializationDecl"} and name:
+            _friend_template_context = (
+                *_friend_template_context,
+                {"name": "::".join(nested_scope), **_friend_template_metadata(node)},
+            )
+        if (
+            kind
+            in {
+                "ClassTemplateDecl",
+                "CXXRecordDecl",
+                "ClassTemplateSpecializationDecl",
+                "ClassTemplatePartialSpecializationDecl",
+            }
+            and name
+        ):
+            owner_name = "::".join((*scope, name))
+            owner_ids = [node.get("id")]
+            if (
+                kind == "CXXRecordDecl"
+                and _friend_owner
+                and _friend_owner["kind"] == "ClassTemplateDecl"
+                and _friend_owner["name"] == owner_name
+            ):
+                owner_ids = [*_friend_owner["_ast_ids"], *owner_ids]
+            _friend_owner = {
+                "name": owner_name,
+                "kind": kind,
+                "template_context": deepcopy(list(_friend_template_context)),
+                "_ast_ids": owner_ids,
+            }
+        if kind == "FriendDecl" and filename:
+            path = (ROOT / filename).resolve()
+            if path.is_relative_to(ROOT / "submodules/systemc/src"):
+                relationship = _friend_relationship(node, filename, _friend_owner)
+                if relationship is not None:
+                    friend_relationships.append(relationship)
     child_access = (
         access
         if kind == "EnumDecl"
@@ -708,15 +873,20 @@ def declarations(
                 namespace,
                 template_context,
                 using_target_refs,
+                friend_relationships,
+                _friend_owner,
+                _friend_template_context,
             )
 
 
-def reconcile_declarations(entries):
+def reconcile_declarations(entries, friend_relationships=None):
     """Resolve semantic owners using Clang redeclaration/context links.
 
     Out-of-class definitions inherit access and template context from their
     declaration. AST pointer IDs are used only within one compiler invocation
     and removed before serialization. Distinct source occurrences are retained.
+    Resolve an optional friend sidecar here before combining compiler invocations;
+    endpoint IDs never use spelling guesses or synthetic declaration identities.
     """
     indexed = {entry["ast_id"]: entry for entry in entries if entry.get("ast_id")}
     for entry in entries:
@@ -760,12 +930,88 @@ def reconcile_declarations(entries):
                         "unavailable_reason": "inherited_macro_default_source_unavailable",
                         "argument_origin": "inherited",
                     }
+    if friend_relationships is not None:
+        resolve_friend_relationships(entries, friend_relationships)
     for entry in entries:
         for field in ("ast_id", "previous_decl", "parent_context"):
             value = entry.pop(field, None)
             if field == "ast_id":
                 entry["_inventory_ast_id"] = value
     return resolve_using_targets(entries)
+
+
+def resolve_friend_relationships(entries, friend_relationships):
+    """Replace exact friend endpoint pointers with canonical IDs in one AST scope.
+
+    Inputs must have completed semantic declaration reconciliation, while their
+    AST pointer fields remain available. Type-only friendship stays unresolved;
+    direct children filtered out of the inventory never link to same-name rows.
+    The sidecar is updated in place and declaration rows are untouched.
+    """
+    if not friend_relationships:
+        return friend_relationships
+    requested_ids = {
+        reference
+        for relationship in friend_relationships
+        for reference in [*relationship["owner"].get("_ast_ids", []), *relationship.get("_target_ast_ids", [])]
+        if reference
+    }
+    indexed = {}
+    declaration_rows = {}
+    for entry in entries:
+        if entry.get("ast_id") in requested_ids:
+            indexed.setdefault(entry["ast_id"], set()).add(declaration_id(entry))
+            declaration_rows[entry["ast_id"]] = entry
+    for relationship in friend_relationships:
+        owner = relationship["owner"]
+        owner_refs = owner.pop("_ast_ids", [])
+        owner["declaration_ids"] = sorted(
+            {
+                identifier
+                for reference in owner_refs
+                if len(indexed.get(reference, ())) == 1
+                for identifier in indexed[reference]
+            }
+        )
+        if not owner["declaration_ids"] or any(len(indexed.get(reference, ())) != 1 for reference in owner_refs):
+            owner["unresolved_reason"] = (
+                "owner_declaration_mapping_ambiguous"
+                if any(len(indexed.get(reference, ())) > 1 for reference in owner_refs)
+                else "some_owner_declarations_filtered_or_outside_inventory"
+                if owner["declaration_ids"]
+                else "owner_filtered_or_outside_inventory"
+                if any(owner_refs)
+                else "lexical_owner_ast_reference_unavailable"
+            )
+        references = relationship.pop("_target_ast_ids", [])
+        if references and len(indexed.get(references[0], ())) == 1:
+            target_row = declaration_rows[references[0]]
+            for field in ("kind", "name", "signature"):
+                relationship["target"][field] = target_row.get(field)
+        target_ids = sorted(
+            {
+                identifier
+                for reference in references
+                if len(indexed.get(reference, ())) == 1
+                for identifier in indexed[reference]
+            }
+        )
+        relationship["target_declaration_ids"] = target_ids
+        if relationship["resolution"] == "type_only_unresolved":
+            relationship["unresolved_reason"] = "type_only_friend_has_no_exact_declaration_reference"
+        elif any(len(indexed.get(reference, ())) > 1 for reference in references):
+            relationship["resolution"] = "target_declaration_mapping_ambiguous"
+            relationship["unresolved_reason"] = "target_declaration_mapping_ambiguous"
+        elif target_ids and all(reference in indexed for reference in references):
+            relationship["resolution"] = "child_declaration"
+        elif target_ids:
+            relationship["resolution"] = "child_declaration_partial"
+            relationship["unresolved_reason"] = "some_target_declarations_filtered_or_outside_inventory"
+        else:
+            reason = "target_filtered_or_outside_inventory" if any(references) else "target_ast_reference_unavailable"
+            relationship["resolution"] = reason
+            relationship["unresolved_reason"] = reason
+    return friend_relationships
 
 
 def declaration_id(entry):
@@ -1166,6 +1412,19 @@ def write_audit_report(inventory, output):
         lines.append(
             f"| `{entry['id']}` | `{name}` | `{signature}` | {entry['source']}:{entry['line']} | {entry['access']} | {entry['classification']} | {entry['mapping_status']} |"
         )
+    if "friend_relationships" in inventory:
+        friends = inventory["friend_relationships"]
+        sites = {friend["occurrence_id"] for friend in friends}
+        exact = sum(friend["resolution"] == "child_declaration" for friend in friends)
+        lines += [
+            "",
+            "## Friend source relationships",
+            "",
+            f"Friend source sites: {len(sites)}; relationship records: {len(friends)}.",
+            f"Exact target records: {exact}; unresolved or partial target records: {len(friends) - exact}.",
+            "These records preserve lexical ownership and source access grants. They do not establish Python binding or ADL support.",
+            "Type-only targets remain unresolved without an exact AST reference. Friends without a portable source location are excluded.",
+        ]
     lines += [
         "",
         "## Remaining inventory gates",
@@ -1215,6 +1474,7 @@ def main():
     ):
         source += f"#include <{header}>\n"
     entries = []
+    friend_relationships = []
     with tempfile.TemporaryDirectory(prefix="pysystemc-inventory-") as temporary:
         translation = Path(temporary) / "inventory.cpp"
         translation.write_text(source)
@@ -1237,12 +1497,14 @@ def main():
                 timeout=60,
             )
             namespace_entries = []
+            namespace_friends = []
             for root in restore_source_files(list(json_roots(result.stdout))):
                 if root["kind"] == "NamespaceDecl" and root.get("name") in {namespace, "tlm_utils"}:
-                    namespace_entries.extend(declarations(root))
+                    namespace_entries.extend(declarations(root, friend_relationships=namespace_friends))
                 elif namespace in {"sc_main", "sc_elab_and_sim"} and root.get("name") == namespace:
-                    namespace_entries.extend(declarations(root))
-            entries.extend(reconcile_declarations(namespace_entries))
+                    namespace_entries.extend(declarations(root, friend_relationships=namespace_friends))
+            entries.extend(reconcile_declarations(namespace_entries, friend_relationships=namespace_friends))
+            friend_relationships.extend(namespace_friends)
         result = subprocess.run(
             [*command, "-dM", "-E", str(translation)],
             cwd=ROOT,
@@ -1279,6 +1541,9 @@ def main():
     inventory = {
         "systemc_revision": revision,
         "schema_version": 4,
+        "friend_relationships": list(
+            {json.dumps(edge, sort_keys=True): edge for edge in friend_relationships}.values()
+        ),
         "utility_headers": list(HEADERS),
         "macro_declarations": list(macro_declarations(attributed.stdout)),
         "configuration": ["C++17", *defines],
