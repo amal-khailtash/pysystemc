@@ -117,6 +117,32 @@ def _resolved_location(location, fallback_filename=None, *, expansion=False):
     }
 
 
+def _using_target_reference(target, fallback_filename=None):
+    """Copy the portable portion of one Clang UsingShadowDecl target reference.
+
+    Keep its AST pointer only in a private field for exact reconciliation. The
+    pointer is removed before inventory serialization and is never interpreted
+    as a declaration identity.
+    """
+    if not isinstance(target, dict):
+        return {
+            "_target_ast_id": None,
+            "kind": None,
+            "name": None,
+            "signature": None,
+            "source": None,
+        }
+    location = _resolved_location(target.get("loc"), fallback_filename)
+    target_type = target.get("type")
+    return {
+        "_target_ast_id": target.get("id"),
+        "kind": target.get("kind"),
+        "name": target.get("name"),
+        "signature": target_type.get("qualType") if isinstance(target_type, dict) else None,
+        "source": location["source"] if location else None,
+    }
+
+
 def _source_span(source_range, fallback_filename=None, *, expansion=False):
     """Return a checked, portable byte span for one Clang source range."""
     if not isinstance(source_range, dict):
@@ -524,7 +550,15 @@ def restore_source_files(roots):
     return roots
 
 
-def declarations(node, scope=(), filename=None, access="public", namespace=(), template_context=()):
+def declarations(
+    node,
+    scope=(),
+    filename=None,
+    access="public",
+    namespace=(),
+    template_context=(),
+    using_target_refs=(),
+):
     """Walk declaration contexts, retaining protected/private candidates for review.
 
     Function bodies, implicit declarations and locationless AST cross-references
@@ -551,7 +585,7 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
     if kind in DECLARATIONS and name and filename and location:
         path = (ROOT / filename).resolve()
         if path.is_relative_to(ROOT / "submodules/systemc/src"):
-            yield {
+            entry = {
                 "ast_id": node.get("id"),
                 "previous_decl": node.get("previousDecl"),
                 "parent_context": node.get("parentDeclContextId"),
@@ -609,6 +643,9 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
                 "status": "untested",
                 "evidence": [],
             }
+            if kind == "UsingDecl":
+                entry["_using_target_refs"] = deepcopy(using_target_refs)
+            yield entry
     if kind not in {
         "NamespaceDecl",
         "CXXRecordDecl",
@@ -652,10 +689,17 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
         and node.get("tagUsed") == "class"
         else "public"
     )
-    for child in node.get("inner", []):
+    children = node.get("inner", [])
+    for index, child in enumerate(children):
         if child["kind"] == "AccessSpecDecl":
             child_access = child["access"]
         else:
+            using_target_refs = []
+            if child["kind"] == "UsingDecl":
+                for shadow in children[index + 1 :]:
+                    if not isinstance(shadow, dict) or shadow.get("kind") != "UsingShadowDecl":
+                        break
+                    using_target_refs.append(_using_target_reference(shadow.get("target"), filename))
             yield from declarations(
                 child,
                 namespace if kind == "FriendDecl" else nested_scope,
@@ -663,6 +707,7 @@ def declarations(node, scope=(), filename=None, access="public", namespace=(), t
                 "public" if kind == "FriendDecl" else child_access,
                 namespace,
                 template_context,
+                using_target_refs,
             )
 
 
@@ -717,8 +762,10 @@ def reconcile_declarations(entries):
                     }
     for entry in entries:
         for field in ("ast_id", "previous_decl", "parent_context"):
-            entry.pop(field, None)
-    return entries
+            value = entry.pop(field, None)
+            if field == "ast_id":
+                entry["_inventory_ast_id"] = value
+    return resolve_using_targets(entries)
 
 
 def declaration_id(entry):
@@ -737,6 +784,86 @@ def declaration_id(entry):
         ]
     identity["template_context"] = entry.get("template_context", [])
     return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+
+def resolve_using_targets(entries):
+    """Resolve exact UsingShadowDecl links to portable inventory declarations.
+
+    Inputs must contain one compiler invocation's reconciled declarations.
+    Missing targets remain explicit unresolved links; target spelling is never
+    used as a lookup key. Callers must not combine separate Clang invocations
+    before this resolution because their temporary pointer IDs can collide.
+    """
+    using_entries = [entry for entry in entries if "_using_target_refs" in entry]
+    if not using_entries:
+        for entry in entries:
+            entry.pop("_inventory_ast_id", None)
+        return entries
+    requested_ids = {
+        reference.get("_target_ast_id")
+        for entry in using_entries
+        for reference in entry["_using_target_refs"]
+        if reference.get("_target_ast_id")
+    }
+    target_index = {}
+    ambiguous_targets = set()
+    for entry in entries:
+        ast_id = entry.get("_inventory_ast_id")
+        if not ast_id or ast_id not in requested_ids:
+            continue
+        canonical_id = declaration_id(entry)
+        candidate = {
+            "declaration_id": canonical_id,
+            "kind": entry.get("kind"),
+            "name": entry.get("name"),
+            "signature": entry.get("signature"),
+            "source": entry.get("source"),
+        }
+        previous = target_index.get(ast_id)
+        if previous and previous["declaration_id"] != canonical_id:
+            ambiguous_targets.add(ast_id)
+        else:
+            target_index[ast_id] = candidate
+
+    for entry in entries:
+        references = entry.pop("_using_target_refs", None)
+        if references is not None:
+            targets = []
+            if not references:
+                references = [
+                    {
+                        "_target_ast_id": None,
+                        "kind": None,
+                        "name": None,
+                        "signature": None,
+                        "source": None,
+                        "unresolved_reason": "using_shadow_not_emitted",
+                    }
+                ]
+            for reference in references:
+                ast_id = reference.pop("_target_ast_id", None)
+                target = {
+                    "kind": reference.get("kind"),
+                    "name": reference.get("name"),
+                    "signature": reference.get("signature"),
+                    "source": reference.get("source"),
+                }
+                if ast_id in ambiguous_targets:
+                    target["unresolved_reason"] = "target_declaration_mapping_ambiguous"
+                elif ast_id in target_index:
+                    resolved = target_index[ast_id]
+                    for field in ("kind", "name", "signature", "source"):
+                        if resolved.get(field) is not None:
+                            target[field] = resolved[field]
+                    target["declaration_id"] = resolved["declaration_id"]
+                elif ast_id:
+                    target["unresolved_reason"] = "target_filtered_or_outside_inventory"
+                else:
+                    target["unresolved_reason"] = reference.get("unresolved_reason", "target_ast_reference_unavailable")
+                targets.append(target)
+            entry["using_targets"] = targets
+        entry.pop("_inventory_ast_id", None)
+    return entries
 
 
 def apply_reviews(entries, reviews):

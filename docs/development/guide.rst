@@ -193,6 +193,12 @@ Default metadata is excluded from declaration identity keys.
 Base-class metadata preserves spelled and desugared types, access and virtual
 inheritance flags. Compiler-local ``typeAliasDeclId`` references are omitted from
 base records so repeated compiler invocations retain comparable source metadata.
+Using declarations retain their target relationships when Clang supplies an exact
+reference. Targets represented in the extraction use canonical declaration IDs;
+filtered targets carry an explicit unresolved reason. Dependent using node kinds
+not represented by the inventory remain outside this relationship metadata.
+Relationships are source metadata and do not establish Python exposure or
+inherited access.
 
 Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
 SystemC revision. Each declaration retains its source occurrences and

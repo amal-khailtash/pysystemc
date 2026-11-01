@@ -23,6 +23,7 @@ _SEMANTIC_VARIANT_FIELDS = (
     "template_arguments",
     "template_context",
     "access",
+    "using_targets",
 )
 
 
@@ -43,8 +44,8 @@ def reconcile(snapshots):
     The top-level declaration fields remain the first encountered snapshot's
     canonical view for compatibility. Each variant separately deep-copies the
     extracted static/virtual/pure flags, bases, parameter/default metadata,
-    template metadata and access. Missing fields remain absent, distinct from
-    explicit false or empty defaults. Variants are audit evidence; they do not
+    template metadata, access and using-declaration targets. Missing fields remain
+    absent, distinct from explicit false or empty defaults. Variants are audit evidence; they do not
     infer or update public support status.
 
     Raises

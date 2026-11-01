@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Record using-declaration target relationships in API inventories, retaining unresolved targets explicitly and preserving declaration identities.
 - Record function and template parameter defaults with source provenance in API inventories while preserving existing declaration identities.
 - Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies and member-access policy construction.
 - Add `native_help` and `format_native_help` for native overloads, templates and enums, available from Python and the playground without inherited cppyy proxy metadata.
