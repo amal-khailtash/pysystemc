@@ -6,6 +6,7 @@ Semantic evidence and internal/public classification require a separate review.
 """
 
 import argparse
+from bisect import bisect_right
 from copy import deepcopy
 from functools import cache
 import hashlib
@@ -579,6 +580,214 @@ def _friend_location(location, filename):
     return point if "offset" in point or "line" in point else None
 
 
+@cache
+def _condition_source_index(filename):
+    """Index lexical conditional histories by original byte offset.
+
+    Translation-phase backslash/newline splicing precedes comment and literal
+    recognition. The original header ledger scanner is deliberately independent.
+    Invalid or unsupported lexical input makes the entire file unavailable.
+    """
+    try:
+        original = source_text(filename)
+    except OSError:
+        return None, "source_file_unavailable"
+    try:
+        original.decode("utf-8")
+    except UnicodeDecodeError:
+        return None, "source_file_not_utf8"
+    if b"??" in original and re.search(rb"\?\?[=/\'()!<>-]", original):
+        return None, "unsupported_trigraph_source"
+    data = bytearray()
+    offsets = []
+    index = 0
+    while index < len(original):
+        splice = re.match(rb"\\\r?\n", original[index : index + 3])
+        if splice:
+            index += len(splice[0])
+        else:
+            data.append(original[index])
+            offsets.append(index)
+            index += 1
+    data = bytes(data)
+    mask = bytearray(data)
+
+    def hide(start, end, replacement=32):
+        """Replace literal/comment bytes while preserving logical line boundaries."""
+        for position in range(start, end):
+            if data[position] not in (10, 13):
+                mask[position] = replacement
+
+    index = 0
+    while index < len(data):
+        if data.startswith(b"//", index):
+            stop = data.find(b"\n", index)
+            stop = len(data) if stop < 0 else stop
+            hide(index, stop)
+            index = stop
+        elif data.startswith(b"/*", index):
+            stop = data.find(b"*/", index + 2)
+            if stop < 0:
+                return None, "unterminated_source_comment"
+            line_start = data.rfind(b"\n", 0, index) + 1
+            if b"\n" in data[index : stop + 2] and re.match(rb"\s*(?:#|%:)", mask[line_start:index]):
+                return None, "unsupported_multiline_directive_comment"
+            hide(index, stop + 2)
+            index = stop + 2
+        else:
+            raw = re.match(rb'(?:u8|u|U|L)?R"([^\s()\\]{0,16})\(', data[index : index + 24])
+            if raw and (index == 0 or not (chr(data[index - 1]).isalnum() or data[index - 1] == 95)):
+                stop = data.find(b")" + raw[1] + b'"', index + len(raw[0]))
+                if stop < 0:
+                    return None, "unterminated_source_raw_string"
+                stop += len(raw[1]) + 2
+                hide(index, stop, 120)
+                index = stop
+            elif data[index] in (34, 39):
+                number_start = index
+                if data[index] == 39:
+                    while number_start > 0 and (
+                        chr(data[number_start - 1]).isalnum() or data[number_start - 1] in b"_.'"
+                    ):
+                        number_start -= 1
+                number_prefix = data[number_start:index]
+                if (
+                    data[index] == 39
+                    and index + 1 < len(data)
+                    and re.match(rb"(?:[0-9]|\.[0-9])", number_prefix)
+                    and chr(data[index + 1]).isalnum()
+                ):
+                    index += 1
+                    continue
+                quote = data[index]
+                stop = index + 1
+                while stop < len(data) and data[stop] != quote:
+                    if data[stop] in (10, 13):
+                        return None, "unterminated_source_literal"
+                    stop += 2 if data[stop] == 92 else 1
+                if stop >= len(data):
+                    return None, "unterminated_source_literal"
+                hide(index, stop + 1, 120)
+                index = stop + 1
+            else:
+                index += 1
+    stack = []
+    else_seen = []
+    events = [0]
+    contexts = [[]]
+    spans = []
+    position = 0
+    for logical_line in bytes(mask).splitlines(keepends=True):
+        end = position + len(logical_line)
+        if re.match(rb"\s*%:", logical_line):
+            return None, "unsupported_directive_digraph"
+        directive_start = re.match(rb"[ \t\v\f\r]*#", logical_line)
+        if directive_start:
+            match = re.match(rb"[ \t\v\f\r]*#\s*([A-Za-z_][A-Za-z_0-9]*)\b", logical_line)
+            if match is None and logical_line[directive_start.end() :].strip():
+                return None, "unsupported_directive_identifier"
+            first = offsets[position]
+            stop = offsets[end - 1] + 1
+            # Match the existing textual continuation presentation, retaining
+            # comments and literal spelling in directive operands.
+            hash_offset = offsets[position + logical_line.index(b"#")]
+            physical = original[hash_offset:stop].decode("utf-8").splitlines()
+            directive = physical[0].strip()
+            for continuation in physical[1:]:
+                directive = directive[:-1].rstrip() + " " + continuation.strip()
+            operation = match[1].decode("ascii") if match else ""
+            spans.append((first, stop))
+            if operation in {"if", "ifdef", "ifndef"}:
+                stack.append([directive])
+                else_seen.append(False)
+            elif operation in {"elif", "else"}:
+                if not stack:
+                    return None, "unmatched_source_" + operation
+                if else_seen[-1]:
+                    return None, "duplicate_source_else" if operation == "else" else "source_elif_after_else"
+                stack[-1].append(directive)
+                else_seen[-1] = operation == "else"
+            elif operation == "endif":
+                if not stack:
+                    return None, "unmatched_source_endif"
+                stack.pop()
+                else_seen.pop()
+            elif operation in {"elifdef", "elifndef"}:
+                return None, "unsupported_conditional_directive"
+            events.append(stop)
+            contexts.append(deepcopy(stack))
+        position = end
+    if stack:
+        return None, "unclosed_source_conditional"
+    return {"contents": original, "events": events, "contexts": contexts, "spans": spans}, None
+
+
+def _declaration_condition_point(point):
+    """Associate one portable source point without inferring missing byte offsets."""
+    occurrence = {key: point.get(key) for key in ("source", "line", "offset")}
+    result = {"source_occurrence": occurrence, "conditional_context": None}
+    source = occurrence["source"]
+    offset = occurrence["offset"]
+    if not source:
+        result["unavailable_reason"] = "source_location_unavailable"
+        return result
+    path = (ROOT / source).resolve()
+    if not path.is_relative_to(ROOT):
+        result["unavailable_reason"] = "source_outside_depot"
+        return result
+    if not isinstance(offset, int) or isinstance(offset, bool):
+        result["unavailable_reason"] = "source_offset_unavailable"
+        return result
+    indexed, reason = _condition_source_index(path)
+    if indexed is None:
+        result["unavailable_reason"] = reason
+        return result
+    if offset < 0 or offset >= len(indexed["contents"]):
+        result["unavailable_reason"] = "source_location_out_of_bounds"
+        return result
+    occurrence["line"] = indexed["contents"].count(b"\n", 0, offset) + 1
+    if any(start <= offset < stop for start, stop in indexed["spans"]):
+        result["unavailable_reason"] = "source_point_inside_directive"
+        return result
+    result["conditional_context"] = deepcopy(indexed["contexts"][bisect_right(indexed["events"], offset) - 1])
+    return result
+
+
+def collect_declaration_conditions(entries, sink):
+    """Append exact same-row condition records and remove private location metadata.
+
+    Call only after semantic declaration reconciliation in one AST invocation.
+    Macro spelling context remains separate from invocation context. No source
+    location, name or compiler pointer is matched against a different row.
+    """
+    for entry in entries:
+        location = entry.pop("_condition_location", None)
+        if sink is None:
+            continue
+        # Existing emitted source occurrence is always the primary association.
+        point = {key: entry.get(key) for key in ("source", "line", "offset")}
+        record = _declaration_condition_point(point)
+        record["declaration_id"] = declaration_id(entry)
+        record["location_kind"] = "expansion_source" if location and "expansionLoc" in location else "written_source"
+        occurrence = record["source_occurrence"]
+        if (
+            isinstance(occurrence["offset"], int)
+            and not isinstance(occurrence["offset"], bool)
+            and occurrence["source"]
+        ):
+            identity = {
+                "declaration_id": record["declaration_id"],
+                "source": occurrence["source"],
+                "offset": occurrence["offset"],
+            }
+            record["occurrence_id"] = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+        else:
+            record["occurrence_id"] = None
+        if location and "spellingLoc" in location:
+            record["spelling_source"] = _declaration_condition_point(location["spellingLoc"] or {})
+        sink.append(record)
+
+
 def _friend_template_metadata(node):
     """Copy target or owner template spelling without importing AST pointer IDs."""
     metadata = {}
@@ -678,6 +887,7 @@ def declarations(
     friend_relationships=None,
     _friend_owner=None,
     _friend_template_context=(),
+    collect_conditions=False,
 ):
     """Walk declaration contexts, retaining protected/private candidates for review.
 
@@ -766,6 +976,17 @@ def declarations(
                 "status": "untested",
                 "evidence": [],
             }
+            if collect_conditions:
+                raw_location = node.get("loc", {})
+                entry["_condition_location"] = (
+                    {
+                        key: _friend_location(raw_location[key], filename)
+                        for key in ("spellingLoc", "expansionLoc")
+                        if key in raw_location
+                    }
+                    if "spellingLoc" in raw_location or "expansionLoc" in raw_location
+                    else _friend_location(raw_location, filename)
+                )
             if kind == "UsingDecl":
                 entry["_using_target_refs"] = deepcopy(using_target_refs)
             yield entry
@@ -876,10 +1097,11 @@ def declarations(
                 friend_relationships,
                 _friend_owner,
                 _friend_template_context,
+                collect_conditions,
             )
 
 
-def reconcile_declarations(entries, friend_relationships=None):
+def reconcile_declarations(entries, friend_relationships=None, declaration_conditions=None):
     """Resolve semantic owners using Clang redeclaration/context links.
 
     Out-of-class definitions inherit access and template context from their
@@ -937,7 +1159,9 @@ def reconcile_declarations(entries, friend_relationships=None):
             value = entry.pop(field, None)
             if field == "ast_id":
                 entry["_inventory_ast_id"] = value
-    return resolve_using_targets(entries)
+    resolved = resolve_using_targets(entries)
+    collect_declaration_conditions(resolved, declaration_conditions)
+    return resolved
 
 
 def resolve_friend_relationships(entries, friend_relationships):
@@ -1475,6 +1699,7 @@ def main():
         source += f"#include <{header}>\n"
     entries = []
     friend_relationships = []
+    declaration_conditions = []
     with tempfile.TemporaryDirectory(prefix="pysystemc-inventory-") as temporary:
         translation = Path(temporary) / "inventory.cpp"
         translation.write_text(source)
@@ -1500,10 +1725,20 @@ def main():
             namespace_friends = []
             for root in restore_source_files(list(json_roots(result.stdout))):
                 if root["kind"] == "NamespaceDecl" and root.get("name") in {namespace, "tlm_utils"}:
-                    namespace_entries.extend(declarations(root, friend_relationships=namespace_friends))
+                    namespace_entries.extend(
+                        declarations(root, friend_relationships=namespace_friends, collect_conditions=True)
+                    )
                 elif namespace in {"sc_main", "sc_elab_and_sim"} and root.get("name") == namespace:
-                    namespace_entries.extend(declarations(root, friend_relationships=namespace_friends))
-            entries.extend(reconcile_declarations(namespace_entries, friend_relationships=namespace_friends))
+                    namespace_entries.extend(
+                        declarations(root, friend_relationships=namespace_friends, collect_conditions=True)
+                    )
+            entries.extend(
+                reconcile_declarations(
+                    namespace_entries,
+                    friend_relationships=namespace_friends,
+                    declaration_conditions=declaration_conditions,
+                )
+            )
             friend_relationships.extend(namespace_friends)
         result = subprocess.run(
             [*command, "-dM", "-E", str(translation)],
@@ -1543,6 +1778,9 @@ def main():
         "schema_version": 4,
         "friend_relationships": list(
             {json.dumps(edge, sort_keys=True): edge for edge in friend_relationships}.values()
+        ),
+        "declaration_conditions": list(
+            {json.dumps(record, sort_keys=True): record for record in declaration_conditions}.values()
         ),
         "utility_headers": list(HEADERS),
         "macro_declarations": list(macro_declarations(attributed.stdout)),

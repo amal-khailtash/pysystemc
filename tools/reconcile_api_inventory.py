@@ -64,6 +64,44 @@ def reconcile_friend_relationships(snapshots):
     }
 
 
+def reconcile_declaration_conditions(snapshots):
+    """Group textual source-condition observations without promoting API support.
+
+    Located occurrences group by their portable ID. Unlocated observations merge
+    only when their entire payload agrees, and retain a null occurrence ID.
+    Collection coverage distinguishes unavailable historical metadata from an
+    explicitly collected empty list. Input payloads are copied independently.
+    """
+    sites = {}
+    indexes = {}
+    collected = []
+    unavailable = []
+    for snapshot in snapshots:
+        configuration = snapshot["configuration"]
+        coverage = collected if "declaration_conditions" in snapshot else unavailable
+        if configuration not in coverage:
+            coverage.append(deepcopy(configuration))
+        for observation in snapshot.get("declaration_conditions", []):
+            identifier = observation["occurrence_id"]
+            payload = {key: deepcopy(value) for key, value in observation.items() if key != "occurrence_id"}
+            payload_key = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+            site_key = ("located", identifier) if identifier is not None else ("unlocated", payload_key)
+            if site_key not in sites:
+                sites[site_key] = {"occurrence_id": identifier, "semantic_variants": []}
+                indexes[site_key] = {}
+            if payload_key not in indexes[site_key]:
+                variant = {**payload, "configurations": []}
+                indexes[site_key][payload_key] = variant
+                sites[site_key]["semantic_variants"].append(variant)
+            configurations = indexes[site_key][payload_key]["configurations"]
+            if configuration not in configurations:
+                configurations.append(deepcopy(configuration))
+    return {
+        "declaration_conditions": [sites[key] for key in sorted(sites)],
+        "declaration_condition_coverage": {"collected": collected, "not_collected": unavailable},
+    }
+
+
 def reconcile(snapshots):
     """Union identities while retaining each extracted semantic configuration variant.
 
@@ -152,6 +190,8 @@ def reconcile(snapshots):
     }
     if any("friend_relationships" in snapshot for snapshot in snapshots):
         inventory.update(reconcile_friend_relationships(snapshots))
+    if any("declaration_conditions" in snapshot for snapshot in snapshots):
+        inventory.update(reconcile_declaration_conditions(snapshots))
     return inventory
 
 
@@ -261,6 +301,13 @@ def write_remaining(inventory, output):
             "Friend relationships retain lexical owners and exact or unresolved targets separately from declarations.",
             "Their semantic_variants preserve configuration observations; friend_relationship_coverage records collection gaps.",
             "Friendship source evidence does not establish Python visibility, ADL or binding support.",
+            "",
+        ]
+    if "declaration_conditions" in inventory:
+        lines += [
+            "Declaration conditions retain textual branch histories at individual source occurrences.",
+            "They do not evaluate preprocessing expressions or prove visibility, public role or binding support.",
+            "declaration_condition_coverage records configurations that collected this metadata.",
             "",
         ]
     output.write_text("\n".join(lines))

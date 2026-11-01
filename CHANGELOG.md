@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Associate declaration source occurrences with textual preprocessor branch histories, keeping macro invocation and spelling contexts separate and preserving API identities.
 - Record lexical friend owners and exact declaration targets in separate API inventory source relationships, preserving unresolved type-only friends and configuration variants.
 - Record using-declaration target relationships in API inventories, retaining unresolved targets explicitly and preserving declaration identities.
 - Record function and template parameter defaults with source provenance in API inventories while preserving existing declaration identities.

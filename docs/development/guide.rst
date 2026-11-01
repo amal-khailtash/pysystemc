@@ -207,6 +207,12 @@ is kept separate from target template parameters. Friendship metadata does not
 establish Python visibility, argument-dependent lookup or an inherited API.
 Friends without a portable source location are excluded. Type-only dependent
 friends retain their written type without an inferred declaration link.
+``declaration_conditions`` records textual preprocessor branch histories at
+individual declaration source occurrences. Include guards and preceding
+``elif``/``else`` alternatives remain in the history. Macro invocation context
+is separate from available spelling context. Unavailable locations or malformed
+source conditions carry explicit reasons. This metadata does not evaluate
+preprocessor expressions or establish active APIs or Python support.
 
 Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
 SystemC revision. Each declaration retains its source occurrences and
@@ -219,6 +225,8 @@ Declaration IDs and support status are preserved when metadata variants are adde
 Friend source sites retain their own configuration variants outside declaration
 rows. ``friend_relationship_coverage`` distinguishes configurations that collected
 an empty sidecar from older snapshots that did not collect friendship metadata.
+Condition observations likewise retain independent configuration variants and
+``declaration_condition_coverage`` without changing declaration identities.
 
 To retain an audit, pass ``--reviews path/to/reviews.json``. The file is a JSON
 object keyed by the emitted declaration ``id``. IDs distinguish overloads and
