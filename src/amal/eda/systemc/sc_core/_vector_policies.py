@@ -8,7 +8,12 @@ _native_member_template = cppyy.gbl.sc_core.sc_member_access
 
 
 def _split_policy(native_type):
-    """Separate the two outer template arguments while preserving nested types."""
+    """Separate the two outer arguments of a reflected native policy type.
+
+    Public construction obtains a two-argument native specialization before
+    calling this helper. The malformed-spelling error protects that private
+    invariant; fabricated proxy metadata is not a supported public input.
+    """
     spelling = native_type.__cpp_name__[len("sc_core::sc_member_access<") : -1]
     depth = 0
     for index, char in enumerate(spelling):

@@ -135,6 +135,13 @@ SystemC factory allocates a trace object with throwing ``new``; it has no null
 return path. Native file opening is lazy, so creation does not establish that the
 file can be written. Keep traced values alive until the context closes.
 
+Coverage obligations distinguish public inputs from private invariants.
+``sc_member_access[Element, Member]`` first reflects the native two-argument
+specialization. The spelling splitter's malformed-metadata guard is tested with
+a fabricated proxy only as a private invariant. That check does not establish
+additional public API coverage; nested native policies and live member access
+have separate native reference comparisons.
+
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.
