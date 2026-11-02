@@ -712,3 +712,21 @@ Joins and workers remain owned throughout the wait. The monitor exit constant
 is read in both models; direct monitor-subclass signaling is tested only by C++
 and remains outside Python parity. Other schedules and teardown orders remain
 open.
+
+Finite time value and configuration checks
+------------------------------------------
+
+The selected time-value reference compares 31 records: twenty scalar/conversion
+and mutation records, six relation outcomes in one record, nine native error
+records and one recovery record. Constructor cases include six units, numeric
+ticks above 2^63, copied values, default/explicit contexts and string units.
+Compound operators preserve native object identity for selected operands; string
+and unit failures permit a later valid parse. These finite cases do not close
+arbitrary rounding, overflow, inputs or configuration contracts.
+
+A separate fresh-kernel comparison checks time resolution/default-unit setup,
+eight rejected changes, the native maximum tick value, simulated time and
+recovery under the selected settings. Duplicate source declarations and getter
+type spellings retain distinct inventory IDs but represent the same native
+functions. Other platforms, resolutions and concurrent configuration access
+remain open.

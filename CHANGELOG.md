@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite native comparisons for time construction/conversion, compound
+  arithmetic, diagnostics/recovery and kernel time configuration.
+
 - Record finite native checks for halt/stack utilities, process-handle
   comparisons and join timing with reset/kill cleanup and rejected handles.
 
