@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite native checks for halt/stack utilities, process-handle
+  comparisons and join timing with reset/kill cleanup and rejected handles.
+
 - Record finite native checks for priority-queue ordering and comparator
   retention, byte-heap state, time-parameter defaults and inactive unwind copies.
 

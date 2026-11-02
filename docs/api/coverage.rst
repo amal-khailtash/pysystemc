@@ -688,3 +688,27 @@ Two copied inactive unwind markers preserve ``RESET``/``KILL`` text and flags
 across the Python exception boundary. The probe confirms inactivity before
 throwing the copy; this finite check does not establish active scheduler-unwind
 behavior.
+
+Finite process utility and join checks
+--------------------------------------
+
+The native reference checks four clocked-thread halt scenarios plus an invalid
+outside-process call. It compares normal completion, default/explicit simulation
+contexts, reset cleanup at 0.5 ns and kill cleanup at 1 ns. Stack-size setup is
+checked through process handles and native thread pointers, including stored
+sizes and invalid argument rejection. Other process kinds and stack limits
+remain open.
+
+Three process-handle comparison functions match native equality, inequality and
+ordering for selected valid, copied and empty handles. Their six source
+declaration IDs include equivalent ``this_type`` signatures; they represent
+three functions. Address ordering is compared within each process and is not
+asserted across independent runs.
+
+The join reference compares five progress records, eight reset/kill cleanup
+records and two rejected-handle diagnostics. Dynamic and clocked waits complete
+at 3 ns and 6 ns; late registration retains the tested native count behavior.
+Joins and workers remain owned throughout the wait. The monitor exit constant
+is read in both models; direct monitor-subclass signaling is tested only by C++
+and remains outside Python parity. Other schedules and teardown orders remain
+open.
