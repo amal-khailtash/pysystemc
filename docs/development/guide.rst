@@ -242,6 +242,18 @@ A borrowed base proxy calls virtually using the base declaration's default;
 an explicit reflected base-method call is qualified and invokes the base
 implementation. Keep the owning derived object alive while using the base proxy.
 These checks cover selected call forms, not all overload or lifecycle contracts.
+Inherited hash constructor checks compare omitted arguments with the explicit
+``PHASH_DEFAULT_*`` values: table size 11, maximum density 5, growth factor 2.0
+and reordering enabled. A custom configuration distinguishes those values from
+other accepted settings. These checks cover constructor configuration and
+constant values; hash insertion, rehashing and callback lifetime have separate
+validation obligations.
+On cppyy 3.5.0, a constructor inherited through a native ``using`` declaration
+can lose its trailing default arguments. The hash probe's five-argument call
+therefore fails, while the native C++ call succeeds. Python configuration checks
+supply all seven arguments explicitly; the zero-argument default constructor
+also works. This records a binding limitation, not complete inherited-default
+support.
 Base-class metadata preserves spelled and desugared types, access and virtual
 inheritance flags. Compiler-local ``typeAliasDeclId`` references are omitted from
 base records so repeated compiler invocations retain comparable source metadata.
