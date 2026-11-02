@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite native comparisons for eight core aliases, two write-through
+  flags and exception-to-report conversion; retain random-seed limitations.
+
 - Record finite native-reference checks for time tuple normalization/overflow,
   DMI state restoration, phase values and quantumkeeper timing/reset/kill order.
 

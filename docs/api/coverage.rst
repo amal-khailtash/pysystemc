@@ -631,8 +631,9 @@ and matches native C++ pointee ordering; the vector owns no pointees.
 
 All sixteen native logic-resolution table cells match C++ and retain symmetry.
 Initial public configuration booleans are readable and match native storage;
-assigning a copied Python module boolean is not claimed to mutate native globals,
-so those mutable-global entries remain open for a complete write contract.
+ordinary copied Python module booleans do not mutate native globals. The two
+explicitly forwarded flags below have separate write-through checks; other
+mutable globals remain open for complete write contracts.
 
 Finite time tuple checks
 ------------------------
@@ -642,3 +643,25 @@ getters and conversion to ``sc_time`` across five selected values. A separate
 fresh process checks normalization overflow at 10 fs resolution, the native
 report and safe recovery. This closes that bounded normalization/overflow
 scenario; other resolutions and whole-declaration contracts remain open.
+
+Finite core alias, flag and exception checks
+--------------------------------------------
+
+The small-type reference checks eight selected aliases: action bits, three clock
+ports, channel and behavior module aliases, the event-queue port and the native
+exception alias. Live clock and queue callbacks match C++ at 0/2/4 ns and 1/3 ns.
+These are selected alias identities and uses; their underlying templates retain
+separate contracts.
+
+Assignments to ``sc_enable_name_checking`` and
+``sc_allow_process_control_corners`` update native storage, reject non-boolean
+values and restore the tested initial flags. The native comparison checks name
+diagnostics and strict/permitted process-control behavior. Concurrent flag
+changes and other configurations remain open.
+
+The active-catch helper checks four exception kinds plus suppression. Returned
+report pointers are owned by the caller; copied messages and native diagnostic
+records match C++. This does not establish arbitrary exception/lifetime cases.
+``sc_set_random_seed`` emits the native not-implemented warning; random sequence
+control remains unsupported. The current simulation context and process query
+return borrowed pointers; deletion or use after native teardown is unverified.
