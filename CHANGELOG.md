@@ -10,6 +10,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Added
 
+- Verify tuple-based native trace overload selection and preserve cppyy selector errors with valid-selection recovery.
 - Add native/Python behavioral comparisons for omitted start policies, FIFO capacity, event-queue naming and timing, inherited virtual defaults, and port/signal template defaults.
 - Associate declaration source occurrences with textual preprocessor branch histories, keeping macro invocation and spelling contexts separate and preserving API identities.
 - Record lexical friend owners and exact declaration targets in separate API inventory source relationships, preserving unresolved type-only friends and configuration variants.

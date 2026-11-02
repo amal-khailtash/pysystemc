@@ -123,6 +123,12 @@ transitions. Upstream fork/join, report and barrier ports are compared with nati
 C++ examples. Coverage measures Python code, including subprocesses, not native
 C++. Sphinx HTML is written to ``build/docs``.
 
+Exact native trace overloads can be selected with a comma-separated signature
+string or a tuple of argument-type strings. Tuple selection of the boolean
+pointer overload is checked against native trace records. Use the exact string
+signature for the typed ctypes char-pointer adapter. Invalid selectors preserve
+cppyy errors; on cppyy 3.5.0, a ``None`` selector raises ``SystemError``.
+
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.

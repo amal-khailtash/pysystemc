@@ -20,7 +20,7 @@ sc.sc_trace.__overload__("sc_core::sc_trace_file*,const sc_core::sc_time*,const 
     file, probe.time_pointer(file), "time_ptr"
 )
 sc.sc_trace(file, sc.sc_trace_value["bool"](file.bool_sample()), "bool_ref")
-sc.sc_trace.__overload__("sc_core::sc_trace_file*,const bool*,const std::string&")(
+sc.sc_trace.__overload__(("sc_core::sc_trace_file*", "const bool*", "const std::string&"))(
     file, probe.bool_pointer(file), "bool_ptr"
 )
 sc.sc_trace(file, sc.sc_trace_value["float"](file.float_sample()), "float_ref")

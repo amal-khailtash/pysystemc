@@ -6,6 +6,37 @@ import sys
 from .support import ROOT, run_example
 
 
+def test_trace_selector_errors_match_native(tmp_path):
+    """Preserve cppyy selector errors and recover with an exact valid signature."""
+    source = """
+from amal.eda.systemc import sc_core as sc
+import cppyy
+
+native = cppyy.gbl.sc_core.sc_trace.__overload__
+public = sc.sc_trace.__overload__
+for arguments in ((), (None,), (123,), (("int",),)):
+    errors = []
+    for select in (native, public):
+        try:
+            select(*arguments)
+        except (TypeError, SystemError, LookupError) as error:
+            errors.append((type(error), str(error)))
+        else:
+            raise AssertionError(f"invalid selector accepted: {arguments!r}")
+    assert errors[0] == errors[1], errors
+signature = "sc_core::sc_trace_file*,const bool&,const std::string&"
+assert callable(native(signature))
+assert callable(public(signature))
+tuple_signature = ("sc_core::sc_trace_file*", "const bool&", "const std::string&")
+assert callable(native(tuple_signature))
+assert callable(public(tuple_signature))
+print("TRACE_SELECTOR_RECOVERY_OK")
+"""
+    result = subprocess.run([sys.executable, "-c", source], cwd=tmp_path, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "TRACE_SELECTOR_RECOVERY_OK" in result.stdout
+
+
 def test_sc_core_free_trace_public(tmp_path):
     """Check exact dispatch, native widths, unbound registration and live values."""
     output = run_example(tmp_path, "tests/models/sc_core_free_trace_public.py")
