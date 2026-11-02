@@ -190,6 +190,18 @@ an explicit unavailable reason. Defaults produced by declaration-generating macr
 retain the initializer spelling; inherited defaults retain the original declaration
 source. These records do not establish semantic support.
 Default metadata is excluded from declaration identity keys.
+Behavioral default checks compare omitted arguments with explicit native values
+in fresh kernels. ``sc_start(duration)`` uses ``SC_RUN_TO_TIME`` and advances to
+the requested end time even when the kernel has no work; choose
+``SC_EXIT_ON_STARVATION`` explicitly to return when work runs out.
+Default ``sc_fifo[int]()`` capacity is 16. Omitted template arguments retain
+native defaults: ``sc_port[IF]`` uses capacity 1 and ``SC_ONE_OR_MORE_BOUND``;
+``sc_signal[T]`` uses the configured ``SC_DEFAULT_WRITER_POLICY``.
+For native overrides, default arguments belong to the selected declaration.
+A borrowed base proxy calls virtually using the base declaration's default;
+an explicit reflected base-method call is qualified and invokes the base
+implementation. Keep the owning derived object alive while using the base proxy.
+These checks cover selected call forms, not all overload or lifecycle contracts.
 Base-class metadata preserves spelled and desugared types, access and virtual
 inheritance flags. Compiler-local ``typeAliasDeclId`` references are omitted from
 base records so repeated compiler invocations retain comparable source metadata.
