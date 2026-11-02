@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite native checks for priority-queue ordering and comparator
+  retention, byte-heap state, time-parameter defaults and inactive unwind copies.
+
 - Record finite native comparisons for eight core aliases, two write-through
   flags and exception-to-report conversion; retain random-seed limitations.
 

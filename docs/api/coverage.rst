@@ -665,3 +665,26 @@ records match C++. This does not establish arbitrary exception/lifetime cases.
 ``sc_set_random_seed`` emits the native not-implemented warning; random sequence
 control remains unsupported. The current simulation context and process query
 return borrowed pointers; deletion or use after native teardown is unverified.
+
+Finite priority queue and storage checks
+----------------------------------------
+
+The priority-queue reference checks four selected configurations: the base
+queue, a custom item-pointer template, time pointers and null timed-event
+pointers. It verifies ordering, duplicate values, capacity growth, extraction
+counts and borrowed pointees. The Python comparator remains retained while its
+queue lives, runs on the calling thread and is released after queue destruction.
+These checks do not establish every template type, comparator failure or empty
+extraction behavior.
+
+The byte-heap comparison checks default initialization, aligned allocation and
+wrap reuse, resizing and selected teardown. Borrowed views may outlive their heap
+proxy but become invalid when native storage is freed or replaced; the teardown
+fixture deliberately performs no later memory access. Default time-parameter
+values and proxy release have their own native comparison. Other heap sizes,
+allocation failures and arbitrary lifetime orders remain open.
+
+Two copied inactive unwind markers preserve ``RESET``/``KILL`` text and flags
+across the Python exception boundary. The probe confirms inactivity before
+throwing the copy; this finite check does not establish active scheduler-unwind
+behavior.
