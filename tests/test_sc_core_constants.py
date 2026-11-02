@@ -19,3 +19,4 @@ def test_sc_core_public_constants(tmp_path):
     records = [line for line in output.splitlines() if line.startswith("CORE_CONSTANT ")]
     assert records == [line for line in native.stdout.splitlines() if line.startswith("CORE_CONSTANT ")]
     assert len(records) == 239
+    assert "CORE_ENUM_TYPES_OK 10 48" in output

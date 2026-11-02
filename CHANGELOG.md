@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Verify all 48 members of the ten named SystemC core enums retain native enum
+  types and integer round-trips; check version getter argument rejection.
+
 - Check every declared TLM enum member against native C++ (30 members across
   seven types), and strengthen version and host query argument checks. Document
   cppyy 3.5 host-endianness results as Python integers.

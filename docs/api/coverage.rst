@@ -616,7 +616,15 @@ An independent native reference compares every inventoried public scalar/string/
 constant (239 declarations), including hash defaults, stack size, version strings,
 report IDs and enum values. Tracing report IDs require the native tracing-ID header,
 which package initialization now loads. Mutable globals, native tables and pointer
-proxies are excluded from scalar-value claims. Bind-proxy default/interface/port
+proxies are excluded from scalar-value claims. All 48 members of the ten named
+``sc_core`` enums also retain enum type identity and support typed integer
+construction and round-trip; C++ compile checks verify their exact native types.
+``sc_status_type`` names the native status enum alongside the compatibility state
+query. The three native version getters match exact C++ strings across repeated
+calls and reject extra arguments. These finite checks apply to the current
+baseline; broader configuration and whole-declaration contracts remain open.
+
+Bind-proxy default/interface/port
 constructors and native nil storage preserve borrowed pointer identity. The CFT
 comparison signature executes a Python callback during native pointer-vector sort
 and matches native C++ pointee ordering; the vector owns no pointees.

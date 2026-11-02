@@ -11,3 +11,12 @@ value = sc.sc_version()
 assert value and sc.sc_release() in value
 assert value == sc.sc_version()
 print("VERSION_FUNCTION_REFERENCE", "sc_version", value.encode().hex())
+
+for name in ("sc_copyright", "sc_release", "sc_version"):
+    assert isinstance(getattr(sc, name)(), str)
+    try:
+        getattr(sc, name)(0)
+    except TypeError:
+        pass
+    else:
+        raise AssertionError(f"no-argument version query accepted an argument: {name}")

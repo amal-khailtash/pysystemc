@@ -9,6 +9,79 @@
 #include <iomanip>
 #include <iostream>
 #include <systemc>
+#include <type_traits>
+/** @brief Compile-check the exact native type of every selected named enum member. */
+static_assert(std::is_same<decltype(sc_core::SC_CTHREAD_PROC_), sc_core::sc_curr_proc_kind>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_METHOD_PROC_), sc_core::sc_curr_proc_kind>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_NO_PROC_), sc_core::sc_curr_proc_kind>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_THREAD_PROC_), sc_core::sc_curr_proc_kind>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_INCLUDE_DESCENDANTS), sc_core::sc_descendant_inclusion_info>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_INVALID_DESCENDANTS), sc_core::sc_descendant_inclusion_info>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_NO_DESCENDANTS), sc_core::sc_descendant_inclusion_info>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_ALL_BOUND), sc_core::sc_port_policy>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_ONE_OR_MORE_BOUND), sc_core::sc_port_policy>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_ZERO_OR_MORE_BOUND), sc_core::sc_port_policy>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_ERROR), sc_core::sc_severity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_FATAL), sc_core::sc_severity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_INFO), sc_core::sc_severity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_MAX_SEVERITY), sc_core::sc_severity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_WARNING), sc_core::sc_severity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_EXIT_ON_STARVATION), sc_core::sc_starvation_policy>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_RUN_TO_TIME), sc_core::sc_starvation_policy>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_BEFORE_END_OF_ELABORATION), sc_core::sc_status>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_BEFORE_TIMESTEP), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_ELABORATION), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_END_OF_ELABORATION), sc_core::sc_status>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_END_OF_INITIALIZATION), sc_core::sc_status>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_END_OF_SIMULATION), sc_core::sc_status>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_END_OF_UPDATE), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_PAUSED), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_RUNNING), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_START_OF_SIMULATION), sc_core::sc_status>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_STATUS_ANY), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_STATUS_LAST), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_STOPPED), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_UNITIALIZED), sc_core::sc_status>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_STOP_FINISH_DELTA), sc_core::sc_stop_mode>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_STOP_IMMEDIATE), sc_core::sc_stop_mode>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_FS), sc_core::sc_time_unit>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_MS), sc_core::sc_time_unit>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_NS), sc_core::sc_time_unit>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_PS), sc_core::sc_time_unit>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_SEC), sc_core::sc_time_unit>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_US), sc_core::sc_time_unit>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_DEBUG), sc_core::sc_verbosity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_FULL), sc_core::sc_verbosity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_HIGH), sc_core::sc_verbosity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_LOW), sc_core::sc_verbosity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_MEDIUM), sc_core::sc_verbosity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_NONE), sc_core::sc_verbosity>::value, "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_MANY_WRITERS), sc_core::sc_writer_policy>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_ONE_WRITER), sc_core::sc_writer_policy>::value,
+              "declared enum identity");
+static_assert(std::is_same<decltype(sc_core::SC_UNCHECKED_WRITERS), sc_core::sc_writer_policy>::value,
+              "declared enum identity");
+
+/** @brief Emit constant values without callbacks or ownership transfer. */
 int sc_main(int, char**)
 {
   std::cout << std::setprecision(17);
