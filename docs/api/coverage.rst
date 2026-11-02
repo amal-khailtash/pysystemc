@@ -811,3 +811,25 @@ report actions; arbitrary timing inputs, concurrent schedules, borrowed-parent
 lifetime orders, other report configurations and whole-declaration contracts
 remain open. Forward declarations retain separate source IDs without counting
 as additional behaviors.
+
+Finite event-list value and busy-state checks
+---------------------------------------------
+
+One required ten-size reference record compares OR and AND list construction,
+duplicate suppression, event/list union overloads, copies, swaps, and assignment
+through borrowed base views. The events and derived lists remain alive while
+these views are used. Derived copy construction delegates to the public native
+base copy constructor. Expression helpers used by the fixture are outside this
+finite declaration mapping; their storage must follow their documented native
+consumption rules.
+
+A separate busy-state reference compares four rejected mutations for each list
+kind, unchanged list sizes after errors, OR wakeup at 2 ns and AND wakeup at
+3 ns, and successful assignment/swap after the waiters resume. The selected
+mutations are assignment, swapping either busy operand, and busy self-swap.
+These checks preserve native report behavior under the default action policy.
+
+The two records do not close arbitrary event lifetimes, expression ownership,
+concurrent mutation, other schedules/report actions, or whole-declaration
+contracts. Duplicate operator declarations with equivalent alias/template
+return types retain separate source IDs without becoming additional behaviors.
