@@ -897,3 +897,24 @@ objects, mutable iteration, empty iteration and swap-with-last removal order.
 Those extra assertions are recorded as Python regression evidence rather than
 native parity. Arbitrary iterator invalidation, owner destruction, custom value
 types, concurrent mutation and whole-declaration contracts remain open.
+
+Finite hierarchical name registry checks
+----------------------------------------
+
+Three required records compare full-name and explicit-parent overloads for
+external name registration, existence, lookup and removal. Missing entries
+return false or null; first registration succeeds and its duplicate fails;
+first removal succeeds and its repetition fails. A copied Python/C++ string
+keeps the full name after unregistering the native entry. External entries
+remain distinct from object/event lookup results.
+
+The final record verifies that registered module and event names cannot be
+unregistered as external entries and that an existing event name cannot be
+registered again. The native reference constructs its event with an explicit
+full name, while Python creates it inside the module-name scope; the resulting
+registry path is equivalent. The parent module/event owners remain alive.
+
+This finite category covers eight overload declarations with the selected
+names. It leaves arbitrary naming inputs, parent destruction, other hierarchy
+contexts, concurrent registry changes and whole-declaration contracts open.
+Supporting object/event lookup and construction APIs are outside this mapping.

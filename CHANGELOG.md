@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite full-name and parent-scoped external-name registry checks,
+  copied-name retention and object/event namespace behavior.
+
 - Record finite attribute value/copy and borrowed collection comparisons for
   int, string and 137-bit values; distinguish Python-only regression checks.
 
