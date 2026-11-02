@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite native checks for seven free time-operator overloads and
+  scoped-lock contention, release, destruction and blocked reset/kill cleanup.
+
 - Record finite native comparisons for time construction/conversion, compound
   arithmetic, diagnostics/recovery and kernel time configuration.
 

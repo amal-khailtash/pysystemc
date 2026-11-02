@@ -730,3 +730,21 @@ recovery under the selected settings. Duplicate source declarations and getter
 type spellings retain distinct inventory IDs but represent the same native
 functions. Other platforms, resolutions and concurrent configuration access
 remain open.
+
+Finite free-time operator and scoped-lock checks
+------------------------------------------------
+
+The free-time operator reference compares seven overloads across basic,
+fractional and large positive values: 21 exact numeric records plus rejection of
+a time-by-time product. It checks both scalar multiplication orders, both
+division forms and unchanged operands. Native compile-time detection also
+rejects the invalid product. Zero divisors, arbitrary rounding/overflow and
+other operands remain open.
+
+Four scoped-lock records compare contention, idempotent release, destruction
+unlock and reset/kill cleanup during blocked construction. The contender
+acquires at 2 ns; blocked-constructor cleanup occurs at 4 ns and 5 ns. The Python
+lock retains its mutex owner, rejects a non-mutex argument and keeps the native
+lockable type identity. These checks cover the selected schedule; other
+lockable implementations, lifetime orders and scheduling combinations remain
+open.
