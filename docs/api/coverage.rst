@@ -788,3 +788,26 @@ and event paths, and scope restoration after name destruction. Conversion uses
 a native helper while the borrowed name storage is alive. These selected
 lifetime orders do not establish arbitrary borrowed-string or teardown safety,
 whole-declaration contracts, or additional module/event API coverage.
+
+Finite event metadata and notification checks
+---------------------------------------------
+
+One required metadata record compares default/named event construction, full
+names and basenames, hierarchy membership, null or borrowed parent identity,
+and a copied name after event destruction. The parent module stays alive while
+the child event is inspected and destroyed. Event-list exercises present in
+the fixture are outside this finite declaration review.
+
+Two notification records compare eight callback times and three duplicate
+notify-delayed reports. The selected schedule exercises all three notify and
+notify-delayed signatures, immediate notification during elaboration, earlier
+timed notification priority, delta priority, repeated cancellation and trigger
+state during and after callbacks. It also checks destruction of pending delta
+and timed events and stable identity of the native none sentinel.
+
+The native reference and Python observer both assert the callback times
+1, 3, 5, 8, 11, 12, 15 and 17 ns. These records cover the selected schedule and
+report actions; arbitrary timing inputs, concurrent schedules, borrowed-parent
+lifetime orders, other report configurations and whole-declaration contracts
+remain open. Forward declarations retain separate source IDs without counting
+as additional behaviors.

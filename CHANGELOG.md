@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite event metadata, notification priority/cancellation, delayed
+  reports and pending-event destruction comparisons against native SystemC.
+
 - Record finite name-generator, unique-name scope and module-name lifetime
   comparisons; require the exact generator reference record.
 
