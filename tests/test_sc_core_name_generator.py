@@ -16,6 +16,6 @@ def test_sc_core_name_generator(tmp_path):
         timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
-    assert [line for line in output.splitlines() if line.startswith("NAME_GENERATOR_REFERENCE")] == [
-        line for line in native.stdout.splitlines() if line.startswith("NAME_GENERATOR_REFERENCE")
-    ]
+    actual = [line for line in output.splitlines() if line.startswith("NAME_GENERATOR_REFERENCE")]
+    expected = [line for line in native.stdout.splitlines() if line.startswith("NAME_GENERATOR_REFERENCE")]
+    assert actual == expected == ["NAME_GENERATOR_REFERENCE item_0 item_1 first first_1 item_0 item_2"]

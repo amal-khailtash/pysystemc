@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite name-generator, unique-name scope and module-name lifetime
+  comparisons; require the exact generator reference record.
+
 - Record finite mutex/semaphore construction, protected state/report and native
   interface-probe comparisons; require all five reference records.
 

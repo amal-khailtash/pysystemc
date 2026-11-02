@@ -766,3 +766,25 @@ contention schedules, invalid counts, arbitrary report actions, interface
 destruction or whole-declaration contracts. The concrete trylock and trywait
 methods are outside this comparison. Required record labels prevent two empty
 outputs from passing the equality check.
+
+Finite naming utility checks
+----------------------------
+
+The name-generator reference requires one exact record containing independent
+generator counters, the preserve-first flag and a valid call after an empty
+base-name error. Python results remain unchanged after subsequent native calls,
+matching C++ strings copied from the generator's temporary buffer. Generator
+destruction ordering and arbitrary invalid names remain open.
+
+Five unique-name records compare counters in global scope, two module scopes
+and two process scopes. They check default/explicit flags, empty-name rejection,
+valid recovery and global counter continuity across simulation. Duplicate
+source declarations map to the same free function; they are not independent
+behaviors. Other concurrent schedules and naming environments remain open.
+
+The module-name reference requires one exact nine-value record. It compares
+construction from a live native string, copied-name conversion, nested module
+and event paths, and scope restoration after name destruction. Conversion uses
+a native helper while the borrowed name storage is alive. These selected
+lifetime orders do not establish arbitrary borrowed-string or teardown safety,
+whole-declaration contracts, or additional module/event API coverage.
