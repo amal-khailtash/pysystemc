@@ -254,6 +254,12 @@ therefore fails, while the native C++ call succeeds. Python configuration checks
 supply all seven arguments explicitly; the zero-argument default constructor
 also works. This records a binding limitation, not complete inherited-default
 support.
+The top-level ``sc_core`` constant comparison checks 239 declaration records
+for 238 symbols: 177 variable declarations and 62 enum constants. Two headers
+declare ``SC_ID_REGISTER_ID_FAILED_``; both identities retain the same value
+evidence. Mutable bools, the logic-value table and the bind proxy are excluded.
+Read-value parity does not verify mutation, address lifetime, enum use in every
+API, or alternate configuration contracts.
 Base-class metadata preserves spelled and desugared types, access and virtual
 inheritance flags. Compiler-local ``typeAliasDeclId`` references are omitted from
 base records so repeated compiler invocations retain comparable source metadata.

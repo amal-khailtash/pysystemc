@@ -1,4 +1,4 @@
-"""Compare public sc_core constants with the independent native source inventory."""
+"""Compare selected sc_core constants with independent native reference output."""
 
 import subprocess
 import sys
@@ -6,7 +6,7 @@ from .support import ROOT, run_example
 
 
 def test_sc_core_public_constants(tmp_path):
-    """Verify exact values of every inventoried public scalar/string/enum constant."""
+    """Compare 239 declaration records for 238 symbols, retaining redeclarations."""
     output = run_example(tmp_path, "tests/models/sc_core_constants.py")
     native = subprocess.run(
         [sys.executable, str(ROOT / "examples/run_sysc_cpp.py"), str(ROOT / "tests/native/sc_core_constants.cpp")],

@@ -1,4 +1,8 @@
-"""Read all inventoried public native scalar/string/enum constants."""
+"""Read selected top-level native scalar, string, and enum constants.
+
+The selection excludes mutable bools, the logic table and the bind proxy.
+Separate source declarations of one symbol produce separate comparison rows.
+"""
 
 import csv
 from pathlib import Path
