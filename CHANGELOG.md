@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite hierarchy lookup and borrowed top-level context checks; require
+  one exact native/Python lookup reference record.
+
 - Record finite OR/AND event-list value operations and busy mutation/recovery
   checks with native waiter timing.
 

@@ -833,3 +833,21 @@ The two records do not close arbitrary event lifetimes, expression ownership,
 concurrent mutation, other schedules/report actions, or whole-declaration
 contracts. Duplicate operator declarations with equivalent alias/template
 return types retain separate source IDs without becoming additional behaviors.
+
+Finite hierarchy lookup checks
+------------------------------
+
+One exact required record compares present and missing object/event lookups,
+current-object selection during module construction, null current-object after
+leaving that scope, and parent identity or a null parent for a root module.
+Top-level object/event views are checked with default and explicit simulation
+contexts: they contain the live root module and root event, while excluding its
+child event. All returned objects, events and context pointers are borrowed;
+the model keeps their native owners alive throughout these checks.
+
+Python additionally checks stable context identity, rejection of invalid context
+arguments, an initially empty top-level event view, and a lookup after starting
+simulation. Those assertions are useful Python regression checks; the native
+reference does not establish parity for those extra cases. The finite category
+excludes arbitrary registry mutations, owner destruction, other contexts,
+concurrent access and whole-declaration contracts.

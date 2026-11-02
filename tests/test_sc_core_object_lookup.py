@@ -16,4 +16,6 @@ def test_sc_core_object_lookup(tmp_path):
         timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
-    assert "OBJECT_LOOKUP_REFERENCE 1 1 1 1 1" in output and "OBJECT_LOOKUP_REFERENCE 1 1 1 1 1" in native.stdout
+    actual = [line for line in output.splitlines() if line.startswith("OBJECT_LOOKUP_REFERENCE")]
+    expected = [line for line in native.stdout.splitlines() if line.startswith("OBJECT_LOOKUP_REFERENCE")]
+    assert actual == expected == ["OBJECT_LOOKUP_REFERENCE 1 1 1 1 1"]
