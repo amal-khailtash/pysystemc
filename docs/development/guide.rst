@@ -110,6 +110,14 @@ ordinary test suite uses the default kernel. To reuse an existing matching
 installation, set ``PYSYSTEMC_COVARIANT_TEST_PREFIX`` to its prefix. The target
 does not replace the normal development installation.
 
+Callback initiator factories configure both ``get_interface()`` and indexed
+access when the concrete socket type exposes them. In the default Python 3.14
+configuration, both accessors are reflected for simple and multi initiator
+sockets. The missing-accessor guard therefore remains a compatibility path;
+successful transport tests in this configuration do not verify that branch.
+Construct sockets inside a live native module, bind before elaboration, and
+retain the module, sockets and callback owners while using returned interfaces.
+
 Tests verify callbacks, lifecycle, sensitivity, integer wraparound and VCD
 transitions. Upstream fork/join, report and barrier ports are compared with native
 C++ examples. Coverage measures Python code, including subprocesses, not native
