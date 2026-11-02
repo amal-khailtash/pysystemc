@@ -38,7 +38,7 @@ def test_sc_core_event_finders(tmp_path):
     ):
         actual = [line for line in output.splitlines() if line.startswith(marker)]
         expected = [line for line in native.stdout.splitlines() if line.startswith(marker)]
-        assert actual == expected, (marker, actual, expected)
+        assert actual and actual == expected, (marker, actual, expected)
 
     native_lifetime = [line for line in native.stdout.splitlines() if line.startswith("FINDER_NATIVE_LIFETIME")]
     assert native_lifetime == ["FINDER_NATIVE_LIFETIME\t1\t1"]

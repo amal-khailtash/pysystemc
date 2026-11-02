@@ -918,3 +918,37 @@ This finite category covers eight overload declarations with the selected
 names. It leaves arbitrary naming inputs, parent destruction, other hierarchy
 contexts, concurrent registry changes and whole-declaration contracts open.
 Supporting object/event lookup and construction APIs are outside this mapping.
+
+Finite module member and reset checks
+-------------------------------------
+
+The module references compare thirteen guarded wait overload results and twelve
+next-trigger results, including callback times and timeout state, plus four
+bool/logic edge helper wakeups. Separate records check hierarchy/context,
+selected positional binding calls, sensitivity callbacks, configured stack
+size, legacy destruction and four lifecycle callbacks in native order. The
+64-argument binding signature is reviewed only for the selected calls.
+
+Eight exact active-high reset overloads compare synchronous/asynchronous
+CTHREAD restart and Python finally-cleanup timestamps for input, inout, output
+and signal-interface arguments. This does not establish reset behavior for
+other process kinds, active-low or composed resets, repeated pulses, arbitrary
+schedules, or whole-declaration contracts. Supporting port/process APIs are
+outside this module declaration mapping.
+
+Finite event-finder cache and diagnostic checks
+-----------------------------------------------
+
+The finder comparison requires nonempty records for every parity marker group.
+Selected wide, bool, logic, overloaded and inherited interface methods check
+lookup identity, cache reuse, port identity and typed finder construction.
+Reports from unbound/incompatible interfaces and native protected report probes
+are compared; the selected no-throw report policy returns the none sentinel and
+restores the previous policy. Probe lifetime evidence is scoped to its native
+destruction counter.
+
+Python-only factory argument checks and the native-only lifetime marker retain
+separate evidence. Cached finders are borrowed from their cache owner, which
+must stay alive until references are released. Cross-port cache assertion
+behavior, arbitrary signatures/interfaces/report actions and destruction orders
+remain outside this category, along with whole-declaration contracts.

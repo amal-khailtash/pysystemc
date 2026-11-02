@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record parallel native module member/reset and finder cache/report validation;
+  require nonempty output for every finder parity marker group.
+
 - Record finite full-name and parent-scoped external-name registry checks,
   copied-name retention and object/event namespace behavior.
 
