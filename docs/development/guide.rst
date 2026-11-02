@@ -129,6 +129,12 @@ pointer overload is checked against native trace records. Use the exact string
 signature for the typed ctypes char-pointer adapter. Invalid selectors preserve
 cppyy errors; on cppyy 3.5.0, a ``None`` selector raises ``SystemError``.
 
+``vcd_trace`` rejects a missing parent directory with ``RuntimeError`` before
+native creation. An empty trace name raises the native ``sc_report``. The pinned
+SystemC factory allocates a trace object with throwing ``new``; it has no null
+return path. Native file opening is lazy, so creation does not establish that the
+file can be written. Keep traced values alive until the context closes.
+
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.

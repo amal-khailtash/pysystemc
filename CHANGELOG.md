@@ -27,6 +27,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Remove the VCD context manager's unreachable null-handle check; preserve native creation reports and the missing-directory precheck.
 - Remove the C++ runner's unreachable false-return compilation branch; cppyy compilation errors propagate as `SyntaxError` with native diagnostics.
 - Remove an unreachable CLI error after command dispatch; bare invocation continues to print help successfully.
 - Omit compiler-local alias references from API inventory base-class metadata while preserving type spelling, access and inheritance flags.
