@@ -25,8 +25,7 @@ def run_sources(sources: Sequence[str], arguments: Sequence[str] = (), includes:
         ValueError: No sources are supplied or an include path is not a directory.
         OSError: Source/include access fails.
         SyntaxError: Cling raises while parsing or compiling a source.
-        RuntimeError: The runner was already invoked, Cling reports failure
-            without raising, or the native entry fails.
+        RuntimeError: The runner was already invoked or the native entry fails.
 
     Invoke once per interpreter. Native models and kernel state remain alive
     until interpreter shutdown; unrelated runs require separate subprocesses.
@@ -49,8 +48,7 @@ def run_sources(sources: Sequence[str], arguments: Sequence[str] = (), includes:
             path = Path(filename).resolve(strict=True)
             cppyy.add_include_path(str(path.parent))
             print(f"\n[pysystemc:C++:info] Reading {filename}", file=sys.stderr)
-            if not cppyy.cppdef(path.read_text(encoding="utf-8")):
-                raise RuntimeError(f"C++ compilation failed: {filename}")
+            cppyy.cppdef(path.read_text(encoding="utf-8"))
     finally:
         cppyy.cppdef("#undef sc_main")
     cppyy.cppdef("pysystemc::native_model_entry = &pysystemc_cpp_main;")
