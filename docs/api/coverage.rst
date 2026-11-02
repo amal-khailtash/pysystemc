@@ -874,3 +874,26 @@ The finite category retains open arbitrary attribute types, borrowed-pointer
 lifetimes, teardown orders, phase callbacks, non-null tracing, concurrent
 registry access and whole-declaration contracts. Supporting attribute/module
 APIs are not added to the reviewed declaration set by this comparison.
+
+Finite attribute value and collection checks
+--------------------------------------------
+
+The attribute-family reference uses int, std::string and sc_biguint<137> values
+to compare value/copy construction and retained copied names and values. The
+integer case checks that changing the original value leaves the copy unchanged.
+Default constructors are exercised on both sides; Python alone asserts their
+default values, so default-value parity remains open. These three types do not
+close arbitrary template types or copying/lifetime contracts.
+
+One required collection record checks base-name copying, null and repeated
+pointer rejection, present/missing lookup, shallow collection-copy identity,
+const iteration order, removal, remove-all and live attribute values after the
+copied collection is destroyed. Pointer and iterator typedefs are checked
+against native vector types. Collections borrow their attributes; removal and
+collection destruction do not transfer or destroy those live attributes.
+
+Python additionally checks distinct equal-name duplicates, invalid Python
+objects, mutable iteration, empty iteration and swap-with-last removal order.
+Those extra assertions are recorded as Python regression evidence rather than
+native parity. Arbitrary iterator invalidation, owner destruction, custom value
+types, concurrent mutation and whole-declaration contracts remain open.
