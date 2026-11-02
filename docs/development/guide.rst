@@ -142,6 +142,19 @@ a fabricated proxy only as a private invariant. That check does not establish
 additional public API coverage; nested native policies and live member access
 have separate native reference comparisons.
 
+Use typed member tokens for reusable vector assemblies::
+
+   token = sc.sc_member_access[Element, Member].member_type.from_member("field")
+   assembly = vector.assemble(token)
+   same_field = sc.sc_assemble_vector(vector, token)
+
+Both routes preserve native member identity, arbitrary value widths and vector
+ownership. Tokens must match the element and member signature and must be
+nonnull. Raw pointer-to-member variables reflected by cppyy are unsupported on
+the Python 3.14/cppyy 3.5 baseline: overload conversion fails before native
+assembly. The raw-pointer fallback contracts remain open; passing typed-token
+tests does not verify those routes.
+
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.

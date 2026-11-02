@@ -235,23 +235,26 @@ def _element_type(vector_type):
 
 
 def assemble_vector(vector, member):
-    """Assemble a vector member using a native member pointer or member name.
+    """Assemble a vector member using a typed member token or member name.
 
     Args:
         vector: Native sc_vector specialization of any element type.
-        member: Native data-member pointer, or public C++ member identifier.
+        member: Typed token from sc_member_access[Element, Member].member_type,
+            or a public C++ member identifier.
 
     Returns:
         Native sc_vector_assembly borrowing the vector and its elements.
 
     Raises:
-        ValueError: A member name is not a valid C++ identifier.
+        ValueError: A member name is invalid or a typed member token is null.
         TypeError: The member is absent, inaccessible or not assemblable; the native
             selection error is retained as the exception cause.
 
     The returned proxy retains the vector, including Python assembly copies,
     assignment and swap. Iterators remain borrowed; keep their owners alive. Calls hold the GIL and preserve
     native binding, range and diagnostic behavior.
+    Raw reflected pointer-to-member values depend on cppyy marshalling and are
+    unsupported on the Python 3.14/cppyy 3.5 baseline; use a typed token instead.
     """
     if isinstance(member, str):
         vector_element_type = type(vector).element_type
@@ -347,7 +350,23 @@ def _pythonize_vector(vector_type, name):
             native_constructor(self, *args)
 
     def assemble(self, member):
-        """Borrow a member assembly using its native pointer or public member name."""
+        """Borrow a member assembly using a typed token or public member name.
+
+        Args:
+            member: Token from sc_member_access[Element, Member].member_type,
+                or an accessible C++ data-member identifier.
+
+        Returns:
+            Native assembly retaining this vector; its iterators remain borrowed.
+
+        Raises:
+            ValueError: The member name is invalid or the token is null.
+            TypeError: The token signature or member selection is incompatible.
+
+        Calls hold the GIL. Raw reflected pointer-to-member values depend on
+        cppyy marshalling; they are unsupported on the Python 3.14/cppyy 3.5
+        baseline. Keep assembly owners alive while using their iterators.
+        """
         if isinstance(member, str):
             assembly = _named_assembly(
                 self,
