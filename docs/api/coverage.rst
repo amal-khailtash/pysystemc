@@ -851,3 +851,26 @@ simulation. Those assertions are useful Python regression checks; the native
 reference does not establish parity for those extra cases. The finite category
 excludes arbitrary registry mutations, owner destruction, other contexts,
 concurrent access and whole-declaration contracts.
+
+Finite object state and native probe checks
+-------------------------------------------
+
+One required reference record compares object naming, parent/child hierarchy,
+attribute counts and formatting, with native assertions for mutable/const
+attribute lookup and collection identity. Duplicate attributes are rejected;
+missing lookup/removal returns null; remove-all restores an empty collection.
+Borrowed attribute and hierarchy pointers remain valid because their owners
+stay alive during these operations.
+
+Small native subclasses exercise protected default/named/copy construction,
+assignment identity and unchanged destination state, child/event link helpers,
+and phase-mask registration/unregistration returns. These probes retain no
+Python callbacks. Mask returns do not establish actual simulation-phase callback
+dispatch. The unsigned phase-mask typedef is checked within this selected scope.
+Print/dump output and a null trace-file call are compared; null tracing does not
+establish VCD output behavior. Deleting the tree removes its registered objects.
+
+The finite category retains open arbitrary attribute types, borrowed-pointer
+lifetimes, teardown orders, phase callbacks, non-null tracing, concurrent
+registry access and whole-declaration contracts. Supporting attribute/module
+APIs are not added to the reviewed declaration set by this comparison.

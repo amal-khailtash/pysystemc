@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite object hierarchy, attributes, output and protected native-probe
+  checks, with exact native/Python reference-record comparison.
+
 - Record finite hierarchy lookup and borrowed top-level context checks; require
   one exact native/Python lookup reference record.
 
