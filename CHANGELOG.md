@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record parallel native FIFO value/stream and port/interface checks, including
+  meaningful 137-bit values, trace transitions and selected lifetime ordering.
+
 - Record parallel native module member/reset and finder cache/report validation;
   require nonempty output for every finder parity marker group.
 

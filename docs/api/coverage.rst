@@ -952,3 +952,37 @@ separate evidence. Cached finders are borrowed from their cache owner, which
 must stay alive until references are released. Cross-port cache assertion
 behavior, arbitrary signatures/interfaces/report actions and destruction orders
 remain outside this category, along with whole-declaration contracts.
+
+Finite FIFO value, trace and stream checks
+------------------------------------------
+
+The successful FIFO reference compares default/named capacities, selected
+blocking and nonblocking values, event/process records, assignment/conversion,
+formatted output and observed destruction. A 137-bit trace must declare its
+width and contain the two expected values at native timestamps 0 and 1. This
+batch does not rerun invalid-size or duplicate FIFO registration scenarios.
+
+Six stream records compare string, combined, derived and file streams, generic
+wide/custom samples and failure propagation. Chaining preserves the adjusted
+native ostream identity, insertion preserves queued values, and the emitted
+file contents match native output. Other stream types, state/exception masks,
+value types and failure paths remain open.
+
+Finite FIFO port and interface checks
+-------------------------------------
+
+The port reference exercises eight input and eight output constructor forms
+with retained parent ports, selected blocking/nonblocking transfers and event
+finders. It compares the port matrix, protected native probes, lifetime and
+value/event records, scoped port errors and a meaningful activity trace whose
+values are 0, 1 and 0 at matching native timestamps. Supporting base-port and
+trace APIs are outside this FIFO declaration mapping. Twelve port aliases are
+asserted in Python and retain metadata review; native alias parity stays open.
+
+The interface reference compares integer and 137-bit values, event callbacks
+at native time/delta coordinates, FIFO registry removal and six native
+interface destruction counters. Native implementations called through Python
+interface views do not establish Python implementations of all pure virtual
+methods. Borrowed interfaces/events and parent ports remain alive through
+consumers. Arbitrary types, iterator/pointer lifetime orders, scheduling,
+policies, repeated teardown and whole-declaration contracts remain open.
