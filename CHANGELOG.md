@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite mutex/semaphore construction, protected state/report and native
+  interface-probe comparisons; require all five reference records.
+
 - Record finite native checks for seven free time-operator overloads and
   scoped-lock contention, release, destruction and blocked reset/kill cleanup.
 

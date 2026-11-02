@@ -748,3 +748,21 @@ lock retains its mutex owner, rejects a non-mutex argument and keeps the native
 lockable type identity. These checks cover the selected schedule; other
 lockable implementations, lifetime orders and scheduling combinations remain
 open.
+
+Finite mutex and semaphore family checks
+----------------------------------------
+
+Five required native/Python records compare constructible native interface
+probes, protected semaphore report fields, process-owned mutex/semaphore state
+transitions and concrete probe destruction. Named and default constructors are
+used on both sides; generated default names and kind strings are asserted. The mutex transitions from unlocked to
+locked and back; the semaphore count changes from one to zero and back to one.
+The report is caught and serialized while its native storage is alive.
+
+Interface probe return values exercise native C++ implementations called from
+Python; they do not establish Python virtual callback parity. Protected members
+are reached through small native subclasses. This finite scope does not close
+contention schedules, invalid counts, arbitrary report actions, interface
+destruction or whole-declaration contracts. The concrete trylock and trywait
+methods are outside this comparison. Required record labels prevent two empty
+outputs from passing the equality check.

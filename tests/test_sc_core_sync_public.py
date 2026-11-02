@@ -19,4 +19,7 @@ def test_sc_core_sync_public(tmp_path):
     assert native.returncode == 0, native.stdout + native.stderr
     actual = [line for line in output.splitlines() if line.startswith("SYNC_PUBLIC_REFERENCE")]
     expected = [line for line in native.stdout.splitlines() if line.startswith("SYNC_PUBLIC_REFERENCE")]
+    labels = ["mutex_interface", "semaphore_interface", "report_error", "in_use", "destruction"]
+    assert [line.split("\t")[1] for line in actual] == labels
+    assert [line.split("\t")[1] for line in expected] == labels
     assert actual == expected
