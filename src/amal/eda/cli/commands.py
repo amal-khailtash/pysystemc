@@ -121,4 +121,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         Repl(history_path=args.history, no_history=args.no_history).run()
         return 0
-    parser.error("no command selected")

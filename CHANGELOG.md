@@ -26,6 +26,7 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ### Fixed
 
+- Remove an unreachable CLI error after command dispatch; bare invocation continues to print help successfully.
 - Omit compiler-local alias references from API inventory base-class metadata while preserving type spelling, access and inheritance flags.
 
 - Preserve source and configuration metadata variants when combining API inventories, including information from definitions that follows forward declarations.
