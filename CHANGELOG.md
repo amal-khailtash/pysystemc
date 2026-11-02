@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Check every declared TLM enum member against native C++ (30 members across
+  seven types), and strengthen version and host query argument checks. Document
+  cppyy 3.5 host-endianness results as Python integers.
+
 ### Added
 
 - Compare inherited native hash constructor defaults and four hash-default constants with explicit and custom settings; record cppyy's missing inherited trailing defaults.

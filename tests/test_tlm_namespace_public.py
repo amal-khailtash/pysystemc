@@ -19,5 +19,8 @@ def test_tlm_namespace_public_matches_native_reference(tmp_path):
     assert native.returncode == 0, native.stdout + native.stderr
     records = [line for line in output.splitlines() if line.startswith("TLM_")]
     expected = [line for line in native.stdout.splitlines() if line.startswith("TLM_")]
-    assert len(records) == 57
+    assert len(records) == 87
     assert records == expected
+    members = [row for row in records if row.startswith("TLM_ENUM_MEMBER|")]
+    assert len(members) == 30
+    assert len({row.split("|")[2] for row in members}) == 7

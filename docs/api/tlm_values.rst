@@ -6,6 +6,14 @@ payload-option, socket-category and endianness enums. Version functions and
 metadata describe the loaded native TLM implementation. Host endianness helpers
 describe the machine running the simulation.
 
+The native comparison checks all 30 declared members across these seven enum
+types, including their values, enum identity and integer construction. It also
+checks ten version metadata variables, three version getters and the three host
+queries on the current host. ``get_host_endianness()`` returns a Python integer
+with the native enum value on cppyy 3.5; declared members retain their enum types.
+These checks cover the listed values and calls; other configurations, host
+architectures and concurrent cached-query initialization remain unverified.
+
 Get and peek interfaces
 -----------------------
 
