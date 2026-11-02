@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Record finite native-reference checks for time tuple normalization/overflow,
+  DMI state restoration, phase values and quantumkeeper timing/reset/kill order.
+
 - Verify all 48 members of the ten named SystemC core enums retain native enum
   types and integer round-trips; check version getter argument rejection.
 

@@ -26,6 +26,11 @@ through a blocking operation. Native conversion and callback errors propagate.
 Direct memory access
 --------------------
 
+The baseline native comparison covers initialization, all four permission
+states, permission replacement, 64-bit address ranges, latency values, borrowed
+buffer reads/writes and restoration through ``init()``. This finite state/value
+check does not establish arbitrary pointer lifetimes or concurrent access.
+
 ``tlm.tlm_dmi`` stores a borrowed byte pointer, inclusive 64-bit address range,
 read/write latency and access permissions. Keep its backing buffer alive while
 any initiator can use the grant. Permission setters replace the previous grant;
@@ -34,6 +39,13 @@ latency setters preserve native values without narrowing to Python word size.
 
 Phases and temporal decoupling
 ------------------------------
+
+The baseline comparison covers all five standard phase names and values,
+default and numeric construction, assignment and one registered extended phase.
+Its quantumkeeper scenario compares thirteen ordered timing/lifecycle records
+with C++, including reset cleanup at 2 ns, kill cleanup at 3 ns and successful
+synchronization at 10 ns and 20 ns. Other schedules and registry/concurrency
+contracts remain open.
 
 ``tlm.tlm_phase`` accepts standard phase enums and native numeric identifiers.
 Registered native extended phases retain their names and stream representation.

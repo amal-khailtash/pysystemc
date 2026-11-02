@@ -633,3 +633,12 @@ All sixteen native logic-resolution table cells match C++ and retain symmetry.
 Initial public configuration booleans are readable and match native storage;
 assigning a copied Python module boolean is not claimed to mutate native globals,
 so those mutable-global entries remain open for a complete write contract.
+
+Finite time tuple checks
+------------------------
+
+The native comparison covers both public ``sc_time_tuple`` constructors, six
+getters and conversion to ``sc_time`` across five selected values. A separate
+fresh process checks normalization overflow at 10 fs resolution, the native
+report and safe recovery. This closes that bounded normalization/overflow
+scenario; other resolutions and whole-declaration contracts remain open.
