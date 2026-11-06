@@ -1,6 +1,6 @@
 /**
  * @file sc_main.cpp
- * @brief Invoke Python sc_main with native arguments and fmt diagnostics.
+ * @brief Invoke Python sc_main with native arguments and lightweight diagnostics.
  */
 #include <Python.h>
 
@@ -52,7 +52,8 @@ struct PythonEntryScope
 extern "C" int sc_main(int argc, char* argv[])
 {
   if (pysystemc::native_model_entry) return pysystemc::native_model_entry(argc, argv);
-  pysystemc::log(false, fmt::format("Entering sc_main with {} arguments", argc));
+  if (pysystemc::debug_enabled())
+    pysystemc::log(false, std::string("Entering sc_main with ") + std::to_string(argc) + " arguments");
   pysystemc::PythonEntryScope scope;
   PyObject* module = PyImport_AddModule("__main__");  // Borrowed reference.
   auto& callable = scope.callable;
@@ -111,6 +112,7 @@ extern "C" int sc_main(int argc, char* argv[])
     Py_DECREF(error);
     pysystemc::log(true, "Python sc_main failed");
   }
-  pysystemc::log(false, fmt::format("Leaving sc_main with status {}", status));
+  if (pysystemc::debug_enabled())
+    pysystemc::log(false, std::string("Leaving sc_main with status ") + std::to_string(status));
   return status;
 }

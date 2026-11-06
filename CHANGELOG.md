@@ -29,6 +29,18 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   classification, avoiding repeated cppyy template lookup while preserving
   expression consumption, overload selection and reset/kill cleanup.
 
+- Speed up native binding startup by avoiding header-only fmt compilation for
+  four diagnostic messages; preserve message, color and write-error behavior
+  and skip disabled debug formatting. Matched warm imports improved from
+  7.22 to 4.68 seconds; disabled-debug method workloads also ran faster.
+
+- Prefer native-first Linux loader ordering during single-threaded cppyy
+  startup, with exact PATH restoration and ordinary-import fallback for
+  unsupported environments or observable Python thread concurrency.
+  `PYSC_NATIVE_FIRST_LDD=0` disables it; `1` explicitly enables it. The temporary
+  PATH change is process-wide. Matched warm imports improved from 23.49 to
+  7.36 seconds on the measured Linux host; results depend on loader layout.
+
 - Avoid duplicate native enum metadata checks while generating namespace help,
   preserving public discovery, native proxy identity and documentation.
 

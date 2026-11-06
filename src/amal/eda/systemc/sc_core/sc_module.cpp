@@ -1126,7 +1126,8 @@ class ScModule : public sc_module, public pysystemc_public::detail::hierarchy_la
   void call_process()
   {
     auto process = sc_get_current_process_handle();
-    pysystemc::log(false, fmt::format("Dispatch {} at {}", process.name(), sc_time_stamp().to_string()));
+    if (pysystemc::debug_enabled())
+      pysystemc::log(false, std::string("Dispatch ") + process.name() + " at " + sc_time_stamp().to_string());
     dispatch_python(callbacks.at(process.get_process_object()));
   }
 
@@ -1161,7 +1162,9 @@ class ScModule : public sc_module, public pysystemc_public::detail::hierarchy_la
     }
     callback_node.key() = handle.get_process_object();
     callbacks.insert(std::move(callback_node));
-    pysystemc::log(false, fmt::format("Registered process {} (kind {})", handle.name(), static_cast<int>(kind)));
+    if (pysystemc::debug_enabled())
+      pysystemc::log(false, std::string("Registered process ") + handle.name() + " (kind " +
+                              std::to_string(static_cast<int>(kind)) + ")");
     sc_module::sensitive << handle;
     sc_module::sensitive_pos << handle;
     sc_module::sensitive_neg << handle;

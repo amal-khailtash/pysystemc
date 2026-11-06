@@ -610,8 +610,9 @@ Diagnostics
 
 ``PYSYSTEMC_LOG_LEVEL=DEBUG`` enables binding diagnostics. Color follows
 ``PYSYSTEMC_COLOR=auto/always/never``. Explicit ``always`` overrides ``NO_COLOR``;
-automatic mode honors it. Native messages use fmt; Python messages use Loguru
-and Rich without changing application logging sinks.
+automatic mode honors it. Native messages use standard C++ strings and C
+stdio; Python messages use Loguru and Rich without changing application
+logging sinks.
 
 The package exposes ``__version__`` from installed metadata and prints it before
 the native kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses only the

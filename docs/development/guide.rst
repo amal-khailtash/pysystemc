@@ -159,10 +159,32 @@ The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.
 
+Native-first loader startup
+--------------------------
+
+On Linux with glibc, cppyy startup may spend time trying a compatibility ELF
+loader before the loader matching Python. Single-threaded main-thread startup
+prefers the matching loader automatically. To disable this optimization::
+
+    PYSC_NATIVE_FIRST_LDD=0 systemc-py run model.py
+
+The optimization uses a temporary copy of the discovered ``ldd`` script and restores
+the original ``PATH`` after cppyy imports, including when import fails. It does
+not change the installed script or caches. Unsupported scripts and platforms
+use ordinary imports. It has no effect when cppyy is already imported.
+
+Imports from worker threads or with other Python threads present use ordinary
+cppyy startup. ``PYSC_NATIVE_FIRST_LDD=1`` explicitly enables the optimization
+in those cases. Native threads and threads starting during import can still
+observe the temporary process-wide ``PATH``; disable the optimization if they
+resolve executables or spawn processes concurrently. The benefit depends on
+the host's installed loader order; benchmark the target environment.
+
 Logging and startup banners
 ---------------------------
 
-Python diagnostics use Loguru and Rich; native binding diagnostics use fmt.
+Python diagnostics use Loguru and Rich; native binding diagnostics use
+standard C++ strings and C stdio.
 Debug messages are opt-in and go to stderr::
 
    PYSYSTEMC_LOG_LEVEL=DEBUG make example-hello-py
