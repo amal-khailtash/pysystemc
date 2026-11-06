@@ -22,6 +22,22 @@ _BRIDGE_EXCLUSIONS = {
         ),
         "python_bound": ("src/amal/eda/systemc/sc_core/bind.cpp:42", "binding bridge helper"),
         "python_edge_wait": ("src/amal/eda/systemc/sc_core/sc_module.cpp:332", "process wait bridge helper"),
+        "python_event_list_busy_access": (
+            "src/amal/eda/systemc/sc_core/sc_module.cpp:207",
+            "read-only native event-list ownership probe type",
+        ),
+        "python_event_list_busy": (
+            "src/amal/eda/systemc/sc_core/sc_module.cpp:218",
+            "read-only native event-list ownership bridge helper",
+        ),
+        "python_wait_expression_list_deletion_count": (
+            "src/amal/eda/systemc/sc_core/sc_module.cpp:293",
+            "read-only wait-expression ownership validation counter",
+        ),
+        "python_next_trigger_expression_list_deletion_count": (
+            "src/amal/eda/systemc/sc_core/sc_module.cpp:299",
+            "read-only trigger-expression ownership validation counter",
+        ),
         "python_entry_callback_error": (
             "src/amal/eda/systemc/sc_core/native_entry.cpp:77",
             "native entry callback error carrier",
@@ -313,20 +329,24 @@ def presented_names(module_globals, namespace, adapters=()):
     return sorted(names)
 
 
-def document_member(member):
+def document_member(member, *, is_enum=None):
     """Supply missing native type documentation without replacing overload help.
 
     Parameters
     ----------
     member : object
         cppyy class, enum or template proxy. Existing documentation is preserved.
+    is_enum : bool or None, keyword-only
+        Enum classification from the current namespace discovery call. When
+        omitted, inspect the proxy metadata directly.
 
     Returns
     -------
     object
         The same native proxy, with a docstring when the proxy permits assignment.
     """
-    is_enum = isinstance(member, type) and hasattr(member, "__underlying")
+    if is_enum is None:
+        is_enum = isinstance(member, type) and hasattr(member, "__underlying")
     if vars(member).get("__doc__") if is_enum else getattr(member, "__doc__", None):
         return member
 
@@ -380,7 +400,6 @@ def namespace_help(module_globals, namespace):
         Python namespace dictionary, including adapters and its introduction.
     namespace : object
         Included native cppyy namespace.
-
     Returns
     -------
     str
@@ -392,8 +411,9 @@ def namespace_help(module_globals, namespace):
             member = module_globals[name]
         else:
             member = getattr(namespace, name)
-        member = document_member(member)
-        if isinstance(member, type) and hasattr(member, "__underlying"):
+        is_enum = isinstance(member, type) and hasattr(member, "__underlying")
+        member = document_member(member, is_enum=is_enum)
+        if is_enum:
             category = "Enums"
         elif type(member).__name__ == "Template":
             category = "Templates"

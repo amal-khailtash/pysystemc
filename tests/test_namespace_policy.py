@@ -52,6 +52,8 @@ def test_policy_excludes_exact_bridge_spellings_and_preserves_native_aliases():
         PythonFifoChannel PythonInterface PythonPrimChannel PythonReadInterface PythonSignalChannel
         dispatch_python dispatch_report python_argv_at python_assign_event_expression python_blocking_result
         python_bound python_edge_wait python_entry_callback_error python_event_notify_delayed
+        python_event_list_busy python_event_list_busy_access
+        python_wait_expression_list_deletion_count python_next_trigger_expression_list_deletion_count
         python_event_notify_delayed_time python_event_notify_delayed_units python_export_access
         python_fifo_read python_fifo_read_output python_fifo_stream python_fifo_write
         python_guarded_halt_operation python_guarded_operation python_halt python_join_wait python_kill

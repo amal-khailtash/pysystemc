@@ -13,6 +13,35 @@ _QUALIFIED_IDENTIFIER = re.compile(r"\b([A-Za-z_]\w*)::([A-Za-z_]\w*)")
 _SIGNATURE_DECLARATION = re.compile(r"^\s*.*?\b([A-Za-z_]\w*)::([A-Za-z_]\w*)(?:::|\s*[<(])")
 _SCMODULE_NAMES = {"ScModule", "sc_module", "sc_core::ScModule", "sc_core::sc_module", "sc_core.ScModule"}
 _NATIVE_NAMESPACES = {"sc_core", "sc_dt", "tlm", "tlm_utils"}
+_SC_REPORT_DECLARATION_SOURCE = (
+    "submodules/systemc/src/sysc/utils/sc_report.h, public sc_report declarations"
+)
+_SC_REPORT_DECLARATIONS_BY_CPP_NAME = {
+    "sc_core::sc_report": (
+        "const char* sc_core::sc_report::get_file_name() const",
+        "int sc_core::sc_report::get_id() const",
+        "int sc_core::sc_report::get_line_number() const",
+        "const char* sc_core::sc_report::get_msg() const",
+        "const char* sc_core::sc_report::get_msg_type() const",
+        "const char* sc_core::sc_report::get_process_name() const",
+        "sc_core::sc_severity sc_core::sc_report::get_severity() const",
+        "const sc_core::sc_time& sc_core::sc_report::get_time() const",
+        "int sc_core::sc_report::get_verbosity() const",
+        "void sc_core::sc_report::swap(sc_core::sc_report&)",
+        "bool sc_core::sc_report::valid() const",
+        "virtual const char* sc_core::sc_report::what() const SC_NOEXCEPT_",
+    ),
+}
+_SC_REPORT_LIFECYCLE_NOTES = (
+    "get_time() returns a borrowed const sc_time& into report-owned timestamp storage; "
+    "keep the report alive while using that reference.",
+    "The timestamp is captured at report construction from sc_time_stamp(); it is a report-time snapshot, not a live clock view.",
+    "Copy construction gives the copy its own timestamp value. Assignment uses copy-and-swap, "
+    "and swap exchanges timestamp storage; re-fetch a borrowed get_time() reference after either operation.",
+)
+_SC_REPORT_SCOPE_NOTE = (
+    "This local formatter entry does not add class attributes or change class dir(), standard pydoc, or builtins.help."
+)
 
 
 def _is_exact_bridge_exclusion(namespace: str, name: str) -> bool:
@@ -31,7 +60,13 @@ def _metadata(member: object, attribute: str) -> Any:
 
 
 def _qualified_cpp_name(member: object) -> str | None:
-    """Return cppyy's native type spelling when it is available."""
+    """Return cppyy's native type spelling when it is safe to inspect."""
+    # Some cppyy constructor overload proxies segfault in their
+    # ``__cpp_name__`` accessor instead of raising a Python exception. Their
+    # existing ``__doc__`` still carries the native candidates, so avoid that
+    # unsafe metadata path for overload sets and keep formatting observational.
+    if type(member).__name__ == "CPPOverload":
+        return None
     value = _metadata(member, "__cpp_name__")
     return value if isinstance(value, str) and value else None
 
@@ -144,6 +179,19 @@ def _overload_documentation(member: object) -> str | None:
     return _metadata(overload_proxy, "__doc__")
 
 
+def _format_curated_sc_report(cpp_name: str, *, name: str | None = None) -> str:
+    """Render pinned sc_report declarations without inspecting or invoking members."""
+    declarations = _SC_REPORT_DECLARATIONS_BY_CPP_NAME[cpp_name]
+    display_name = name or cpp_name
+    sections = [
+        f"Native help: {display_name}",
+        f"Curated public declarations from {_SC_REPORT_DECLARATION_SOURCE}:\n" + "\n".join(declarations),
+        "Lifecycle notes:\n" + "\n".join(f"- {note}" for note in _SC_REPORT_LIFECYCLE_NOTES),
+        _SC_REPORT_SCOPE_NOTE,
+    ]
+    return "\n\n".join(sections)
+
+
 def format_native_help(member: object, *, name: str | None = None) -> str:
     """Format existing cppyy metadata for one native class, overload, enum or template.
 
@@ -151,7 +199,9 @@ def format_native_help(member: object, *, name: str | None = None) -> str:
     metadata, including aggregate constructor docs on an adapter's
     ``__overload__.__self__`` proxy. It does not call the represented native
     member, instantiate a template, change the proxy, or traverse inherited
-    pydoc data.
+    pydoc data. The exact ``sc_core::sc_report`` class proxy is a curated exception:
+    its public declarations are rendered from the pinned vendored header because
+    cppyy does not expose those methods on the exported class proxy.
 
     Args:
         member: A cppyy native proxy or a Python adapter with useful documentation.
@@ -172,6 +222,9 @@ def format_native_help(member: object, *, name: str | None = None) -> str:
         raise TypeError("name must be a string or None")
 
     cpp_name = _qualified_cpp_name(member)
+    if isinstance(member, type) and cpp_name in _SC_REPORT_DECLARATIONS_BY_CPP_NAME:
+        return _format_curated_sc_report(cpp_name, name=name)
+
     member_doc = _metadata(member, "__doc__")
     hidden_name = _hidden_declaration(cpp_name)
     hidden_doc_names = _hidden_doc_declarations(member_doc)

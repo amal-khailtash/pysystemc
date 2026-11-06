@@ -8,6 +8,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Avoid duplicate native enum metadata checks while generating namespace help,
+  preserving public discovery, native proxy identity and documentation.
+
+- Show 12 public `sc_report` member signatures in native help using the pinned
+  header, with timestamp lifetime notes and preserved native proxy identity.
+
 - Expose exact native hash and comparison callback holders under the familiar
   hash-base typedef names, accepting them in setters and preserving Python
   callback retention and qualified template arguments. Reflected constructors
@@ -16,6 +22,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 - Preserve written static and virtual declaration flags separately from their
   effective values, retaining compiler resolution provenance in inventory
   variants and leaving unavailable inheritance information explicit.
+
+- Avoid a cppyy constructor metadata crash when formatting native help; retain
+  the existing constructor signature documentation.
 
 - Add an opt-in adapter for inherited hash-base constructor defaults, retaining
   native overload selection and Python callbacks. Measure coverage by source
