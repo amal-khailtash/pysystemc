@@ -4,14 +4,13 @@ import cppyy
 
 
 def _arguments(arguments, *, cycles):
-    """Select native template types once and consume borrowed event expressions."""
+    """Select native template types once while retaining event expressions."""
     values = []
     types = []
     for index, value in enumerate(arguments):
         name = getattr(type(value), "__cpp_name__", "")
-        if name.startswith("sc_core::sc_event_expr<"):
-            value = value.release()
-            name = getattr(type(value), "__cpp_name__", "")
+        # Keep event-expression proxies intact; C++ establishes list ownership
+        # before native process validation or a potentially blocking wait.
         if index == 0 and isinstance(value, (int, float)):
             name = "int" if cycles and len(arguments) == 1 and isinstance(value, int) else "double"
         elif index == 1 and isinstance(arguments[0], (int, float)):
@@ -33,7 +32,8 @@ def _scheduling_member(owner_type, method, unwind):
 
         Args:
             *args: Native time, event, OR/AND list or numeric duration arguments;
-                wait also accepts an integer cycle count. Expressions are consumed.
+                wait also accepts an integer cycle count. Expressions are consumed
+                by the native adapter after it establishes temporary-list ownership.
 
         Returns:
             None after completion or registration of method sensitivity.

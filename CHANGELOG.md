@@ -8,6 +8,27 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache the exact native integer-cycle wait overload after first use, preserving
+  default and explicit contexts, GIL release and reset/kill cleanup. A matched
+  20,000-cycle workload used 67.1% less simulation time across ten pairs.
+
+- Cache exact native overloads for reusable OR/AND event-list waits, preserving
+  list ownership, explicit contexts, GIL release and reset/kill cleanup. A matched
+  20,000-resumption workload used 56.5% less simulation time across ten pairs.
+
+- Cache exact native expression-wait overloads by signature, avoiding repeated
+  cppyy overload resolution while preserving context, expression ownership,
+  GIL release and reset/kill cleanup. A matched 20,000-resumption workload used
+  86.4% less simulation time across ten pairs.
+
+- Reuse canonical event-expression types in `next_trigger()` classification,
+  reducing dynamic-method overhead while preserving native overloads, context
+  handling and expression consumption.
+
+- Retain the two canonical event-expression type proxies used by `wait()`
+  classification, avoiding repeated cppyy template lookup while preserving
+  expression consumption, overload selection and reset/kill cleanup.
+
 - Avoid duplicate native enum metadata checks while generating namespace help,
   preserving public discovery, native proxy identity and documentation.
 
@@ -23,8 +44,14 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   effective values, retaining compiler resolution provenance in inventory
   variants and leaving unavailable inheritance information explicit.
 
+- Verify expression-list deletion and process termination when a forbidden
+  wait is attempted during self-reset or self-kill unwind.
+
 - Avoid a cppyy constructor metadata crash when formatting native help; retain
   the existing constructor signature documentation.
+
+- Release event-expression storage when native `wait` or `next_trigger` rejects
+  a call, preserving native report order and normal, reset, and kill cleanup.
 
 - Add an opt-in adapter for inherited hash-base constructor defaults, retaining
   native overload selection and Python callbacks. Measure coverage by source

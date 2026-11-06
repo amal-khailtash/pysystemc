@@ -1071,6 +1071,7 @@ def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> No
 
 
 _native_next_trigger = cppyy.gbl.sc_core.next_trigger
+_python_next_trigger = cppyy.gbl.sc_core.python_next_trigger
 _next_trigger_adapters = {}
 
 
@@ -1079,8 +1080,9 @@ def next_trigger(*args: Any) -> Any:
 
     Args:
         *args: Native next_trigger time/event arguments. Expressions are consumed
-            once; referenced events must outlive the scheduled invocation. An
-            optional native simulation context follows the sensitivity arguments.
+            once by the native adapter after it establishes list ownership;
+            referenced events must outlive the scheduled invocation. An optional
+            native simulation context follows the sensitivity arguments.
 
     Returns:
         None after configuring the next method invocation.
@@ -1094,12 +1096,17 @@ def next_trigger(*args: Any) -> Any:
     if args and isinstance(args[-1], native.sc_simcontext):
         context, args = args[-1], args[:-1]
     types, values = [], []
+    has_expression = False
     for index, value in enumerate(args):
-        for list_type in (native.sc_event_or_list, native.sc_event_and_list):
-            if isinstance(value, native.sc_event_expr[list_type]):
-                value = value.release()
+        expression_name = None
+        for list_type, expression_type in _wait_expression_types:
+            if isinstance(value, expression_type):
+                expression_name = f"sc_core::sc_event_expr<{list_type.__cpp_name__}>"
+                has_expression = True
                 break
-        if index == 0 and isinstance(value, (int, float)):
+        if expression_name is not None:
+            name = f"const {expression_name}&"
+        elif index == 0 and isinstance(value, (int, float)):
             name = "double"
         elif index == 1 and types[0] == "double":
             name = "sc_core::sc_time_unit"
@@ -1115,7 +1122,8 @@ def next_trigger(*args: Any) -> Any:
     signature = ", ".join((*types, "sc_core::sc_simcontext*"))
     operation = _next_trigger_adapters.get(signature)
     if operation is None:
-        operation = _native_next_trigger.__overload__(signature)
+        source = _python_next_trigger if has_expression else _native_next_trigger
+        operation = source.__overload__(signature)
         _next_trigger_adapters[signature] = operation
     return operation(*values, context)
 
@@ -1205,6 +1213,15 @@ class _ProcessUnwind(BaseException):
     """Private signal that unwinds Python frames before native reset or kill."""
 
 
+_wait_expression_types = tuple(
+    (list_type, cppyy.gbl.sc_core.sc_event_expr[list_type])
+    for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
+)
+_wait_expression_adapters = {}
+_wait_list_adapters = {}
+_wait_cycle_adapter = None
+
+
 def wait(*args: Any) -> None:
     """Suspend a native thread with cycle, time, event or event-list sensitivity.
 
@@ -1224,14 +1241,76 @@ def wait(*args: Any) -> None:
     wait during unwind cleanup. Events and sensitivity targets must outlive waits.
     Blocking scheduler calls release the GIL.
     """
+    global _wait_cycle_adapter
+
     native = cppyy.gbl.sc_core
     operation = native.python_wait
+    has_expression = False
+    for index, value in enumerate(args):
+        for list_type, expression_type in _wait_expression_types:
+            if isinstance(value, expression_type):
+                has_expression = True
+                break
+        if has_expression:
+            break
+
+    if has_expression:
+        values = list(args)
+        context = native.sc_get_curr_simcontext()
+        if values and isinstance(values[-1], native.sc_simcontext):
+            context = values.pop()
+        types = []
+        for index, value in enumerate(values):
+            expression_name = None
+            for list_type, expression_type in _wait_expression_types:
+                if isinstance(value, expression_type):
+                    expression_name = f"sc_core::sc_event_expr<{list_type.__cpp_name__}>"
+                    break
+            if expression_name is not None:
+                name = f"const {expression_name}&"
+            elif index == 0 and isinstance(value, (int, float)):
+                # Expression timed waits use the native value/unit overload;
+                # integer cycle waits have no expression-list form.
+                name = "double"
+            elif index == 1 and isinstance(values[0], (int, float)):
+                name = "sc_core::sc_time_unit"
+            else:
+                for argument_type in (
+                    native.sc_time,
+                    native.sc_event,
+                    native.sc_event_or_list,
+                    native.sc_event_and_list,
+                ):
+                    if isinstance(value, argument_type):
+                        name = f"const {argument_type.__cpp_name__}&"
+                        break
+                else:
+                    raise TypeError("wait requires native time/event arguments or a numeric duration")
+            types.append(name)
+        signature = ", ".join((*types, "sc_core::sc_simcontext*"))
+        cached_operation = _wait_expression_adapters.get(signature)
+        if cached_operation is None:
+            cached_operation = operation.__overload__(signature)
+            _wait_expression_adapters[signature] = cached_operation
+        operation = cached_operation
+        operation.__release_gil__ = True
+        if not operation(*values, context):
+            raise _ProcessUnwind()
+        return
+
     # A native diagnostic must not retry a different wait and enter the kernel.
     if args and isinstance(args[0], int) and (len(args) == 1 or isinstance(args[1], native.sc_simcontext)):
-        operation = operation.__overload__("int, sc_core::sc_simcontext*")
+        if _wait_cycle_adapter is None:
+            _wait_cycle_adapter = operation.__overload__("int, sc_core::sc_simcontext*")
+        operation = _wait_cycle_adapter
     elif args and isinstance(args[0], (native.sc_event_or_list, native.sc_event_and_list)):
         name = type(args[0]).__cpp_name__
-        operation = operation.__overload__(f"const {name}&, sc_core::sc_simcontext*")
+        signature = f"const {name}&, sc_core::sc_simcontext*"
+        cached_operation = _wait_list_adapters.get(signature)
+        if cached_operation is None:
+            cached_operation = operation.__overload__(signature)
+            _wait_list_adapters[signature] = cached_operation
+        operation = cached_operation
     operation.__release_gil__ = True
     if not operation(*args):
         raise _ProcessUnwind()

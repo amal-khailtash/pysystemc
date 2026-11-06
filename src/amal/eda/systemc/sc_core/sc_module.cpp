@@ -7,6 +7,7 @@
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 #include <Python.h>
 
+#include <atomic>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -200,6 +201,155 @@ bool python_guarded_operation(const std::function<void()>& operation)
     python_unwind = std::current_exception();
     return false;
   }
+}
+
+/**
+ * @brief Expose the protected, read-only event-list busy query to this bridge.
+ * @details This adapter adds no state and changes no ownership. It exists only
+ * to inspect whether a process still has dynamic registrations on a list.
+ */
+struct python_event_list_busy_access : sc_event_list
+{
+  using sc_event_list::busy;
+
+  /** @brief Return the inherited query member pointer without widening the public API. */
+  static auto busy_member()
+  {
+    return &python_event_list_busy_access::busy;
+  }
+};
+
+/**
+ * @brief Query whether a native process still has dynamic registrations on a list.
+ * @param list Borrowed event list; it must remain alive for this nonblocking query.
+ * @return True while native process registrations still refer to the list.
+ * @details Does not acquire the GIL, invoke Python callbacks, or alter the list.
+ */
+bool python_event_list_busy(const sc_event_list& list)
+{
+  return (list.*python_event_list_busy_access::busy_member())();
+}
+
+namespace
+{
+std::atomic<unsigned long> python_wait_expression_list_deletions{0};
+std::atomic<unsigned long> python_next_trigger_expression_list_deletions{0};
+
+template <class List>
+struct python_event_list_deleter
+{
+  /** Atomic counter incremented after ordinary heap storage is destroyed. */
+  std::atomic<unsigned long>* deletions;
+
+  /**
+   * @brief Delete an owned list and record the bridge destruction.
+   * @param list Heap list exclusively owned by this deleter.
+   * @details Callers must first establish that no native registration retains
+   * the list. This operation runs without the GIL and invokes no Python code.
+   */
+  void operator()(List* list) const
+  {
+    delete list;
+    deletions->fetch_add(1, std::memory_order_relaxed);
+  }
+};
+
+template <class List>
+using python_event_list_owner = std::unique_ptr<List, python_event_list_deleter<List>>;
+
+/**
+ * @brief Stage an expression list in ordinary storage across a native wait.
+ * @tparam List Native OR/AND event-list type carried by the expression.
+ * @tparam Operation Synchronous native wait operation accepting a borrowed list.
+ * @param expression Move-only native expression consumed exactly once.
+ * @param operation Native wait call; referenced events must outlive its suspension.
+ * @return True after normal wait completion, or false when scheduler unwind is pending.
+ * @throws Any native exception not translated to scheduler unwind, after checking
+ * whether native registration still retains the list.
+ * @details The released SystemC auto-delete list is moved into ordinary heap
+ * storage owned here, so process-context reports cannot leak it. This helper
+ * runs with the GIL released while waiting and never invokes Python callbacks.
+ * It deletes the list when @c busy() is false. If native code adopted it, or a
+ * registration failed after partial progress, ownership is relinquished because
+ * deletion would invalidate native references. Python cleanup and restoration
+ * of scheduler unwind happen after this frame returns.
+ */
+template <class List, class Operation>
+bool python_wait_expression(const sc_event_expr<List>& expression, Operation&& operation)
+{
+  python_event_list_owner<List> owner(new List(), {&python_wait_expression_list_deletions});
+  // Assignment moves from and destroys SystemC's released auto-delete list;
+  // this destination is ordinary storage owned by this call frame.
+  *owner = expression.release();
+  try
+  {
+    const bool completed = python_guarded_operation([&] { operation(*owner); });
+    if (python_event_list_busy(*owner)) owner.release();
+    return completed;
+  }
+  catch (...)
+  {
+    // A failed registration may have made partial progress. Never destroy a
+    // list while native dynamic registrations still refer to it.
+    if (python_event_list_busy(*owner)) owner.release();
+    throw;
+  }
+}
+
+/**
+ * @brief Retain an expression list through a nonblocking native trigger attempt.
+ * @tparam List Native OR/AND event-list type carried by the expression.
+ * @tparam Operation Synchronous, nonblocking native trigger call accepting a borrowed list.
+ * @param expression Move-only native expression consumed exactly once.
+ * @param operation Native trigger registration; referenced events must outlive
+ * the scheduled invocation.
+ * @throws Any native report or exception after checking whether registration
+ * adopted the list.
+ * @details The GIL remains held and this helper invokes no Python callback.
+ * Rejected idle lists are destroyed here. Accepted lists are relinquished to
+ * SystemC's native auto-delete lifecycle. If an exception follows partial
+ * registration and @c busy() remains true, ownership is also relinquished
+ * conservatively; a registration rollback handshake is required to reclaim it.
+ */
+template <class List, class Operation>
+void python_next_trigger_expression(const sc_event_expr<List>& expression, Operation&& operation)
+{
+  auto& released = const_cast<List&>(expression.release());
+  python_event_list_owner<List> owner(&released, {&python_next_trigger_expression_list_deletions});
+  try
+  {
+    operation(released);
+  }
+  catch (...)
+  {
+    // Busy means accepted or partially registered. Relinquish conservatively;
+    // deletion is unsafe until a native acceptance/rollback handshake exists.
+    if (python_event_list_busy(released)) owner.release();
+    throw;
+  }
+  if (python_event_list_busy(released)) owner.release();
+}
+}  // namespace
+
+/**
+ * @brief Read the process-wide number of wait-expression lists destroyed by this bridge.
+ * @return A relaxed atomic snapshot of the deletion count.
+ * @details Safe from any thread; no GIL, Python callback, or ownership change is involved.
+ */
+unsigned long python_wait_expression_list_deletion_count()
+{
+  return python_wait_expression_list_deletions.load(std::memory_order_relaxed);
+}
+
+/**
+ * @brief Read the process-wide number of rejected next-trigger lists destroyed by this bridge.
+ * @return A relaxed atomic snapshot of the deletion count.
+ * @details Accepted lists follow SystemC auto-delete and are not counted here.
+ * No GIL, Python callback, or ownership change is involved.
+ */
+unsigned long python_next_trigger_expression_list_deletion_count()
+{
+  return python_next_trigger_expression_list_deletions.load(std::memory_order_relaxed);
 }
 
 /** @brief Halt a clocked thread while preserving Python cleanup and native control flow.
@@ -573,7 +723,7 @@ bool python_suspend(sc_process_handle& handle, sc_descendant_inclusion_info desc
 void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression,
                          sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(expression.release(), context);
+  python_next_trigger_expression(expression, [&](const sc_event_or_list& list) { next_trigger(list, context); });
 }
 
 /** @brief Consume a native OR expression for dynamic method sensitivity.
@@ -583,7 +733,7 @@ void python_next_trigger(const sc_event_expr<sc_event_or_list>& expression,
 void python_next_trigger(const sc_time& time, const sc_event_expr<sc_event_or_list>& expression,
                          sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(time, expression.release(), context);
+  python_next_trigger_expression(expression, [&](const sc_event_or_list& list) { next_trigger(time, list, context); });
 }
 
 /** @brief Consume a native OR expression for dynamic method sensitivity.
@@ -593,7 +743,8 @@ void python_next_trigger(const sc_time& time, const sc_event_expr<sc_event_or_li
 void python_next_trigger(double value, sc_time_unit unit, const sc_event_expr<sc_event_or_list>& expression,
                          sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(value, unit, expression.release(), context);
+  python_next_trigger_expression(expression,
+                                 [&](const sc_event_or_list& list) { next_trigger(value, unit, list, context); });
 }
 
 /** @brief Consume a native AND expression for dynamic method sensitivity.
@@ -603,7 +754,7 @@ void python_next_trigger(double value, sc_time_unit unit, const sc_event_expr<sc
 void python_next_trigger(const sc_event_expr<sc_event_and_list>& expression,
                          sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(expression.release(), context);
+  python_next_trigger_expression(expression, [&](const sc_event_and_list& list) { next_trigger(list, context); });
 }
 
 /** @brief Consume a native AND expression for dynamic method sensitivity.
@@ -613,7 +764,7 @@ void python_next_trigger(const sc_event_expr<sc_event_and_list>& expression,
 void python_next_trigger(const sc_time& time, const sc_event_expr<sc_event_and_list>& expression,
                          sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(time, expression.release(), context);
+  python_next_trigger_expression(expression, [&](const sc_event_and_list& list) { next_trigger(time, list, context); });
 }
 
 /** @brief Consume a native AND expression for dynamic method sensitivity.
@@ -623,7 +774,8 @@ void python_next_trigger(const sc_time& time, const sc_event_expr<sc_event_and_l
 void python_next_trigger(double value, sc_time_unit unit, const sc_event_expr<sc_event_and_list>& expression,
                          sc_simcontext* context = sc_get_curr_simcontext())
 {
-  next_trigger(value, unit, expression.release(), context);
+  python_next_trigger_expression(expression,
+                                 [&](const sc_event_and_list& list) { next_trigger(value, unit, list, context); });
 }
 
 /**
@@ -739,41 +891,41 @@ bool python_wait(double value, sc_time_unit unit, const sc_event_and_list& event
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
 bool python_wait(const sc_event_expr<sc_event_or_list>& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event.release(), context); });
+  return python_wait_expression(event, [&](const sc_event_or_list& list) { wait(list, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
 bool python_wait(const sc_time& time, const sc_event_expr<sc_event_or_list>& event,
                  sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event.release(), context); });
+  return python_wait_expression(event, [&](const sc_event_or_list& list) { wait(time, list, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
 bool python_wait(double value, sc_time_unit unit, const sc_event_expr<sc_event_or_list>& event,
                  sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event.release(), context); });
+  return python_wait_expression(event, [&](const sc_event_or_list& list) { wait(value, unit, list, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
 bool python_wait(const sc_event_expr<sc_event_and_list>& event, sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(event.release(), context); });
+  return python_wait_expression(event, [&](const sc_event_and_list& list) { wait(list, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
 bool python_wait(const sc_time& time, const sc_event_expr<sc_event_and_list>& event,
                  sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(time, event.release(), context); });
+  return python_wait_expression(event, [&](const sc_event_and_list& list) { wait(time, list, context); });
 }
 
 /** @brief Guard a native wait overload; targets must outlive suspension and callers release the GIL. */
 bool python_wait(double value, sc_time_unit unit, const sc_event_expr<sc_event_and_list>& event,
                  sc_simcontext* context = sc_get_curr_simcontext())
 {
-  return guarded_wait([&]() { wait(value, unit, event.release(), context); });
+  return python_wait_expression(event, [&](const sc_event_and_list& list) { wait(value, unit, list, context); });
 }
 
 /**
@@ -1056,9 +1208,150 @@ struct python_member_edge
   }
 };
 
+/**
+ * @brief Call an ordinary native member wait through the scheduler unwind guard.
+ * @tparam Owner Native module/channel retaining the current process context.
+ * @tparam Arguments Borrowed native wait arguments; referenced objects outlive suspension.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param arguments Native wait arguments forwarded without overload retry.
+ * @return True after normal completion, false when native scheduler unwind is pending.
+ * @details Caller releases the GIL for suspension. No Python callback is invoked
+ * here; ordinary native exceptions propagate to the Python bridge.
+ */
+template <class Owner, class... Arguments>
+bool python_member_wait_call(Owner& owner, const Arguments&... arguments)
+{
+  return python_guarded_operation([&] { owner.wait(arguments...); });
+}
+
+/**
+ * @brief Keep an OR/AND expression list alive through a member event wait.
+ * @tparam Owner Native module/channel retaining the current process context.
+ * @tparam List Native event-list type in the move-only expression.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param expression Consumed expression; its events remain borrowed through suspension.
+ * @return True after normal completion, false when scheduler unwind is pending.
+ * @details Caller releases the GIL. List ownership and exceptions follow
+ * python_wait_expression(); no Python callback runs inside this adapter.
+ */
+template <class Owner, class List>
+bool python_member_wait_call(Owner& owner, const sc_event_expr<List>& expression)
+{
+  return python_wait_expression(expression, [&](const List& list) { owner.wait(list); });
+}
+
+/**
+ * @brief Keep an OR/AND expression list alive through a timed member wait.
+ * @tparam Owner Native module/channel retaining the current process context.
+ * @tparam Time Native timeout type; it is copied or borrowed by the native overload.
+ * @tparam List Native event-list type in the move-only expression.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param time Native timeout.
+ * @param expression Consumed expression; its events remain borrowed through suspension.
+ * @return True after normal completion, false when scheduler unwind is pending.
+ * @details Caller releases the GIL. List ownership and exceptions follow
+ * python_wait_expression(); no Python callback runs inside this adapter.
+ */
+template <class Owner, class Time, class List>
+bool python_member_wait_call(Owner& owner, const Time& time, const sc_event_expr<List>& expression)
+{
+  return python_wait_expression(expression, [&](const List& list) { owner.wait(time, list); });
+}
+
+/**
+ * @brief Keep an OR/AND expression list alive through a value/unit member wait.
+ * @tparam Owner Native module/channel retaining the current process context.
+ * @tparam Value Numeric timeout value forwarded to the native overload.
+ * @tparam Unit Native time unit forwarded to the native overload.
+ * @tparam List Native event-list type in the move-only expression.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param value Numeric timeout value.
+ * @param unit Native timeout unit.
+ * @param expression Consumed expression; its events remain borrowed through suspension.
+ * @return True after normal completion, false when scheduler unwind is pending.
+ * @details Caller releases the GIL. List ownership and exceptions follow
+ * python_wait_expression(); no Python callback runs inside this adapter.
+ */
+template <class Owner, class Value, class Unit, class List>
+bool python_member_wait_call(Owner& owner, Value value, Unit unit, const sc_event_expr<List>& expression)
+{
+  return python_wait_expression(expression, [&](const List& list) { owner.wait(value, unit, list); });
+}
+
+/**
+ * @brief Call an ordinary native member trigger through its exact overload.
+ * @tparam Owner Native module retaining the current process context.
+ * @tparam Arguments Borrowed native trigger arguments.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param arguments Native trigger arguments forwarded without overload retry.
+ * @details The operation is nonblocking and runs with the GIL held. Event
+ * arguments remain borrowed and must outlive their scheduled use. Native reports
+ * and exceptions propagate to Python; no callback runs inside this adapter.
+ */
+template <class Owner, class... Arguments>
+void python_member_next_trigger_call(Owner& owner, const Arguments&... arguments)
+{
+  owner.next_trigger(arguments...);
+}
+
+/**
+ * @brief Keep an OR/AND expression list alive through a member trigger attempt.
+ * @tparam Owner Native module retaining the current process context.
+ * @tparam List Native event-list type in the move-only expression.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param expression Consumed expression; referenced events must outlive sensitivity.
+ * @details Runs nonblocking with the GIL held and follows
+ * python_next_trigger_expression() ownership and exception behavior; it invokes no
+ * Python callback.
+ */
+template <class Owner, class List>
+void python_member_next_trigger_call(Owner& owner, const sc_event_expr<List>& expression)
+{
+  python_next_trigger_expression(expression, [&](const List& list) { owner.next_trigger(list); });
+}
+
+/**
+ * @brief Keep an OR/AND expression list alive through a timed member trigger attempt.
+ * @tparam Owner Native module retaining the current process context.
+ * @tparam Time Native timeout type forwarded to the native overload.
+ * @tparam List Native event-list type in the move-only expression.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param time Native timeout.
+ * @param expression Consumed expression; referenced events must outlive sensitivity.
+ * @details Runs nonblocking with the GIL held and follows
+ * python_next_trigger_expression() ownership and exception behavior; it invokes no
+ * Python callback.
+ */
+template <class Owner, class Time, class List>
+void python_member_next_trigger_call(Owner& owner, const Time& time, const sc_event_expr<List>& expression)
+{
+  python_next_trigger_expression(expression, [&](const List& list) { owner.next_trigger(time, list); });
+}
+
+/**
+ * @brief Keep an OR/AND expression list alive through a value/unit trigger attempt.
+ * @tparam Owner Native module retaining the current process context.
+ * @tparam Value Numeric timeout value forwarded to the native overload.
+ * @tparam Unit Native time unit forwarded to the native overload.
+ * @tparam List Native event-list type in the move-only expression.
+ * @param owner Borrowed native owner retained by the registered process host.
+ * @param value Numeric timeout value.
+ * @param unit Native timeout unit.
+ * @param expression Consumed expression; referenced events must outlive sensitivity.
+ * @details Runs nonblocking with the GIL held and follows
+ * python_next_trigger_expression() ownership and exception behavior; it invokes no
+ * Python callback.
+ */
+template <class Owner, class Value, class Unit, class List>
+void python_member_next_trigger_call(Owner& owner, Value value, Unit unit, const sc_event_expr<List>& expression)
+{
+  python_next_trigger_expression(expression, [&](const List& list) { owner.next_trigger(value, unit, list); });
+}
+
 /** @brief Concrete wait entry point for one exact native member signature.
  * @tparam Owner Public module/channel bridge retaining native context.
- * @tparam Arguments Native argument types; events are borrowed through suspension.
+ * @tparam Arguments Native argument types; event lists are call-owned or borrowed
+ * through suspension, while event objects remain borrowed.
  * @details Caller releases GIL. False requires Python frame cleanup before
  * dispatch_python restores native unwind; ordinary exceptions propagate.
  */
@@ -1068,7 +1361,7 @@ struct python_member_wait
   /** @brief Invoke the actual native member without overload retry. */
   static bool invoke(Owner& owner, const Arguments&... arguments)
   {
-    return python_guarded_operation([&] { owner.wait(arguments...); });
+    return python_member_wait_call(owner, arguments...);
   }
 };
 
@@ -1083,7 +1376,7 @@ struct python_member_next_trigger
   /** @brief Register sensitivity through the actual native member. */
   static void invoke(Owner& owner, const Arguments&... arguments)
   {
-    owner.next_trigger(arguments...);
+    python_member_next_trigger_call(owner, arguments...);
   }
 };
 
