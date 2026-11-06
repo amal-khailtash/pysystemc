@@ -46,13 +46,23 @@ struct generic_endian_request
 class _GenericEndianRequest:
     """Instantiate native request adapters without restricting word types."""
 
+    def __init__(self):
+        """Retain resolved converter proxies for exact string word names."""
+        self._adapters = {}
+
     def __getitem__(self, word):
         """Return the converter for a native word type or cppyy type name.
 
         The returned call accepts a borrowed payload and bus width in bytes.
         Native power-of-two, streaming and buffer-lifetime constraints apply.
         """
-        return cppyy.gbl.pysystemc_interfaces.generic_endian_request[word].call
+        if type(word) is not str:
+            return cppyy.gbl.pysystemc_interfaces.generic_endian_request[word].call
+        operation = self._adapters.get(word)
+        if operation is None:
+            operation = cppyy.gbl.pysystemc_interfaces.generic_endian_request[word].call
+            self._adapters[word] = operation
+        return operation
 
 
 tlm_to_hostendian_generic = _GenericEndianRequest()

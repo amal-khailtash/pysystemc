@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache generic TLM endian converter proxies for resolved string word names,
+  preserving arbitrary native word types and payload/buffer semantics. A matched
+  20,000 request/response workload used 26.7% less elapsed time across ten pairs.
+
 - Cache the exact native integer-cycle wait overload after first use, preserving
   default and explicit contexts, GIL release and reset/kill cleanup. A matched
   20,000-cycle workload used 67.1% less simulation time across ten pairs.
