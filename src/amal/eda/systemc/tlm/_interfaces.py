@@ -69,6 +69,8 @@ def _pythonize(interface_type, name):
                     or getattr(type(args[0]), "__cpp_name__", "") == tag_type
                 )
             ):
+                if args and args[0] is None:
+                    return _native_tag_peek(owner, cppyy.nullptr)
                 return _native_tag_peek(owner, *args)
             return _native(owner, *args)
 

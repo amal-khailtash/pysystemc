@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Convert explicit `None` tags to native null pointers for combined TLM blocking
+  peek interfaces, so `peek(None)` returns the same nonconsuming value as
+  `peek()` and `peek(cppyy.nullptr)` for arbitrary transaction types.
+
 - Retain generic native `sc_ref` and `sc_cref` template proxies, preserving
   per-value type deduction and reference-owner lifetime. A matched 20,000-call
   custom/257-bit wrapper workload used 10.7% less elapsed time across ten pairs,
