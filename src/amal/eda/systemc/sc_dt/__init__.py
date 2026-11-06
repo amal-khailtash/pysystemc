@@ -35,6 +35,8 @@ sc_fxtype_context = sc_context[_namespace.sc_fxtype_params]
 sc_fxcast_context = sc_context[_namespace.sc_fxcast_switch]
 sc_length_context = sc_context[_namespace.sc_length_param]
 _native_to_string = _namespace.to_string
+# Keep resolved cppyy enum callables for the sc_dt module lifetime.
+_enum_string_dispatches = {}
 
 
 def to_string(value):
@@ -60,7 +62,11 @@ def to_string(value):
         "sc_dt::sc_o_mode",
         "sc_dt::sc_switch",
     }:
-        return str(cppyy.gbl.pysystemc_datatypes.enum_string[enum_type](value))
+        operation = _enum_string_dispatches.get(enum_type)
+        if operation is None:
+            operation = cppyy.gbl.pysystemc_datatypes.enum_string[enum_type]
+            _enum_string_dispatches[enum_type] = operation
+        return str(operation(value))
     return _native_to_string(value)
 
 

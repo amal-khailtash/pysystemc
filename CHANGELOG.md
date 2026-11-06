@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache exact native datatype enum formatters lazily, preserving unknown-value
+  spellings, numeric fallback and the native overload selector. A matched
+  20,000-conversion workload used 17.3% less elapsed time across ten pairs,
+  with nine paired wins.
+
 - Cache resolved native signal-value conversion adapters by full datatype and
   writer-policy specialization, preserving current values and borrowed references.
   A matched 20,000-read int/257-bit workload used 56.1% less elapsed time across
