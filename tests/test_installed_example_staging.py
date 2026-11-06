@@ -12,7 +12,7 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FROZEN_CHECKOUT_RUNTIME_SOURCE_COUNT = 110
+FROZEN_CHECKOUT_RUNTIME_SOURCE_COUNT = 111
 """Current checkout roster size, retained as a test-only review guard."""
 
 
@@ -510,11 +510,11 @@ def test_runtime_source_parity_checks_exact_bytes_and_ignores_native_data(tmp_pa
     assert parity["mismatches"] == []
 
 
-def test_checkout_runtime_source_roster_matches_the_110_file_freeze():
+def test_checkout_runtime_source_roster_matches_the_111_file_freeze():
     """Guard the currently reviewed Python/C++ runtime source roster without imports.
 
     Returns:
-        None: The checkout roster contains exactly the frozen 110 runtime source files.
+        None: The checkout roster contains exactly the frozen 111 runtime source files.
     """
     checker = _load_checker()
 

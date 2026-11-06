@@ -176,7 +176,7 @@ def test_failed_import_is_recorded_and_original_exception_propagates() -> None:
     }
 
 
-def test_child_runner_retains_nonzero_output_and_timeout_output(tmp_path) -> None:
+def test_child_runner_retains_nonzero_output_and_timeout_output(tmp_path, monkeypatch) -> None:
     """Failure and timeout results keep all output captured before exit/kill."""
     profiler = load_profiler()
     result_file = tmp_path / "no-result.json"
@@ -191,20 +191,37 @@ def test_child_runner_retains_nonzero_output_and_timeout_output(tmp_path) -> Non
     assert failed["stdout"] == "out\n"
     assert "err" in failed["stderr"]
 
-    timed_out = profiler.run_child(
-        [
-            sys.executable,
-            "-c",
-            "import sys, time; print('before-timeout', flush=True); print('stderr-before-timeout', file=sys.stderr, flush=True); time.sleep(5)",
-        ],
-        dict(os.environ),
-        0.1,
-        result_file,
-    )
+    def timeout_with_output(command, **kwargs):
+        """Supply captured bytes without depending on interpreter startup latency."""
+        raise profiler.subprocess.TimeoutExpired(
+            command,
+            kwargs["timeout"],
+            output=b"before-timeout\n",
+            stderr=b"stderr-before-timeout\n",
+        )
+
+    monkeypatch.setattr(profiler.subprocess, "run", timeout_with_output)
+    timed_out = profiler.run_child([sys.executable, "-c", "pass"], dict(os.environ), 0.1, result_file)
     assert timed_out["timed_out"]
     assert timed_out["returncode"] is None
     assert "before-timeout" in timed_out["stdout"]
     assert "stderr-before-timeout" in timed_out["stderr"]
+
+
+def test_child_runner_times_out_real_subprocess(tmp_path) -> None:
+    """A real sleeping child times out even when startup produces no output."""
+    profiler = load_profiler()
+    timed_out = profiler.run_child(
+        [sys.executable, "-c", "import time; time.sleep(30)"],
+        dict(os.environ),
+        0.1,
+        tmp_path / "no-result.json",
+    )
+    assert timed_out["timed_out"]
+    assert timed_out["returncode"] is None
+    assert timed_out["stdout"] == ""
+    assert timed_out["stderr"] == ""
+    assert timed_out["profile"] is None
 
 
 def _write_fake_package(root: Path) -> None:

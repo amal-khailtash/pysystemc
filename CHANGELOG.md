@@ -12,6 +12,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   effective values, retaining compiler resolution provenance in inventory
   variants and leaving unavailable inheritance information explicit.
 
+- Exercise residual lifecycle, cleanup and native-free adapter guards, retaining
+  explicit unsupported and configuration-dependent coverage limits.
+
+- Refresh the runtime source roster regression guard for the added help module;
+  separate startup timeout output checks from interpreter startup timing.
+
 - Record parallel native FIFO value/stream and port/interface checks, including
   meaningful 137-bit values, trace transitions and selected lifetime ordering.
 

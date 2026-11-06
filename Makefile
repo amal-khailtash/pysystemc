@@ -262,14 +262,14 @@ format-python:
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage
 coverage:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov=amal.eda.cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=src/amal/eda/systemc --cov=src/amal/eda/cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
 
 # ----------------------------------------------------------------------------------------------------------------------
 # coverage-parallel: ## Run coverage in isolated pytest workers (TEST_WORKERS defaults to 4)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage-parallel
 coverage-parallel:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -n $(TEST_WORKERS) --dist=worksteal --cov=amal.eda.systemc --cov=amal.eda.cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml $(ARGS)
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -n $(TEST_WORKERS) --dist=worksteal --cov=src/amal/eda/systemc --cov=src/amal/eda/cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml $(ARGS)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # benchmark-startup: ## Measure fresh-process startup and first-use latency
