@@ -27,7 +27,9 @@ def _decorate(pointer_type, kind):
     pointer identity. This adapter stores a native pointer value, rather than
     representing a reflected function-pointer type. Native code remains borrowed
     and must stay loaded through all consumers; no Python callable is retained.
-    Construction and native selection hold the GIL and do not invoke callbacks.
+    Native reflected constructors do not implicitly accept this holder; use an
+    explicitly adapted first-party consumer. Construction and native selection
+    hold the GIL and do not invoke callbacks.
     """
     native_init = pointer_type.__init__
 
@@ -149,14 +151,90 @@ def _wrap_consumer(native, name=""):
         native._callback_map_wrapped = True
 
 
+def _wrap_hash_consumer(native, name=""):
+    """Adapt native hash setters while preserving Python callback retention."""
+    if name != "sc_phash_base" and not name.startswith(("sc_phash<", "sc_pdhash<", "sc_strhash<")):
+        return
+    if native.__dict__.get("_hash_pointer_setters_wrapped", False):
+        return
+
+    native_hash_setter = native.set_hash_fn
+    native_compare_setter = native.set_cmpr_fn
+    hash_pointer = cppyy.gbl.pysystemc.callback_pointer[2]
+    compare_pointer = cppyy.gbl.pysystemc.callback_pointer[0]
+
+    def set_hash_fn(self, callback):
+        """Set a borrowed native hash pointer or preserve the existing callback path.
+
+        Args:
+            callback: Exact hash pointer holder or a native/Python callback with
+                the native ``unsigned(const void*)`` signature.
+        Returns:
+            None, matching the native setter.
+        Raises:
+            TypeError: Callback cannot convert to the exact native hash signature.
+            ValueError: The native pointer holder is null.
+
+        Native pointer holders retain no code or Python references; keep their
+        native function loaded through table use. Existing Python callback
+        retention remains on the original setter path. Calls hold the GIL and
+        callback execution remains synchronous on the caller thread.
+        """
+        if isinstance(callback, hash_pointer):
+            if not callback.valid():
+                raise ValueError("cannot use a null native callback pointer")
+            return cppyy.gbl.pysystemc.set_phash_hash_callback(self, callback)
+        return native_hash_setter(self, callback)
+
+    def set_cmpr_fn(self, callback):
+        """Set a borrowed native comparison pointer or preserve callback handling.
+
+        Args:
+            callback: Exact CFT pointer holder or a native/Python callback with
+                the native ``int(const void*, const void*)`` signature.
+        Returns:
+            None, matching the native setter.
+        Raises:
+            TypeError: Callback cannot convert to the exact native comparison signature.
+            ValueError: The native pointer holder is null.
+
+        Native pointer holders retain no code or Python references; keep their
+        native function loaded through table use. Existing Python callback
+        retention remains on the original setter path. Calls hold the GIL and
+        callback execution remains synchronous on the caller thread.
+        """
+        if isinstance(callback, compare_pointer):
+            if not callback.valid():
+                raise ValueError("cannot use a null native callback pointer")
+            return cppyy.gbl.pysystemc.set_phash_compare_callback(self, callback)
+        return native_compare_setter(self, callback)
+
+    if hasattr(native_hash_setter, "__overload__"):
+        set_hash_fn.__overload__ = native_hash_setter.__overload__
+    if hasattr(native_compare_setter, "__overload__"):
+        set_cmpr_fn.__overload__ = native_compare_setter.__overload__
+    native.set_hash_fn = set_hash_fn
+    native.set_cmpr_fn = set_cmpr_fn
+    native._hash_pointer_setters_wrapped = True
+
+
 def install():
     """Return public pointer-value adapters and install synchronous consumers."""
-    pointers = tuple(_decorate(cppyy.gbl.pysystemc.callback_pointer[kind], kind) for kind in range(2))
+    pointers = tuple(_decorate(cppyy.gbl.pysystemc.callback_pointer[kind], kind) for kind in range(3))
     report_type = _decorate(cppyy.gbl.pysystemc.report_handler_pointer, 3)
-    cppyy.gbl.sc_core.sc_ppq_base.compare_fn_t = pointers[0]
-    _wrap_consumer(cppyy.gbl.sc_core.sc_plist_base)
-    for candidate in tuple(vars(cppyy.gbl.sc_core).values()):
+    namespace = cppyy.gbl.sc_core
+    namespace.sc_ppq_base.compare_fn_t = pointers[0]
+    hash_base = namespace.sc_phash_base
+    hash_base.hash_fn_t = pointers[2]
+    hash_base.cmpr_fn_t = pointers[0]
+    _wrap_hash_consumer(hash_base, "sc_phash_base")
+    _wrap_consumer(namespace.sc_plist_base)
+    for candidate in tuple(vars(namespace).values()):
         if isinstance(candidate, type):
             _wrap_consumer(candidate)
+            cpp_name = getattr(candidate, "__cpp_name__", "")
+            simple_name = cpp_name.removeprefix("sc_core::")
+            _wrap_hash_consumer(candidate, simple_name)
     cppyy.py.add_pythonization(_wrap_consumer, "sc_core")
+    cppyy.py.add_pythonization(_wrap_hash_consumer, "sc_core")
     return pointers[0], pointers[1], report_type

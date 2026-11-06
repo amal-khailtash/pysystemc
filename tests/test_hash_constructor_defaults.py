@@ -7,7 +7,7 @@ from .support import ROOT, run_example
 
 
 def test_hash_constructor_defaults(tmp_path):
-    """Check native settings and record missing inherited trailing defaults."""
+    """Compare repaired inherited constructor arities with native defaults."""
     output = run_example(tmp_path, "tests/models/hash_constructor_defaults.py")
     native = subprocess.run(
         [
@@ -21,7 +21,6 @@ def test_hash_constructor_defaults(tmp_path):
         timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
-    assert "HASH_INHERITED_TRAILING_DEFAULTS_UNSUPPORTED" in output
     actual = [row for row in output.splitlines() if row.startswith(("HASH_DEFAULTS ", "HASH_CONSTANTS "))]
     expected = [row for row in native.stdout.splitlines() if row.startswith(("HASH_DEFAULTS ", "HASH_CONSTANTS "))]
     assert (

@@ -44,6 +44,34 @@ class Probe : public sc_core::sc_phash_base
     return reorder_flag != 0;
   }
 };
+
+/** @brief Add one ordinary native constructor beside inherited hash constructors.
+ * @details The inherited base owns bucket storage and default configuration.
+ * The marker is a value member owned by this object. Construction is
+ * synchronous, invokes no Python callback and has no GIL requirement.
+ */
+class ProbeWithTag : public Probe
+{
+ public:
+  /** @brief Inherit every constructor exposed by Probe. */
+  using Probe::Probe;
+
+  /** @brief Construct with a native-only marker overload.
+   * @param marker Value returned by tag().
+   */
+  explicit ProbeWithTag(int marker) : Probe(), marker_(marker)
+  {
+  }
+
+  /** @brief Return the marker supplied to the native-only constructor. */
+  int tag() const
+  {
+    return marker_;
+  }
+
+ private:
+  int marker_ = 0;
+};
 }  // namespace hash_constructor_defaults_probe
 
 #endif  // HASH_CONSTRUCTOR_DEFAULTS_PROBE_H

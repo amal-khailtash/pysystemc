@@ -32,6 +32,7 @@ from ._interfaces import release_interface_callbacks as release_interface_callba
 from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
+from ._hashes import adapt_inherited_hash_constructor as adapt_inherited_hash_constructor
 from . import _tracing
 from ._report_policy import install_report_policy as _install_report_policy
 

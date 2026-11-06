@@ -3,6 +3,7 @@
  */
 #pragma once
 
+#include <sysc/utils/sc_hash.h>
 #include <sysc/utils/sc_list.h>
 #include <sysc/utils/sc_pq.h>
 #include <sysc/utils/sc_pvector.h>
@@ -29,6 +30,17 @@ struct callback_pointer_traits<1>
 {
   using type = sc_core::sc_plist_map_fn;
 };
+/** @brief Native chained-hash key hash signature. */
+template <>
+struct callback_pointer_traits<2>
+{
+  using type = sc_core::sc_phash_base::hash_fn_t;
+};
+
+static_assert(std::is_same<callback_pointer_traits<0>::type, sc_core::sc_phash_base::cmpr_fn_t>::value,
+              "hash comparison must exactly match the existing CFT pointer adapter");
+static_assert(std::is_same<callback_pointer_traits<2>::type, sc_core::sc_phash_base::hash_fn_t>::value,
+              "hash pointer adapter must exactly match the native hash typedef");
 /** @brief Own a value of an exact native callback typedef, without owning code.
  * @details This is a pointer-value adapter, not a reflected function-pointer
  * type. Native code must stay loaded for the lifetime of the value and every
@@ -119,6 +131,30 @@ inline void map_callback_pointer(sc_core::sc_plist_base& list, const callback_po
 {
   pointer.require_valid();
   list.mapcar(pointer.get(), context);
+}
+
+/** @brief Set the native hash callback from an exact pointer-value holder.
+ * @details The table borrows native code; keep that code loaded through table
+ * use. The holder owns neither code nor Python references. Hold the GIL for this
+ * synchronous operation. A null holder raises std::invalid_argument before the
+ * table changes; this setter does not invoke the callback.
+ */
+inline void set_phash_hash_callback(sc_core::sc_phash_base& table, const callback_pointer<2>& pointer)
+{
+  pointer.require_valid();
+  table.set_hash_fn(pointer.get());
+}
+
+/** @brief Set the native comparison callback from an exact CFT holder.
+ * @details The table borrows native code; keep that code loaded through table
+ * use. The holder owns neither code nor Python references. Hold the GIL for this
+ * synchronous operation. A null holder raises std::invalid_argument before the
+ * table changes; this setter does not invoke the callback.
+ */
+inline void set_phash_compare_callback(sc_core::sc_phash_base& table, const callback_pointer<0>& pointer)
+{
+  pointer.require_valid();
+  table.set_cmpr_fn(pointer.get());
 }
 
 /** @brief Allocate a native queue retaining only an exact comparator pointer.

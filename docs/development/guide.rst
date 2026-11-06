@@ -249,11 +249,16 @@ other accepted settings. These checks cover constructor configuration and
 constant values; hash insertion, rehashing and callback lifetime have separate
 validation obligations.
 On cppyy 3.5.0, a constructor inherited through a native ``using`` declaration
-can lose its trailing default arguments. The hash probe's five-argument call
-therefore fails, while the native C++ call succeeds. Python configuration checks
-supply all seven arguments explicitly; the zero-argument default constructor
-also works. This records a binding limitation, not complete inherited-default
-support.
+can lose its trailing default arguments. For a user-defined native subclass of
+``sc_phash_base``, opt in with
+``sc_core.adapt_inherited_hash_constructor(DerivedHash)`` before constructing
+instances. The adapter returns the same native class and restores omitted
+arguments using SystemC's default values when cppyy reports the known inherited
+arity error. Successful native overload selection remains unchanged, including
+other constructors defined by the subclass. Explicit overload selection and
+Python callback retention are preserved. Raw, unadapted cppyy constructors
+retain the upstream limitation; this adapter covers the inherited hash-base
+signature, not arbitrary inherited C++ constructors.
 The top-level ``sc_core`` constant comparison checks 239 declaration records
 for 238 symbols: 177 variable declarations and 62 enum constants. Two headers
 declare ``SC_ID_REGISTER_ID_FAILED_``; both identities retain the same value

@@ -8,9 +8,18 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Expose exact native hash and comparison callback holders under the familiar
+  hash-base typedef names, accepting them in setters and preserving Python
+  callback retention and qualified template arguments. Reflected constructors
+  continue to reject holder objects with `TypeError`.
+
 - Preserve written static and virtual declaration flags separately from their
   effective values, retaining compiler resolution provenance in inventory
   variants and leaving unavailable inheritance information explicit.
+
+- Add an opt-in adapter for inherited hash-base constructor defaults, retaining
+  native overload selection and Python callbacks. Measure coverage by source
+  path so isolated helper-module aliases are included.
 
 - Exercise residual lifecycle, cleanup and native-free adapter guards, retaining
   explicit unsupported and configuration-dependent coverage limits.
