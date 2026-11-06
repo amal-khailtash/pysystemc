@@ -144,6 +144,75 @@ def test_reconcile_distinguishes_missing_metadata_from_explicit_defaults():
     assert missing["configurations"] == [["omitted"]]
     assert present["configurations"] == [["explicit"]]
     assert present["static"] is False
+    assert "written_static" not in missing
+    assert "effective_static_status" not in missing
+
+
+def test_reconcile_preserves_written_and_effective_flag_provenance():
+    """Keep direct AST flags and unresolved effective values with each occurrence."""
+    declaration = _declaration(
+        written_static=False,
+        written_virtual=False,
+        effective_static_status="resolved_from_self",
+        effective_virtual_status="unresolved_inherited_override_not_exposed",
+        virtual=None,
+    )
+    definition = _declaration(
+        source="src/owner.cpp",
+        line=50,
+        written_static=False,
+        written_virtual=False,
+        effective_static_status="resolved_from_previous_decl",
+        effective_virtual_status="unresolved_inherited_override_not_exposed",
+        virtual=None,
+    )
+    union = _RECONCILE(
+        [
+            _snapshot(["modeling"], [declaration, definition]),
+            _snapshot(
+                ["baseline"],
+                [
+                    _declaration(
+                        line=9,
+                        written_static=False,
+                        written_virtual=False,
+                        effective_static_status="resolved_from_self",
+                        effective_virtual_status="unresolved_inherited_override_not_exposed",
+                        virtual=None,
+                    )
+                ],
+            ),
+        ]
+    )
+    row = union["declarations"][0]
+
+    assert row["configurations"] == [["modeling"], ["baseline"]]
+    assert len(row["semantic_variants"]) == 2
+    self_resolved, previous_resolved = row["semantic_variants"]
+    assert self_resolved["configurations"] == [["modeling"], ["baseline"]]
+    assert self_resolved["written_static"] is False
+    assert self_resolved["written_virtual"] is False
+    assert self_resolved["effective_static_status"] == "resolved_from_self"
+    assert self_resolved["effective_virtual_status"] == "unresolved_inherited_override_not_exposed"
+    assert self_resolved["virtual"] is None
+    assert {(item["source"], item["line"], tuple(item["configuration"])) for item in self_resolved["occurrences"]} == {
+        ("include/owner.h", 2, ("modeling",)),
+        ("include/owner.h", 9, ("baseline",)),
+    }
+    assert previous_resolved["configurations"] == [["modeling"]]
+    assert previous_resolved["written_static"] is False
+    assert previous_resolved["written_virtual"] is False
+    assert previous_resolved["effective_static_status"] == "resolved_from_previous_decl"
+    assert previous_resolved["effective_virtual_status"] == "unresolved_inherited_override_not_exposed"
+    assert previous_resolved["virtual"] is None
+    assert previous_resolved["occurrences"] == [
+        {
+            "source": "src/owner.cpp",
+            "line": 50,
+            "access": "protected",
+            "configuration": ["modeling"],
+        }
+    ]
 
 
 def test_reconcile_traces_same_configuration_declaration_definition_variants():

@@ -118,10 +118,13 @@ template<class U, typename T = int, int N = sizeof(T),
     assert template_parameters["U"]["default_argument"] is None
     assert template_parameters["T"]["default_argument"]["kind"] == "type"
     assert template_parameters["T"]["default_argument"]["expression"] == "int"
+    assert template_parameters["T"]["default_argument"]["argument_origin"] == "written"
     assert template_parameters["N"]["default_argument"]["kind"] == "expression"
     assert template_parameters["N"]["default_argument"]["expression"] == "sizeof(T)"
+    assert template_parameters["N"]["default_argument"]["argument_origin"] == "written"
     assert template_parameters["C"]["default_argument"]["kind"] == "template"
     assert template_parameters["C"]["default_argument"]["expression"] == "Box"
+    assert template_parameters["C"]["default_argument"]["argument_origin"] == "written"
     assert all(
         not Path(parameter["default_argument"]["expression_source"]["source"]).is_absolute()
         for parameter in template_parameters.values()
@@ -141,6 +144,93 @@ template<class U, typename T = int, int N = sizeof(T),
     macro_provenance = _INVENTORY["_macro_provenance"](bad_expression, source_file)
     assert macro_provenance[0]["expansion_token"] == {"unavailable_reason": "source_location_out_of_bounds"}
     assert macro_provenance[0]["spelling_tokens"] == [{"unavailable_reason": "source_location_out_of_bounds"}]
+
+
+def test_redeclared_template_defaults_keep_the_written_declaration_source(tmp_path, monkeypatch):
+    """Follow Clang template-parameter inheritance to the authored default span."""
+    source = """namespace fixture {
+template<class> struct Box {};
+template<class T = long, int Width = sizeof(T)> struct Sequence;
+template<class T, int Width> struct Sequence { T values[Width]; };
+template<template<class> class Container = Box> struct Wrapped;
+template<template<class> class Container> struct Wrapped {};
+}
+"""
+    entries = _ast_entries(source, tmp_path, monkeypatch)
+    sequences = [
+        entry
+        for entry in entries
+        if entry["name"] == "fixture::Sequence" and entry["kind"] == "ClassTemplateDecl"
+    ]
+    wrapped = [
+        entry
+        for entry in entries
+        if entry["name"] == "fixture::Wrapped" and entry["kind"] == "ClassTemplateDecl"
+    ]
+    assert len(sequences) == len(wrapped) == 2
+
+    for declarations, expected in (
+        (sequences, {"T": "long", "Width": "sizeof(T)"}),
+        (wrapped, {"Container": "Box"}),
+    ):
+        written, redeclared = sorted(declarations, key=lambda entry: entry["line"])
+        written_parameters = {item["name"]: item for item in written["template_parameters"]}
+        redeclared_parameters = {item["name"]: item for item in redeclared["template_parameters"]}
+        for name, expression in expected.items():
+            written_default = written_parameters[name]["default_argument"]
+            inherited_default = redeclared_parameters[name]["default_argument"]
+            assert written_default["expression"] == inherited_default["expression"] == expression
+            assert written_default["argument_origin"] == "written"
+            assert inherited_default["argument_origin"] == "inherited"
+            assert inherited_default["expression_source"] == written_default["expression_source"]
+            assert inherited_default["expression_source"]["line_range"][0] < redeclared["line"]
+
+    assert all("_template_parameter_nodes" not in entry for entry in entries)
+    assert all(
+        "_inherited_template_parameter_ast_id" not in (parameter.get("default_argument") or {})
+        for entry in entries
+        for parameter in entry["template_parameters"]
+    )
+
+
+def test_anonymous_sfinae_pointer_defaults_recover_macro_spelling_source(tmp_path, monkeypatch):
+    """Recover unnamed dependent pointer defaults from their source macro body."""
+    source = """#include <cstddef>
+namespace fixture {
+template<bool Condition> struct enable_if {};
+template<> struct enable_if<true> { using type = void; };
+#define SFINAE_POINTER_(Condition) typename enable_if<(Condition)>::type * = NULL
+template<class Owner> struct direct_access {
+    template<class U> direct_access(const U&, SFINAE_POINTER_(true)) {}
+};
+template<class Owner> struct vector_iter {
+    template<class U> vector_iter(const U&, SFINAE_POINTER_(true)) {}
+};
+}
+"""
+    entries = _ast_entries(source, tmp_path, monkeypatch)
+    constructors = [entry for entry in entries if entry["kind"] == "CXXConstructorDecl"]
+    candidates = [
+        entry
+        for entry in constructors
+        if entry["name"].startswith(("fixture::direct_access::direct_access", "fixture::vector_iter::vector_iter"))
+        and len(entry["parameters"]) == 2
+    ]
+    assert len(candidates) == 2
+    for entry in candidates:
+        parameter = entry["parameters"][1]
+        default = parameter["default_argument"]
+        assert parameter["name"] is None
+        assert default["expression"] == "NULL"
+        assert default["argument_origin"] == "macro_generated"
+        span = default["expression_source"]
+        assert span["location_kind"] == "macro_spelling_source"
+        assert span["source"] == "submodules/systemc/src/defaults.hpp"
+        start, stop = span["byte_range"]
+        source_bytes = source.encode("utf-8")
+        assert source_bytes[start:stop].decode("utf-8") == "NULL"
+        assert source.rfind("#define SFINAE_POINTER_") < start < source.index("template<class Owner>")
+        assert span["line_range"][0] == span["line_range"][1]
 
 
 def test_default_metadata_does_not_change_legacy_identity():

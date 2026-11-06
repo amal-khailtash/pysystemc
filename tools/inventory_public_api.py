@@ -401,6 +401,9 @@ def _default_argument(node, filename, *, template_kind=None):
             source_range = expression_node.get("range") if expression_node else None
             if _range_has_macro(source_range) and _range_within(source_range, node.get("range", {}), filename):
                 span, reason = _source_span(source_range, filename, expansion=False)
+                if span is None:
+                    span = _macro_replacement_default(node, filename)
+                    reason = None if span is not None else reason
                 if span is not None:
                     span["location_kind"] = "macro_spelling_source"
                 argument_origin = "macro_generated"
@@ -416,6 +419,16 @@ def _default_argument(node, filename, *, template_kind=None):
         if span is None:
             return {"expression": None, "unavailable_reason": reason or declaration_reason}
     else:
+        inherited_from = node.get("defaultArg", {}).get("inherited from", {})
+        inherited_id = inherited_from.get("id") if isinstance(inherited_from, dict) else None
+        if inherited_id:
+            return {
+                "expression": None,
+                "kind": template_kind,
+                "unavailable_reason": "inherited_template_default_source_pending",
+                "argument_origin": "inherited",
+                "_inherited_template_parameter_ast_id": inherited_id,
+            }
         declaration_span, reason = _source_span(node.get("range"), filename, expansion=True)
         if declaration_span is None:
             return {"expression": None, "kind": template_kind, "unavailable_reason": reason}
@@ -459,8 +472,7 @@ def _default_argument(node, filename, *, template_kind=None):
     }
     if template_kind is not None:
         result["kind"] = template_kind
-    else:
-        result["argument_origin"] = argument_origin
+    result["argument_origin"] = argument_origin if template_kind is None else "written"
     if expression_node is not None:
         result["macro_provenance"] = _macro_provenance(expression_node, filename)
     return result
@@ -491,6 +503,109 @@ def _source_slice(source, start, stop):
         "line_range": [contents.count(b"\n", 0, start) + 1, contents.count(b"\n", 0, stop) + 1],
         "location_kind": "written_source",
     }, None
+
+
+def _macro_replacement_default(node, fallback_filename):
+    """Recover an authored macro-default token when nested macro locations cross files.
+
+    Clang can report a default argument such as ``= NULL`` at the final system
+    header expansion of ``NULL`` while the parameter itself came from a
+    first-party macro. In that case, use the AST spelling point to find the
+    containing source macro definition and the expansion point to confirm which
+    macro was invoked. The expression text and source span are read from that
+    definition; no replacement text is synthesized.
+    """
+    source_range = node.get("range", {})
+    begin = source_range.get("begin", {})
+    spelling = _resolved_location(begin, fallback_filename)
+    expansion = _resolved_location(begin, fallback_filename, expansion=True)
+    if spelling is None or expansion is None:
+        return None
+    try:
+        spelling_bytes = source_text(ROOT / spelling["source"])
+        expansion_bytes = source_text(ROOT / expansion["source"])
+    except OSError:
+        return None
+
+    invocation = re.match(rb"[A-Za-z_][A-Za-z_0-9]*", expansion_bytes[expansion["offset"] :])
+    if invocation is None:
+        return None
+    invoked_name = invocation.group().decode("ascii")
+
+    directive_start = 0
+    definition = None
+    while directive_start < len(spelling_bytes):
+        newline = spelling_bytes.find(b"\n", directive_start)
+        line_stop = len(spelling_bytes) if newline < 0 else newline + 1
+        first_line = spelling_bytes[directive_start:line_stop].rstrip(b"\r\n")
+        directive_stop = line_stop
+        continued = first_line.endswith(b"\\")
+        while continued and directive_stop < len(spelling_bytes):
+            newline = spelling_bytes.find(b"\n", directive_stop)
+            next_stop = len(spelling_bytes) if newline < 0 else newline + 1
+            line = spelling_bytes[directive_stop:next_stop].rstrip(b"\r\n")
+            continued = line.endswith(b"\\")
+            directive_stop = next_stop
+        if directive_start <= spelling["offset"] < directive_stop:
+            if first_line.lstrip().startswith(b"#define"):
+                definition = (directive_start, directive_stop)
+            break
+        directive_start = directive_stop
+    if definition is None:
+        return None
+
+    start, stop = definition
+    logical = []
+    byte_offsets = []
+    cursor = start
+    while cursor < stop:
+        if spelling_bytes[cursor : cursor + 2] == b"\\\n":
+            cursor += 2
+            continue
+        if spelling_bytes[cursor : cursor + 3] == b"\\\r\n":
+            cursor += 3
+            continue
+        logical.append(chr(spelling_bytes[cursor]))
+        byte_offsets.append(cursor)
+        cursor += 1
+    text = "".join(logical)
+    macro = re.match(r"\s*#\s*define\s+([A-Za-z_][A-Za-z_0-9]*)", text)
+    if macro is None or macro.group(1) != invoked_name:
+        return None
+    body_start = macro.end()
+    if body_start < len(text) and text[body_start] == "(":
+        depth = 1
+        body_start += 1
+        while body_start < len(text) and depth:
+            if text[body_start] == "(":
+                depth += 1
+            elif text[body_start] == ")":
+                depth -= 1
+            body_start += 1
+        if depth:
+            return None
+    while body_start < len(text) and text[body_start].isspace():
+        body_start += 1
+    body = text[body_start:]
+    separator = _default_separator(body)
+    if separator is None:
+        return None
+    expression_start = body_start + separator + 1
+    expression_stop = len(text)
+    while expression_start < expression_stop and text[expression_start].isspace():
+        expression_start += 1
+    while expression_stop > expression_start and text[expression_stop - 1].isspace():
+        expression_stop -= 1
+    if expression_start == expression_stop:
+        return None
+    span, _ = _source_slice(
+        spelling["source"],
+        byte_offsets[expression_start],
+        byte_offsets[expression_stop - 1] + 1,
+    )
+    if span is not None:
+        span["location_kind"] = "macro_spelling_source"
+    return span
 
 
 def restore_source_files(roots):
@@ -888,6 +1003,7 @@ def declarations(
     _friend_owner=None,
     _friend_template_context=(),
     collect_conditions=False,
+    _parent_record_id=None,
 ):
     """Walk declaration contexts, retaining protected/private candidates for review.
 
@@ -922,9 +1038,11 @@ def declarations(
                 "ast_id": node.get("id"),
                 "previous_decl": node.get("previousDecl"),
                 "parent_context": node.get("parentDeclContextId"),
+                "_parent_record_id": _parent_record_id,
                 "name": "::".join((*scope, name)),
                 "kind": kind,
                 "signature": node.get("type", {}).get("qualType"),
+                "written_static": node.get("storageClass") == "static",
                 "static": node.get("storageClass") == "static",
                 "template_context": list(template_context),
                 "template_arguments": [
@@ -953,12 +1071,23 @@ def declarations(
                     for child in node.get("inner", [])
                     if child["kind"] in {"TemplateTypeParmDecl", "NonTypeTemplateParmDecl", "TemplateTemplateParmDecl"}
                 ],
+                # Kept only until `reconcile_declarations` resolves Clang's
+                # `defaultArg.inherited from` edges for template parameters.
+                "_template_parameter_nodes": [
+                    child
+                    for child in node.get("inner", [])
+                    if child["kind"] in {"TemplateTypeParmDecl", "NonTypeTemplateParmDecl", "TemplateTemplateParmDecl"}
+                ],
                 "source": path.relative_to(ROOT).as_posix(),
                 "line": location.get("line")
                 or (source_text(path).count(b"\n", 0, location["offset"]) + 1 if "offset" in location else None),
                 "offset": location.get("offset"),
                 "access": access,
+                "written_virtual": node.get("virtual", False),
                 "virtual": node.get("virtual", False),
+                "_has_override_attribute": any(
+                    child.get("kind") == "OverrideAttr" for child in node.get("inner", [])
+                ),
                 "pure": node.get("pure", False),
                 "bases": _portable_base_metadata(node.get("bases", [])),
                 "parameters": [
@@ -1076,6 +1205,11 @@ def declarations(
         else "public"
     )
     children = node.get("inner", [])
+    nested_parent_record_id = (
+        node.get("id")
+        if kind in {"CXXRecordDecl", "ClassTemplateSpecializationDecl", "ClassTemplatePartialSpecializationDecl"}
+        else _parent_record_id
+    )
     for index, child in enumerate(children):
         if child["kind"] == "AccessSpecDecl":
             child_access = child["access"]
@@ -1098,6 +1232,7 @@ def declarations(
                 _friend_owner,
                 _friend_template_context,
                 collect_conditions,
+                nested_parent_record_id,
             )
 
 
@@ -1111,6 +1246,64 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
     endpoint IDs never use spelling guesses or synthetic declaration identities.
     """
     indexed = {entry["ast_id"]: entry for entry in entries if entry.get("ast_id")}
+    template_parameter_nodes = {
+        parameter_node["id"]: (parameter_node, entry["source"])
+        for entry in entries
+        for parameter_node in entry.get("_template_parameter_nodes", [])
+        if parameter_node.get("id")
+    }
+
+    def resolve_template_default(node, filename, seen=()):
+        """Follow Clang default-argument links to the declaration that wrote it."""
+        inherited_from = node.get("defaultArg", {}).get("inherited from", {})
+        inherited_id = inherited_from.get("id") if isinstance(inherited_from, dict) else None
+        if not inherited_id:
+            kind = {
+                "TemplateTypeParmDecl": "type",
+                "NonTypeTemplateParmDecl": "expression",
+                "TemplateTemplateParmDecl": "template",
+            }[node["kind"]]
+            return _default_argument(node, filename, template_kind=kind)
+        if inherited_id in seen:
+            return {
+                "expression": None,
+                "kind": {
+                    "TemplateTypeParmDecl": "type",
+                    "NonTypeTemplateParmDecl": "expression",
+                    "TemplateTemplateParmDecl": "template",
+                }[node["kind"]],
+                "unavailable_reason": "inherited_template_default_cycle",
+                "argument_origin": "inherited",
+            }
+        prior = template_parameter_nodes.get(inherited_id)
+        if prior is None:
+            return {
+                "expression": None,
+                "kind": {
+                    "TemplateTypeParmDecl": "type",
+                    "NonTypeTemplateParmDecl": "expression",
+                    "TemplateTemplateParmDecl": "template",
+                }[node["kind"]],
+                "unavailable_reason": "inherited_template_default_source_unavailable",
+                "argument_origin": "inherited",
+            }
+        prior_node, prior_filename = prior
+        recovered = resolve_template_default(prior_node, prior_filename, (*seen, inherited_id))
+        recovered.pop("_inherited_template_parameter_ast_id", None)
+        if recovered.get("expression") is not None:
+            recovered.pop("unavailable_reason", None)
+        recovered["argument_origin"] = "inherited"
+        return recovered
+
+    for entry in entries:
+        for index, parameter in enumerate(entry.get("template_parameters", [])):
+            if not parameter.get("default_argument"):
+                continue
+            parameter_nodes = entry.get("_template_parameter_nodes", [])
+            if index >= len(parameter_nodes):
+                continue
+            parameter["default_argument"] = resolve_template_default(parameter_nodes[index], entry["source"])
+
     for entry in entries:
         previous = indexed.get(entry.get("previous_decl"))
         parent = indexed.get(entry.get("parent_context"))
@@ -1152,6 +1345,90 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
                         "unavailable_reason": "inherited_macro_default_source_unavailable",
                         "argument_origin": "inherited",
                     }
+    def previous_declaration_chain(entry):
+        """Follow only explicit Clang `previousDecl` IDs in this invocation."""
+        chain = [entry]
+        seen = {entry.get("ast_id")}
+        current = entry
+        while current.get("previous_decl"):
+            previous_id = current["previous_decl"]
+            if previous_id in seen:
+                return chain, "previous_declaration_cycle"
+            previous = indexed.get(previous_id)
+            if previous is None:
+                return chain, "previous_declaration_not_in_snapshot"
+            chain.append(previous)
+            seen.add(previous_id)
+            current = previous
+        return chain, None
+
+    def resolve_effective_flags(entry):
+        """Resolve static/virtual properties from linked declarations only.
+
+        Written AST facts remain occurrence-local. Effective static follows the
+        exact redeclaration chain. Effective virtual also uses Clang's explicit
+        OverrideAttr; when the AST omits override relationships for a derived
+        member, the result stays unknown rather than matching by spelling.
+        """
+        chain, chain_error = previous_declaration_chain(entry)
+        if chain_error:
+            entry["static"] = None
+            entry["effective_static_status"] = f"unresolved_{chain_error}"
+            entry["virtual"] = None
+            entry["effective_virtual_status"] = f"unresolved_{chain_error}"
+            return
+
+        root = chain[-1]
+        via_previous = len(chain) > 1
+        if "written_static" in root:
+            entry["static"] = root["written_static"]
+            entry["effective_static_status"] = (
+                "resolved_from_previous_decl" if via_previous else "resolved_from_self"
+            )
+        else:
+            entry["static"] = entry.get("static")
+            entry["effective_static_status"] = "unresolved_written_static_unavailable"
+
+        if not any("written_virtual" in candidate for candidate in chain):
+            entry["effective_virtual_status"] = "unresolved_written_virtual_unavailable"
+            return
+        if root.get("kind") == "CXXConstructorDecl":
+            entry["virtual"] = False
+            entry["effective_virtual_status"] = "resolved_nonvirtual_constructor"
+            return
+        if any(candidate.get("written_virtual") is True for candidate in chain):
+            entry["virtual"] = True
+            entry["effective_virtual_status"] = (
+                "resolved_from_previous_decl_virtual_specifier" if via_previous
+                else "resolved_from_virtual_specifier"
+            )
+            return
+        if any(candidate.get("_has_override_attribute") for candidate in chain):
+            entry["virtual"] = True
+            entry["effective_virtual_status"] = "resolved_from_override_attribute"
+            return
+        if root.get("written_static") is True:
+            entry["virtual"] = False
+            entry["effective_virtual_status"] = "resolved_nonvirtual_static_member"
+            return
+        if root.get("kind") not in {"CXXMethodDecl", "CXXDestructorDecl", "CXXConversionDecl"}:
+            entry["virtual"] = False
+            entry["effective_virtual_status"] = "resolved_nonvirtual_nonmethod"
+            return
+
+        parent = indexed.get(root.get("_parent_record_id") or root.get("parent_context"))
+        if parent is None:
+            entry["virtual"] = None
+            entry["effective_virtual_status"] = "unresolved_parent_record_not_in_snapshot"
+        elif not parent.get("bases"):
+            entry["virtual"] = False
+            entry["effective_virtual_status"] = "resolved_nonvirtual_no_base_record"
+        else:
+            entry["virtual"] = None
+            entry["effective_virtual_status"] = "unresolved_inherited_override_not_exposed"
+
+    for entry in entries:
+        resolve_effective_flags(entry)
     if friend_relationships is not None:
         resolve_friend_relationships(entries, friend_relationships)
     for entry in entries:
@@ -1159,6 +1436,9 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
             value = entry.pop(field, None)
             if field == "ast_id":
                 entry["_inventory_ast_id"] = value
+        entry.pop("_template_parameter_nodes", None)
+        entry.pop("_has_override_attribute", None)
+        entry.pop("_parent_record_id", None)
     resolved = resolve_using_targets(entries)
     collect_declaration_conditions(resolved, declaration_conditions)
     return resolved

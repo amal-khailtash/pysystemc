@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Preserve written static and virtual declaration flags separately from their
+  effective values, retaining compiler resolution provenance in inventory
+  variants and leaving unavailable inheritance information explicit.
+
 - Record parallel native FIFO value/stream and port/interface checks, including
   meaningful 137-bit values, trace transitions and selected lifetime ordering.
 

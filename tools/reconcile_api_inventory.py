@@ -16,6 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 _SEMANTIC_VARIANT_FIELDS = (
     "static",
     "virtual",
+    "written_static",
+    "written_virtual",
+    "effective_static_status",
+    "effective_virtual_status",
     "pure",
     "bases",
     "parameters",
@@ -118,8 +122,9 @@ def reconcile(snapshots):
 
     The top-level declaration fields remain the first encountered snapshot's
     canonical view for compatibility. Each variant separately deep-copies the
-    extracted static/virtual/pure flags, bases, parameter/default metadata,
-    template metadata, access and using-declaration targets. Missing fields remain
+    extracted effective and written static/virtual flags and their resolution
+    statuses, pure flags, bases, parameter/default metadata, template metadata,
+    access and using-declaration targets. Missing fields remain
     absent, distinct from explicit false or empty defaults. Variants are audit evidence; they do not
     infer or update public support status.
     Optional friendship sidecars retain independent source-site variants and
