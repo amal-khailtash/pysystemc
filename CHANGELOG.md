@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache resolved native signal-value conversion adapters by full datatype and
+  writer-policy specialization, preserving current values and borrowed references.
+  A matched 20,000-read int/257-bit workload used 56.1% less elapsed time across
+  ten pairs.
+
 - Cache generic TLM endian converter proxies for resolved string word names,
   preserving arbitrary native word types and payload/buffer semantics. A matched
   20,000 request/response workload used 26.7% less elapsed time across ten pairs.

@@ -3,6 +3,9 @@
 import cppyy
 
 _PREFIX = "sc_core::sc_signal_t<"
+# Keep only full native type names and free-function dispatch proxies here.
+# Signals and their borrowed value references remain owned by their callers.
+_value_dispatches = {}
 
 
 def sc_signal_value(signal):
@@ -28,14 +31,20 @@ def sc_signal_value(signal):
         name = getattr(base, "__cpp_name__", "")
         if not name.startswith(_PREFIX):
             continue
-        arguments = name[len(_PREFIX) : -1]
-        depth = 0
-        for index, character in enumerate(arguments):
-            depth += (character in "<([") - (character in ">)]")
-            if character == "," and depth == 0:
-                datatype = arguments[:index].strip()
-                policy = f"(sc_core::sc_writer_policy)({arguments[index + 1 :].strip()})"
-                return cppyy.gbl.pysystemc_signals.value_dispatch[datatype, policy].get(signal)
+        dispatch = _value_dispatches.get(name)
+        if dispatch is None:
+            arguments = name[len(_PREFIX) : -1]
+            depth = 0
+            for index, character in enumerate(arguments):
+                depth += (character in "<([") - (character in ">)]")
+                if character == "," and depth == 0:
+                    datatype = arguments[:index].strip()
+                    policy = f"(sc_core::sc_writer_policy)({arguments[index + 1 :].strip()})"
+                    dispatch = cppyy.gbl.pysystemc_signals.value_dispatch[datatype, policy].get
+                    _value_dispatches[name] = dispatch
+                    break
+        if dispatch is not None:
+            return dispatch(signal)
     raise TypeError("sc_signal_value requires a live native sc_signal_t-derived signal")
 
 
