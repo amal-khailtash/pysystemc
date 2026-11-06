@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Retain generic native `sc_ref` and `sc_cref` template proxies, preserving
+  per-value type deduction and reference-owner lifetime. A matched 20,000-call
+  custom/257-bit wrapper workload used 10.7% less elapsed time across ten pairs,
+  with ten paired wins.
+
 - Cache exact native datatype enum formatters lazily, preserving unknown-value
   spellings, numeric fallback and the native overload selector. A matched
   20,000-conversion workload used 17.3% less elapsed time across ten pairs,
