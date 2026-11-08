@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native binary arithmetic, bitwise and comparison dispatch
+  by exact ordered operand types, preserving current values and independently
+  owned native results. A matched 20,000-addition integer/fixed-point workload
+  used 11.8% less elapsed time across ten pairs, with ten paired wins.
+
 - Cache successful native dispatch for named fixed-point `add`, `sub`, `mult`
   and `div` calls by exact output and operand types, preserving fresh values,
   output ownership and native overload behavior. A matched 20,000-call `add`

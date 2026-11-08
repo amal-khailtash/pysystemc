@@ -60,6 +60,7 @@ def named_function(name):
 
 def _binary(operation, reverse=False):
     """Build a native expression wrapper with exact argument dispatch."""
+    dispatches = {}
 
     def apply(owner, other):
         """Return an independent native result or a comparison boolean.
@@ -77,8 +78,13 @@ def _binary(operation, reverse=False):
         Python floats use double. Native arithmetic preconditions apply.
         """
         left, right = (other, owner) if reverse else (owner, other)
-        adapter = cppyy.gbl.pysystemc_datatypes.NumericOperators[_argument_type(left), _argument_type(right)]
-        return getattr(adapter, operation)(left, right)
+        key = (_argument_type(left), _argument_type(right))
+        native = dispatches.get(key)
+        if native is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.NumericOperators[key]
+            native = getattr(adapter, operation)
+            dispatches[key] = native
+        return native(left, right)
 
     return apply
 
