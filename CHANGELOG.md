@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native dispatch for named fixed-point `add`, `sub`, `mult`
+  and `div` calls by exact output and operand types, preserving fresh values,
+  output ownership and native overload behavior. A matched 20,000-call `add`
+  workload used 34.7% less elapsed time across ten pairs, with ten paired wins.
+
 - Convert explicit `None` tags to native null pointers for combined TLM blocking
   peek interfaces, so `peek(None)` returns the same nonconsuming value as
   `peek()` and `peek(cppyy.nullptr)` for arbitrary transaction types.

@@ -21,6 +21,7 @@ def _argument_type(value):
 def named_function(name):
     """Build an exact native output-parameter arithmetic callable."""
     native = getattr(cppyy.gbl.sc_dt, name)
+    dispatches = {}
 
     def apply(target, left, right):
         """Write native arithmetic into existing output storage.
@@ -43,10 +44,13 @@ def named_function(name):
         overload-specific native alias behavior; no blanket alias guarantee is
         made.
         """
-        adapter = cppyy.gbl.pysystemc_datatypes.NumericFunctions[
-            type(target), _argument_type(left), _argument_type(right)
-        ]
-        getattr(adapter, "perform_" + name)(target, left, right)
+        key = (type(target), _argument_type(left), _argument_type(right))
+        operation = dispatches.get(key)
+        if operation is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.NumericFunctions[key]
+            operation = getattr(adapter, "perform_" + name)
+            dispatches[key] = operation
+        operation(target, left, right)
 
     apply.__overload__ = native.__overload__
     apply.__name__ = name
