@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native scalar bit/logic bitwise and comparison dispatch by
+  exact ordered operand types, preserving current values, fresh owned results
+  and native reports. A matched 20,000-call `&` workload used 10.2% less elapsed
+  time across ten pairs, with ten paired wins.
+
 - Cache successful native numeric left/right shift dispatch by exact value and
   count types, preserving fresh result ownership and current input values. A
   matched 20,000-call integer/fixed-point workload used 19.1% less elapsed time
