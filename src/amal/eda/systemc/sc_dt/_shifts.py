@@ -10,6 +10,8 @@ cppyy.include(str(Path(__file__).with_name("shift_adapters.h")))
 def _shift(direction):
     """Build a native shift wrapper preserving value and count types."""
 
+    dispatches = {}
+
     def apply(value, count):
         """Return an independently owned native shifted value.
 
@@ -23,8 +25,13 @@ def _shift(direction):
         Value and count are borrowed for a GIL-held call. Native shift-count
         preconditions apply. No waits, callbacks or source references persist.
         """
-        operation = cppyy.gbl.pysystemc_datatypes.ShiftOperators[type(value), _native_argument_type(count)]
-        return getattr(operation, direction)(value, count)
+        key = (type(value), _native_argument_type(count))
+        native = dispatches.get(key)
+        if native is None:
+            operation = cppyy.gbl.pysystemc_datatypes.ShiftOperators[key]
+            native = getattr(operation, direction)
+            dispatches[key] = native
+        return native(value, count)
 
     return apply
 
