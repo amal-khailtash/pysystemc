@@ -27,6 +27,8 @@ def _constructor(native_type):
     native_assignment = native_type.__assign__
     string_assignment = native_assignment.__overload__("const char*")
 
+    constructions = {}
+
     def construct(owner, *args, **kwargs):
         """Initialize owned native integer storage from an exact value.
 
@@ -52,7 +54,15 @@ def _constructor(native_type):
             if type(value) is int:
                 return string_constructor(owner, _integer_text(value))
             if hasattr(type(value), "__cpp_name__"):
-                converted = cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, type(value)].construct(value)
+                key = type(value)
+                call = constructions.get(key)
+                if call is None:
+                    call = cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, key].construct
+                    converted = call(value)
+                    result = copy_constructor(owner, converted)
+                    constructions[key] = call
+                    return result
+                converted = call(value)
                 return copy_constructor(owner, converted)
         return native(owner, *args, **kwargs)
 
