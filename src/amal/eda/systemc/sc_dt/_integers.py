@@ -59,6 +59,8 @@ def _constructor(native_type):
     construct.__overload__ = native.__overload__
     native_type.__init__ = construct
 
+    assignments = {}
+
     def assign(owner, source):
         """Assign exact native integer storage and return the live target.
 
@@ -75,7 +77,14 @@ def _constructor(native_type):
         if type(source) is int:
             return string_assignment(owner, _integer_text(source))
         if hasattr(type(source), "__cpp_name__"):
-            return cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, type(source)].assign(owner, source)
+            key = type(source)
+            call = assignments.get(key)
+            if call is None:
+                call = cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, key].assign
+                result = call(owner, source)
+                assignments[key] = call
+                return result
+            return call(owner, source)
         return native_assignment(owner, source)
 
     assign.__overload__ = native_assignment.__overload__

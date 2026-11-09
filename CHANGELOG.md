@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native integer-template assignment dispatch by exact source
+  type, preserving target identity, current values and conversion reports.
+  A matched 20,000-call signed/unsigned and vector-source assignment workload
+  used 33.3% less elapsed time across ten pairs, with ten paired wins.
+
 - Cache successful native vector constructor dispatch by exact source type
   after native construction and copying succeed, preserving fresh owned
   storage and current values. A matched 20,000-call arbitrary-width vector
