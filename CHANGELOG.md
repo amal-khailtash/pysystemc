@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native vector assignment dispatch by exact source type,
+  preserving target identity, current values and failure recovery. A matched
+  20,000-call arbitrary-width vector workload used 17.6% less elapsed time
+  across ten pairs, with ten paired wins.
+
 - Capture canonical native TLM synchronization enum metadata once when
   registering nonblocking transport callbacks, preserving callback mutation,
   result validation and error recovery. A matched 20,000-call forward/backward

@@ -34,6 +34,8 @@ def _adapt_vector(native_type):
             return copy(owner, result)
         return original(owner, *args, **kwargs)
 
+    assignments = {}
+
     def assign(owner, source):
         """Assign a native vector source and return the live target.
 
@@ -47,7 +49,14 @@ def _adapt_vector(native_type):
         Calls hold the GIL and never suspend or retain source references.
         """
         if hasattr(type(source), "__cpp_name__"):
-            return cppyy.gbl.pysystemc_datatypes.vector_assign[native_type, type(source)](owner, source)
+            key = type(source)
+            call = assignments.get(key)
+            if call is None:
+                call = cppyy.gbl.pysystemc_datatypes.vector_assign[native_type, key]
+                result = call(owner, source)
+                assignments[key] = call
+                return result
+            return call(owner, source)
         return assignment(owner, source)
 
     construct.__overload__ = original.__overload__
