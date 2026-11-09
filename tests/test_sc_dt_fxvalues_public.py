@@ -63,7 +63,7 @@ def test_sc_dt_fxvalues_public_inventory_and_native_parity(tmp_path):
         cwd=tmp_path,
         capture_output=True,
         text=True,
-        timeout=90,
+        timeout=60,
     )
     assert native.returncode == 0, native.stdout + native.stderr
     python_records = semantic_records(python_output)

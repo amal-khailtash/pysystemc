@@ -91,6 +91,7 @@ def _binary(operation, reverse=False):
 
 def _compound(operation):
     """Build a native compound expression on the existing numeric owner."""
+    dispatches = {}
 
     def apply(owner, source):
         """Mutate numeric storage and return the original Python owner.
@@ -107,8 +108,13 @@ def _compound(operation):
         """
         if operation == "assign" and type(source) is int and not -(1 << 31) <= source < (1 << 31):
             source = _integer_text(source)
-        adapter = cppyy.gbl.pysystemc_datatypes.NumericMutation[type(owner), _argument_type(source)]
-        getattr(adapter, operation)(owner, source)
+        key = (type(owner), _argument_type(source))
+        native = dispatches.get(key)
+        if native is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.NumericMutation[key]
+            native = getattr(adapter, operation)
+            dispatches[key] = native
+        native(owner, source)
         return owner
 
     return apply

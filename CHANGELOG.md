@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native compound operator dispatch by exact owner and source
+  types, preserving in-place mutation, current values and native report behavior.
+  A matched 20,000-call integer/fixed-point `+=` workload used 15.9% less elapsed
+  time across ten pairs, with ten paired wins.
+
 - Cache successful native binary arithmetic, bitwise and comparison dispatch
   by exact ordered operand types, preserving current values and independently
   owned native results. A matched 20,000-addition integer/fixed-point workload
