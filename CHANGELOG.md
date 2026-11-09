@@ -8,6 +8,12 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Cache successful native vector constructor dispatch by exact source type
+  after native construction and copying succeed, preserving fresh owned
+  storage and current values. A matched 20,000-call arbitrary-width vector
+  constructor workload used 8.6% less elapsed time across ten pairs,
+  with ten paired wins.
+
 - Cache successful native vector assignment dispatch by exact source type,
   preserving target identity, current values and failure recovery. A matched
   20,000-call arbitrary-width vector workload used 17.6% less elapsed time
