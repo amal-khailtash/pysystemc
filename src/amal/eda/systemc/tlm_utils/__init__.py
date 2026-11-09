@@ -162,6 +162,10 @@ def _checked_socket_callback(method, callback):
     guarded waits and exceptions retain the registration bridge's native contract.
     """
 
+    if method in ("register_nb_transport_fw", "register_nb_transport_bw"):
+        sync_type = cppyy.gbl.tlm.tlm_sync_enum
+        sync_values = (cppyy.gbl.tlm.TLM_ACCEPTED, cppyy.gbl.tlm.TLM_UPDATED, cppyy.gbl.tlm.TLM_COMPLETED)
+
     def checked(*args):
         """Invoke the retained callback and enforce its native return contract."""
         result = callback(*args)
@@ -177,9 +181,9 @@ def _checked_socket_callback(method, callback):
             if not 0 <= result < 2**32:
                 raise ValueError("transport_dbg result outside unsigned int range")
         elif method in ("register_nb_transport_fw", "register_nb_transport_bw"):
-            if isinstance(result, bool) or not isinstance(result, cppyy.gbl.tlm.tlm_sync_enum):
+            if isinstance(result, bool) or not isinstance(result, sync_type):
                 raise TypeError(f"{method} callback must return native tlm_sync_enum")
-            if result not in (cppyy.gbl.tlm.TLM_ACCEPTED, cppyy.gbl.tlm.TLM_UPDATED, cppyy.gbl.tlm.TLM_COMPLETED):
+            if result not in sync_values:
                 raise ValueError(f"{method} callback returned invalid tlm_sync_enum")
         return result
 

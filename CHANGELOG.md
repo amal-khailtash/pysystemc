@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Capture canonical native TLM synchronization enum metadata once when
+  registering nonblocking transport callbacks, preserving callback mutation,
+  result validation and error recovery. A matched 20,000-call forward/backward
+  socket workload used 7.8% less elapsed time across ten pairs, with ten wins.
+
 - Cache successful native text and boolean-bit concatenation dispatch by exact
   operand type and direction, preserving live borrowed views and native result
   ownership. A matched 20,000-call text-concatenation workload used
