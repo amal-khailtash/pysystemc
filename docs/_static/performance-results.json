@@ -647,6 +647,23 @@
         "build/performance/native-blocking-cache/paired.json.acceptance.json"
       ],
       "limits": "Timed waits and integer return only; no reset/kill characterization for candidate, no confirmation or adoption/package gate. Native parity and cold/warm exceptions, null/unsupported inputs, transient proxy release checked."
+    },
+    {
+      "id": "member-scheduler-timed-wait-cache",
+      "date": "2026-11-10",
+      "status": "rejected",
+      "before_ms": 367.503956,
+      "candidate_ms": 354.009379,
+      "elapsed_reduction_percent": 3.671954214283346,
+      "pairs": 3,
+      "wins": 3,
+      "scope": "Complete warm module member wait(sc_time) calls, each suspending for 1 ns; checksum included.",
+      "reason": "Below the 5% feasibility threshold; production unchanged.",
+      "evidence": [
+        "build/performance/member-scheduler-cache/paired.json",
+        "build/performance/member-scheduler-cache/paired.json.acceptance.json"
+      ],
+      "limits": "Timed sc_time member waits only. No native next_trigger throughput, reset/kill, expression or package acceptance for this candidate. Controlled actual factory checks cold/warm exceptions, unwind, current values, closure/method isolation and borrowed proxy release."
     }
   ],
   "current_working_tree_acceptance": {

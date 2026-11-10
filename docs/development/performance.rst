@@ -220,3 +220,24 @@ The timing includes checksum bookkeeping. No ten-pair confirmation or broader
 reset/kill, package, startup, or end-to-end performance claim follows from this
 screen. Evidence is retained under
 ``build/performance/native-blocking-cache/``.
+
+Member scheduling timed-wait screen
+-----------------------------------
+
+A cache of successfully used member scheduling callables, retained within each
+owner and method closure by argument type spellings, was screened with complete
+module member ``wait(sc_time)`` calls. Three serialized fresh-process pairs of
+20,000 waits measured 367.504 ms before and 354.009 ms for the candidate (3.67%
+lower, three paired wins). The candidate was rejected below the 5% feasibility
+threshold; production remains unchanged and no adopted workload was added.
+
+Native reference member waits matched the resume count and simulation time.
+Two duration values confirmed current arguments after warming the signature;
+invalid arguments were rejected without advancing simulation. A separate
+controlled factory fixture checked cold and warm errors, scheduler unwind,
+closure and method isolation, current values and borrowed-object release.
+Those controlled checks do not establish native reset/kill or allocator-failure
+behavior. Timing includes checksum bookkeeping. Native method-process
+``next_trigger`` throughput and expression lifetimes were not measured in this
+screen. Evidence is retained under
+``build/performance/member-scheduler-cache/``.
