@@ -425,6 +425,11 @@ def test_repository_example_inventory_reconciles_all_python_files():
     mapping = checker.inventory_mapping(ROOT)
 
     assert mapping["classification_reconciles"] is True, mapping
+    assert "examples/counter/py/tb.py" in mapping["runnable_entrypoints"]
+    assert {
+        "path": "examples/counter/py/system.py",
+        "role": "tutorial support module",
+    } in mapping["other_python_files"]
 
 
 class _FakeDistribution:
@@ -510,15 +515,19 @@ def test_runtime_source_parity_checks_exact_bytes_and_ignores_native_data(tmp_pa
     assert parity["mismatches"] == []
 
 
-def test_checkout_runtime_source_roster_matches_the_111_file_freeze():
+def test_checkout_runtime_source_roster_includes_reviewed_native_adapters():
     """Guard the currently reviewed Python/C++ runtime source roster without imports.
 
     Returns:
-        None: The checkout roster contains exactly the frozen 111 runtime source files.
+        None: The roster includes the integer and event-registration headers added
+        since the historical 111-file fixture, alongside its existing sources.
     """
     checker = _load_checker()
 
-    assert len(checker._checkout_runtime_sources(ROOT)) == FROZEN_CHECKOUT_RUNTIME_SOURCE_COUNT
+    roster = checker._checkout_runtime_sources(ROOT)
+    assert len(roster) == FROZEN_CHECKOUT_RUNTIME_SOURCE_COUNT + 2
+    assert "amal/eda/systemc/sc_dt/integers.h" in roster
+    assert "amal/eda/systemc/sc_core/event_list_registration.h" in roster
 
 
 def test_runtime_source_parity_accepts_additional_legitimate_checkout_sources(tmp_path):

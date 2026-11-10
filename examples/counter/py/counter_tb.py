@@ -2,7 +2,7 @@
 
 from amal.eda.systemc import main, sc_core, sc_dt
 
-from counter import Counter
+from system import Counter
 
 
 def sc_main(args: list) -> int:

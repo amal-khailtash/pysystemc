@@ -52,6 +52,7 @@ REGRESSION_TEST_FILES = ("test_upstream.py", "test_tutorials.py")
 TUTORIAL_ENTRYPOINTS = (
     "examples/helloworld/py/helloworld.py",
     "examples/counter/py/counter_tb.py",
+    "examples/counter/py/tb.py",
     "examples/simple_fifo/py/simple_fifo.py",
     "examples/toy/event_cancel.py",
     "examples/toy/mixed_gate.py",
@@ -64,10 +65,9 @@ TUTORIAL_ENTRYPOINTS = (
 OTHER_PYTHON_FILES = (
     {"path": "examples/counter/py/counter.py", "role": "tutorial support module"},
     {"path": "examples/run_sysc_cpp.py", "role": "native runner wrapper"},
-    {"path": "examples/counter/py/system.py", "role": "empty stub"},
-    {"path": "examples/counter/py/tb.py", "role": "empty stub"},
+    {"path": "examples/counter/py/system.py", "role": "tutorial support module"},
 )
-"""Four remaining Python files, counted outside the runnable-entrypoint set."""
+"""Three support/runner files counted outside the runnable-entrypoint set."""
 
 DEFAULT_TUTORIALS = (
     ("helloworld/py/helloworld.py", "Simulation finished"),
