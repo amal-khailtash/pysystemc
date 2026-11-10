@@ -140,3 +140,24 @@ void Owner::callback() {}
     assert value["written_static"] is False
     assert value["static"] is None
     assert value["effective_static_status"] == "unresolved_previous_declaration_not_in_snapshot"
+
+
+def test_nonmethod_virtual_applicability_survives_missing_redeclarations(tmp_path, monkeypatch):
+    """A missing record declaration cannot make a nonmethod virtual property unknown."""
+    source = """namespace fixture {
+struct Owner;
+struct Owner { Owner(); };
+Owner::Owner() {}
+}
+"""
+    raw = _compile_entries(source, tmp_path, monkeypatch)
+    missing = {entry["previous_decl"] for entry in raw if entry.get("previous_decl")}
+    entries = _INVENTORY["reconcile_declarations"]([entry for entry in raw if entry["ast_id"] not in missing])
+    record = next(entry for entry in entries if entry["name"] == "fixture::Owner")
+    constructor = next(entry for entry in entries if entry["name"] == "fixture::Owner::Owner")
+    assert record["static"] is None
+    assert record["effective_static_status"] == "unresolved_previous_declaration_not_in_snapshot"
+    assert record["virtual"] is False
+    assert record["effective_virtual_status"] == "resolved_nonvirtual_nonmethod"
+    assert constructor["virtual"] is False
+    assert constructor["effective_virtual_status"] == "resolved_nonvirtual_constructor"

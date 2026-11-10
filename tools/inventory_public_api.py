@@ -1370,12 +1370,19 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
         OverrideAttr; when the AST omits override relationships for a derived
         member, the result stays unknown rather than matching by spelling.
         """
+        kind = entry.get("kind")
+        nonvirtual_status = (
+            "resolved_nonvirtual_constructor" if kind == "CXXConstructorDecl"
+            else "resolved_nonvirtual_nonmethod"
+            if kind not in {"CXXMethodDecl", "CXXDestructorDecl", "CXXConversionDecl"}
+            else None
+        )
         chain, chain_error = previous_declaration_chain(entry)
         if chain_error:
             entry["static"] = None
             entry["effective_static_status"] = f"unresolved_{chain_error}"
-            entry["virtual"] = None
-            entry["effective_virtual_status"] = f"unresolved_{chain_error}"
+            entry["virtual"] = False if nonvirtual_status else None
+            entry["effective_virtual_status"] = nonvirtual_status or f"unresolved_{chain_error}"
             return
 
         root = chain[-1]
@@ -1389,12 +1396,12 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
             entry["static"] = entry.get("static")
             entry["effective_static_status"] = "unresolved_written_static_unavailable"
 
+        if nonvirtual_status:
+            entry["virtual"] = False
+            entry["effective_virtual_status"] = nonvirtual_status
+            return
         if not any("written_virtual" in candidate for candidate in chain):
             entry["effective_virtual_status"] = "unresolved_written_virtual_unavailable"
-            return
-        if root.get("kind") == "CXXConstructorDecl":
-            entry["virtual"] = False
-            entry["effective_virtual_status"] = "resolved_nonvirtual_constructor"
             return
         if any(candidate.get("written_virtual") is True for candidate in chain):
             entry["virtual"] = True
@@ -1410,10 +1417,6 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
         if root.get("written_static") is True:
             entry["virtual"] = False
             entry["effective_virtual_status"] = "resolved_nonvirtual_static_member"
-            return
-        if root.get("kind") not in {"CXXMethodDecl", "CXXDestructorDecl", "CXXConversionDecl"}:
-            entry["virtual"] = False
-            entry["effective_virtual_status"] = "resolved_nonvirtual_nonmethod"
             return
 
         parent = indexed.get(root.get("_parent_record_id") or root.get("parent_context"))
