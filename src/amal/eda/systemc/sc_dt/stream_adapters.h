@@ -4,6 +4,8 @@
 
 #include <istream>
 #include <ostream>
+#include <sstream>
+#include <string>
 namespace pysystemc_datatypes
 {
 /** @brief Select the native datatype insertion and extraction overloads.
@@ -19,6 +21,18 @@ struct StreamOperators
   static std::ostream& insert(std::ostream& stream, const Value& value)
   {
     return stream << value;
+  }
+  /** @brief Copy the native default stream representation into owned text.
+   * @param value Borrowed live native datatype; no storage is modified.
+   * @return Independent string using a fresh native output stream's defaults.
+   * @details Holds the GIL and retains no values or callbacks. Native stream,
+   * report and allocation exceptions propagate; no scheduler calls occur.
+   */
+  static std::string text(const Value& value)
+  {
+    std::ostringstream stream;
+    stream << value;
+    return stream.str();
   }
   /** @brief Extract into live value storage and return the borrowed input stream. */
   static std::istream& extract(std::istream& stream, Value& value)

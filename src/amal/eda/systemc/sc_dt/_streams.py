@@ -83,3 +83,33 @@ for _stream in (
 ):
     _wrap(_stream)
 cppyy.py.add_pythonization(_wrap)
+
+
+def _stringify(value):
+    """Return the exact native default stream spelling as independent Python text.
+
+    Args:
+        value: Live native numeric datatype or concatenation reference.
+    Returns:
+        str: Copied representation from a fresh native output stream.
+    Raises:
+        Native exception: Native stream insertion, reporting or allocation fails.
+    Calls hold the GIL and do not suspend or change the value. Borrowed views
+    require their parent storage to remain live. No values or callbacks persist.
+    """
+    return str(cppyy.gbl.pysystemc_datatypes.StreamOperators[type(value)].text(value))
+
+
+def _wrap_numeric_text(native_type, name):
+    """Avoid cppyy's generic numeric string slot invoking adapted shifts."""
+    if name.startswith(("sc_int<", "sc_uint<", "sc_bigint<", "sc_biguint<", "sc_fixed<", "sc_ufixed<", "sc_fixed_fast<", "sc_ufixed_fast<")):
+        native_type.__str__ = _stringify
+
+
+for _name in (
+    "sc_signed", "sc_unsigned", "sc_int_base", "sc_uint_base", "sc_concatref",
+    "sc_fxval", "sc_fxval_fast", "sc_fxnum", "sc_fxnum_fast",
+    "sc_fix", "sc_ufix", "sc_fix_fast", "sc_ufix_fast",
+):
+    getattr(cppyy.gbl.sc_dt, _name).__str__ = _stringify
+cppyy.py.add_pythonization(_wrap_numeric_text, "sc_dt")
