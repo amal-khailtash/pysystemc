@@ -8,6 +8,37 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Format native numeric `str` and f-string values through exact C++ stream
+  insertion, avoiding cppyy shift-template crashes while preserving arbitrary
+  integer and fixed-point widths, current values and stream spelling.
+
+- Cache successful native `sc_port_value` conversion callables while preserving
+  per-call native reads and borrowed interface storage. A matched 20,000-call
+  input/inout/output workload used 26.7% less elapsed time across ten pairs,
+  with ten paired wins.
+
+- Hide three internal wait/trigger bridge helpers from public help and REPL
+  completion while retaining similarly named user-defined native types.
+
+- Convert Python booleans through the exact decimal integer overload so native
+  integer constructors and assignments receive `0` and `1` before width wrapping.
+
+- Clean up unpublished dynamic event-list registrations when a native scheduling
+  call throws, balancing list ownership and canceling staged process timeouts.
+
+- Complete the counter tutorial's `system.py` and `tb.py` compatibility paths,
+  preserve native asynchronous event defaults, and load FFT/FIR sibling modules
+  by their source paths to avoid collisions between example entrypoints.
+
+- Preserve the upstream TLM memory helper's address checks, response precedence,
+  transfer lengths and delays; reject DMI grants beyond its inclusive native range.
+
+- Resolve nonmethod virtual-property applicability before missing redeclaration
+  links in the source inventory scanner, while retaining unknown member flags.
+
+- Record historical performance workloads, checkpoints and measurement limits in
+  a versioned report. No cumulative package-wide improvement is established.
+
 - Cache successful native integer-template constructor dispatch by exact source
   type after conversion and copying succeed, preserving fresh owned storage
   and current values. A matched 20,000-call signed/unsigned and vector-source

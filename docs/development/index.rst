@@ -9,6 +9,8 @@ this repository's validation, publication and recovery workflow.
 
    guide
    contributing
+   verification
+   performance
    releases
    ../intro/architecture
    ../intro/roadmap

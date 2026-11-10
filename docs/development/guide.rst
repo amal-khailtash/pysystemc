@@ -160,7 +160,7 @@ reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.
 
 Native-first loader startup
---------------------------
+---------------------------
 
 On Linux with glibc, cppyy startup may spend time trying a compatibility ELF
 loader before the loader matching Python. Single-threaded main-thread startup

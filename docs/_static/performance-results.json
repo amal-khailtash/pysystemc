@@ -1,0 +1,658 @@
+{
+  "schema": "pysystemc-performance-checkpoint-v1",
+  "measured_checkpoint": "21497a96115084a92a7e59d9eb8e9b6da705e1cc",
+  "baseline_checkpoint": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+  "accounted_date": "2026-11-09",
+  "environment": {
+    "python": "3.14.0",
+    "cppyy": "3.5.0",
+    "systemc": "2.3.4-Accellera",
+    "scope": "Recorded Linux checkout; machine-specific measurements, not cross-platform guarantees"
+  },
+  "measurement_rule": "Report adopted timing improvements only at their measured workload scope. Do not sum percentages across workloads or infer package-wide improvement from microbenchmarks.",
+  "whole_package_cumulative_gain": null,
+  "whole_package_cumulative_gain_status": "not measured",
+  "records": [
+    {
+      "id": "namespace-help-sc-core",
+      "change": "Reuse one native enum classification per member when producing namespace help",
+      "commit": "98376c1",
+      "baseline": 49.848827,
+      "after": 31.9051905,
+      "unit": "ms per namespace_help call",
+      "workload": "sc_core help; exact documentation compared",
+      "pairs": 10,
+      "wins": null,
+      "elapsed_reduction_percent": 35.996106,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.performance_acceptance.timings.sc_core",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        },
+        {
+          "path": "build/startup/namespace-enum-classification-root.json",
+          "sha256_at_accounting": "9d0e2290353e9b8c688caa55ff4e481d1a7a791855b6d47c7312438a3f367daa"
+        }
+      ],
+      "limitations": "One fresh CPython 3.14 process; post-import method timing, not package startup. Acceptance says alternating old/new pairs and exact documentation parity, but records no win count."
+    },
+    {
+      "id": "namespace-help-sc-dt",
+      "change": "Reuse one native enum classification per member when producing namespace help",
+      "commit": "98376c1",
+      "baseline": 56.4282855,
+      "after": 51.2535335,
+      "unit": "ms per namespace_help call",
+      "workload": "sc_dt help; exact documentation compared",
+      "pairs": 10,
+      "wins": null,
+      "elapsed_reduction_percent": 9.170493,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.performance_acceptance.timings.sc_dt",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        },
+        {
+          "path": "build/startup/namespace-enum-classification-root.json",
+          "sha256_at_accounting": "9d0e2290353e9b8c688caa55ff4e481d1a7a791855b6d47c7312438a3f367daa"
+        }
+      ],
+      "limitations": "One fresh CPython 3.14 process; post-import method timing, not package startup. Acceptance says alternating old/new pairs and exact documentation parity, but records no win count."
+    },
+    {
+      "id": "namespace-help-tlm",
+      "change": "Reuse one native enum classification per member when producing namespace help",
+      "commit": "98376c1",
+      "baseline": 201.5748995,
+      "after": 197.2820125,
+      "unit": "ms per namespace_help call",
+      "workload": "tlm help; exact documentation compared",
+      "pairs": 10,
+      "wins": null,
+      "elapsed_reduction_percent": 2.129673,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.performance_acceptance.timings.tlm",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        },
+        {
+          "path": "build/startup/namespace-enum-classification-root.json",
+          "sha256_at_accounting": "9d0e2290353e9b8c688caa55ff4e481d1a7a791855b6d47c7312438a3f367daa"
+        }
+      ],
+      "limitations": "Small result from one fresh CPython 3.14 process; recorded as noisy. Post-import method timing, not package startup."
+    },
+    {
+      "id": "namespace-help-tlm-utils",
+      "change": "Reuse one native enum classification per member when producing namespace help",
+      "commit": "98376c1",
+      "baseline": 50.299633,
+      "after": 50.888789,
+      "unit": "ms per namespace_help call",
+      "workload": "tlm_utils help; exact documentation compared",
+      "pairs": 10,
+      "wins": null,
+      "elapsed_reduction_percent": -1.171293,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.performance_acceptance.timings.tlm_utils",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        },
+        {
+          "path": "build/startup/namespace-enum-classification-root.json",
+          "sha256_at_accounting": "9d0e2290353e9b8c688caa55ff4e481d1a7a791855b6d47c7312438a3f367daa"
+        }
+      ],
+      "limitations": "This namespace was slightly slower in the one fresh CPython 3.14 checkpoint. Post-import method timing, not package startup."
+    },
+    {
+      "id": "next-trigger-type-classification",
+      "change": "Reuse canonical event-expression type proxies in next_trigger classification",
+      "commit": "a7d81a1",
+      "baseline": 0.173973,
+      "after": 0.138445,
+      "unit": "seconds per 20,000 callbacks",
+      "workload": "dynamic sensitivity callback classification",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 20.42156,
+      "throughput_increase_percent": 25.7,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/next-trigger-types/final-acceptance.json",
+          "sha256_at_accounting": "21d34d9cbf8157e1c26f6abb6717e2da10e1d930b2ec4bf8ec292d1f8bb666da"
+        }
+      ],
+      "limitations": "Scoped method workload; no package startup claim. The progress table rounds the values and reports throughput gain."
+    },
+    {
+      "id": "wait-type-classification",
+      "change": "Retain canonical event-expression type proxies used in wait classification",
+      "commit": "a7d81a1",
+      "baseline": 0.421164,
+      "after": 0.353857,
+      "unit": "seconds per 20,000 resumptions",
+      "workload": "wait classification",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 15.981185,
+      "throughput_increase_percent": 19.0,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/wait-types/final-acceptance.json",
+          "sha256_at_accounting": "c66ff4642316d5761ae2bc68d0282bd4c9eb20600ebaf7a3eb709bfb7481ff15"
+        }
+      ],
+      "limitations": "Scoped method workload; imports unchanged; no package startup claim."
+    },
+    {
+      "id": "native-first-loader-startup",
+      "change": "Use native-first Linux loader ordering during safe single-threaded startup",
+      "commit": "c47a6f8",
+      "baseline": 23.4903758541,
+      "after": 7.3554306664,
+      "unit": "seconds per warm package import",
+      "workload": "fresh-process SystemC package import on measured Linux host",
+      "pairs": 3,
+      "wins": null,
+      "elapsed_reduction_percent": 68.687471,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.startup_acceptance",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        },
+        {
+          "path": ".ai/audits/cppyy-bootstrap/default-root-acceptance.json",
+          "sha256_at_accounting": "1c3dc6a0f34313b9635ce7da9740ebddaa798b53f000cfffba554abf41cd212d"
+        }
+      ],
+      "limitations": "Warm checkout, single-main-thread Linux case. An initial sample was recorded separately; prior 10-import algorithm evidence was reused. Not cold-cache or cross-platform evidence."
+    },
+    {
+      "id": "native-logging-startup",
+      "change": "Avoid header-only fmt compilation for four native diagnostic messages",
+      "commit": "c47a6f8",
+      "baseline": 7.2220844664,
+      "after": 4.6766002551,
+      "unit": "seconds per warm package import",
+      "workload": "fresh-process SystemC package import after loader-order change",
+      "pairs": null,
+      "wins": null,
+      "elapsed_reduction_percent": 35.245838,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.native_logging_acceptance",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        },
+        {
+          "path": ".ai/audits/native-logging/final-acceptance.json",
+          "sha256_at_accounting": "3abf9fb4429ca27c2e77cd68adad308ec29c7a57e9b633e850271623107c26c4"
+        }
+      ],
+      "limitations": "Three imports per path, warm checkout. This is an additional stage after the loader-order result, but a single end-to-end baseline against the original startup path was not measured."
+    },
+    {
+      "id": "tlm-endian-converter",
+      "change": "Cache resolved TLM endian converter word proxies",
+      "commit": "22d3668",
+      "baseline": 31.05638735,
+      "after": 22.7683112,
+      "unit": "ms per 20,000 request/response conversion pairs",
+      "workload": "TLM endian conversion; arbitrary native word types",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 26.687187,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/endian-word-cache/final-acceptance.json",
+          "sha256_at_accounting": "aac2c9631e2bee053b811f801fa3a0a593412831856f3114010f3521e4d36a52"
+        }
+      ],
+      "limitations": "No whole-transport or general-model gain claimed."
+    },
+    {
+      "id": "signal-value-conversion",
+      "change": "Cache native signal value conversion adapters",
+      "commit": "625418d",
+      "baseline": 87.67493069,
+      "after": 38.45847398,
+      "unit": "ms per 20,000 int/257-bit reads",
+      "workload": "Native signal value conversion and read",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 56.135153,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/signal-value-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "d3819fe69437d80c3a8798647846a3cfe672dc45aa0f59b418ead159a6a8bfe4"
+        }
+      ],
+      "limitations": "Read microbenchmark; no general SystemC model gain claimed."
+    },
+    {
+      "id": "datatype-enum-conversion",
+      "change": "Cache exact native datatype enum formatters lazily",
+      "commit": "8a844cf",
+      "baseline": 43.37891564,
+      "after": 35.87908484,
+      "unit": "ms per 20,000 typed enum conversions",
+      "workload": "Exact typed sc_dt enum string conversions",
+      "pairs": 10,
+      "wins": 9,
+      "elapsed_reduction_percent": 17.289115,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/dt-enum-string-cache/final-acceptance.json",
+          "sha256_at_accounting": "5f0a5b0cf06f5ff57cb1ecc199f21c902d602c405d2fb262e055f0bd65e7e144"
+        }
+      ],
+      "limitations": "One of ten pairs was slower; raw-integer fallback was not optimized."
+    },
+    {
+      "id": "reference-wrapper-construction",
+      "change": "Retain generic native sc_ref and sc_cref template proxies",
+      "commit": "61bd488",
+      "baseline": 32.95,
+      "after": 29.427,
+      "unit": "ms per 20,000 custom/257-bit wrapper constructions",
+      "workload": "Generic reference and const-reference wrapper construction",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 10.691958,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/native-reference-templates/final-acceptance.json",
+          "sha256_at_accounting": "c5597537d51e753c56a51eae6d641d2315743bf52ea726331c5db11a8d317703"
+        }
+      ],
+      "limitations": "Wrapper-construction workload only; no general startup/model gain claimed."
+    },
+    {
+      "id": "named-arithmetic-dispatch",
+      "change": "Cache native named fixed-point arithmetic dispatch",
+      "commit": "e8b780c",
+      "baseline": 35.174,
+      "after": 22.977,
+      "unit": "ms per 20,000 add calls",
+      "workload": "Public named fixed-point add dispatch",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 34.676181,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/named-arithmetic-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "a5fb9dcfb208ae7c9992132597f47fcbd9790f8a19328efb784142297de7ad5f"
+        }
+      ],
+      "limitations": "One named add workload; no general model gain claim."
+    },
+    {
+      "id": "binary-arithmetic-dispatch",
+      "change": "Cache native binary arithmetic, bitwise, and comparison dispatch",
+      "commit": "ad3d2be",
+      "baseline": 70.312,
+      "after": 62.019,
+      "unit": "ms per 20,000 additions",
+      "workload": "Integer/fixed-point public binary addition",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 11.794573,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/binary-arithmetic-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "1c92471323d14e61f1eb5f41b16af735e7f19cb44225f85f5bfb4a86f81740d4"
+        }
+      ],
+      "limitations": "One addition workload; no aggregate arithmetic or model gain claim."
+    },
+    {
+      "id": "compound-arithmetic-dispatch",
+      "change": "Cache native compound operator dispatch by owner and source types",
+      "commit": "ff7c38d",
+      "baseline": 48.487,
+      "after": 40.795,
+      "unit": "ms per 20,000 compound additions",
+      "workload": "Public integer/fixed-point += dispatch",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 15.864046,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/compound-arithmetic-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "93c14a455ed2cd409e329b3c9ac8125cec4a2001fd2b4847ef61e25190292b5f"
+        }
+      ],
+      "limitations": "One compound-addition workload; no aggregate arithmetic or model gain claim."
+    },
+    {
+      "id": "numeric-shift-dispatch",
+      "change": "Cache native numeric shift dispatch",
+      "commit": "be7fc5c",
+      "baseline": 37.641,
+      "after": 30.469,
+      "unit": "ms per 20,000 left/right shifts",
+      "workload": "Public integer/fixed-point left and right shift calls",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 19.053691,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/shift-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "5f44537757d05a9e937cb0641015d7df1962324bc56afcecb42eea137461af57"
+        }
+      ],
+      "limitations": "Shift microbenchmark only; no general model gain claim."
+    },
+    {
+      "id": "scalar-bit-dispatch",
+      "change": "Cache native scalar bit/logic operator dispatch",
+      "commit": "eacaf78",
+      "baseline": 74.576,
+      "after": 66.999,
+      "unit": "ms per 20,000 conjunctions",
+      "workload": "Public scalar integer/fixed-point & dispatch",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 10.160105,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/scalar-bit-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "b3a673af78271580ffd442aa0454a6f7971c52217940f81a099c84483a0630b7"
+        }
+      ],
+      "limitations": "One conjunction workload; no general model gain claim."
+    },
+    {
+      "id": "datatype-concat-dispatch",
+      "change": "Cache native text and boolean-bit concatenation dispatch",
+      "commit": "e267c78",
+      "baseline": 47.427,
+      "after": 32.981,
+      "unit": "ms per 20,000 text concatenations",
+      "workload": "Public datatype text concatenation dispatch",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 30.459443,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/concat-dispatch/final-acceptance.json",
+          "sha256_at_accounting": "4c61a4e50eb2cd487cd128b90a140e363ad4aeac9db3a88cf545d3b4e15eea58"
+        }
+      ],
+      "limitations": "Benchmark is text concatenation; boolean-bit cases were covered by correctness checks, not this timing workload."
+    },
+    {
+      "id": "nonblocking-socket-enum-metadata",
+      "change": "Capture canonical TLM synchronization enum metadata at nonblocking callback registration",
+      "commit": "b6df955",
+      "baseline": 93.416,
+      "after": 86.092,
+      "unit": "ms per 20,000 public forward/backward calls",
+      "workload": "TLM nonblocking socket FW/BW callbacks",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 7.840199,
+      "evidence": [
+        {
+          "path": ".ai/VERIFICATION_AND_PERFORMANCE_PLAN.md#progress-at-a-glance",
+          "sha256_at_accounting": "38929a43b3709595cb4a006955fe1abb503f761772049f3c6a814b55591d4cfe"
+        },
+        {
+          "path": ".ai/audits/nb-enum/final-acceptance.json",
+          "sha256_at_accounting": "c0b3b4d7c260cf2c99d6a2de8485d481025c2835120bc5297bf922bfc12cc721"
+        }
+      ],
+      "limitations": "No whole-transport or general model gain claim."
+    },
+    {
+      "id": "vector-assignment-dispatch",
+      "change": "Cache successful exact-source-type native vector assignments",
+      "commit": "a0a01fa",
+      "baseline": 58.907,
+      "after": 48.541,
+      "unit": "ms per 20,000 arbitrary-width assignments",
+      "workload": "Native vector assignment across signed/unsigned numeric and bit/logic vector sources",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 17.59723,
+      "evidence": [
+        {
+          "path": ".ai/audits/vector-assign/final-acceptance.json",
+          "sha256_at_accounting": "339cda697759bc4f8bd3c5cf0c0f4e773f359625aeab2c4fc7a59954bab3da78"
+        },
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.experiments.VECTOR-ASSIGN",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        }
+      ],
+      "limitations": "Exact report multiplicity matched inherited Python behavior (3) but differed from direct native helper count (1); no report-count equivalence claim."
+    },
+    {
+      "id": "vector-constructor-dispatch",
+      "change": "Cache successful exact-source-type native vector constructors",
+      "commit": "b57681b",
+      "baseline": 109.217,
+      "after": 99.77,
+      "unit": "ms per 20,000 arbitrary-width constructors",
+      "workload": "Native vector construction from numeric and bit/logic vector sources",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 8.649752,
+      "evidence": [
+        {
+          "path": ".ai/audits/vector-construct/final-acceptance.json",
+          "sha256_at_accounting": "98ce105748e11b1723f45cabf892d38cf87294b43a5c097c73578fe08dbefa5a"
+        },
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.experiments.VECTOR-CONSTRUCT",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        }
+      ],
+      "limitations": "Cold/warm Python report counts matched at 1/3 before/candidate; no general report-count parity claim."
+    },
+    {
+      "id": "integer-assignment-dispatch",
+      "change": "Cache successful exact-source-type native integer-template assignments",
+      "commit": "678ddcd",
+      "baseline": 25.822,
+      "after": 17.23,
+      "unit": "ms per 20,000 integer-template assignments",
+      "workload": "Signed/unsigned integer owners assigned from numeric and vector sources",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 33.273952,
+      "evidence": [
+        {
+          "path": ".ai/audits/integer-assign/final-acceptance.json",
+          "sha256_at_accounting": "99d515a3bdb698ab823b68bf6a2bb9f2b1ce7d7fbad8fef87486c99816921772"
+        },
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.experiments.INTEGER-ASSIGN",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        }
+      ],
+      "limitations": "Native conversion report counts matched cold/warm before/candidate at 1/1. Two baseline fixture failures were retained and excluded; final acceptance passed."
+    },
+    {
+      "id": "integer-constructor-dispatch",
+      "change": "Cache successful exact-source-class native integer-template constructors",
+      "commit": "21497a96115084a92a7e59d9eb8e9b6da705e1cc",
+      "baseline": 63.713,
+      "after": 54.409,
+      "unit": "ms per 20,000 integer-template constructors",
+      "workload": "Signed/unsigned integer constructors from numeric and vector sources",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 14.602985,
+      "evidence": [
+        {
+          "path": ".ai/audits/integer-construct/final-acceptance.json",
+          "sha256_at_accounting": "8dff58e2def8fa54d69810e715301ebf5c892a1d37e1cbf609acc31d43984a1d"
+        },
+        {
+          "path": ".ai/VERIFICATION_PROGRESS.json#active_scope.current_experiment",
+          "sha256_at_accounting": "d47db45335cb11471286f210836bcf0c6c6b219ed4d84958da11121e0d61ac93"
+        }
+      ],
+      "limitations": "Native conversion report counts matched at 1/1. Python bool constructor mismatch (4294967295 versus direct native 1) was preserved and deferred; no bool equivalence claim."
+    },
+    {
+      "id": "port-value-dispatch",
+      "change": "Cache successful native port conversion callables by matched full input/inout base name",
+      "commit": "f0daf48",
+      "status": "integrated_committed",
+      "source_sha256": "092dc8841eba2402c74d28a3f9ed9f4a7eba2bbefbac47ed5147e5bdc05caa2f",
+      "baseline": 56.410569697618484,
+      "after": 41.355930268764496,
+      "unit": "ms per20,000 sc_port_value conversions",
+      "workload": "20,000 warmed sc_port_value conversions across int/biguint257 input/inout/output ports; includes checksum work. Successful native callable cache only; per-call MRO/native conversion preserved.",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 26.687621680746044,
+      "evidence": [
+        {
+          "path": "build/performance/port-value-dispatch/final-acceptance-root.json",
+          "sha256_at_accounting": "9ad84886ef2722ccb98ce9bb1068e0232d25231b3a0810955b94f17aff5618ce"
+        },
+        {
+          "path": "build/performance/port-value-dispatch/confirmation.json",
+          "sha256_at_accounting": "a2f99fc53047a9407f6f036c6510977028c440ae463c7fb983bb4a8f439b10d7"
+        }
+      ],
+      "limitations": "Warmed dispatch includes result checksum; no startup/end-to-end/package-wide speedup. Native-six/VCD and installed113archive/virtual-read/borrowedupdate/errorrecovery checks passed. Broad completion suite/coverage retained as historical snapshot."
+    }
+  ],
+  "raw_evidence_location": "Relative paths identify retained local verification artifacts; they are not shipped in distributions. This versioned report preserves workload values and evidence digests.",
+  "limitations": [
+    "Historical timings through 21497a9 precede correctness completion; port-value dispatch was measured and validated afterward and committed as f0daf48.",
+    "Recorder I/O and correctness checks are outside timed operations; these measurements are not a whole-process estimate of tracking overhead.",
+    "No final combined startup, representative end-to-end throughput, cold-cache, or cross-platform gain has been measured.",
+    "Absent pair win counts remain null. Failure logs with reconstructed provenance cannot prove original byte identity."
+  ],
+  "exploratory_screens": [
+    {
+      "id": "endian-native-type-key",
+      "date": "2026-11-10",
+      "status": "rejected",
+      "before_seconds": 1.5678148083388805,
+      "candidate_seconds": 1.5363462790846825,
+      "elapsed_reduction_percent": 2.0071585678884674,
+      "pairs": 3,
+      "wins": 3,
+      "scope": "20,000 complete owned-buffer request/response operations with native EndianWord16, 32-byte bus, READ/WRITE/masks/high addresses; includes Python fixture work.",
+      "reason": "Below the 5% feasibility threshold; no production change or adopted gain.",
+      "evidence": [
+        "build/performance/endian-native-key-screen/paired.json",
+        "build/performance/endian-native-key-screen/root-disposition.json"
+      ],
+      "production_checkpoint": "21497a96115084a92a7e59d9eb8e9b6da705e1cc",
+      "limits": "Three pairs only; workload includes fixture allocation, byte preparation and assertions. No startup or package-wide gain."
+    },
+    {
+      "id": "vector-operator-dispatch",
+      "date": "2026-11-10",
+      "status": "rejected",
+      "before_seconds": 0.12820373103022575,
+      "candidate_seconds": 0.12213869020342827,
+      "elapsed_reduction_percent": 4.730783400810368,
+      "pairs": 3,
+      "wins": 3,
+      "scope": "20,000 Python vector AND/OR/XOR calls across sc_bv<137> and sc_lv<257>, forward/reflected/compound routes; includes dispatch-loop bookkeeping.",
+      "reason": "Below the 5% feasibility threshold; production unchanged, no adopted gain.",
+      "evidence": [
+        "build/performance/vector-operator-dispatch/paired.json",
+        "build/performance/vector-operator-dispatch/root-disposition.json"
+      ],
+      "production_checkpoint": "21497a96115084a92a7e59d9eb8e9b6da705e1cc",
+      "limits": "Dispatch loop includes bookkeeping. Smoke checks all bitwise routes; timed replay checks last result and final compound targets, not every intermediate result. Environment inherited; no PATH or resolved-library attestation. Controlled lifetime contract is not native allocator failure proof."
+    },
+    {
+      "id": "finder-specialization",
+      "date": "2026-11-10",
+      "status": "rejected",
+      "before_ms": 160.964093,
+      "candidate_ms": 130.352982,
+      "elapsed_reduction_percent": 19.017353764730615,
+      "pairs": 3,
+      "wins": 2,
+      "scope": "20,000 warmed calls through already-selected cached_create closures across6bool/logic/biguint257ports andcaches.",
+      "reason": "A paired loss fails the required3/3win feasibility gate. No productionfinderchange oradoptedgain.",
+      "evidence": [
+        "build/performance/finder-specialization/paired.json",
+        "build/performance/finder-specialization/root-disposition.json"
+      ],
+      "limits": "Repeated warm calls through already-selected cached_create closures; no elaboration/end-to-end startup or simulation-throughput gain. Per-call validation/nativefactory retained. Mutable native reflection not characterized."
+    }
+  ],
+  "current_working_tree_acceptance": {
+    "date": "2026-11-10",
+    "id": "port-value-dispatch",
+    "source_sha256": "092dc8841eba2402c74d28a3f9ed9f4a7eba2bbefbac47ed5147e5bdc05caa2f",
+    "uncommitted": false,
+    "commit": "f0daf48"
+  },
+  "subsequent_correctness_repairs": [
+    {
+      "id": "native-numeric-string",
+      "date": "2026-11-10",
+      "performance_gain": null,
+      "status": "accepted_committed",
+      "evidence": "build/verification/native-string/final-root.json",
+      "scope": "Explicit native default-stream formatting repairs numericstr crash; no performance timing or additionaladoptedslice.",
+      "commit": "f9d3f79"
+    }
+  ],
+  "current_committed_accounting": {
+    "accepted_workload_slices": 24,
+    "performance_commits": 19,
+    "latest_performance_commit": "f0daf48"
+  }
+}
