@@ -664,6 +664,24 @@
         "build/performance/member-scheduler-cache/paired.json.acceptance.json"
       ],
       "limits": "Timed sc_time member waits only. No native next_trigger throughput, reset/kill, expression or package acceptance for this candidate. Controlled actual factory checks cold/warm exceptions, unwind, current values, closure/method isolation and borrowed proxy release."
+    },
+    {
+      "id": "core-stream-insertion-dispatch",
+      "date": "2026-11-10",
+      "status": "rejected",
+      "before_ms": 69.05627995729446,
+      "candidate_ms": 54.28612604737282,
+      "elapsed_reduction_percent": 21.38857453522801,
+      "pairs": 3,
+      "wins": 2,
+      "scope": "Repeated sc_time(12, SC_NS) insertions into one fresh std::ostringstream, including the complete Python adapter and native formatting call. Each child first runs tests/models/sc_core_public_streams.py. The timed region excludes imports, native kernel smoke, 100 warm insertions, final string retrieval, the direct C++ reference loop, and the separate 13 ns spelling check.",
+      "reason": "A paired loss fails the required 3/3 feasibility gate; production unchanged.",
+      "evidence": [
+        "build/performance/core-stream-dispatch/paired.json",
+        "build/performance/core-stream-dispatch/paired.json.acceptance.json",
+        "build/performance/core-stream-dispatch/native-reference.json"
+      ],
+      "limits": "Complete time insertion only timed. Six broad public-stream smoke rows match independent native reference; entire timed text matches native loop. Controlled wrapper cold/warm failures/lifetimes are not native allocator-failure reachability. Package checks prepared but not executed; no ten-pair confirmation or adopted slice."
     }
   ],
   "current_working_tree_acceptance": {

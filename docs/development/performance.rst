@@ -241,3 +241,24 @@ behavior. Timing includes checksum bookkeeping. Native method-process
 ``next_trigger`` throughput and expression lifetimes were not measured in this
 screen. Evidence is retained under
 ``build/performance/member-scheduler-cache/``.
+
+Core stream insertion dispatch screen
+-------------------------------------
+
+A cache of successful native stream insertion callables was screened with
+20,000 insertions of ``sc_time(12, SC_NS)`` into a fresh ``std::ostringstream``.
+Three serialized fresh-process pairs measured 69.056 ms before and 54.286 ms
+for the candidate (21.39% less elapsed, two paired wins). The candidate was
+rejected because acceptance requires all three pairs to improve. Production
+remains unchanged and no accepted workload or performance commit was added.
+
+Both variants matched six standalone native reference rows covering status,
+time, channels, ports, wide and custom payloads, derived streams and errors.
+The entire timed output matched an independent C++ insertion loop; a separate
+13 ns value checked current spelling after warming the same specialization.
+A controlled wrapper fixture checked cold and warm failures, recovery, exact
+specializations, fallback and borrowed-object release. It does not establish
+native allocator-failure reachability. Timing excludes final text retrieval,
+reference rendering and smoke. Prepared installed-package checks were not
+executed; no confirmation or adoption gate is pending. Evidence is retained
+under ``build/performance/core-stream-dispatch/``.
