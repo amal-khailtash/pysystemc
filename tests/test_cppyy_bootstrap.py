@@ -4,6 +4,7 @@ import importlib.util
 import os
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
+import builtins
 
 import pytest
 
@@ -31,6 +32,7 @@ def loaders(bootstrap, tmp_path, monkeypatch):
     monkeypatch.setattr(bootstrap.sys, "executable", str(paths[1]))
     monkeypatch.setattr(bootstrap.sys, "platform", "linux")
     monkeypatch.setenv("PYSC_NATIVE_FIRST_LDD", "1")
+    monkeypatch.delitem(bootstrap.sys.modules, "cppyy", raising=False)
     return script, paths
 
 
@@ -173,3 +175,235 @@ def test_already_imported_cppyy_bypasses_loader_preparation(bootstrap, loaders, 
 
     monkeypatch.setattr(bootstrap, "_prepare_ldd", unexpected_prepare)
     assert bootstrap.import_cppyy() is result
+
+
+def _fallback_importer(bootstrap, monkeypatch, original_path):
+    """Install an ordinary fake cppyy import and return its identity sentinel."""
+    result = ModuleType("fake_cppyy")
+
+    def importing(name):
+        """Assert fallback imports cppyy without changing PATH."""
+        assert name == "cppyy"
+        assert os.environ.get("PATH") == original_path
+        return result
+
+    monkeypatch.setattr(bootstrap.importlib, "import_module", importing)
+    return result
+
+
+def _track_temporary_directories(bootstrap, monkeypatch):
+    """Record real adapter temp directories so fallback cleanup can be asserted."""
+    original_factory = bootstrap.tempfile.TemporaryDirectory
+    directories = []
+
+    def create(*args, **kwargs):
+        """Create and retain one owned temporary directory instance."""
+        directory = original_factory(*args, **kwargs)
+        directories.append(directory)
+        return directory
+
+    monkeypatch.setattr(bootstrap.tempfile, "TemporaryDirectory", create)
+    return directories
+
+
+@pytest.mark.parametrize(
+    ("contents", "message", "cause"),
+    [
+        (b'#!/bin/sh\n# GNU C Library\nRTLDLIST="\xff"\n', "RTLDLIST is not ASCII", UnicodeDecodeError),
+        (b'#!/bin/sh\n# GNU C Library\nRTLDLIST=""\n', "RTLDLIST is empty", None),
+    ],
+    ids=("non-ascii", "empty"),
+)
+def test_bad_rtld_lists_report_and_fall_back(bootstrap, loaders, monkeypatch, tmp_path, contents, message, cause):
+    """Reject malformed native-loader lists, then import fake cppyy unchanged."""
+    script, _ = loaders
+    script.write_bytes(contents)
+    source = script.read_bytes()
+    with pytest.raises(RuntimeError, match=message) as caught:
+        bootstrap._prepare_ldd(tmp_path)
+    if cause is None:
+        assert caught.value.__cause__ is None
+    else:
+        assert isinstance(caught.value.__cause__, cause)
+
+    original_path = os.environ.get("PATH")
+    directories = _track_temporary_directories(bootstrap, monkeypatch)
+    result = _fallback_importer(bootstrap, monkeypatch, original_path)
+    assert bootstrap.import_cppyy() is result
+    assert os.environ.get("PATH") == original_path
+    assert len(directories) == 1 and not Path(directories[0].name).exists()
+    assert script.read_bytes() == source
+
+
+def test_missing_ldd_reports_and_falls_back(bootstrap, loaders, monkeypatch, tmp_path):
+    """Diagnose missing ldd and preserve PATH/source while ordinary import falls back."""
+    script, _ = loaders
+    source = script.read_bytes()
+    monkeypatch.setattr(bootstrap.shutil, "which", lambda name: None)
+    with pytest.raises(RuntimeError, match="cannot resolve ldd from PATH"):
+        bootstrap._prepare_ldd(tmp_path)
+
+    original_path = os.environ.get("PATH")
+    directories = _track_temporary_directories(bootstrap, monkeypatch)
+    result = _fallback_importer(bootstrap, monkeypatch, original_path)
+    assert bootstrap.import_cppyy() is result
+    assert os.environ.get("PATH") == original_path
+    assert len(directories) == 1 and not Path(directories[0].name).exists()
+    assert script.read_bytes() == source
+
+
+@pytest.mark.parametrize(
+    ("contents", "message"),
+    [
+        (b"\x7fELF", "not a supported ELF file"),
+        (b"not an ELF file", "not a supported ELF file"),
+        (b"\x7fELF\x03", "not a supported ELF file"),
+    ],
+    ids=("short-header", "non-elf", "unsupported-class"),
+)
+def test_elf_class_rejects_malformed_headers(bootstrap, tmp_path, contents, message):
+    """Reject truncated, non-ELF and unsupported-class loader headers."""
+    path = tmp_path / "malformed-loader"
+    path.write_bytes(contents)
+    with pytest.raises(RuntimeError, match=message) as caught:
+        bootstrap._elf_class(path)
+    assert caught.value.__cause__ is None
+
+
+def test_elf_class_reports_unreadable_file(bootstrap, tmp_path, monkeypatch):
+    """Preserve the permission error as the cause for an unreadable ELF file."""
+    path = tmp_path / "unreadable-loader"
+    path.write_bytes(b"\x7fELF\x02")
+    original_open = builtins.open
+
+    def unreadable(file, *args, **kwargs):
+        """Deny only the selected loader while leaving test files readable."""
+        if Path(file) == path:
+            raise PermissionError("controlled unreadable ELF")
+        return original_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", unreadable)
+    with pytest.raises(RuntimeError, match="cannot read ELF file") as caught:
+        bootstrap._elf_class(path)
+    assert isinstance(caught.value.__cause__, PermissionError)
+    assert "controlled unreadable ELF" in str(caught.value.__cause__)
+
+
+def test_unreadable_optional_loader_is_retained(bootstrap, loaders, monkeypatch, tmp_path):
+    """Keep an unreadable optional loader after the readable Python-class loader."""
+    script, paths = loaders
+    source = script.read_bytes()
+    original_open = builtins.open
+
+    def unreadable(file, *args, **kwargs):
+        """Simulate denied reads for one executable loader despite root access."""
+        if Path(file) == paths[0]:
+            raise PermissionError("controlled optional-loader read denial")
+        return original_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", unreadable)
+    prepared = bootstrap._prepare_ldd(tmp_path)
+    tokens = prepared.read_text().split('RTLDLIST="')[1].split('"')[0].split()
+    assert tokens == [str(paths[1]), str(paths[0]), str(paths[2])]
+    assert prepared.stat().st_mode & 0o111
+    assert script.read_bytes() == source
+
+
+@pytest.mark.parametrize("ordering", ["no_matching", "already_native"], ids=("no-matching", "already-native"))
+def test_unusable_or_unneeded_ordering_falls_back(bootstrap, loaders, monkeypatch, tmp_path, ordering):
+    """Use an ordinary import when no matching loader exists or order is already native."""
+    script, paths = loaders
+    if ordering == "no_matching":
+        paths[1].write_bytes(b"\x7fELF\x01")
+        python_elf = tmp_path / "python-elf"
+        python_elf.write_bytes(b"\x7fELF\x02")
+        python_elf.chmod(0o755)
+        monkeypatch.setattr(bootstrap.sys, "executable", str(python_elf))
+        message = "no loader matching Python's ELF class"
+        ordered = paths
+    else:
+        ordered = [paths[1], paths[0], paths[2]]
+        script.write_text(f'#!/bin/sh\n# GNU C Library\nRTLDLIST="{" ".join(map(str, ordered))}"\n')
+        message = "needs no loader reordering"
+    source = script.read_bytes()
+    with pytest.raises(RuntimeError, match=message) as caught:
+        bootstrap._prepare_ldd(tmp_path)
+    assert caught.value.__cause__ is None
+
+    original_path = os.environ.get("PATH")
+    directories = _track_temporary_directories(bootstrap, monkeypatch)
+    result = _fallback_importer(bootstrap, monkeypatch, original_path)
+    assert bootstrap.import_cppyy() is result
+    assert os.environ.get("PATH") == original_path
+    assert len(directories) == 1 and not Path(directories[0].name).exists()
+    assert script.read_bytes() == source
+
+
+def test_temp_directory_creation_failure_falls_back(bootstrap, loaders, monkeypatch):
+    """Ordinary import survives a failure before adapter resources are allocated."""
+    del loaders
+    original_path = os.environ.get("PATH")
+    calls = []
+
+    def unavailable(*args, **kwargs):
+        """Record the native-first request then fail before creating resources."""
+        calls.append(kwargs.get("prefix"))
+        raise PermissionError("controlled temporary-directory denial")
+
+    monkeypatch.setattr(bootstrap.tempfile, "TemporaryDirectory", unavailable)
+    result = _fallback_importer(bootstrap, monkeypatch, original_path)
+    assert bootstrap.import_cppyy() is result
+    assert calls == ["pysystemc-ldd-"]
+    assert os.environ.get("PATH") == original_path
+
+
+def test_cleanup_oserror_does_not_mask_cppyy_import_error(bootstrap, loaders, monkeypatch):
+    """Preserve the import exception and clean the owned directory after a failed cleanup."""
+    del loaders
+    original_factory = bootstrap.tempfile.TemporaryDirectory
+    original_path = os.environ.get("PATH")
+    import_error = ImportError("controlled cppyy import failure")
+    directories = []
+
+    class CleanupFailure:
+        """Expose real temp storage while making the adapter cleanup fail once."""
+
+        def __init__(self, *args, **kwargs):
+            """Create a real owned directory and count cleanup attempts."""
+            self.actual = original_factory(*args, **kwargs)
+            self.name = self.actual.name
+            self.cleanup_calls = 0
+
+        def cleanup(self):
+            """Raise the controlled cleanup error without hiding import failure."""
+            self.cleanup_calls += 1
+            raise OSError("controlled cleanup denial")
+
+        def dispose(self):
+            """Run the real cleanup after the production helper returns."""
+            self.actual.cleanup()
+
+    def create(*args, **kwargs):
+        """Create and retain one proxy around real temporary storage."""
+        directory = CleanupFailure(*args, **kwargs)
+        directories.append(directory)
+        return directory
+
+    def importing(name):
+        """Raise the exact import exception after inspecting native-first PATH."""
+        assert name == "cppyy"
+        assert os.environ["PATH"].startswith(directories[0].name + os.pathsep)
+        raise import_error
+
+    monkeypatch.setattr(bootstrap.tempfile, "TemporaryDirectory", create)
+    monkeypatch.setattr(bootstrap.importlib, "import_module", importing)
+    try:
+        with pytest.raises(ImportError) as caught:
+            bootstrap.import_cppyy()
+        assert caught.value is import_error
+        assert directories[0].cleanup_calls == 1
+        assert Path(directories[0].name).exists()
+        assert os.environ.get("PATH") == original_path
+    finally:
+        directories[0].dispose()
+    assert not Path(directories[0].name).exists()
