@@ -147,6 +147,7 @@ class Target(sc.sc_module):
         self.read_delay = 50
         self.write_delay = 30
         self.out_of_order = False
+        self.previous_warning = False
         self.requests = Queue("end_requests")
         self.responses = Queue("responses")
         self.end_response = sc.sc_event("end_response")
@@ -165,29 +166,61 @@ class Target(sc.sc_module):
 
     def latency(self, gp):
         """Return the source read/write memory latency."""
-        return ns(self.write_delay if gp.get_command() == tlm.TLM_WRITE_COMMAND else self.read_delay)
-
-    def operation(self, gp):
-        """Copy native payload bytes, validate attributes and print memory records."""
         address, length = int(gp.get_address()), int(gp.get_data_length())
-        assert 0 <= address < 4096 and address + length <= 4096
-        assert not gp.get_byte_enable_ptr() and int(gp.get_streaming_width()) >= length
-        data = gp.get_data_ptr()
+        if address >= len(self.memory) or address + length >= len(self.memory):
+            return ns(0)
         if gp.get_command() == tlm.TLM_WRITE_COMMAND:
-            self.memory[address : address + length] = bytes(data[i] for i in range(length))
+            return ns(self.write_delay)
+        return ns(self.read_delay if gp.get_command() == tlm.TLM_READ_COMMAND else 0)
+
+    def operation(self, gp, delay=None):
+        """Perform the native example memory operation without resizing storage.
+
+        Args:
+            gp: Borrowed native payload with live storage for its declared length.
+            delay: Optional native time updated with the memory operation delay.
+        Returns:
+            None; the payload receives the native example's final response status.
+        Notes:
+            The upstream helper overwrites byte-enable, burst and command errors
+            with its address status. Preserve that behavior, including its strict
+            end boundary, rather than imposing different payload validation.
+            Call on the simulation thread and retain payload/buffer owners.
+        """
+        address, length = int(gp.get_address()), int(gp.get_data_length())
+        status = tlm.TLM_OK_RESPONSE
+        if address >= len(self.memory) or address + length >= len(self.memory):
+            status = tlm.TLM_ADDRESS_ERROR_RESPONSE
+        command = gp.get_command()
+        if command not in (tlm.TLM_WRITE_COMMAND, tlm.TLM_READ_COMMAND):
+            if not self.previous_warning:
+                report("memory.cpp", "operation", f"Target: {self.identifier} Unsupported Command Extension")
+                self.previous_warning = True
+                if delay is not None:
+                    delay.__assign__(sc.SC_ZERO_TIME)
+            gp.set_response_status(status)
+            return
+        if status != tlm.TLM_OK_RESPONSE:
+            gp.set_response_status(status)
+            return
+        data = gp.get_data_ptr()
+        if command == tlm.TLM_WRITE_COMMAND:
+            for i in range(length):
+                self.memory[address + i] = data[i]
             command = "WRITE"
         else:
-            assert gp.get_command() == tlm.TLM_READ_COMMAND
             for i in range(length):
                 data[i] = self.memory[address + i]
             command = "READ"
+        if delay is not None:
+            delay.__assign__(delay + self.latency(gp))
         value = int.from_bytes(bytes(data[i] for i in range(length)), "little")
         report(
             "memory.cpp",
             "print",
             f"ID: {self.identifier} COMMAND: {command} Length: {length:02d}\n      Addr: 0x{address:016X} Data: 0x{value:08X}",
         )
-        gp.set_response_status(tlm.TLM_OK_RESPONSE)
+        gp.set_response_status(status)
 
     def forward(self, gp, phase, delay):
         """Preserve annotated completion and every twentieth forced response."""
