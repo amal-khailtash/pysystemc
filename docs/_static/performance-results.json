@@ -630,6 +630,23 @@
         "build/performance/finder-specialization/root-disposition.json"
       ],
       "limits": "Repeated warm calls through already-selected cached_create closures; no elaboration/end-to-end startup or simulation-throughput gain. Per-call validation/nativefactory retained. Mutable native reflection not characterized."
+    },
+    {
+      "id": "native-blocking-cache",
+      "date": "2026-11-10",
+      "status": "rejected",
+      "before_ms": 446.322548,
+      "candidate_ms": 422.321391,
+      "elapsed_reduction_percent": 5.377536292430374,
+      "pairs": 3,
+      "wins": 2,
+      "scope": "Complete warm integer-return native functor calls, each suspending for 1 ns; checksum included.",
+      "reason": "A paired loss fails the required 3/3 win feasibility gate; production unchanged.",
+      "evidence": [
+        "build/performance/native-blocking-cache/paired.json",
+        "build/performance/native-blocking-cache/paired.json.acceptance.json"
+      ],
+      "limits": "Timed waits and integer return only; no reset/kill characterization for candidate, no confirmation or adoption/package gate. Native parity and cold/warm exceptions, null/unsupported inputs, transient proxy release checked."
     }
   ],
   "current_working_tree_acceptance": {

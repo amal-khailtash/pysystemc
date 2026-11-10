@@ -167,7 +167,7 @@ so measured public operations and native replay start from identical state.
 Port value dispatch
 -------------------
 
-The working tree caches successful native ``sc_port_value`` conversion callables
+Commit ``f0daf48`` caches successful native ``sc_port_value`` conversion callables
 by the full matched input or inout base name. Output ports retain their native
 inout conversion. Every call still scans the native bases and invokes the
 current bound interface; the cache retains neither ports nor returned values.
@@ -185,7 +185,8 @@ declarations and transitions. Both uv archives match all 113 current runtime
 files. An isolated installed Python 3.14 probe verifies native casts, borrowed
 storage and updates, one virtual read per cold/warm call, native read-error
 recovery and PATH restoration. The broader completion suite and coverage remain
-evidence for the preceding source snapshot. No commit or release was made.
+evidence for the preceding source snapshot. The change was committed locally;
+no release was published.
 
 Cached finder specialization screen
 -----------------------------------
@@ -202,3 +203,20 @@ was rejected because one pair regressed; finder production code remains
 unchanged. Timing covers warmed calls through already-selected creators, with
 no elaboration, startup or simulation-throughput estimate. No adopted gain is
 added. The numeric string correction is a separate untimed correctness repair.
+
+Native blocking dispatch screen
+-------------------------------
+
+A cache of successfully used native callable metadata was tested with complete
+integer-return functor calls, each suspending a SystemC thread for 1 ns. Three
+serialized pairs of 20,000 calls produced medians of 446.32 ms before and
+422.32 ms for the candidate, a 5.38% reduction, with two paired wins. The
+candidate was rejected because acceptance requires all three pairs to improve.
+Production dispatch remains unchanged; no adopted workload was added.
+
+Both variants checked native counter and simulation-time parity, cold and warm
+exceptions, invalid return contracts, null objects, and transient object release.
+The timing includes checksum bookkeeping. No ten-pair confirmation or broader
+reset/kill, package, startup, or end-to-end performance claim follows from this
+screen. Evidence is retained under
+``build/performance/native-blocking-cache/``.
