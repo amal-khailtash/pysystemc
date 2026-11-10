@@ -33,7 +33,7 @@ def _constructor(native_type):
         """Initialize owned native integer storage from an exact value.
 
         Args:
-            args: Native constructor arguments. Python integers use exact
+            args: Native constructor arguments. Python integers and booleans use exact
                 decimal text, preserving all bits before native width wrapping.
                 Native value/generic sources use exact C++ overload resolution.
             kwargs: Native single-source keyword arguments (a or v) use the
@@ -51,7 +51,7 @@ def _constructor(native_type):
             kwargs = {}
         if len(args) == 1 and not kwargs:
             value = args[0]
-            if type(value) is int:
+            if type(value) in (int, bool):
                 return string_constructor(owner, _integer_text(value))
             if hasattr(type(value), "__cpp_name__"):
                 key = type(value)
@@ -75,7 +75,7 @@ def _constructor(native_type):
         """Assign exact native integer storage and return the live target.
 
         Args:
-            source: Python integer or native assignment source.
+            source: Python integer, boolean, or native assignment source.
         Returns:
             The target integer, borrowing its existing storage.
         Raises:
@@ -84,7 +84,7 @@ def _constructor(native_type):
         Python integers retain every bit before native width wrapping. Calls
         hold the GIL and retain no source references or callbacks.
         """
-        if type(source) is int:
+        if type(source) in (int, bool):
             return string_assignment(owner, _integer_text(source))
         if hasattr(type(source), "__cpp_name__"):
             key = type(source)

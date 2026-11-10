@@ -11,6 +11,7 @@ _BRIDGE_EXCLUSIONS = {
         "PythonSignalChannel": ("src/amal/eda/systemc/sc_core/sc_module.cpp:94", "bridge channel implementation"),
         "dispatch_python": ("src/amal/eda/systemc/sc_core/sc_module.cpp:632", "Python process dispatch bridge"),
         "dispatch_report": ("src/amal/eda/systemc/sc_core/sc_module.cpp:785", "Python report dispatch bridge"),
+        "guarded_wait": ("src/amal/eda/systemc/sc_core/sc_module.cpp:507", "guarded blocking bridge helper"),
         "python_argv_at": ("src/amal/eda/systemc/sc_core/sc_module.cpp:173", "native entry bridge helper"),
         "python_assign_event_expression": (
             "src/amal/eda/systemc/sc_core/event_lists.cpp:36",
@@ -84,6 +85,14 @@ _BRIDGE_EXCLUSIONS = {
             "module member bridge helper",
         ),
         "python_member_wait": ("src/amal/eda/systemc/sc_core/sc_module.cpp:1064", "module member bridge helper"),
+        "python_member_wait_call": (
+            "src/amal/eda/systemc/sc_core/sc_module.cpp:1229",
+            "module member wait overload bridge helper",
+        ),
+        "python_member_next_trigger_call": (
+            "src/amal/eda/systemc/sc_core/sc_module.cpp:1299",
+            "module member trigger overload bridge helper",
+        ),
         "python_mutex_lock": ("src/amal/eda/systemc/sc_core/sc_module.cpp:415", "synchronization bridge helper"),
         "python_native_blocking": (
             "src/amal/eda/systemc/sc_core/native_blocking.h:76",

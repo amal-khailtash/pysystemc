@@ -33,5 +33,12 @@ def test_repl_completion_uses_public_namespace_policy(tmp_path: Path) -> None:
         "tlm.tlm_analysis_fifo",
         "tlm_utils.simple_target_socket",
     ]
-    assert report["hidden_bridge_names"] == ["python_wait", "python_member_wait", "PythonInterface"]
+    assert report["hidden_bridge_names"] == [
+        "python_wait",
+        "python_member_wait",
+        "PythonInterface",
+        "guarded_wait",
+        "python_member_wait_call",
+        "python_member_next_trigger_call",
+    ]
     assert report["template_cpp_names"] == ["sc_dt::sc_uint<73>", "sc_dt::sc_biguint<73>"]

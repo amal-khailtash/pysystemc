@@ -59,6 +59,8 @@ def main() -> None:
         namespace sc_core {
         /** @brief Test-native type with a user-owned implementation-like name. */
         struct python_user_probe_native {};
+        /** @brief User-owned near-prefix name that exact bridge filtering must retain. */
+        struct python_member_wait_user_probe_native {};
         }
         """
     )
@@ -113,29 +115,34 @@ def main() -> None:
     assert sc_core.python_user_probe_native is raw_user_type
     assert "python_user_probe_native" in dir(sc_core)
     assert _has_candidate(completer, "sc_core.python_user_probe_nativ", "sc_core.python_user_probe_native")
+    assert sc_core.python_member_wait_user_probe_native is cppyy.gbl.sc_core.python_member_wait_user_probe_native
+    assert _has_candidate(
+        completer, "sc_core.python_member_wait_user_probe_nativ", "sc_core.python_member_wait_user_probe_native"
+    )
 
     # The known bridge declarations remain usable through raw cppyy for
     # binding/debugging, but are absent from Python REPL discovery.
-    hidden_names = ("python_wait", "python_member_wait", "PythonInterface")
+    hidden_names = (
+        "python_wait",
+        "python_member_wait",
+        "PythonInterface",
+        "guarded_wait",
+        "python_member_wait_call",
+        "python_member_next_trigger_call",
+    )
     raw_core = cppyy.gbl.sc_core
     for name in hidden_names:
         assert getattr(raw_core, name) is not None, name
         assert name not in namespace, f"{name} was seeded as a bare name"
         assert name not in _complete(completer, name[: max(2, len(name) - 1)]), name
-        assert not any(
-            item.startswith(f"sc_core.{name}")
-            for item in _complete(completer, f"sc_core.{name[: max(2, len(name) - 1)]}")
-        ), name
+        assert not _has_candidate(completer, f"sc_core.{name[: max(2, len(name) - 1)]}", f"sc_core.{name}"), name
 
     # Public module fallback remains available for ordinary API attributes,
     # while the same exact bridge names do not complete through that module.
     assert sc_core.sc_time is cppyy.gbl.sc_core.sc_time
     assert sc_core.sc_placeholder is cppyy.gbl.sc_core.python_placeholder
     for name in hidden_names:
-        assert not any(
-            item.startswith(f"sc_core.{name}")
-            for item in _complete(completer, f"sc_core.{name[: max(2, len(name) - 1)]}")
-        ), name
+        assert not _has_candidate(completer, f"sc_core.{name[: max(2, len(name) - 1)]}", f"sc_core.{name}"), name
 
     # Datatype specialization keeps its original arbitrary-width C++ proxy.
     uint73 = sc_dt.sc_uint[73]

@@ -50,7 +50,7 @@ def test_policy_excludes_exact_bridge_spellings_and_preserves_native_aliases():
     expected_candidates = set(
         """
         PythonFifoChannel PythonInterface PythonPrimChannel PythonReadInterface PythonSignalChannel
-        dispatch_python dispatch_report python_argv_at python_assign_event_expression python_blocking_result
+        dispatch_python dispatch_report guarded_wait python_argv_at python_assign_event_expression python_blocking_result
         python_bound python_edge_wait python_entry_callback_error python_event_notify_delayed
         python_event_list_busy python_event_list_busy_access
         python_wait_expression_list_deletion_count python_next_trigger_expression_list_deletion_count
@@ -58,7 +58,8 @@ def test_policy_excludes_exact_bridge_spellings_and_preserves_native_aliases():
         python_fifo_read python_fifo_read_output python_fifo_stream python_fifo_write
         python_guarded_halt_operation python_guarded_operation python_halt python_join_wait python_kill
         python_member_edge python_member_next_trigger python_member_scheduler python_member_timeout
-        python_member_wait python_mutex_lock python_native_blocking python_native_blocking_traits
+        python_member_wait python_member_wait_call python_member_next_trigger_call
+        python_mutex_lock python_native_blocking python_native_blocking_traits
         python_next_trigger python_placeholder python_public_stream python_read_resolved
         python_report_handler python_reset python_result_functor python_scoped_lock python_semaphore_wait
         python_spawn_result python_start python_stream_access python_suspend python_throw_helper
@@ -80,7 +81,13 @@ def test_policy_excludes_exact_bridge_spellings_and_preserves_native_aliases():
     for name in ("sc_argc", "sc_argv", "sc_elab_and_sim", "sc_in_action"):
         assert policy.is_public_name("sc_core", name)
 
-    for name in ("python_user_extension", "PythonWidget", "sc_extension", "custom_vendor_type"):
+    for name in (
+        "python_user_extension",
+        "python_member_wait_user_extension",
+        "PythonWidget",
+        "sc_extension",
+        "custom_vendor_type",
+    ):
         assert policy.is_public_name("sc_core", name)
     assert not policy.is_public_name("sc_core", "__cpp_name__")
     assert not policy.is_public_name("sc_core", "print")

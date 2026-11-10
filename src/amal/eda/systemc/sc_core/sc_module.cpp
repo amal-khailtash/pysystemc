@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "binding_log.h"
+#include "event_list_registration.h"
 #include "hierarchy.h"
 #include "native_blocking.h"
 
@@ -270,8 +271,9 @@ using python_event_list_owner = std::unique_ptr<List, python_event_list_deleter<
  * storage owned here, so process-context reports cannot leak it. This helper
  * runs with the GIL released while waiting and never invokes Python callbacks.
  * It deletes the list when @c busy() is false. If native code adopted it, or a
- * registration failed after partial progress, ownership is relinquished because
- * deletion would invalidate native references. Python cleanup and restoration
+ * registration failed before publication, a context-checked transaction removes
+ * its dynamic registrations and balances the busy count. Uncertain ownership
+ * remains conservatively native-owned. Python cleanup and restoration
  * of scheduler unwind happen after this frame returns.
  */
 template <class List, class Operation>
@@ -281,6 +283,7 @@ bool python_wait_expression(const sc_event_expr<List>& expression, Operation&& o
   // Assignment moves from and destroys SystemC's released auto-delete list;
   // this destination is ordinary storage owned by this call frame.
   *owner = expression.release();
+  const pysystemc_detail::EventListRegistration registration(*owner, false);
   try
   {
     const bool completed = python_guarded_operation([&] { operation(*owner); });
@@ -289,8 +292,7 @@ bool python_wait_expression(const sc_event_expr<List>& expression, Operation&& o
   }
   catch (...)
   {
-    // A failed registration may have made partial progress. Never destroy a
-    // list while native dynamic registrations still refer to it.
+    registration.rollback(owner);
     if (python_event_list_busy(*owner)) owner.release();
     throw;
   }
@@ -308,23 +310,25 @@ bool python_wait_expression(const sc_event_expr<List>& expression, Operation&& o
  * @details The GIL remains held and this helper invokes no Python callback.
  * Rejected idle lists are destroyed here. Accepted lists are relinquished to
  * SystemC's native auto-delete lifecycle. If an exception follows partial
- * registration and @c busy() remains true, ownership is also relinquished
- * conservatively; a registration rollback handshake is required to reclaim it.
+ * registration before publication, a context-checked transaction removes its
+ * registrations and allows native auto-deletion. Uncertain ownership remains
+ * conservatively native-owned.
  */
 template <class List, class Operation>
 void python_next_trigger_expression(const sc_event_expr<List>& expression, Operation&& operation)
 {
   auto& released = const_cast<List&>(expression.release());
   python_event_list_owner<List> owner(&released, {&python_next_trigger_expression_list_deletions});
+  const pysystemc_detail::EventListRegistration registration(released, true);
   try
   {
     operation(released);
   }
   catch (...)
   {
-    // Busy means accepted or partially registered. Relinquish conservatively;
-    // deletion is unsafe until a native acceptance/rollback handshake exists.
-    if (python_event_list_busy(released)) owner.release();
+    registration.rollback(owner);
+    if (!owner) python_next_trigger_expression_list_deletions.fetch_add(1, std::memory_order_relaxed);
+    if (owner && python_event_list_busy(*owner)) owner.release();
     throw;
   }
   if (python_event_list_busy(released)) owner.release();
