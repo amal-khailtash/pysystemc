@@ -14,15 +14,27 @@ from amal.eda.systemc import sc_core as sc
 class AsyncEvent(sc.sc_prim_channel):
     """Retain native event state and deliver updates on the kernel thread."""
 
-    def __init__(self, name):
-        """Attach a suspending asynchronous primitive channel."""
+    def __init__(self, name=None):
+        """Attach a suspending asynchronous primitive channel.
+
+        Args:
+            name: Native channel name; None generates the upstream default name.
+        """
+        if name is None:
+            name = sc.sc_gen_unique_name("async_event")
         super().__init__(name)
         self.m_delay = sc.SC_ZERO_TIME
-        self.m_event = sc.sc_event(name + "_event")
+        self.m_event = sc.sc_event(str(self.basename()) + "_event")
         self.async_attach_suspending()
 
-    def notify(self, delay):
-        """Request a native update from a separate host thread."""
+    def notify(self, delay=sc.SC_ZERO_TIME):
+        """Request a native update from a host thread.
+
+        Args:
+            delay: Simulation delay, defaulting to the native zero-time delay.
+        Returns:
+            None. The kernel delivers the notification in its update phase.
+        """
         self.m_delay = delay
         self.async_request_update()
 
@@ -81,11 +93,23 @@ class Activity(sc.sc_module):
         print("I'm busy!")
 
 
-watchdog = WatchDog("WatchDog")
-activity = Activity("Activity")
-print("Start SystemC ")
-sc.sc_start()
-watchdog.m_thread.join(timeout=5)
-assert not watchdog.m_thread.is_alive()
-assert sc.sc_time_stamp() == sc.sc_time(10, sc.SC_NS)
-print("Program completed")
+def run():
+    """Run the native ten-nanosecond stimulus in a fresh simulation kernel.
+
+    Returns:
+        None after event delivery, simulation stop, and host-thread completion.
+    Raises:
+        AssertionError: Delivery time or host-thread termination differs.
+    """
+    models = (WatchDog("WatchDog"), Activity("Activity"))
+    watchdog = models[0]
+    print("Start SystemC ")
+    sc.sc_start()
+    watchdog.m_thread.join(timeout=5)
+    assert not watchdog.m_thread.is_alive()
+    assert sc.sc_time_stamp() == sc.sc_time(10, sc.SC_NS)
+    print("Program completed")
+
+
+if __name__ == "__main__":
+    run()

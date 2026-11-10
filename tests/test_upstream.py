@@ -332,11 +332,16 @@ def _compare_fft(tmp_path, group):
 
     directory = ROOT / f"submodules/systemc/examples/sysc/fft/{group}"
     executable = _compile_upstream(tmp_path, directory, ("fft", "source", "sink", "main"))
-    for suffix in ("", ".1", ".2", ".3", ".4"):
+    for suffix in ("", ".1", ".2", ".3", ".4", "unequal_real", "unequal_imag"):
         work = tmp_path / ("default" if not suffix else suffix[1:])
         work.mkdir()
         for component in ("real", "imag"):
-            shutil.copyfile(directory / f"in_{component}{suffix}", work / f"in_{component}")
+            input_suffix = ".1" if suffix.startswith("unequal_") else suffix
+            destination = work / f"in_{component}"
+            shutil.copyfile(directory / f"in_{component}{input_suffix}", destination)
+            if suffix == f"unequal_{component}":
+                with destination.open("a") as stream:
+                    stream.write("\n1\n")
         output = run_example(work, f"examples/sysc/fft/{group}/main.py")
         python_files = [(work / name).read_text() for name in ("out_real", "out_imag")]
         native = subprocess.run(
