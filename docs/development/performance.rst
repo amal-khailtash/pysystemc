@@ -312,3 +312,31 @@ regressions passed; current collection is 995. All 113 accepted runtime hashes
 remain unchanged, so the preceding package gate is reused. This follow-up adds
 correctness evidence without adding a performance workload. Destruction while
 registered, concurrent kernels and mutable reflection remain uncharacterized.
+
+Sampled member edge dispatch screen
+-----------------------------------
+
+A cache of successful native sampled-edge callables was screened with
+100,000 alternating ``at_posedge``/``at_negedge`` waits in a Python CTHREAD.
+The candidate retained per-call signal MRO classification, GIL release and
+reset/kill unwind. Three serialized fresh-process pairs measured 6.134 s
+before and 5.995 s for the candidate (2.28% less elapsed, two wins). The
+candidate was rejected: acceptance requires at least 5% less elapsed and
+all three pairs to improve. Production remains unchanged.
+
+A native CTHREAD performed the same sampled bool schedule alongside Python,
+with a 1 ns sampling clock and a signal toggled every 2 ns. Counts, checksums,
+edge values and timestamps matched. Timing includes Python bookkeeping and
+the native reference/stimulus work equally in both variants; it excludes
+imports, 100 warm calls and final checks. A separate public model matched
+36 native rows, including positive and negative bool/logic edges. Reset/kill
+cleanup matched an independent native reference after warming both operations.
+Controlled factory checks covered cold/warm failures, GIL behavior, current
+values, datatype/edge isolation and borrowed release. All 113 runtime hashes
+retained the preceding accepted package bytes.
+
+Two initial smoke failures were benchmark fixture errors (a port passed in
+place of a signal interface and a stale timing key); corrected smoke passed.
+Failed runs were excluded from timing acceptance. No confirmation, integration
+or package gate is pending for this rejected candidate. Evidence is retained
+under ``build/performance/member-edge-cache/``.

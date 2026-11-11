@@ -711,6 +711,25 @@
         "build/performance/core-stream-dispatch/native-reference.json"
       ],
       "limits": "Complete time insertion only timed. Six broad public-stream smoke rows match independent native reference; entire timed text matches native loop. Controlled wrapper cold/warm failures/lifetimes are not native allocator-failure reachability. Package checks prepared but not executed; no ten-pair confirmation or adopted slice."
+    },
+    {
+      "id": "sampled-member-edge-callable-cache",
+      "date": "2026-11-11",
+      "status": "rejected",
+      "before_ms": 6134.276349,
+      "candidate_ms": 5994.55305,
+      "elapsed_reduction_percent": 2.2777470568762004,
+      "pairs": 3,
+      "wins": 2,
+      "scope": "100,000 alternating sampled bool edge waits in PythonCTHREAD with native reference and signal stimulus;100warm calls/imports/finalchecks excluded.",
+      "reason": "Below5percent and pairedloss fails strict3/3 screen; production unchanged.",
+      "evidence": [
+        "build/performance/member-edge-cache/screen.json",
+        "build/performance/member-edge-cache/screen-acceptance.json",
+        "build/performance/member-edge-cache/native-smoke.json",
+        "build/performance/member-edge-cache/control-smoke.json"
+      ],
+      "limits": "36native publicrows and sampledCTHREAD resetkill parity; no10pairconfirmation/integration/package gate or adopted slice."
     }
   ],
   "current_working_tree_acceptance": {
