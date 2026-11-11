@@ -299,5 +299,16 @@ All 113 runtime files matched the wheel, sdist and isolated installed package;
 112 runtime files were unchanged from the preceding package. Installed public
 trigger callbacks and both native and Python 3.14 thread waits passed, including
 Python finally cleanup and process-handle lifecycle. Eight targeted tests
-passed without skips. Current collection is 993; full-suite and global coverage
+passed without skips. Integration collection was 993; full-suite and global coverage
 results remain historical.
+
+Follow-up lifetime regressions compare two owner instances sharing the installed
+member closure against independent native methods with private event sets.
+They cover interleaved cold and warm time, event, OR/AND expression and timed
+event signatures, with all four expression proxies collected. A separate
+native comparison resets a method with registered sensitivity at 2 ns, kills
+it at 3 ns and confirms that a 4 ns event does not resume it. Three targeted
+regressions passed; current collection is 995. All 113 accepted runtime hashes
+remain unchanged, so the preceding package gate is reused. This follow-up adds
+correctness evidence without adding a performance workload. Destruction while
+registered, concurrent kernels and mutable reflection remain uncharacterized.

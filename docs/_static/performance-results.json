@@ -729,6 +729,14 @@
       "evidence": "build/verification/native-string/final-root.json",
       "scope": "Explicit native default-stream formatting repairs numericstr crash; no performance timing or additionaladoptedslice.",
       "commit": "f9d3f79"
+    },
+    {
+      "id": "member-trigger-lifetime-regressions",
+      "date": "2026-11-11",
+      "status": "accepted_targeted_regressions",
+      "performance_gain": null,
+      "evidence": "build/performance/member-next-trigger-lifetime/final-root.json",
+      "scope": "Two-owner warm expressions and native method reset/kill; 3targeted regressions and4collectedproxies;113runtimebytes unchanged; no new performancecount."
     }
   ],
   "current_committed_accounting": {

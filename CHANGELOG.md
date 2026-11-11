@@ -8,6 +8,9 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Add member trigger lifetime regressions for interleaved owner instances,
+  consumed event expressions, and native method reset/kill behavior.
+
 - Reuse successful native member `next_trigger` dispatch by exact argument type
   while preserving current values, event ownership, native reports and GIL
   behavior. A matched 200,000-registration workload used 13.3% less elapsed

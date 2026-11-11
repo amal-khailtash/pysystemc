@@ -35,10 +35,12 @@ class Operation:
         """Start successful without retaining arguments."""
         self.mode = "success"
         self.current = None
+        self.owner_identity = None
 
     def __call__(self, owner, *values):
         """Read current values, then fail, unwind or complete without retaining them."""
         self.current = tuple(value.value for value in values)
+        self.owner_identity = id(owner)
         if self.mode == "error":
             raise ValueError("controlled native failure")
         return self.mode != "unwind"
@@ -119,6 +121,26 @@ def test_member_next_trigger_cache_contract(monkeypatch):
         else:
             raise AssertionError("invalid argument accepted")
     assert len(trigger.selected) == 6
+    second_owner = Owner()
+    invoke(second_owner, argument)
+    assert operation.owner_identity == id(second_owner)
+    invoke(owner, argument)
+    assert operation.owner_identity == id(owner)
+    assert len(trigger.selected) == 6
+
+    class ChannelOwner:
+        """Represent a separate native owner type with a distinct closure."""
+
+    channel_owner = ChannelOwner()
+    channel_call = module._scheduling_member(ChannelOwner, "next_trigger", Unwind)
+    channel_call(channel_owner, argument)
+    channel_operation = trigger.operations[(ChannelOwner, Argument.__cpp_name__)]
+    assert channel_operation is not operation
+    assert channel_operation.owner_identity == id(channel_owner)
+    assert len(trigger.selected) == 7
+    channel_call(channel_owner, argument)
+    assert len(trigger.selected) == 7
+
     wait_call = module._scheduling_member(Owner, "wait", Unwind)
     wait_call(owner, argument)
     wait_call(owner, argument)
@@ -131,7 +153,7 @@ def test_member_next_trigger_cache_contract(monkeypatch):
     else:
         raise AssertionError("baseline wait unwind changed")
     assert len(wait.selected) == 3
-    refs = [weakref.ref(value) for value in (owner, argument, other)]
-    del owner, argument, other
+    refs = [weakref.ref(value) for value in (owner, second_owner, channel_owner, argument, other)]
+    del owner, second_owner, channel_owner, argument, other
     gc.collect()
     assert all(ref() is None for ref in refs)
