@@ -25,6 +25,8 @@ def _arguments(arguments, *, cycles):
 
 def _scheduling_member(owner_type, method, unwind):
     """Bind one exact native member adapter to a public bridge class."""
+    if method == "next_trigger":
+        return _next_trigger_member(owner_type)
     dispatch = getattr(cppyy.gbl.sc_core, "python_member_" + method)
 
     def invoke(self, *args):
@@ -53,6 +55,41 @@ def _scheduling_member(owner_type, method, unwind):
         result = operation(self, *values)
         if method == "wait" and not result:
             raise unwind()
+
+    return invoke
+
+
+
+def _next_trigger_member(owner_type):
+    """Bind native method sensitivity with successful callable metadata reuse."""
+    dispatch = cppyy.gbl.sc_core.python_member_next_trigger
+    operations = {}
+
+    def invoke(self, *args):
+        """Register native sensitivity without suspending the current method.
+
+        Args:
+            *args: Native time, event, OR/AND list or numeric duration arguments.
+        Returns:
+            None after successful native sensitivity registration.
+        Raises:
+            TypeError: Arguments cannot match a native member overload.
+            sc_report: The current process cannot register method sensitivity.
+
+        Call from a SystemC method; the GIL stays held. Retain this owner and
+        referenced events for their native registration lifetime. Expressions
+        retain native consumption and ownership semantics. Cache entries retain
+        callable metadata only, never owners, arguments, expressions or results.
+        Native exceptions propagate without caching a failed first invocation.
+        """
+        types, values = _arguments(args, cycles=False)
+        key = tuple(types)
+        operation = operations.get(key)
+        if operation is None:
+            operation = dispatch[tuple([owner_type, *types])].invoke
+        operation.__release_gil__ = False
+        operation(self, *values)
+        operations[key] = operation
 
     return invoke
 
