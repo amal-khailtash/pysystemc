@@ -568,6 +568,35 @@
         }
       ],
       "limitations": "Warmed dispatch includes result checksum; no startup/end-to-end/package-wide speedup. Native-six/VCD and installed113archive/virtual-read/borrowedupdate/errorrecovery checks passed. Broad completion suite/coverage retained as historical snapshot."
+    },
+    {
+      "id": "member-next-trigger-dispatch",
+      "change": "Cache successful member next_trigger callable metadata by exact argument type",
+      "commit": "854707d",
+      "status": "integrated_committed",
+      "source_sha256": "cb432627257a40ece556023335eeacf39d01f270040fcf89b61fb2d35ac726c8",
+      "baseline": 591.6391045,
+      "after": 513.1128285,
+      "unit": "ms per200,000 next_trigger registrations and resumptions",
+      "workload": "Python module next_trigger(sc_time) method with identical concurrent native reference, checksum bookkeeping; imports and100warm callbacks excluded.",
+      "pairs": 10,
+      "wins": 10,
+      "elapsed_reduction_percent": 13.272664940963175,
+      "evidence": [
+        {
+          "path": "build/performance/member-next-trigger-cache/final-root.json",
+          "sha256_at_accounting": "64eb4dc132c08f8037d885b0c461a92d7c4d9417bf142afeee14fdfbb35d5fbc"
+        },
+        {
+          "path": "build/performance/member-next-trigger-cache/confirm.json",
+          "sha256_at_accounting": "ba49e0d4448e276b574410facbbcbd19d27d54041a1b515f0726d59c2ff670dd"
+        },
+        {
+          "path": "build/performance/member-next-trigger-cache/package-root.json",
+          "sha256_at_accounting": "c6f66a4889434dacefe24da2d48ff1d7c2a1792639af170fe6e3c754d63cb573"
+        }
+      ],
+      "limitations": "No package-wide or tracking-overhead measurement. Targeted8native tests, all113archive/installedbytes and Python3.14 thread/wait checked; no full-suite/globalcoverage refresh. Python3.15 deferred."
     }
   ],
   "raw_evidence_location": "Relative paths identify retained local verification artifacts; they are not shipped in distributions. This versioned report preserves workload values and evidence digests.",
@@ -685,11 +714,11 @@
     }
   ],
   "current_working_tree_acceptance": {
-    "date": "2026-11-10",
-    "id": "port-value-dispatch",
-    "source_sha256": "092dc8841eba2402c74d28a3f9ed9f4a7eba2bbefbac47ed5147e5bdc05caa2f",
+    "date": "2026-11-11",
+    "id": "member-next-trigger-dispatch",
+    "source_sha256": "cb432627257a40ece556023335eeacf39d01f270040fcf89b61fb2d35ac726c8",
     "uncommitted": false,
-    "commit": "f0daf48"
+    "commit": "854707d"
   },
   "subsequent_correctness_repairs": [
     {
@@ -703,8 +732,8 @@
     }
   ],
   "current_committed_accounting": {
-    "accepted_workload_slices": 24,
-    "performance_commits": 19,
-    "latest_performance_commit": "f0daf48"
+    "accepted_workload_slices": 25,
+    "performance_commits": 20,
+    "latest_performance_commit": "854707d"
   }
 }

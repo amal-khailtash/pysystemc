@@ -9,6 +9,9 @@ These are historical measurements from Python 3.14.0, cppyy 3.5.0 and SystemC
 constitute new performance measurements. The port-value dispatch change in
 commit ``f0daf48`` adds one accepted workload slice, described below, bringing
 the total to 24 accepted workload slices across 19 performance commits.
+The member ``next_trigger`` cache in commit ``854707d`` brings the total to
+25 accepted workload slices across 20 performance commits; its confirmation
+and validation are described below.
 
 The timing loops measure the named operations. Recorder output and native
 correctness checks run outside those loops. These results therefore do not
@@ -262,3 +265,39 @@ native allocator-failure reachability. Timing excludes final text retrieval,
 reference rendering and smoke. Prepared installed-package checks were not
 executed; no confirmation or adoption gate is pending. Evidence is retained
 under ``build/performance/core-stream-dispatch/``.
+
+Member next_trigger dispatch cache
+----------------------------------
+
+Successful native member ``next_trigger`` callables are reused by exact argument
+type spelling in a separate closure for each owner class. Arguments are
+classified on every call, native registration still runs with the GIL held,
+and cache entries retain callable metadata without retaining owners or event
+expressions. Failed first calls do not populate the cache. The member ``wait``
+factory retains its previous dispatch and unwind behavior.
+
+Three serialized fresh-process pairs of 200,000 timed registrations passed
+the screen with a 12.26% reduction and three wins. Ten confirmation pairs
+measured 591.639 ms before and 513.113 ms with the cache (13.27% less elapsed,
+ten wins). Each Python method ran alongside an independent native C++ method
+with matching registration counts, checksums and timestamps. Timing includes
+Python bookkeeping and the same native reference work in both variants;
+it excludes imports, 100 warm callbacks and final validation. This is one
+module ``next_trigger(sc_time)`` workload, not a package-wide gain or a
+measurement of tracking overhead.
+
+Cold and warm thread-context failures matched native report 520 and recovery
+times. Public module/channel models exercised all time, event, OR/AND list and
+numeric overloads, with native-equivalence tests covering reports, member
+wait cleanup and scheduler queries. A controlled regression checks error
+recovery, current values, exact signatures, closure isolation and borrowed
+object release. These checks do not characterize concurrent kernels, mutable
+cppyy reflection or native allocator failure. Evidence is retained under
+``build/performance/member-next-trigger-cache/``. Python 3.15 remains deferred.
+
+All 113 runtime files matched the wheel, sdist and isolated installed package;
+112 runtime files were unchanged from the preceding package. Installed public
+trigger callbacks and both native and Python 3.14 thread waits passed, including
+Python finally cleanup and process-handle lifecycle. Eight targeted tests
+passed without skips. Current collection is 993; full-suite and global coverage
+results remain historical.
