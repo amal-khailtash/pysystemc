@@ -300,8 +300,9 @@ All 113 runtime files matched the wheel, sdist and isolated installed package;
 trigger callbacks and both native and Python 3.14 thread waits passed, including
 Python finally cleanup and process-handle lifecycle. Eight targeted tests
 passed without skips. Integration collection at that checkpoint was 993.
-Current collection is 995. Full-suite and global coverage results remain
-historical pending the fresh regression run.
+The fresh Python 3.14 regression run passed all 995 tests with zero failures,
+errors or skips. Independent XML/log reconciliation and all 113 runtime source
+hashes passed. The prior global coverage result remains historical.
 
 Follow-up lifetime regressions compare two owner instances sharing the installed
 member closure against independent native methods with private event sets.
@@ -369,3 +370,19 @@ reachability or mutable reflection behavior. All 113 runtime hashes remain
 unchanged. Installed package checks were prepared but not executed; no
 confirmation or adoption gate is pending. Evidence is retained under
 ``build/performance/event-append-guard/``.
+
+Fresh regression closeout
+-------------------------
+
+The full four-worker suite passed 995 tests in 1,964.80 seconds on Python
+3.14.0. Independent acceptance reconciled the JUnit testcase outcomes, suite
+counters and pytest log, and verified all 113 runtime files against the accepted
+package manifest. The first attempt stopped at the recorder's 300-second
+whole-command limit; the completed retry allowed 3,600 seconds for the suite
+while preserving the existing 60-second simulation subprocess deadlines.
+
+This is regression evidence for the current source, not a new coverage or
+performance measurement. The historical 4,539/4,548 statement coverage snapshot
+and its nine classified residuals remain separate. Evidence:
+``build/verification/full-suite-995-root-retry.xml`` and
+``build/verification/full-suite-995-root-accept.json``.

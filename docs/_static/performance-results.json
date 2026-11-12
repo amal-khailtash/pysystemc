@@ -780,5 +780,24 @@
     "accepted_workload_slices": 25,
     "performance_commits": 20,
     "latest_performance_commit": "854707d"
+  },
+  "latest_regression_acceptance": {
+    "date": "2026-11-12",
+    "source_commit": "b565a39",
+    "python": "3.14.0",
+    "tests": 995,
+    "passed": 995,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "pytest_seconds": 1964.8,
+    "runtime_files_matched": 113,
+    "xml_sha256": "1c2142f49bf55c640af45e91ac1875ede52745aa7d4338f98151324d40fdb62b",
+    "log_sha256": "12a4a54cac71381938f63afed74af5dd9a3f74ebdb27f85e3a55d57c08605baa",
+    "evidence": [
+      "build/verification/full-suite-995-root-retry.xml",
+      "build/verification/full-suite-995-root-accept.json"
+    ],
+    "limits": "No new global coverage or performance measurement; first whole-command recorder timeout retained."
   }
 }
