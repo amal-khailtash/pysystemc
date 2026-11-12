@@ -386,3 +386,27 @@ performance measurement. The historical 4,539/4,548 statement coverage snapshot
 and its nine classified residuals remain separate. Evidence:
 ``build/verification/full-suite-995-root-retry.xml`` and
 ``build/verification/full-suite-995-root-accept.json``.
+
+Exact numeric-unit constructor screen rejected
+----------------------------------------------
+
+Selecting the exact native ``sc_time(double, sc_time_unit)`` initializer did
+not improve construction throughput. Three serialized alternating pairs of
+20,000 constructions measured 23.912 ms before and 26.866 ms for the candidate,
+12.36% more elapsed time, with zero paired wins. Both roles restored the raw
+cppyy initializer before installing exactly one frozen Python wrapper.
+Independent acceptance checked all 113 unchanged runtime files, native tick
+checksums, analytical tick arithmetic and independently owned result storage.
+
+An initial candidate changed very large integer conversion diagnostics from
+``TypeError`` to ``OverflowError``. A narrowed candidate kept integers above
+1,023 bits on the original dispatcher and passed the boundary comparison before
+timing. Both candidates remain experiments; production is unchanged. The
+narrowed candidate also matched all 31 native public constructor rows and
+passed the controlled route/lifetime contract. Boundary checks include recovery
+after errors; nonfinite and out-of-range observations do not define portable
+native behavior. Evidence: ``build/performance/time-unit-overload/``.
+
+The performance gate failed, so no ten-pair confirmation, integration or package
+validation is pending for this candidate. Accepted accounting remains 25
+workload slices across 20 performance commits.

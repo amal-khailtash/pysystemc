@@ -748,6 +748,29 @@
         "build/performance/event-append-guard/native-smoke.json"
       ],
       "limits": "Native callback/checksum/timing and event/list transfer/discard/type rejection parity. Controlled derivedtype/error/proxyrelease checks are not native allocator-failure reachability or mutable reflection characterization. Package gates prepared not executed; no confirmation/integration/adopted slice."
+    },
+    {
+      "id": "exact-native-time-unit-constructor",
+      "date": "2026-11-12",
+      "status": "rejected",
+      "before_ms": 23.91204982995987,
+      "candidate_ms": 26.866383850574493,
+      "elapsed_reduction_percent": -12.355001104560603,
+      "pairs": 3,
+      "wins": 0,
+      "scope": "20,000 sc_time constructions with alternating exact int/float inputs and canonical PS/NS/US/MS units;one frozen Python wrapper perrole. Values retained through checks;imports/warmup/nativechecksum/destruction outside timing.",
+      "reason": "Candidate slower in allthree pairs; below5percent gate. Production unchanged. Initial source candidate also changed hugeinteger error diagnostics; narrowed <=1023bit int route restored diagnostics before timing.",
+      "evidence": [
+        "build/performance/time-unit-overload/screen.json",
+        "build/performance/time-unit-overload/screen.root.json",
+        "build/performance/time-unit-overload/native-smoke.json",
+        "build/performance/time-unit-overload/boundary.json"
+      ],
+      "source_hashes": {
+        "before.py": "0fe82b653e86047909373b0edde2a9e934e802bafa597fe8fb90dfbdd0f477f2",
+        "candidate.py": "b20e5c74688d9d22cffbeafac7d70708a913a1ef639707b8efd9db8e6c2ed2b3"
+      },
+      "limits": "31 native public rows,controlled factory,12 numeric boundary cases/error recovery and independent owned storage checks. Nonfinite/out-of-range host observations do not define portable native behavior. No ten-pair confirmation,integration,adoption or package gate;prepared installed checks unexecuted."
     }
   ],
   "current_working_tree_acceptance": {
