@@ -340,3 +340,31 @@ place of a signal interface and a stale timing key); corrected smoke passed.
 Failed runs were excluded from timing acceptance. No confirmation, integration
 or package gate is pending for this rejected candidate. Evidence is retained
 under ``build/performance/member-edge-cache/``.
+
+Event expression append guard screen
+------------------------------------
+
+Hoisting the canonical ``(sc_event, list_type)`` guard tuple into each append
+closure was screened with 200,000 timed three-event OR/AND registrations in a
+Python method process. Each registration constructs a fresh expression and
+executes one chained append guard. Three serialized fresh-process pairs
+measured 1.371 s before and 1.320 s for the candidate (3.71% less elapsed,
+three wins). The candidate was rejected because the reduction falls below
+the 5% feasibility gate. Production remains unchanged.
+
+A native C++ method performed the same expression and timeout schedule in
+each kernel. Callback counts, checksums and simulation times matched; no
+events were notified, so every callback resumed after 1 ns. Timing includes
+expression construction, registration, Python bookkeeping and the identical
+native reference work. It excludes imports, 100 warm callbacks and final
+checks. This result does not establish a package-wide gain or tracking cost.
+
+The public event-list model matched C++, including event and matching-list
+appends, mixed-list rejection without consuming the left expression, and
+automatic-list transfer, copy and discard. A controlled actual-factory fixture
+checked canonical and derived event types, current operands, native errors
+and borrowed-object release. It does not establish native allocator-failure
+reachability or mutable reflection behavior. All 113 runtime hashes remain
+unchanged. Installed package checks were prepared but not executed; no
+confirmation or adoption gate is pending. Evidence is retained under
+``build/performance/event-append-guard/``.

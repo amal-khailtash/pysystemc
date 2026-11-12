@@ -730,6 +730,24 @@
         "build/performance/member-edge-cache/control-smoke.json"
       ],
       "limits": "36native publicrows and sampledCTHREAD resetkill parity; no10pairconfirmation/integration/package gate or adopted slice."
+    },
+    {
+      "id": "event-expression-append-guard-hoist",
+      "date": "2026-11-12",
+      "status": "rejected",
+      "before_ms": 1370.63591,
+      "candidate_ms": 1319.759094,
+      "elapsed_reduction_percent": 3.7119132534620403,
+      "pairs": 3,
+      "wins": 3,
+      "scope": "200,000 fresh three-event OR/AND expression constructions and timed next_trigger registrations/resumptions; same nativeSC_METHODreference,100warm callbacks/imports/finalchecks excluded.",
+      "reason": "Reduction below5percent feasibility gate; production unchanged.",
+      "evidence": [
+        "build/performance/event-append-guard/screen.json",
+        "build/performance/event-append-guard/screen-acceptance.json",
+        "build/performance/event-append-guard/native-smoke.json"
+      ],
+      "limits": "Native callback/checksum/timing and event/list transfer/discard/type rejection parity. Controlled derivedtype/error/proxyrelease checks are not native allocator-failure reachability or mutable reflection characterization. Package gates prepared not executed; no confirmation/integration/adopted slice."
     }
   ],
   "current_working_tree_acceptance": {
