@@ -144,8 +144,9 @@ hosts are unsupported. Native blocking operations require the appropriate guarde
 reset/kill cleanup. Python FIFO direct/port read/write and native TLM FIFO
 get/peek/put use guarded native operations.
 
-Further upstream examples and platform combinations remain unverified. No
-namespace export is counted as an executed example.
+The 60-file Python example source audit is accepted; broader example behavior
+and platform combinations remain unverified. No namespace export is counted
+as an executed example.
 
 Trace errors and ownership
 --------------------------

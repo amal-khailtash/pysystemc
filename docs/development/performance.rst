@@ -299,8 +299,9 @@ All 113 runtime files matched the wheel, sdist and isolated installed package;
 112 runtime files were unchanged from the preceding package. Installed public
 trigger callbacks and both native and Python 3.14 thread waits passed, including
 Python finally cleanup and process-handle lifecycle. Eight targeted tests
-passed without skips. Integration collection was 993; full-suite and global coverage
-results remain historical.
+passed without skips. Integration collection at that checkpoint was 993.
+Current collection is 995. Full-suite and global coverage results remain
+historical pending the fresh regression run.
 
 Follow-up lifetime regressions compare two owner instances sharing the installed
 member closure against independent native methods with private event sets.
