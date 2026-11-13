@@ -76,6 +76,31 @@ for this finite closeout.
 Evidence and exact disposition counts are recorded in
 ``docs/_static/verification-closeout.json``.
 
+Source-review ledger completion
+-------------------------------
+
+The runtime review ledger previously listed 111 files and omitted
+``_bootstrap.py`` and ``sc_core/event_list_registration.h``. Both files have
+now been read completely and matched to current package hashes and existing
+assertions. All 113 packaged runtime paths have source-review entries. Existing
+review statuses are preserved; adding an entry does not certify every runtime
+contract.
+
+The bootstrap audit checks private loader preparation, exact environment
+restoration, fallback and cleanup. Its 32 focused cases pass in the accepted
+regression. Concurrent native or newly starting threads can observe the temporary
+process-wide ``PATH``; arbitrary import and filesystem races remain outside the
+selected tests. The event-list audit checks borrowed process identity,
+unpublished registration cleanup and list ownership. All 14 rollback cases pass,
+including two partial-registration shapes. These tests inject ``bad_alloc`` after
+real registration; they do not establish recovery from genuine allocator
+exhaustion or priority-queue corruption. No concrete defect was found in either
+source review.
+
+The added entries, source hashes, selected testcase names and limits are recorded
+in ``docs/_static/runtime-source-review-completion.json``. Broader API contract
+verification remains incomplete.
+
 Performance exploration remains paused. The 25 accepted workload slices across
 20 performance commits retain their individual scopes. There is no measured
 package-wide cumulative gain or tracking-overhead comparison. No new benchmark
