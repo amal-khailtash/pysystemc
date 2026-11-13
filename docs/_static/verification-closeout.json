@@ -1,67 +1,16 @@
 {
-  "status": "closed_with_explicit_limits_within_tested_baseline_scopes",
+  "status": "closed_finite_baseline_obligations_with_explicit_backend_limit",
   "python": "3.14.0",
-  "tests": 995,
-  "passed": 995,
+  "tests": 996,
+  "passed": 996,
   "failures": 0,
   "errors": 0,
   "skips": 0,
   "runtime_source_hashes_matched": 113,
   "example_audit_hashes_matched": 60,
-  "baseline_obligations_addressed": 142,
+  "baseline_obligations_addressed": 147,
   "baseline_obligations_total": 147,
-  "remaining_baseline_items": [
-    {
-      "item": "Resolved-read fallback call when reflected native read is absent",
-      "status": "conditional",
-      "source": "src/amal/eda/systemc/sc_core/__init__.py:701-703",
-      "evidence": [
-        ".ai/audits/remaining-baseline-contracts-2026-11-01.md",
-        ".ai/audits/coverage-residual-root-2026-11-04.json"
-      ],
-      "next": "Check supported configurations; current host exposes native read so this route cannot be forced safely."
-    },
-    {
-      "item": "Conditional installation of resolved-read adapter",
-      "status": "conditional",
-      "source": "src/amal/eda/systemc/sc_core/__init__.py:706-707",
-      "evidence": [
-        ".ai/audits/remaining-baseline-contracts-2026-11-01.md",
-        ".ai/audits/coverage-residual-root-2026-11-04.json"
-      ],
-      "next": "Retain feature detection; establish an actual supported configuration lacking native read before claiming branch verification."
-    },
-    {
-      "item": "Missing socket accessor fallback",
-      "status": "conditional",
-      "source": "src/amal/eda/systemc/tlm_utils/__init__.py:189-208",
-      "evidence": [
-        ".ai/audits/remaining-baseline-contracts-2026-11-01.md",
-        ".ai/audits/coverage-residual-root-2026-11-04.json"
-      ],
-      "next": "Identify a concrete supported socket family without that accessor, or record as configuration-dependent."
-    },
-    {
-      "item": "Raw pointer-to-member route through sc_assemble_vector",
-      "status": "unsupported_on_cppyy_3_5",
-      "source": "src/amal/eda/systemc/sc_core/_vectors.py:256-270",
-      "evidence": [
-        ".ai/audits/native-member-pointer-2026-11-01.json",
-        ".ai/audits/remaining-baseline-contracts-2026-11-01.md"
-      ],
-      "next": "Only reconsider after a safe typed adapter or supported PMD representation exists."
-    },
-    {
-      "item": "Raw pointer-to-member route through vector.assemble",
-      "status": "unsupported_on_cppyy_3_5",
-      "source": "src/amal/eda/systemc/sc_core/_vectors.py:350-364",
-      "evidence": [
-        ".ai/audits/native-member-pointer-2026-11-01.json",
-        ".ai/audits/remaining-baseline-contracts-2026-11-01.md"
-      ],
-      "next": "Only reconsider after a safe typed adapter or supported PMD representation exists."
-    }
-  ],
+  "remaining_baseline_items": [],
   "selected_alternative_path_test_counts": {
     "public_adapter_coverage": 1,
     "sc_core_concrete_signals_public": 1,
@@ -70,12 +19,81 @@
     "tlm_utils_simple_b_public": 1
   },
   "whole_api_contract_verification": "incomplete;12681 reviewed declarations and292 accepted finite categories do not establish exhaustive contracts",
-  "performance_exploration": "paused; no new screens authorized by this closeout",
-  "coverage": "historical4539/4548,nineclassifiedresiduals;not a new measurement",
+  "performance_exploration": "paused; no benchmark queued",
+  "coverage": "historical4539/4548,nineclassifiedresiduals; not remeasured after branch retirement",
   "evidence": [
-    "build/verification/full-suite-995-root-retry.xml",
-    "build/verification/full-suite-995-root-accept.json",
-    "build/performance/member-next-trigger-cache/package-root.json",
+    "build/verification/remaining-closeout/full-suite.xml",
+    "build/verification/remaining-closeout/full-root.json",
+    "build/verification/remaining-closeout/package-root.json",
+    "build/verification/remaining-closeout/fallback-root.json",
     ".ai/audits/completion-reopen/examples/source-syntax.json"
-  ]
+  ],
+  "implementation_commit": "9016bf0",
+  "installed_models": 4,
+  "baseline_obligations_exercised": 132,
+  "baseline_obligations_retired": 15,
+  "completed_baseline_items": [
+    {
+      "item": "Resolved-read fallback call when reflected native read is absent",
+      "source": "src/amal/eda/systemc/sc_core/__init__.py",
+      "evidence": [
+        "build/verification/remaining-closeout/fallback-root.json"
+      ],
+      "previous_status": "conditional",
+      "status": "retired_native_api_required"
+    },
+    {
+      "item": "Conditional installation of resolved-read adapter",
+      "source": "src/amal/eda/systemc/sc_core/__init__.py",
+      "evidence": [
+        "build/verification/remaining-closeout/fallback-root.json"
+      ],
+      "previous_status": "conditional",
+      "status": "retired_native_api_required"
+    },
+    {
+      "item": "Missing socket accessor fallback",
+      "source": "src/amal/eda/systemc/tlm_utils/__init__.py",
+      "evidence": [
+        "build/verification/remaining-closeout/fallback-root.json"
+      ],
+      "previous_status": "conditional",
+      "status": "retired_native_api_required"
+    },
+    {
+      "item": "Raw pointer-to-member route through sc_assemble_vector",
+      "source": "src/amal/eda/systemc/sc_core/_vectors.py",
+      "evidence": [
+        "build/verification/remaining-closeout-root-native.log",
+        "build/verification/remaining-closeout/package-root.json"
+      ],
+      "previous_status": "unsupported_on_cppyy_3_5",
+      "status": "supported_native_symbol_adapter"
+    },
+    {
+      "item": "Raw pointer-to-member route through vector.assemble",
+      "source": "src/amal/eda/systemc/sc_core/_vectors.py",
+      "evidence": [
+        "build/verification/remaining-closeout-root-native.log",
+        "build/verification/remaining-closeout/package-root.json"
+      ],
+      "previous_status": "unsupported_on_cppyy_3_5",
+      "status": "supported_native_symbol_adapter"
+    }
+  ],
+  "backend_limitations": [
+    {
+      "item": "Direct raw cppyy member-pointer views",
+      "status": "unsupported_cppyy_3_5_representation",
+      "public_alternative": "member_type.from_pointer(\"namespace::symbol\") then either assembly API",
+      "behavior": "Explicit TypeError rejects unsafe raw views before overload marshalling"
+    }
+  ],
+  "historical_baseline_closeout": {
+    "commit": "63f9920",
+    "tests": 995,
+    "addressed": 142,
+    "total": 147,
+    "remaining": 5
+  }
 }

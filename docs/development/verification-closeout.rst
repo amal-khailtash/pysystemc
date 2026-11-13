@@ -1,75 +1,82 @@
 Python 3.14 verification closeout
 =================================
 
-The tested Python 3.14 baseline has a clean regression result: 995 tests passed,
-with zero failures, errors or skips. Independent acceptance reconciled the
-JUnit testcase outcomes and counters with the pytest log. All 113 runtime
-source files match the accepted package manifest, and all 60 example source
-files match their accepted source-audit hashes.
+The five remaining baseline obligations have concrete dispositions: three
+speculative compatibility branches are retired, and both runtime native
+member-pointer assembly routes have a supported typed adapter. Final integrated
+regression passed all 996 tests with zero failures, errors or skips in
+1966.56 seconds. All 113 runtime files match the source, wheel,
+source archive and isolated installed package. The earlier clean 995-test result
+remains historical evidence.
 
-This closes the regression and source-audit gates for the tested baseline
-scopes. Exhaustive verification of every public API contract remains incomplete.
+Baseline obligation dispositions
+--------------------------------
+
+.. list-table:: Disposition of the five former remaining obligations
+   :header-rows: 1
+   :widths: 30 20 50
+
+   * - Item
+     - Status
+     - Evidence and public behavior
+   * - Resolved-read fallback helper
+     - Retired
+     - Native ``sc_signal_resolved`` inherits public virtual ``read()``.
+       Native and bridge values match before and after a channel update.
+       No supported missing-read configuration was established.
+   * - Resolved-read fallback installation
+     - Retired
+     - Native reflection exposes inherited read, including private-hiding
+       probes. An assignment to an incomplete reflected class is replaced
+       when its native definition arrives; that is not a supported fallback.
+   * - Missing socket accessor fallback
+     - Retired
+     - All six simple, tagged and multi callback socket factory products expose
+       both inherited port accessors. Missing reflection now raises an API
+       error. Indexed and direct interface access configure blocking transport
+       for Python thread waits.
+   * - Runtime member pointer through ``sc_assemble_vector``
+     - Supported through symbol capture
+     - ``member_type.from_pointer("namespace::selection")`` copies the current
+       native variable into a typed token. Independent C++ equivalence checks
+       member identity, arbitrary width, null, const and inherited conversion.
+   * - Runtime member pointer through ``vector.assemble``
+     - Supported through symbol capture
+     - The same token supports the member API. Later variable changes affect
+       new tokens; copies preserve their original pointer. Error recovery and
+       retained vector ownership have regression checks.
+
+Retirement does not mean an unavailable compatibility branch was exercised.
+Raw cppyy 3.5 member-pointer views still cannot be safely marshalled. Passing
+such a view raises an actionable ``TypeError``; callers capture the native
+variable by qualified identifier instead. Arbitrary C++ expressions are rejected.
+
+The baseline ledger now has 147/147 obligations addressed: 132 exercised and
+15 retired, including these two adapted routes and three retired branches.
+All final gates for these finite obligations passed. Exhaustive verification of every public API contract remains incomplete.
 The 12,681 declaration reviews and 292 accepted finite categories describe
 source review and selected behavior; they do not establish every template,
 configuration, error, GIL/thread or lifetime contract.
 
-Five remaining baseline items
------------------------------
+Validation scope and finish line
+--------------------------------
 
-The original baseline ledger has 142 of 147 obligations addressed. The five
-remaining items are explicit limitations, with no failing regression test in
-the selected public alternatives:
+Historical coverage remains 4,539/4,548 with nine classified residual statements.
+Removing compatibility branches changes the current source, so those counts
+are retained as a historical snapshot rather than relabeled as current coverage.
+The 60 accepted example audits are reused. Broader example inputs, topologies,
+process lifecycles and trace variants remain outside the selected scopes.
+Python 3.14 is the baseline; Python 3.15 is deferred.
 
-.. list-table:: Remaining baseline obligations
-   :header-rows: 1
-   :widths: 35 20 45
+Independent acceptance reconciled all 996 JUnit testcase outcomes and counters
+with the pytest log and current runtime hashes. Four fresh installed-package
+models passed native pointer capture, resolved reads, socket accessors and
+thread/reset/kill behavior. No validation or implementation item remains pending
+for this finite closeout.
+Evidence and exact disposition counts are recorded in
+``docs/_static/verification-closeout.json``.
 
-   * - Item
-     - Status
-     - Tested public path or condition for further work
-   * - Resolved-read fallback helper
-     - Configuration-dependent; untested branch
-     - Native resolved reads have parity tests. The helper requires a real
-       supported configuration without the reflected native read method.
-   * - Resolved-read fallback installation
-     - Configuration-dependent; untested branch
-     - Native read is available on the tested baseline. A missing-method
-       configuration is needed to validate installation without replacing
-       native reflection artificially.
-   * - Missing socket accessor fallback
-     - Configuration-dependent; untested branch
-     - Concrete available socket accessors have regression evidence. This
-       compatibility branch depends on the socket family and reflected API.
-   * - Raw pointer-to-member through ``sc_assemble_vector``
-     - Unsupported by cppyy 3.5
-     - Typed member tokens and named member access have native parity tests.
-       Retesting the raw route requires a supported member-pointer representation
-       or a safe adapter.
-   * - Raw pointer-to-member through ``vector.assemble``
-     - Unsupported by cppyy 3.5
-     - Typed tokens and named members remain the supported routes. A raw pointer
-       conversion failure is not a failure of those alternatives.
-
-These five capability obligations are distinct from the nine residual statements
-in the historical 4,539/4,548 coverage snapshot. Coverage has not been remeasured
-by this closeout. Broader example inputs, topologies, process lifecycles and trace
-variants also remain outside the accepted selected scopes. Python 3.15 is deferred.
-
-Finish line and further work
-----------------------------
-
-No test, build or installation gate remains pending for the accepted baseline
-artifacts within their recorded scopes. Further correctness work requires a
-specific failing public case, a supported configuration that reaches a conditional
-branch, or a defined expansion of the tested contract set. Those items remain
-visible; this closeout does not relabel them as passing or exhaustively verified.
-
-Performance exploration is paused at this closeout. The 25 accepted workload
-slices across 20 performance commits retain their individual scopes. Rejected
-experiments do not close correctness obligations and do not count as gains.
-There is no measured package-wide cumulative gain or tracking-overhead comparison.
-
-Evidence is summarized in ``docs/_static/verification-closeout.json``. The fresh
-regression XML and independent reconciliation are retained under
-``build/verification/full-suite-995-root-*`` and
-``build/verification/baseline-closeout/root.json``.
+Performance exploration remains paused. The 25 accepted workload slices across
+20 performance commits retain their individual scopes. There is no measured
+package-wide cumulative gain or tracking-overhead comparison. No new benchmark
+or optimization screen is part of this finite closeout.
