@@ -7,8 +7,63 @@ import cppyy
 _members = {}
 _member_failures = {}
 _member_tokens = {}
+_pointer_getters = {}
 _next_member_helper_id = 0
-_native_assemble = cppyy.gbl.sc_core.sc_assemble_vector
+
+
+def _pointer_member_token(element_type, member_type, symbol):
+    """Capture a native pointer variable by symbol without marshalling its bytes.
+
+    Args:
+        element_type: Native element class of the requested pointer signature.
+        member_type: Native member type, including arbitrary template arguments.
+        symbol: C++ variable identifier, optionally qualified by namespaces.
+
+    Returns:
+        An independent native token copying the variable's current pointer value.
+
+    Raises:
+        ValueError: The symbol is not a qualified C++ identifier.
+        TypeError: The variable is missing, inaccessible or not a compatible
+            pointer to a data member; the compiler error is retained as cause.
+
+    Only generated callables are cached. Pointer values are sampled on every
+    call. Tokens own no element storage; callers retain assembly owners. Calls
+    hold the GIL, invoke no Python callbacks and do not enter the kernel.
+    """
+    if not isinstance(symbol, str):
+        raise TypeError("pointer symbol must be a C++ variable identifier")
+    if not re.fullmatch(r"(?:::)?[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*", symbol):
+        raise ValueError("pointer symbol must be a qualified C++ variable identifier")
+    symbol = symbol.removeprefix("::")
+    key = (element_type.__cpp_name__, str(getattr(member_type, "__cpp_name__", member_type)), symbol)
+    if key not in _pointer_getters:
+        global _next_member_helper_id
+        identifier = f"pointer_symbol_{_next_member_helper_id}"
+        _next_member_helper_id += 1
+        try:
+            cppyy.cppdef(f"""
+namespace pysystemc_vectors {{
+/** @brief Read one native data-member pointer variable without raw marshalling.
+ * @return A fresh token for the symbol's current value, including null.
+ * @details Calls hold the GIL and own only the copied pointer value. No Python
+ * callbacks or kernel entry occur. Elements remain borrowed by later assemblies.
+ * The native capture parameter checks the exact or convertible pointer signature.
+ */
+member_pointer<{key[0]}, {key[1]}> {identifier}() {{
+  return member_pointer_access<{key[0]}, {key[1]}>::capture(::{symbol});
+}}
+}}
+""")
+            _pointer_getters[key] = getattr(cppyy.gbl.pysystemc_vectors, identifier)
+        except (SyntaxError, TypeError, ValueError) as error:
+            raise TypeError(f"native pointer symbol {symbol!r} is unavailable or incompatible") from error
+    try:
+        token = _pointer_getters[key]()
+    except (SyntaxError, TypeError, ValueError) as error:
+        raise TypeError(f"native pointer symbol {symbol!r} is unavailable or incompatible") from error
+    _register_member_token(type(token), element_type, member_type)
+    return token
 
 
 def _member_helper(element_type, member):
@@ -253,8 +308,8 @@ def assemble_vector(vector, member):
     The returned proxy retains the vector, including Python assembly copies,
     assignment and swap. Iterators remain borrowed; keep their owners alive. Calls hold the GIL and preserve
     native binding, range and diagnostic behavior.
-    Raw reflected pointer-to-member values depend on cppyy marshalling and are
-    unsupported on the Python 3.14/cppyy 3.5 baseline; use a typed token instead.
+    Capture native pointer variables using member_type.from_pointer(symbol).
+    Untyped raw cppyy views are rejected before native dispatch.
     """
     if isinstance(member, str):
         vector_element_type = type(vector).element_type
@@ -269,7 +324,9 @@ def assemble_vector(vector, member):
     else:
         assembly = _assemble_member_token(vector, member, "free", "sc_assemble_vector")
         if assembly is None:
-            assembly = _native_assemble(vector, member)
+            raise TypeError(
+                "sc_assemble_vector requires a member name or typed token; capture native pointer variables with member_type.from_pointer(symbol)"
+            )
     assembly._vector_owner = vector
     return assembly
 
@@ -280,7 +337,6 @@ def _pythonize_vector(vector_type, name):
         return
     native_constructor = vector_type.__init__
     native_initialize = vector_type.init
-    native_member = vector_type.assemble
     element_type = _element_type(vector_type)
     element_type_proxy = vector_type.element_type
 
@@ -363,9 +419,9 @@ def _pythonize_vector(vector_type, name):
             ValueError: The member name is invalid or the token is null.
             TypeError: The token signature or member selection is incompatible.
 
-        Calls hold the GIL. Raw reflected pointer-to-member values depend on
-        cppyy marshalling; they are unsupported on the Python 3.14/cppyy 3.5
-        baseline. Keep assembly owners alive while using their iterators.
+        Calls hold the GIL. Native pointer variables can be captured with
+        member_type.from_pointer(symbol). Untyped raw cppyy views are rejected.
+        Keep assembly owners alive while using their iterators.
         """
         if isinstance(member, str):
             assembly = _named_assembly(
@@ -379,7 +435,9 @@ def _pythonize_vector(vector_type, name):
         else:
             assembly = _assemble_member_token(self, member, "member", "sc_vector.assemble")
             if assembly is None:
-                assembly = native_member(self, member)
+                raise TypeError(
+                    "sc_vector.assemble requires a member name or typed token; capture native pointer variables with member_type.from_pointer(symbol)"
+                )
         assembly._vector_owner = self
         return assembly
 

@@ -1011,7 +1011,15 @@ already created; initialization can then be retried under native elaboration rul
 native member pointers for public data members. For a reusable typed pointer value,
 select ``sc_member_access[Element, Member].member_type`` and call
 ``from_member("port")`` on that alias. Pass the result to either assembly API.
-The alias also accepts default construction for a null pointer and copy
+For a runtime C++ pointer variable, use
+``from_pointer("namespace::pointer_variable")`` on the same alias. C++ copies
+the variable's current value directly, including compatible base-to-derived
+member-pointer conversions. Only getter callables are cached; later variable
+changes affect new tokens and leave existing tokens unchanged. The symbol must
+be a qualified identifier, not an expression. Invalid spelling raises
+``ValueError``; missing or incompatible symbols raise ``TypeError`` with the
+compiler error as cause. Calls hold the GIL and invoke no callbacks or kernel
+operations. The alias also accepts default construction for a null pointer and copy
 construction from a token of the same type. Null assembly arguments raise
 ``ValueError``; incompatible element types raise ``TypeError``. Member selection
 supports arbitrary native element templates and member types.

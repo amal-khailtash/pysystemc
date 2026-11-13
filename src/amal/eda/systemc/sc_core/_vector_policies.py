@@ -2,7 +2,7 @@
 
 import cppyy
 
-from ._vectors import _named_member_policy, _named_member_token, _register_member_token
+from ._vectors import _named_member_policy, _named_member_token, _pointer_member_token, _register_member_token
 
 _native_member_template = cppyy.gbl.sc_core.sc_member_access
 
@@ -162,6 +162,30 @@ class _MemberPointerType:
         if self._native_alias is None:
             raise AttributeError(name)
         return getattr(self._native_alias, name)
+
+    def from_pointer(self, symbol):
+        """Capture a native pointer-to-member variable in a typed value token.
+
+        Args:
+            symbol: C++ variable identifier, optionally namespace-qualified.
+                The variable must contain a pointer convertible to this token's
+                native ``Member Element::*`` signature.
+
+        Returns:
+            An owned token copying the variable's current pointer value. A null
+            variable creates a null token, rejected when used for assembly.
+
+        Raises:
+            ValueError: The symbol is not a qualified C++ identifier.
+            TypeError: The symbol is missing, inaccessible or incompatible.
+
+        C++ reads the variable directly; no raw pointer bytes cross Python.
+        Tokens retain neither the variable nor element storage, and later
+        variable changes do not affect existing tokens. Calls hold the GIL,
+        invoke no Python callbacks and do not enter the simulation kernel.
+        Keep the vector alive while using any assembly made from the token.
+        """
+        return _pointer_member_token(self._element_type, self._member_type, symbol)
 
 
 class MemberAccessTemplate:

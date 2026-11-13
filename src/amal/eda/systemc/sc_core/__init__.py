@@ -701,13 +701,8 @@ def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> A
     return channel
 
 
-def _read_resolved(self: Any) -> Any:
-    """Return a copy of native resolved logic after the channel update phase."""
-    return cppyy.gbl.sc_core.python_read_resolved(self)
-
-
-if not hasattr(cppyy.gbl.sc_core.sc_signal_resolved, "read"):
-    cppyy.gbl.sc_core.sc_signal_resolved.read = _read_resolved
+# sc_signal_resolved inherits the public native virtual read() from sc_signal_t.
+# Require that native API rather than installing a speculative reflection fallback.
 
 
 def _time_modulo(self: Any, other: Any) -> Any:

@@ -8,6 +8,15 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Capture runtime native member-pointer variables with
+  `sc_member_access[Element, Member].member_type.from_pointer("namespace::symbol")`
+  for both vector assembly APIs. Preserve current values, copied tokens, native
+  conversions and vector ownership; reject unsafe raw cppyy views clearly.
+
+- Require the inherited native resolved-signal read and callback socket port
+  accessors, retiring three speculative compatibility branches. Both socket
+  accessors configure blocking transport for Python thread waits.
+
 - Add member trigger lifetime regressions for interleaved owner instances,
   consumed event expressions, and native method reset/kill behavior.
 

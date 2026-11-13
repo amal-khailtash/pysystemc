@@ -150,10 +150,15 @@ Use typed member tokens for reusable vector assemblies::
 
 Both routes preserve native member identity, arbitrary value widths and vector
 ownership. Tokens must match the element and member signature and must be
-nonnull. Raw pointer-to-member variables reflected by cppyy are unsupported on
-the Python 3.14/cppyy 3.5 baseline: overload conversion fails before native
-assembly. The raw-pointer fallback contracts remain open; passing typed-token
-tests does not verify those routes.
+nonnull. Capture a runtime native pointer variable through the same typed alias::
+
+   token = sc.sc_member_access[Element, Member].member_type.from_pointer("model::selection")
+   assembly = vector.assemble(token)
+
+The adapter samples the current native variable directly and copies its value.
+Raw cppyy views still cannot be marshalled safely; passing one raises an
+actionable ``TypeError`` directing callers to symbol capture. Symbol capture
+has an independent C++ reference comparison through both assembly APIs.
 
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and

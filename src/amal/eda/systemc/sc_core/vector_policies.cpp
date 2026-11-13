@@ -99,6 +99,19 @@ struct member_pointer_access
 {
   using token_type = member_pointer<Element, Member>;
 
+  /** @brief Capture a runtime native pointer-to-member in an owned value token.
+   * @param pointer Exact or implicitly convertible Member Element::* value.
+   * @return A token copying the pointer value, including a null pointer.
+   * @details Called by generated C++ symbol adapters with the GIL held. No raw
+   * pointer bytes cross Python, no element ownership is acquired, and no
+   * callbacks, kernel entry or exceptions occur. Later symbol changes do not
+   * change the returned token; callers retain elements used by its assemblies.
+   */
+  static token_type capture(typename token_type::pointer_type pointer)
+  {
+    return token_type(pointer);
+  }
+
   /** @brief Assemble via sc_vector::assemble from a validated typed token.
    * @param vector Native vector borrowed by the returned assembly.
    * @param token Typed pointer value, whose member storage remains vector-owned.

@@ -191,13 +191,15 @@ def _checked_socket_callback(method, callback):
 
 
 def _configure_forward_access(socket_type):
-    """Release GIL on concrete forward interfaces returned by a native socket."""
+    """Configure both inherited native port accessors for blocking waits.
+
+    Supported callback socket types provide get_interface and indexed access
+    through their native port base. Missing reflection is an API error.
+    """
     if getattr(socket_type, "_forward_gil_configured", False):
         return
     for accessor in ("get_interface", "__getitem__"):
-        native_get = getattr(socket_type, accessor, None)
-        if native_get is None:
-            continue
+        native_get = getattr(socket_type, accessor)
 
         def get_interface(socket, *args, _native=native_get):
             """Return the native interface with blocking dispatch configured for waits."""
