@@ -1,0 +1,81 @@
+{
+  "status": "closed_with_explicit_limits_within_tested_baseline_scopes",
+  "python": "3.14.0",
+  "tests": 995,
+  "passed": 995,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "runtime_source_hashes_matched": 113,
+  "example_audit_hashes_matched": 60,
+  "baseline_obligations_addressed": 142,
+  "baseline_obligations_total": 147,
+  "remaining_baseline_items": [
+    {
+      "item": "Resolved-read fallback call when reflected native read is absent",
+      "status": "conditional",
+      "source": "src/amal/eda/systemc/sc_core/__init__.py:701-703",
+      "evidence": [
+        ".ai/audits/remaining-baseline-contracts-2026-11-01.md",
+        ".ai/audits/coverage-residual-root-2026-11-04.json"
+      ],
+      "next": "Check supported configurations; current host exposes native read so this route cannot be forced safely."
+    },
+    {
+      "item": "Conditional installation of resolved-read adapter",
+      "status": "conditional",
+      "source": "src/amal/eda/systemc/sc_core/__init__.py:706-707",
+      "evidence": [
+        ".ai/audits/remaining-baseline-contracts-2026-11-01.md",
+        ".ai/audits/coverage-residual-root-2026-11-04.json"
+      ],
+      "next": "Retain feature detection; establish an actual supported configuration lacking native read before claiming branch verification."
+    },
+    {
+      "item": "Missing socket accessor fallback",
+      "status": "conditional",
+      "source": "src/amal/eda/systemc/tlm_utils/__init__.py:189-208",
+      "evidence": [
+        ".ai/audits/remaining-baseline-contracts-2026-11-01.md",
+        ".ai/audits/coverage-residual-root-2026-11-04.json"
+      ],
+      "next": "Identify a concrete supported socket family without that accessor, or record as configuration-dependent."
+    },
+    {
+      "item": "Raw pointer-to-member route through sc_assemble_vector",
+      "status": "unsupported_on_cppyy_3_5",
+      "source": "src/amal/eda/systemc/sc_core/_vectors.py:256-270",
+      "evidence": [
+        ".ai/audits/native-member-pointer-2026-11-01.json",
+        ".ai/audits/remaining-baseline-contracts-2026-11-01.md"
+      ],
+      "next": "Only reconsider after a safe typed adapter or supported PMD representation exists."
+    },
+    {
+      "item": "Raw pointer-to-member route through vector.assemble",
+      "status": "unsupported_on_cppyy_3_5",
+      "source": "src/amal/eda/systemc/sc_core/_vectors.py:350-364",
+      "evidence": [
+        ".ai/audits/native-member-pointer-2026-11-01.json",
+        ".ai/audits/remaining-baseline-contracts-2026-11-01.md"
+      ],
+      "next": "Only reconsider after a safe typed adapter or supported PMD representation exists."
+    }
+  ],
+  "selected_alternative_path_test_counts": {
+    "public_adapter_coverage": 1,
+    "sc_core_concrete_signals_public": 1,
+    "member_pointer_policy_values": 1,
+    "native_member_pointer_assembly": 1,
+    "tlm_utils_simple_b_public": 1
+  },
+  "whole_api_contract_verification": "incomplete;12681 reviewed declarations and292 accepted finite categories do not establish exhaustive contracts",
+  "performance_exploration": "paused; no new screens authorized by this closeout",
+  "coverage": "historical4539/4548,nineclassifiedresiduals;not a new measurement",
+  "evidence": [
+    "build/verification/full-suite-995-root-retry.xml",
+    "build/verification/full-suite-995-root-accept.json",
+    "build/performance/member-next-trigger-cache/package-root.json",
+    ".ai/audits/completion-reopen/examples/source-syntax.json"
+  ]
+}

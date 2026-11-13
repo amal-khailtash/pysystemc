@@ -10,6 +10,7 @@ this repository's validation, publication and recovery workflow.
    guide
    contributing
    verification
+   verification-closeout
    performance
    releases
    ../intro/architecture
