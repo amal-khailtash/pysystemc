@@ -61,9 +61,27 @@ configuration, error, GIL/thread or lifetime contract.
 Validation scope and finish line
 --------------------------------
 
-Historical coverage remains 4,539/4,548 with nine classified residual statements.
-Removing compatibility branches changes the current source, so those counts
-are retained as a historical snapshot rather than relabeled as current coverage.
+Fresh Python statement coverage is **4,587/4,594 (99.85%)**,
+with **7 missed statements, all classified**, and zero excluded lines.
+The coverage run passed all 996 tests with zero failures, errors or skips in
+2102.14 seconds. Independent acceptance reconciled the XML and log,
+coverage totals, current statement locations and all 113 runtime source hashes.
+Python statement coverage does not instrument the native C++ bridge or certify
+every public API contract.
+
+The earlier 4,539/4,548 snapshot had nine missed statements. Four of those
+statements were removed by the committed fallback and raw-view fixes; five still
+exist. Real native metadata probes confirm that the current member policy has
+no reflected ``member_type`` alias and the callback setter wrappers have no
+``__overload__`` selector. Their metadata-forwarding branches remain conditional
+and unexercised. Defensive error guards are retained and recorded separately.
+No synthetic private failure is reported as supported native behavior.
+
+Every current miss, its exact source statement and its classification is in
+``docs/_static/verification-current-coverage.json``. This closes the current
+coverage measurement and classification gate; the remaining unexercised guards
+and metadata conditions remain visible.
+
 The 60 accepted example audits are reused. Broader example inputs, topologies,
 process lifecycles and trace variants remain outside the selected scopes.
 Python 3.14 is the baseline; Python 3.15 is deferred.

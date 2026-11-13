@@ -20,13 +20,16 @@
   },
   "whole_api_contract_verification": "incomplete;12681 reviewed declarations and292 accepted finite categories do not establish exhaustive contracts",
   "performance_exploration": "paused; no benchmark queued",
-  "coverage": "historical4539/4548,nineclassifiedresiduals; not remeasured after branch retirement",
+  "coverage": "current4587/4594(99.8476%),7misses classified,zero excluded;historical4539/4548 retained",
   "evidence": [
     "build/verification/remaining-closeout/full-suite.xml",
     "build/verification/remaining-closeout/full-root.json",
     "build/verification/remaining-closeout/package-root.json",
     "build/verification/remaining-closeout/fallback-root.json",
-    ".ai/audits/completion-reopen/examples/source-syntax.json"
+    ".ai/audits/completion-reopen/examples/source-syntax.json",
+    "docs/_static/verification-current-coverage.json",
+    "build/verification/remaining-current-coverage/root-acceptance.json",
+    "build/verification/remaining-current-coverage/full-suite.xml"
   ],
   "implementation_commit": "9016bf0",
   "installed_models": 4,
@@ -95,5 +98,16 @@
     "addressed": 142,
     "total": 147,
     "remaining": 5
-  }
+  },
+  "current_coverage": {
+    "covered_statements": 4587,
+    "total_statements": 4594,
+    "missing_statements": 7,
+    "percent_covered": 99.84762734000871,
+    "excluded_lines": 0,
+    "unclassified": 0,
+    "evidence": "docs/_static/verification-current-coverage.json"
+  },
+  "runtime_source_review_entries": 113,
+  "runtime_source_review_evidence": "docs/_static/runtime-source-review-completion.json"
 }
