@@ -159,6 +159,64 @@ def test_self_reset_kill_executes_cleanup(tmp_path):
     assert "SELF_CONTROL_OK" in run_example(tmp_path, "tests/models/self_control.py")
 
 
+def test_method_self_kill_clears_pending_python_unwind(tmp_path):
+    """Method self-kill preserves cleanup and leaves later Python calls usable."""
+    code = """
+import gc
+import sys
+from amal.eda.systemc import main, sc_core as sc
+
+cleanup_case = sys.argv[1]
+cleanup_raises = cleanup_case == "cleanup-error"
+
+class SelfKiller(sc.sc_module):
+    def __init__(self, name):
+        super().__init__(name)
+        self.entries = 0
+        self.cleanups = 0
+        self.handle = None
+        self.sc_method("kill_self", self.kill_self)
+
+    def kill_self(self):
+        self.entries += 1
+        try:
+            self.handle = sc.sc_get_current_process_handle()
+            try:
+                self.handle.kill()
+            except BaseException:
+                if cleanup_case != "swallow-unwind":
+                    raise
+        finally:
+            self.cleanups += 1
+            if cleanup_raises:
+                raise ValueError("cleanup_error_must_not_replace_kill")
+
+def sc_main(args):
+    model = SelfKiller("self_killer")
+    sc.sc_start(1, sc.SC_NS)
+    assert model.entries == model.cleanups == 1, (model.entries, model.cleanups)
+    assert model.handle.terminated()
+    assert sc.sc_time_stamp() == sc.sc_time(1, sc.SC_NS)
+    assert sc.sc_delta_count() >= 0
+    gc.collect()
+    assert sc.sc_time_stamp() == sc.sc_time(1, sc.SC_NS)
+    print("SELF_KILL_PENDING_ERROR_OK", cleanup_raises)
+    return 0
+
+main()
+"""
+    for cleanup_case in ("cleanup-ok", "cleanup-error", "swallow-unwind"):
+        result = subprocess.run(
+            [sys.executable, "-c", code, cleanup_case],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert f"SELF_KILL_PENDING_ERROR_OK {cleanup_case == 'cleanup-error'}" in result.stdout
+
+
 def test_entry_arguments_and_simulation_lifecycle(tmp_path):
     """Entry preserves argv while bounded starts and terminal hooks follow native state."""
     result = subprocess.run(

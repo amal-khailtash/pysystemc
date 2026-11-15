@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Clear the private Python reset/kill signal before restoring native process
+  unwind, preserving cleanup ordering and preventing a pending error from
+  causing `SystemError` on the next Python API call.
+
 - Capture runtime native member-pointer variables with
   `sc_member_access[Element, Member].member_type.from_pointer("namespace::symbol")`
   for both vector assembly APIs. Preserve current values, copied tokens, native

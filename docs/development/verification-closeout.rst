@@ -9,6 +9,10 @@ regression passed all 996 tests with zero failures, errors or skips in
 source archive and isolated installed package. The earlier clean 995-test result
 remains historical evidence.
 
+These counts describe the accepted baseline checkpoint. A subsequent method
+self-kill probe found a pending Python unwind error; the correction and its
+targeted validation are recorded separately below.
+
 Baseline obligation dispositions
 --------------------------------
 
@@ -139,3 +143,26 @@ Performance exploration remains paused. The 25 accepted workload slices across
 20 performance commits retain their individual scopes. There is no measured
 package-wide cumulative gain or tracking-overhead comparison. No new benchmark
 or optimization screen is part of this finite closeout.
+
+Method self-kill correction
+---------------------------
+
+A later direct-callback feasibility probe reproduced a production defect:
+after a method killed itself, its ``finally`` block ran but the private Python
+unwind signal remained pending. The next time query raised ``SystemError``.
+Native callback dispatch now clears the Python error with the GIL held before
+restoring the original native reset or kill exception. A cleanup error cannot
+replace native process control, and a callback that catches the private signal
+still completes the native unwind.
+
+The regression checks one method entry and cleanup, a terminated process handle,
+the expected 1 ns timestamp, and subsequent API calls after garbage collection
+in three fresh simulations: ordinary cleanup, cleanup raising ``ValueError``,
+and a callback that catches the private unwind signal. Evidence and validation
+limits are recorded in ``docs/_static/verification-method-unwind.json``.
+All 90 targeted lifecycle, ownership, reset/teardown and public-start tests passed
+with zero failures or skips. The corrected source matches the uv-built wheel
+and source archive; all three cases also pass from the extracted wheel in
+isolated Python 3.14 processes. The current inventory collects 997 tests;
+the earlier full-suite and coverage results retain their original checkpoints.
+The direct-callback prototype has no accepted timing or production integration.

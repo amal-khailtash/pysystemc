@@ -785,7 +785,8 @@ void python_next_trigger(double value, sc_time_unit unit, const sc_event_expr<sc
 /**
  * @brief Dispatch Python and restore original native scheduler control flow.
  * @details cppyy acquires the GIL for callback entry. Even if Python catches its private unwind signal and returns,
- * a pending native unwind is rethrown. Callers must propagate Python unwind immediately and execute cleanup only.
+ * a pending native unwind is rethrown after clearing its Python signal with the GIL held. Callers must propagate
+ * Python unwind immediately and execute cleanup only. Callback errors during cleanup cannot replace native unwind.
  */
 void dispatch_python(const std::function<void()>& callback)
 {
@@ -799,6 +800,9 @@ void dispatch_python(const std::function<void()>& callback)
     {
       auto original = python_unwind;
       python_unwind = nullptr;
+      const auto state = PyGILState_Ensure();
+      PyErr_Clear();
+      PyGILState_Release(state);
       std::rethrow_exception(original);
     }
     throw;
@@ -807,6 +811,9 @@ void dispatch_python(const std::function<void()>& callback)
   {
     auto original = python_unwind;
     python_unwind = nullptr;
+    const auto state = PyGILState_Ensure();
+    PyErr_Clear();
+    PyGILState_Release(state);
     std::rethrow_exception(original);
   }
 }
