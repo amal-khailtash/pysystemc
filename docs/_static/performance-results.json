@@ -809,6 +809,44 @@
         }
       ],
       "limits": "No adopted optimization, ten-pair confirmation or package gate. All113runtime bytes unchanged. VCD disabled; native kernel and analytical callback/value/time checks pass for every fresh-process sample. No cumulative gain claim."
+    },
+    {
+      "id": "native-callback-raw-lookup",
+      "date": "2026-11-15",
+      "status": "rejected",
+      "before_ms": 892.372403293848,
+      "candidate_ms": 883.5626132786274,
+      "elapsed_reduction_percent": 0.9872324584111691,
+      "pairs": 3,
+      "wins": 2,
+      "scope": "64Python+64native event-sensitive methods,10000 timed event iterations after100warm iterations; VCDoff; imports/elaboration/warmup/final checks excluded; one frozen native callback host variant per process.",
+      "reason": "Below5%median-reduction feasibility threshold; raw also fails3/3wins.",
+      "evidence": [
+        {
+          "path": "build/performance/callback-dispatch/raw-screen.json",
+          "sha256": "c8780f03bb01ba993971347522a909a2a9746352b478074257554a3603e3ccf7"
+        }
+      ],
+      "limits": "Frozen native host classes; method processes only. Matched native/Python counts and time checked; no suspension/reset/kill support promoted. All113production source files unchanged; no confirmation, adoption, package gate or cumulative gain. Pointer-reuse hypothesis was not reproduced because nativeE541 prohibits runtime module SC_METHOD registration."
+    },
+    {
+      "id": "native-callback-hash-lookup",
+      "date": "2026-11-15",
+      "status": "rejected",
+      "before_ms": 880.0556026399136,
+      "candidate_ms": 841.73783659935,
+      "elapsed_reduction_percent": 4.354016487778878,
+      "pairs": 3,
+      "wins": 3,
+      "scope": "64Python+64native event-sensitive methods,10000 timed event iterations after100warm iterations; VCDoff; imports/elaboration/warmup/final checks excluded; one frozen native callback host variant per process.",
+      "reason": "Below5%median-reduction feasibility threshold; raw also fails3/3wins.",
+      "evidence": [
+        {
+          "path": "build/performance/callback-dispatch/hash-screen.json",
+          "sha256": "c3a04fdc6135e931ecd37266aa71e3f76793dd62eee036d6ce15e44b54b3994a"
+        }
+      ],
+      "limits": "Frozen native host classes; method processes only. Matched native/Python counts and time checked; no suspension/reset/kill support promoted. All113production source files unchanged; no confirmation, adoption, package gate or cumulative gain. Pointer-reuse hypothesis was not reproduced because nativeE541 prohibits runtime module SC_METHOD registration."
     }
   ],
   "current_working_tree_acceptance": {

@@ -84,6 +84,37 @@ These screens add no accepted optimization workload or cumulative gain.
 Raw evidence is retained under ``build/performance/start-dispatch/`` and its
 values and digests are preserved in the versioned performance-results record.
 
+Native callback lookup screens
+------------------------------
+
+Two native callback-host variants were screened with VCD disabled. Each fresh
+kernel runs 64 Python methods and 64 matching native methods, all sensitive to
+their model's event. After 100 warm iterations, 10,000 iterations are timed.
+All individual Python and native counts equal 10,100, with simulation time
+10,100 ns. Imports, elaboration, warmup and final checks are excluded.
+
+Replacing the temporary owning current-process handle with a borrowed native
+pointer measured 892.372 ms before and 883.563 ms for the candidate: 0.99% less
+elapsed time and two wins in three alternating pairs. Replacing the callback
+tree map with an unordered map measured 880.056 ms before and 841.738 ms for
+the candidate: 4.35% less elapsed time and three paired wins. The unordered
+candidate reserves capacity and stages its node before native registration,
+preserving allocation ordering in the experiment.
+
+Both reductions are below the 5% feasibility threshold, so neither candidate
+is adopted. No confirmation, integration or package check remains pending.
+Independent acceptance reconciles all twelve samples, medians, pair wins,
+frozen C++ source hashes and all 113 unchanged production runtime files.
+These method-only experiments do not extend thread/reset/kill support or
+establish a cumulative gain.
+
+A separate process-address-reuse probe did not demonstrate a callback defect:
+native SystemC rejected the first runtime module ``SC_METHOD`` registration
+with E541. The failed probe remains recorded; the speculative collision is
+not reported as a supported failing configuration. Raw screen evidence is in
+``build/performance/callback-dispatch/`` and versioned values and digests are
+in the performance-results record.
+
 .. list-table:: Recorded workload results
    :header-rows: 1
    :widths: 38 35 14 13
