@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "accepted_final_installed_comparators",
+  "date": "2026-11-15",
+  "validated_commit": "c22617deb8969feb8b46262e80069f76f0c7c22b",
+  "python": "3.14.0",
+  "junit": {
+    "tests": 41,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "runnable_entrypoints": 43,
+  "inventory_reconciliation": "Historical42 omitted the conventional counter tb.py alias; current43 includes it, and the accepted counter sensitivity comparator executes both entrypoints.",
+  "runtime_files_matched": 113,
+  "wheel_sha256": "fef2acf32c8d64d5a499364e3b24b2da0b25713c8e53e51217b74bd2d5ac7edc",
+  "evidence": {
+    "build/verification/final-installed-examples/installed-example-report.json": "4a7b577a6aa94b321b9ed417fe2ab504599dbe8fb36345387a784fa748011957",
+    "build/verification/final-installed-examples/installed-example-results.xml": "6dba2c87ccd43f7472bf0353ddcc7da3db44304b43d68f21453c8e36ec6bcf4f"
+  },
+  "limits": "Selected existing comparator inputs and native reference assertions; support files are not independent passes. Broader inputs, topologies, lifecycle and trace variants remain untested. No runtime change since the accepted 996-test coverage checkpoint."
+}

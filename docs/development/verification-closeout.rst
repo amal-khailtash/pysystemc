@@ -94,6 +94,22 @@ for this finite closeout.
 Evidence and exact disposition counts are recorded in
 ``docs/_static/verification-closeout.json``.
 
+Final installed-example acceptance
+----------------------------------
+
+The final Python 3.14 wheel passes all 41 selected installed comparator tests,
+with zero failures, errors or skips. All 113 installed runtime source files
+match both the checkout and the accepted wheel archive. Console smoke,
+behavior and native equivalence checks pass with checkout imports excluded.
+
+The current inventory has 43 runnable entrypoints. The earlier count of 42
+omitted ``examples/counter/py/tb.py``, the conventional counter testbench alias;
+the accepted sensitivity comparator runs both that alias and
+``counter_tb.py``. This inventory correction adds no new model behavior claim.
+Broader inputs, topologies, lifecycle and trace variants remain outside this
+finite acceptance. Counts, artifact identity and evidence digests are recorded
+in ``docs/_static/verification-final-installed-examples.json``.
+
 Source-review ledger completion
 -------------------------------
 
