@@ -17,6 +17,48 @@ The timing loops measure the named operations. Recorder output and native
 correctness checks run outside those loops. These results therefore do not
 measure the whole-process cost of tracking, tracing, or verification.
 
+Final bounded measurements
+--------------------------
+
+After final installed-example acceptance, a separate bounded measurement round
+records current startup and VCD tracing cost. It adopts no runtime optimization
+and leaves the historical 25-workload, 20-performance-commit accounting intact.
+
+Three measured fresh processes after one initial process give median elapsed
+times of 4.757 seconds for SystemC import and 4.899 seconds for import plus first
+model construction. These times include subprocess and interpreter startup.
+Inherited settings and OS caches are preserved; comparisons with older startup
+records are not matched revision comparisons.
+
+``tools/benchmark_simulation.py`` compares Python and native C++ method counters
+using the same Python stimulus in fresh kernel processes. Each sample asserts
+20,000 callbacks, the final value and 40,000 ns simulation time. Every traced
+sample also checks all 20,000 counter transitions in its VCD file.
+
+.. list-table:: Three alternating tracing pairs per implementation
+   :header-rows: 1
+
+   * - Counter method
+     - Tracing off
+     - VCD tracing on
+     - Tracing overhead
+   * - Python
+     - 129.981 ms
+     - 233.504 ms
+     - 79.6%
+   * - Native C++
+     - 98.937 ms
+     - 211.121 ms
+     - 113.4%
+
+Simulation timing excludes imports and elaboration, and includes the Python
+stimulus, kernel advances, trace creation and closure. It is a single-host
+workload measurement with three pairs, not a fully native stimulus benchmark
+or a cumulative optimization gain. Here tracking means VCD simulation tracing;
+Python profiling, coverage and AI verification bookkeeping are not measured.
+The `bounded measurement record <../_static/performance-final-bounded.json>`_
+preserves raw simulation samples, startup summaries and evidence digests.
+
 .. list-table:: Recorded workload results
    :header-rows: 1
    :widths: 38 35 14 13
