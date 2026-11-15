@@ -771,6 +771,44 @@
         "candidate.py": "b20e5c74688d9d22cffbeafac7d70708a913a1ef639707b8efd9db8e6c2ed2b3"
       },
       "limits": "31 native public rows,controlled factory,12 numeric boundary cases/error recovery and independent owned storage checks. Nonfinite/out-of-range host observations do not define portable native behavior. No ten-pair confirmation,integration,adoption or package gate;prepared installed checks unexecuted."
+    },
+    {
+      "id": "sc-start-cache-dispatch",
+      "date": "2026-11-15",
+      "status": "rejected",
+      "before_ms": 545.2628657221794,
+      "candidate_ms": 548.7007647752762,
+      "elapsed_reduction_percent": -0.6305030599403461,
+      "pairs": 3,
+      "wins": 1,
+      "scope": "100000 untraced Python counter cycles; same stimulus and native kernel; imports/elaboration excluded; only sc_start wrapper differs.",
+      "reason": "Failed the >=5% median reduction and3/3 paired wins feasibility gate.",
+      "evidence": [
+        {
+          "path": "build/performance/start-dispatch/cache-screen.json",
+          "sha256": "e18d5d636d75799ed513def9d6ca92a64d6b6cba476b14c38f85ed598beaff89"
+        }
+      ],
+      "limits": "No adopted optimization, ten-pair confirmation or package gate. All113runtime bytes unchanged. VCD disabled; native kernel and analytical callback/value/time checks pass for every fresh-process sample. No cumulative gain claim."
+    },
+    {
+      "id": "sc-start-direct-dispatch",
+      "date": "2026-11-15",
+      "status": "rejected",
+      "before_ms": 566.6557848453522,
+      "candidate_ms": 540.6329296529293,
+      "elapsed_reduction_percent": 4.59235675137859,
+      "pairs": 3,
+      "wins": 2,
+      "scope": "100000 untraced Python counter cycles; same stimulus and native kernel; imports/elaboration excluded; only sc_start wrapper differs.",
+      "reason": "Failed the >=5% median reduction and3/3 paired wins feasibility gate.",
+      "evidence": [
+        {
+          "path": "build/performance/start-dispatch/direct-screen.json",
+          "sha256": "4dc7b5d55d96455f7c0f36da4d7fd5a380df137f156096ec0e31f141b1566f80"
+        }
+      ],
+      "limits": "No adopted optimization, ten-pair confirmation or package gate. All113runtime bytes unchanged. VCD disabled; native kernel and analytical callback/value/time checks pass for every fresh-process sample. No cumulative gain claim."
     }
   ],
   "current_working_tree_acceptance": {

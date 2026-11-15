@@ -59,6 +59,31 @@ Python profiling, coverage and AI verification bookkeeping are not measured.
 The `bounded measurement record <../_static/performance-final-bounded.json>`_
 preserves raw simulation samples, startup summaries and evidence digests.
 
+Untraced scheduler dispatch screens
+-----------------------------------
+
+Two frozen ``sc_start`` wrappers were screened against the checked Python
+counter with VCD tracing disabled. Each sample drives 100,000 cycles and checks
+callback count, final signal value and 200,000 ns simulation time in a fresh
+kernel process. Only the scheduler wrapper differs between paired samples.
+Argument validation, per-call GIL release and native report propagation remain
+in both candidates.
+
+Caching each native start callable after its first successful invocation
+measured 545.263 ms before and 548.701 ms for the candidate: 0.63% more elapsed
+time and one win in three alternating pairs. Calling the selected native
+overload with explicit positional arguments instead of unpacking a tuple
+measured 566.656 ms before and 540.633 ms for the candidate: 4.59% less elapsed
+time and two wins in three alternating pairs.
+
+Both candidates fail the required 5% median reduction and three paired wins.
+They are rejected; no ten-pair confirmation, integration or package validation
+is pending. Independent acceptance reconciles all twelve sample results,
+medians, pair wins, frozen source hashes and all 113 unchanged runtime files.
+These screens add no accepted optimization workload or cumulative gain.
+Raw evidence is retained under ``build/performance/start-dispatch/`` and its
+values and digests are preserved in the versioned performance-results record.
+
 .. list-table:: Recorded workload results
    :header-rows: 1
    :widths: 38 35 14 13
