@@ -508,3 +508,26 @@ native behavior. Evidence: ``build/performance/time-unit-overload/``.
 The performance gate failed, so no ten-pair confirmation, integration or package
 validation is pending for this candidate. Accepted accounting remains 25
 workload slices across 20 performance commits.
+
+Direct Python method callback screen rejected
+---------------------------------------------
+
+Invoking method callbacks through ``PyObject_CallNoArgs`` in place of cppyy's
+generic ``std::function`` conversion measured 892.384 ms before and 852.927 ms
+for the candidate: 4.42% less elapsed time, with three wins in three alternating
+pairs. This is below the predeclared 5% feasibility threshold, so the prototype
+is rejected without ten-pair confirmation or production integration.
+
+The frozen workload registers 64 Python and 64 native event-sensitive methods,
+then runs 10,000 timed iterations after 100 warm iterations, with VCD tracing
+disabled. Every callback count is 10,100 and simulation time is 10,100 ns.
+Imports, elaboration, warmup and final correctness checks are outside timing.
+Ordinary exception reports and callback lifetime match between roles; all three
+method self-kill cleanup cases pass after the correction at ``2b16429``.
+Independent acceptance verifies all six samples, medians, paired wins, frozen
+C++ hashes and all 113 unchanged production paths.
+
+The method-only prototype establishes no additional thread or wait support.
+Accepted accounting remains 25 workload slices across 20 performance commits;
+there is no adopted gain from this screen. Evidence is available in
+:download:`the direct callback screen report <../_static/performance-direct-callback-screen.json>`.

@@ -847,6 +847,26 @@
         }
       ],
       "limits": "Frozen native host classes; method processes only. Matched native/Python counts and time checked; no suspension/reset/kill support promoted. All113production source files unchanged; no confirmation, adoption, package gate or cumulative gain. Pointer-reuse hypothesis was not reproduced because nativeE541 prohibits runtime module SC_METHOD registration."
+    },
+    {
+      "id": "direct-pyobject-method-callback",
+      "date": "2026-11-15",
+      "baseline_commit": "2b16429",
+      "status": "rejected",
+      "before_ms": 892.3840597271919,
+      "candidate_ms": 852.9274575412273,
+      "elapsed_reduction_percent": 4.4214821808926885,
+      "pairs": 3,
+      "wins": 3,
+      "scope": "64Python+64native event-sensitive methods,10000 timed event iterations after100warm iterations; VCDoff; imports/elaboration/warmup/final checks excluded; one frozen native callback host variant per process.",
+      "reason": "Below the predeclared5%median-reduction feasibility threshold.",
+      "evidence": [
+        {
+          "path": "docs/_static/performance-direct-callback-screen.json",
+          "sha256": "8e914f1a91d0d5caeae6039157298c891a4600ab9c853f0efccc7d2fd99cc19c"
+        }
+      ],
+      "limits": "DirectPyObject_CallNoArgs method-only prototype. Matched ordinaryreport/lifetime and all3self-kill cleanup modes pass for both frozen roles after2b16429. All113production bytes unchanged; no confirmation, integration, repeatedfullsuite/packagegate or adopted gain. Qwen/GLM gave no usable result during boundedwait; none accepted."
     }
   ],
   "current_working_tree_acceptance": {
