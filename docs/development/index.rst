@@ -13,6 +13,7 @@ this repository's validation, publication and recovery workflow.
    verification-closeout
    performance
    performance-end-to-end-progress
+   performance-tlm-profile-progress
    releases
    ../intro/architecture
    ../intro/roadmap

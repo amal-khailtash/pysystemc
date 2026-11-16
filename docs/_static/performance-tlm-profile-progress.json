@@ -1,0 +1,37 @@
+{
+  "schema": "pysystemc-tlm-profile-progress-v1",
+  "status": "running",
+  "baseline_commit": "29251f038a0b095082bb07499892459d9a576aab",
+  "profiles": 3,
+  "transfers": 20000,
+  "candidate_limit": 1,
+  "screen_pairs": 3,
+  "confirmation_pairs": 10,
+  "minimum_reduction_percent": 5,
+  "resampling": false,
+  "child_timeout_seconds": 60,
+  "gates": {
+    "contract": {
+      "status": "passed"
+    },
+    "profile": {
+      "status": "passed",
+      "detail": "3/3 diagnostic profiles"
+    },
+    "candidate_choice": {
+      "status": "pending"
+    },
+    "correctness": {
+      "status": "pending"
+    },
+    "measurement": {
+      "status": "pending"
+    },
+    "decision": {
+      "status": "pending"
+    },
+    "docs_commit": {
+      "status": "pending"
+    }
+  }
+}
