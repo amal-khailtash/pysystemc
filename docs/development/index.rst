@@ -19,6 +19,7 @@ this repository's validation, publication and recovery workflow.
    performance-tlm-profile
    performance-callback-progress
    performance-callback-boundary
+   minor-release-progress
    releases
    ../intro/architecture
    ../intro/roadmap

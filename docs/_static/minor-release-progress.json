@@ -1,0 +1,35 @@
+{
+  "status": "running",
+  "target_version": "1.1.0",
+  "account": "amal-khailtash",
+  "gates": {
+    "dependencies": {
+      "status": "passed",
+      "detail": "uv lock --upgrade and uv sync --locked: 13 packages updated; Python 3.14 retained. Commit 1caaca5."
+    },
+    "seven_misses": {
+      "status": "targeted_pass",
+      "detail": "Seven explicit defensive/helper/reflection/backend statements; targeted fresh-process test passed. Commit 26d7137; full coverage confirmation pending."
+    },
+    "full_suite_coverage": {
+      "status": "running",
+      "detail": "Full current suite with four workers and subprocess coverage; frozen 113 runtime source hashes."
+    },
+    "fresh_distributions": {
+      "status": "passed",
+      "detail": "Fresh uv_build wheel/sdist built; 113/113 tracked runtime files match checkout and both archives. Installed parity remains in installed_examples."
+    },
+    "installed_examples": {
+      "status": "running",
+      "detail": "All 43 selected installed-wheel comparators in isolation; Python/native behavior and installed source parity required."
+    },
+    "feature_and_release_prs": {
+      "status": "pending",
+      "detail": "Existing workflow; minor1.1.0, matching metadata and changelog."
+    },
+    "publication": {
+      "status": "pending",
+      "detail": "Trusted PyPI publication, hash verification, final GitHub release and documentation."
+    }
+  }
+}

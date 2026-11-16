@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Refresh 13 locked dependencies for the Python 3.14 baseline and exercise the
+  seven previously classified Python misses with explicit defensive helper,
+  reflection-metadata and backend-fault contracts. Retain their distinction
+  from supported native API configurations.
+
 - Finish the finite tracking, correctness and example batch: measure actual
   recorder on/off overhead in ten fixed pairs, add native/Python wide-signal
   contracts at 65/137/257 bits, and expand packet-switch comparisons to three
