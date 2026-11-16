@@ -11,6 +11,7 @@ this repository's validation, publication and recovery workflow.
    contributing
    verification
    verification-closeout
+   todo-batch-progress
    performance
    performance-end-to-end-progress
    performance-tlm-profile-progress

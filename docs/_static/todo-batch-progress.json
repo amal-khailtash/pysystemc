@@ -1,0 +1,26 @@
+{
+  "status": "running",
+  "portability": "dropped",
+  "items": {
+    "contract": {
+      "status": "passed",
+      "detail": "Three named jobs, fixed acceptance and stopping point."
+    },
+    "tracking": {
+      "status": "pending",
+      "detail": "10 alternating actual recorder on/off pairs; whole-process and original loop statistics, hashes/behavior reconciled."
+    },
+    "correctness": {
+      "status": "pending",
+      "detail": "Native/Python wide-signal contracts at 65/137/257 bits; values/events/times/lifetime."
+    },
+    "examples": {
+      "status": "pending",
+      "detail": "Existing packet-switch port expanded to seeds1/7/23; complete native send/receive/drop comparison."
+    },
+    "final_closeout": {
+      "status": "pending",
+      "detail": "Root acceptance, docs/lint/diff and grouped commits; no pending batch item."
+    }
+  }
+}
