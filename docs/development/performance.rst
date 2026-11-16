@@ -17,6 +17,18 @@ The timing loops measure the named operations. Recorder output and native
 correctness checks run outside those loops. These results therefore do not
 measure the whole-process cost of tracking, tracing, or verification.
 
+Bounded TLM profile and candidate evaluation
+--------------------------------------------
+
+The follow-up profile round is complete. Three diagnostic profiles identified
+module lookup as a candidate boundary; the single guarded lookup prototype
+passed correctness but reduced median transport-loop time by only 1.37%
+(134.304 ms to 132.467 ms; three wins in three alternating pairs). The fixed
+screen required at least 5%, so the candidate was rejected and confirmation
+was not run. Runtime source and the 25-slice/20-commit accounting are unchanged.
+See :doc:`performance-tlm-profile` for evidence and limitations and
+:doc:`performance-tlm-profile-progress` for the seven-gate closure tracker.
+
 Fixed end-to-end revision comparison
 ------------------------------------
 

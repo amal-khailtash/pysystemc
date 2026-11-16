@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Complete a bounded TLM profile and single-candidate screen with source and
+  behavior evidence. Reject guarded module lookup at 1.37% median improvement,
+  below the fixed 5% threshold; preserve runtime code and close the tracker.
+
 - Add a finite end-to-end performance comparison with a seven-gate progress
   tracker, three workloads and ten alternating revision pairs each. Separate
   import, elaboration, simulation and process-wall results with VCD, coverage

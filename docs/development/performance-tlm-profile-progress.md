@@ -1,16 +1,16 @@
 # TLM profiling and candidate progress
 
-Status: **running**.
+Status: **complete**.
 
 | Gate | Status | Detail |
 |---|---|---|
 | contract | passed |  |
 | profile | passed | 3/3 diagnostic profiles |
-| candidate_choice | pending |  |
-| correctness | pending |  |
-| measurement | pending |  |
-| decision | pending |  |
-| docs_commit | pending |  |
+| candidate_choice | passed | 40,000 ordinary sc_core module reads dominate ~24 ms self time per diagnostic; guarded base-slot lookup selected. Time constructor retry excluded. |
+| correctness | passed | 2 module/native flag checks and 4 Python/native TLM models agree; actual MRO status retained. |
+| measurement | passed | screen 3/3, 1.37% reduction, 3/3 wins; fixed measurement finished |
+| decision | passed | Rejected: 1.37% median reduction below 5%; no confirmation or runtime change. |
+| docs_commit | passed | Root/Luna reconciliation, strict Sphinx and lint passed; report and closure tracker grouped in result commit. |
 
 Fixed scope: three diagnostic profiles of the existing 20,000-transfer workload.
 At most one candidate; three alternating feasibility pairs. Confirmation runs only
