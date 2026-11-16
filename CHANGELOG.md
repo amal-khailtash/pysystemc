@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Close the finite Python 3.14 verification gates with 997 passing regression
+  tests, 41 installed-example comparators, and 113 matching runtime files across
+  checkout, wheel and source archive. Reconcile 99.85% Python statement coverage
+  with all seven misses classified; broader API contracts remain unverified.
+
 - Clear the private Python reset/kill signal before restoring native process
   unwind, preserving cleanup ordering and preventing a pending error from
   causing `SystemError` on the next Python API call.

@@ -4,14 +4,14 @@ Python 3.14 verification closeout
 The five remaining baseline obligations have concrete dispositions: three
 speculative compatibility branches are retired, and both runtime native
 member-pointer assembly routes have a supported typed adapter. Final integrated
-regression passed all 996 tests with zero failures, errors or skips in
-1966.56 seconds. All 113 runtime files match the source, wheel,
+regression passed all 997 tests with zero failures, errors or skips in
+2119.50 seconds. All 113 runtime files match the source, wheel,
 source archive and isolated installed package. The earlier clean 995-test result
 remains historical evidence.
 
-These counts describe the accepted baseline checkpoint. A subsequent method
-self-kill probe found a pending Python unwind error; the correction and its
-targeted validation are recorded separately below.
+These counts describe the fresh final checkpoint, including the method
+self-kill correction described below. Earlier 995- and 996-test results
+retain their historical scopes.
 
 Baseline obligation dispositions
 --------------------------------
@@ -67,8 +67,8 @@ Validation scope and finish line
 
 Fresh Python statement coverage is **4,587/4,594 (99.85%)**,
 with **7 missed statements, all classified**, and zero excluded lines.
-The coverage run passed all 996 tests with zero failures, errors or skips in
-2102.14 seconds. Independent acceptance reconciled the XML and log,
+The coverage run passed all 997 tests with zero failures, errors or skips in
+2119.50 seconds. Independent acceptance reconciled the XML and log,
 coverage totals, current statement locations and all 113 runtime source hashes.
 Python statement coverage does not instrument the native C++ bridge or certify
 every public API contract.
@@ -90,8 +90,8 @@ The 60 accepted example audits are reused. Broader example inputs, topologies,
 process lifecycles and trace variants remain outside the selected scopes.
 Python 3.14 is the baseline; Python 3.15 is deferred.
 
-Independent acceptance reconciled all 996 JUnit testcase outcomes and counters
-with the pytest log and current runtime hashes. Four fresh installed-package
+Independent acceptance reconciled all 997 JUnit testcase outcomes and counters
+with the pytest log and current runtime hashes. Four earlier installed-package
 models passed native pointer capture, resolved reads, socket accessors and
 thread/reset/kill behavior. No validation or implementation item remains pending
 for this finite closeout.
@@ -112,7 +112,8 @@ the accepted sensitivity comparator runs both that alias and
 ``counter_tb.py``. This inventory correction adds no new model behavior claim.
 Broader inputs, topologies, lifecycle and trace variants remain outside this
 finite acceptance. Counts, artifact identity and evidence digests are recorded
-in ``docs/_static/verification-final-installed-examples.json``.
+in ``docs/_static/verification-finish-line.json``. Earlier installed reports
+retain their original archive identities.
 
 Source-review ledger completion
 -------------------------------
@@ -141,8 +142,10 @@ verification remains incomplete.
 
 Performance exploration remains paused. The 25 accepted workload slices across
 20 performance commits retain their individual scopes. There is no measured
-package-wide cumulative gain or tracking-overhead comparison. No new benchmark
-or optimization screen is part of this finite closeout.
+package-wide cumulative gain or profiling/bookkeeping overhead comparison.
+The prior bounded VCD comparison measured +79.6% Python and +113.4% native
+trace overhead with shared Python stimulus; that is a scoped trace measurement.
+No new benchmark or optimization screen is part of this finite closeout.
 
 Method self-kill correction
 ---------------------------
@@ -163,6 +166,7 @@ limits are recorded in ``docs/_static/verification-method-unwind.json``.
 All 90 targeted lifecycle, ownership, reset/teardown and public-start tests passed
 with zero failures or skips. The corrected source matches the uv-built wheel
 and source archive; all three cases also pass from the extracted wheel in
-isolated Python 3.14 processes. The current inventory collects 997 tests;
-the earlier full-suite and coverage results retain their original checkpoints.
+isolated Python 3.14 processes. The final fresh regression passes all 997 tests,
+including this case, with coverage and archive identities reconciled in
+``docs/_static/verification-finish-line.json``.
 The direct-callback prototype has no accepted timing or production integration.
