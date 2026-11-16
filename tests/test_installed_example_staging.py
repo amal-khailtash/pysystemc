@@ -282,12 +282,12 @@ def test_repository_regression_manifest_is_ast_derived_and_nonparametrized():
     """Guard the current selected source modules without importing their runtime dependencies.
 
     Returns:
-        None: Assertions establish the known 41 top-level tests and both suite modules.
+        None: Assertions establish the known 43 top-level tests and both suite modules.
     """
     checker = _load_checker()
     expected = checker.expected_test_nodes(ROOT / "tests")
 
-    assert len(expected) == 41
+    assert len(expected) == 43
     assert {module for module, _ in expected} == {"test_upstream", "test_tutorials"}
 
 

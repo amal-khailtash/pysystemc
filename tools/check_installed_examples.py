@@ -986,7 +986,7 @@ def main() -> int:
     parser.add_argument(
         "--all",
         action="store_true",
-        help="run the staged 41-test installed behavior/native-equivalence regression suite",
+        help="run the staged installed behavior/native-equivalence regression suite",
     )
     parser.add_argument(
         "--output-dir",

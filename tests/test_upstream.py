@@ -450,7 +450,30 @@ def test_upstream_rsa_seed_matches_native(tmp_path):
 
 
 def test_upstream_packet_switch_seed_matches_native(tmp_path):
-    """Compare all sent/received packets and drop counters with fixed source time."""
+    """Compare packet-switch output with native using seed seven."""
+    _compare_upstream_packet_switch_seed(tmp_path, 7)
+
+
+def test_upstream_packet_switch_seed_one_matches_native(tmp_path):
+    """Compare packet-switch output with native using seed one."""
+    _compare_upstream_packet_switch_seed(tmp_path, 1)
+
+
+def test_upstream_packet_switch_seed_twenty_three_matches_native(tmp_path):
+    """Compare packet-switch output with native using seed twenty-three."""
+    _compare_upstream_packet_switch_seed(tmp_path, 23)
+
+
+def _compare_upstream_packet_switch_seed(tmp_path, seed):
+    """Compare sent/received packet records and final drop counters for a seed.
+
+    The upstream native sender copy receives a fixed seed by changing only its
+    wall-time seed expression. The Python port receives the same libc seed.
+
+    Args:
+        tmp_path: Isolated work directory for the source copy and executable.
+        seed: Integer seed shared by the native and Python senders.
+    """
     import re
     import shutil
 
@@ -459,12 +482,12 @@ def test_upstream_packet_switch_seed_matches_native(tmp_path):
     shutil.copytree(directory, source)
     sender = source / "sender.cpp"
     # Change only the test copy's wall-time seed, preserving native routing/stimulus.
-    sender.write_text(sender.read_text().replace("srand((unsigned)time(NULL));", "srand(7);"))
+    sender.write_text(sender.read_text().replace("srand((unsigned)time(NULL));", f"srand({seed});"))
     executable = _compile_upstream(tmp_path, source, ("fifo", "sender", "receiver", "switch_clk", "switch", "main"))
     python = subprocess.run(
         [sys.executable, str(ROOT / "examples/sysc/pkt_switch/main.py")],
         cwd=tmp_path,
-        env=dict(os.environ, PYSYSTEMC_PACKET_SEED="7"),
+        env=dict(os.environ, PYSYSTEMC_PACKET_SEED=str(seed)),
         capture_output=True,
         text=True,
         timeout=60,
@@ -474,8 +497,29 @@ def test_upstream_packet_switch_seed_matches_native(tmp_path):
     assert native.returncode == 0, native.stdout + native.stderr
     pattern = r"^ *(?:New Packet.*|Destination Addresses:.*|Packet Value:.*|Sender ID:.*|Receiver ID:.*|Total number.*|Percentage packets.*)$"
     records = [line.strip() for line in re.findall(pattern, python.stdout, re.M)]
-    assert len(records) > 1000
-    assert records == [line.strip() for line in re.findall(pattern, native.stdout, re.M)]
+    native_records = [line.strip() for line in re.findall(pattern, native.stdout, re.M)]
+    assert records == native_records
+
+    sent_count = records.count("New Packet Sent")
+    received_count = records.count("New Packet Received")
+    assert sent_count > 20
+    assert received_count > 20
+    assert len(re.findall(r"^Destination Addresses: [1-4](?: [1-4])*$", "\n".join(records), re.M)) == sent_count
+
+    counters = re.compile(
+        r"^Total number of packets received: (\d+)\n"
+        r"Total number of packets dropped: (\d+)\n"
+        r"Percentage packets dropped:  (\d+)$",
+        re.M,
+    )
+    python_counters = counters.findall(python.stdout)
+    native_counters = counters.findall(native.stdout)
+    assert len(python_counters) == len(native_counters) == 1
+    packets, dropped, percentage = map(int, python_counters[0])
+    assert python_counters == native_counters
+    assert packets > 0
+    assert 0 <= dropped <= packets
+    assert percentage == dropped * 100 // packets
 
 
 def test_upstream_simple_bus_matches_native(tmp_path):
