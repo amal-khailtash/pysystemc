@@ -43,11 +43,7 @@ def test_integer_bool_construction_and_assignment_match_cpp(tmp_path):
         for value in (0, 1)
         for form in CONSTRUCTOR_FORMS
     }
-    expected_assignment_keys = {
-        (family, width, value)
-        for family, width, _signed in CASES
-        for value in (0, 1)
-    }
+    expected_assignment_keys = {(family, width, value) for family, width, _signed in CASES for value in (0, 1)}
     constructor_records = {}
     assignment_records = {}
     for fields in records:

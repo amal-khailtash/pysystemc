@@ -1085,9 +1085,7 @@ def declarations(
                 "access": access,
                 "written_virtual": node.get("virtual", False),
                 "virtual": node.get("virtual", False),
-                "_has_override_attribute": any(
-                    child.get("kind") == "OverrideAttr" for child in node.get("inner", [])
-                ),
+                "_has_override_attribute": any(child.get("kind") == "OverrideAttr" for child in node.get("inner", [])),
                 "pure": node.get("pure", False),
                 "bases": _portable_base_metadata(node.get("bases", [])),
                 "parameters": [
@@ -1345,6 +1343,7 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
                         "unavailable_reason": "inherited_macro_default_source_unavailable",
                         "argument_origin": "inherited",
                     }
+
     def previous_declaration_chain(entry):
         """Follow only explicit Clang `previousDecl` IDs in this invocation."""
         chain = [entry]
@@ -1372,7 +1371,8 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
         """
         kind = entry.get("kind")
         nonvirtual_status = (
-            "resolved_nonvirtual_constructor" if kind == "CXXConstructorDecl"
+            "resolved_nonvirtual_constructor"
+            if kind == "CXXConstructorDecl"
             else "resolved_nonvirtual_nonmethod"
             if kind not in {"CXXMethodDecl", "CXXDestructorDecl", "CXXConversionDecl"}
             else None
@@ -1389,9 +1389,7 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
         via_previous = len(chain) > 1
         if "written_static" in root:
             entry["static"] = root["written_static"]
-            entry["effective_static_status"] = (
-                "resolved_from_previous_decl" if via_previous else "resolved_from_self"
-            )
+            entry["effective_static_status"] = "resolved_from_previous_decl" if via_previous else "resolved_from_self"
         else:
             entry["static"] = entry.get("static")
             entry["effective_static_status"] = "unresolved_written_static_unavailable"
@@ -1406,8 +1404,7 @@ def reconcile_declarations(entries, friend_relationships=None, declaration_condi
         if any(candidate.get("written_virtual") is True for candidate in chain):
             entry["virtual"] = True
             entry["effective_virtual_status"] = (
-                "resolved_from_previous_decl_virtual_specifier" if via_previous
-                else "resolved_from_virtual_specifier"
+                "resolved_from_previous_decl_virtual_specifier" if via_previous else "resolved_from_virtual_specifier"
             )
             return
         if any(candidate.get("_has_override_attribute") for candidate in chain):

@@ -70,10 +70,16 @@ def _value(value):
 def _descriptor(native, operation_name, reverse):
     """Return the Python adapter descriptor selected by one public expression."""
     suffix = {"bit_and": "and", "bit_or": "or", "bit_xor": "xor"}.get(operation_name)
-    name = f"__r{suffix}__" if reverse else f"__{suffix}__" if suffix else {
-        "equal": "__eq__",
-        "not_equal": "__ne__",
-    }[operation_name]
+    name = (
+        f"__r{suffix}__"
+        if reverse
+        else f"__{suffix}__"
+        if suffix
+        else {
+            "equal": "__eq__",
+            "not_equal": "__ne__",
+        }[operation_name]
+    )
     return getattr(type(native), name)
 
 
@@ -137,13 +143,7 @@ OPERATIONS = tuple(PUBLIC_OPERATORS)
 def _check_one(operation_name, left, right, *, reverse=False):
     """Check native parity, independent ownership and one exact cache key."""
     comparison = operation_name in ("equal", "not_equal")
-    native = (
-        left
-        if hasattr(type(left), "__cpp_name__")
-        else right
-        if comparison or reverse
-        else left
-    )
+    native = left if hasattr(type(left), "__cpp_name__") else right if comparison or reverse else left
     descriptor = _descriptor(native, operation_name, False if comparison else reverse)
     dispatch_left, dispatch_right = (left, right)
     if comparison:
@@ -160,8 +160,7 @@ def _check_one(operation_name, left, right, *, reverse=False):
     public_value, reference_value = _value(public), _value(reference)
     if public_type != reference_type or public_value != reference_value:
         raise AssertionError(
-            f"{operation_name} mismatch for {public_type} {public_value!r} and "
-            f"{reference_type} {reference_value!r}"
+            f"{operation_name} mismatch for {public_type} {public_value!r} and {reference_type} {reference_value!r}"
         )
 
     if operation_name in BITWISE_OPERATIONS:
@@ -261,12 +260,10 @@ def _exercise_paths():
     for family, native_kind in (("bit", "bit"), ("logic", "logic")):
         partners = (native_kind, "bool", "char", "int")
         for other_kind in partners:
-            for reverse in ((False,) if other_kind == native_kind else (False, True)):
+            for reverse in (False,) if other_kind == native_kind else (False, True):
                 for operation_name in OPERATIONS:
                     if operation_name in BITWISE_OPERATIONS:
-                        initial, changed = _path_cases(
-                            family, native_kind, other_kind, reverse, operation_name
-                        )
+                        initial, changed = _path_cases(family, native_kind, other_kind, reverse, operation_name)
                     elif reverse:
                         native_values = _values(native_kind, family)
                         other_values = _values(other_kind, family)
@@ -373,10 +370,7 @@ def _report_recovery():
 
     previous_actions = handler.set_actions(sc.SC_ERROR, sc.SC_THROW)
     try:
-        public_messages = [
-            _capture_report("public sc_bit and invalid char", lambda: owner & "Q")
-            for _ in range(2)
-        ]
+        public_messages = [_capture_report("public sc_bit and invalid char", lambda: owner & "Q") for _ in range(2)]
         native_messages = [
             _capture_report(
                 "native sc_bit and invalid char",
@@ -402,9 +396,7 @@ def _report_recovery():
             and id(cache[key]) == cached_callable_id
             and cache_before == cache_after
         )
-        owner_preserved = (
-            int(cppyy.addressof(owner)) == owner_address and _value(owner) == owner_value == "1"
-        )
+        owner_preserved = int(cppyy.addressof(owner)) == owner_address and _value(owner) == owner_value == "1"
     finally:
         handler.set_actions(sc.SC_ERROR, previous_actions)
 
@@ -428,16 +420,14 @@ SCALAR_BIT_RESULT = {
     "package_imported_before_cppyy": True,
     "package_version": str(systemc.__version__),
     "native_parity": True,
-    "cache_present": all(
-        _cache(result["descriptor"]) is result["cache"] for result in _observed.values()
-    ),
+    "cache_present": all(_cache(result["descriptor"]) is result["cache"] for result in _observed.values()),
     "cache_callable_stable": _reports["cache_callable_stable"]
     and all(
-        callable(result["cache"][result["key"]])
-        and id(result["cache"][result["key"]]) == result["callable_id"]
+        callable(result["cache"][result["key"]]) and id(result["cache"][result["key"]]) == result["callable_id"]
         for result in _observed.values()
     ),
-    "report_recovery_parity": _reports["messages_match"] and _reports["recovery_parity"]
+    "report_recovery_parity": _reports["messages_match"]
+    and _reports["recovery_parity"]
     and _reports["owner_preserved"],
     "public_report_count": _reports["public_report_count"],
     "native_report_count": _reports["native_report_count"],

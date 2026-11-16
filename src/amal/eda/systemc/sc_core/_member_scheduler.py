@@ -59,7 +59,6 @@ def _scheduling_member(owner_type, method, unwind):
     return invoke
 
 
-
 def _next_trigger_member(owner_type):
     """Bind native method sensitivity with successful callable metadata reuse."""
     dispatch = cppyy.gbl.sc_core.python_member_next_trigger

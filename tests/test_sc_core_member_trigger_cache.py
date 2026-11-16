@@ -64,10 +64,18 @@ class Dispatch:
 def test_member_next_trigger_cache_contract(monkeypatch):
     """Preserve native failures, current values and lifetimes across cache hits."""
     wait, trigger = Dispatch(), Dispatch()
-    monkeypatch.setitem(sys.modules, "cppyy", types.SimpleNamespace(
-        gbl=types.SimpleNamespace(sc_core=types.SimpleNamespace(
-            python_member_wait=wait, python_member_next_trigger=trigger))))
-    spec = importlib.util.spec_from_file_location("next_trigger_contract", ROOT / "src/amal/eda/systemc/sc_core/_member_scheduler.py")
+    monkeypatch.setitem(
+        sys.modules,
+        "cppyy",
+        types.SimpleNamespace(
+            gbl=types.SimpleNamespace(
+                sc_core=types.SimpleNamespace(python_member_wait=wait, python_member_next_trigger=trigger)
+            )
+        ),
+    )
+    spec = importlib.util.spec_from_file_location(
+        "next_trigger_contract", ROOT / "src/amal/eda/systemc/sc_core/_member_scheduler.py"
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     invoke = module._scheduling_member(Owner, "next_trigger", Unwind)
@@ -105,6 +113,7 @@ def test_member_next_trigger_cache_contract(monkeypatch):
 
     class OtherArgument(Argument):
         """Provide a distinct unrestricted native signature."""
+
         __cpp_name__ = "fixture::Argument<513>"
 
     other = OtherArgument(513)

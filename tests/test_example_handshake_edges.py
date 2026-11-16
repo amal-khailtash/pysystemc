@@ -101,7 +101,9 @@ def test_handshake_edges_match_upstream_ports(tmp_path: Path, protocol: str, sce
         reset_release = next(i for i, (tag, _, _) in enumerate(python_records) if tag == "RESET_RELEASE")
         first_begin = next(i for i, (tag, value, _) in enumerate(python_records) if (tag, value) == ("SEND_BEGIN", 41))
         assert first_begin < reset_assert < reset_release
-        assert reset_release < next(i for i, (tag, value, _) in enumerate(python_records) if (tag, value) == ("SEND_BEGIN", received[0]))
+        assert reset_release < next(
+            i for i, (tag, value, _) in enumerate(python_records) if (tag, value) == ("SEND_BEGIN", received[0])
+        )
         if protocol == "rvd":
             assert not any(tag == "SEND_DONE" and value == 41 for tag, value, _ in python_records)
         else:

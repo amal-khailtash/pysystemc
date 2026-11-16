@@ -195,9 +195,9 @@ class RollbackModel(sc.sc_module):
         sc.wait(1, sc.SC_NS)
         sc.wait(self.done)
         expected_timeout = 8 if self.process_kind == "cthread" else 7
-        assert self.timeout_observations == [
-            self.injection_start + sc.sc_time(expected_timeout, sc.SC_NS).value()
-        ], self.timeout_observations
+        assert self.timeout_observations == [self.injection_start + sc.sc_time(expected_timeout, sc.SC_NS).value()], (
+            self.timeout_observations
+        )
         sc.sc_stop()
 
 
@@ -220,9 +220,9 @@ def main():
     expected = ["injected", "recovery", "quiet"]
     assert [record[0] for record in model.callback_records] == expected, model.callback_records
     expected_timeout = 8 if process_kind == "cthread" else 7
-    assert model.timeout_observations == [
-        model.injection_start + sc.sc_time(expected_timeout, sc.SC_NS).value()
-    ], model.timeout_observations
+    assert model.timeout_observations == [model.injection_start + sc.sc_time(expected_timeout, sc.SC_NS).value()], (
+        model.timeout_observations
+    )
     assert model.deletion_delta == 1, model.deletion_delta
     assert model.staged_timeout_delta == int(timed), model.staged_timeout_delta
     recovery_ns = 5 if process_kind == "cthread" else 4

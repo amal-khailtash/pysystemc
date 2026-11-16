@@ -88,6 +88,7 @@ def test_counter_matches_native_values_and_trace(tmp_path):
     compatibility_trace = (compatibility_dir / "counter.vcd").read_text()
     native_trace = (native_dir / "counter.vcd").read_text()
     assert python_trace[python_trace.index("$timescale") :] == native_trace[native_trace.index("$timescale") :]
-    assert compatibility_trace[compatibility_trace.index("$timescale") :] == native_trace[
-        native_trace.index("$timescale") :
-    ]
+    assert (
+        compatibility_trace[compatibility_trace.index("$timescale") :]
+        == native_trace[native_trace.index("$timescale") :]
+    )

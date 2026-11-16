@@ -102,14 +102,35 @@ def _stringify(value):
 
 def _wrap_numeric_text(native_type, name):
     """Avoid cppyy's generic numeric string slot invoking adapted shifts."""
-    if name.startswith(("sc_int<", "sc_uint<", "sc_bigint<", "sc_biguint<", "sc_fixed<", "sc_ufixed<", "sc_fixed_fast<", "sc_ufixed_fast<")):
+    if name.startswith(
+        (
+            "sc_int<",
+            "sc_uint<",
+            "sc_bigint<",
+            "sc_biguint<",
+            "sc_fixed<",
+            "sc_ufixed<",
+            "sc_fixed_fast<",
+            "sc_ufixed_fast<",
+        )
+    ):
         native_type.__str__ = _stringify
 
 
 for _name in (
-    "sc_signed", "sc_unsigned", "sc_int_base", "sc_uint_base", "sc_concatref",
-    "sc_fxval", "sc_fxval_fast", "sc_fxnum", "sc_fxnum_fast",
-    "sc_fix", "sc_ufix", "sc_fix_fast", "sc_ufix_fast",
+    "sc_signed",
+    "sc_unsigned",
+    "sc_int_base",
+    "sc_uint_base",
+    "sc_concatref",
+    "sc_fxval",
+    "sc_fxval_fast",
+    "sc_fxnum",
+    "sc_fxnum_fast",
+    "sc_fix",
+    "sc_ufix",
+    "sc_fix_fast",
+    "sc_ufix_fast",
 ):
     getattr(cppyy.gbl.sc_dt, _name).__str__ = _stringify
 cppyy.py.add_pythonization(_wrap_numeric_text, "sc_dt")

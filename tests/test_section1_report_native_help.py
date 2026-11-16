@@ -86,8 +86,7 @@ def test_curated_report_signatures_match_the_pinned_public_header():
     formatter = _load_formatter()
     declarations = formatter._SC_REPORT_DECLARATIONS_BY_CPP_NAME["sc_core::sc_report"]
     method_names = tuple(
-        re.search(r"sc_core::sc_report::([A-Za-z_]\w*)\(", signature).group(1)
-        for signature in declarations
+        re.search(r"sc_core::sc_report::([A-Za-z_]\w*)\(", signature).group(1) for signature in declarations
     )
     actual = _header_signatures(SYSTEMC_HEADER.read_text(), method_names)
 

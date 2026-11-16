@@ -10,10 +10,23 @@ import cppyy
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = [
-    (0, 0, 0), (1, 123, 456), (2, -12, 7), (3, -123, 123), (4, 9, 12),
-    (5, 32767, 65535), (6, -9, 2), (6, 9, 0), (7, 12, 10), (8, 12, 10),
-    (9, 12, 10), (10, 12, 10), (11, 12, 0), (12, 1, 30), (13, 1024, 4),
-    (14, -9, 2), (31, 1, 2),
+    (0, 0, 0),
+    (1, 123, 456),
+    (2, -12, 7),
+    (3, -123, 123),
+    (4, 9, 12),
+    (5, 32767, 65535),
+    (6, -9, 2),
+    (6, 9, 0),
+    (7, 12, 10),
+    (8, 12, 10),
+    (9, 12, 10),
+    (10, 12, 10),
+    (11, 12, 0),
+    (12, 1, 30),
+    (13, 1024, 4),
+    (14, -9, 2),
+    (31, 1, 2),
 ]
 
 
@@ -40,11 +53,32 @@ class Stimulus(sc.sc_module):
         self.clock = sc.sc_clock("clock", 2, sc.SC_NS)
         self.alu.CLK.bind(self.clock)
         self.signals = {}
-        for name in ("opcode", "add1", "dina", "dinb", "dest", "reset", "in_valid", "negate", "shift_sel",
-                     "forward_A", "forward_B", "C", "V", "Z", "out_valid", "dout", "destout"):
-            datatype = "unsigned" if name in ("dest", "destout") else int if name in (
-                "opcode", "add1", "dina", "dinb", "dout"
-            ) else bool
+        for name in (
+            "opcode",
+            "add1",
+            "dina",
+            "dinb",
+            "dest",
+            "reset",
+            "in_valid",
+            "negate",
+            "shift_sel",
+            "forward_A",
+            "forward_B",
+            "C",
+            "V",
+            "Z",
+            "out_valid",
+            "dout",
+            "destout",
+        ):
+            datatype = (
+                "unsigned"
+                if name in ("dest", "destout")
+                else int
+                if name in ("opcode", "add1", "dina", "dinb", "dout")
+                else bool
+            )
             signal = sc.sc_signal[datatype](name)
             getattr(self.alu, name).bind(signal)
             self.signals[name] = signal
@@ -59,12 +93,17 @@ class Stimulus(sc.sc_module):
                 self.signals[key].write(value)
             sc.wait(self.signals["out_valid"].posedge_event())
             self.signals["in_valid"].write(False)
-            self.records.append({
-                "opcode": opcode, "result": int(self.signals["dout"].read()),
-                "dest": int(self.signals["destout"].read()),
-                "Z": bool(self.signals["Z"].read()), "C": bool(self.signals["C"].read()),
-                "V": bool(self.signals["V"].read()), "ns": round(sc.sc_time_stamp().to_seconds() * 1e9),
-            })
+            self.records.append(
+                {
+                    "opcode": opcode,
+                    "result": int(self.signals["dout"].read()),
+                    "dest": int(self.signals["destout"].read()),
+                    "Z": bool(self.signals["Z"].read()),
+                    "C": bool(self.signals["C"].read()),
+                    "V": bool(self.signals["V"].read()),
+                    "ns": round(sc.sc_time_stamp().to_seconds() * 1e9),
+                }
+            )
             sc.wait(self.signals["out_valid"].negedge_event())
             sc.wait(self.clock.posedge_event())
         sc.sc_stop()

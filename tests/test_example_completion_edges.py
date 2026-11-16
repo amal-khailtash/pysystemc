@@ -46,12 +46,12 @@ def test_async_default_and_explicit_delay_match_native(tmp_path: Path, delay: in
             "if native:\n"
             "    cppyy.add_include_path(directory)\n"
             "    cppyy.cppdef('''\n"
-            "#include <systemc>\nusing namespace sc_core;\n#include \"async_event.h\"\n"
+            '#include <systemc>\nusing namespace sc_core;\n#include "async_event.h"\n'
             "/** @brief Own a native channel and count its simulation-thread callback. */\n"
             "struct AsyncDefaultReference : sc_module {\n"
             "  async_event event; int count = 0; double when = -1;\n"
             "  SC_HAS_PROCESS(AsyncDefaultReference);\n"
-            "  AsyncDefaultReference(sc_module_name n) : sc_module(n), event(\"event\") {\n"
+            '  AsyncDefaultReference(sc_module_name n) : sc_module(n), event("event") {\n'
             "    SC_METHOD(deliver); sensitive << event; dont_initialize();\n"
             "  }\n"
             "  void deliver() { ++count; when = sc_time_stamp().to_seconds(); sc_stop(); }\n"
@@ -89,7 +89,9 @@ def test_async_default_and_explicit_delay_match_native(tmp_path: Path, delay: in
             "assert sc.sc_end_of_simulation_invoked()\n"
             "print(f'ASYNC_RESULT count={model.count} ns={round(model.when * 1e9)} stopped=1')\n"
         )
-        outputs.append(next(line for line in run_example(tmp_path, script).splitlines() if line.startswith("ASYNC_RESULT")))
+        outputs.append(
+            next(line for line in run_example(tmp_path, script).splitlines() if line.startswith("ASYNC_RESULT"))
+        )
     assert outputs == [f"ASYNC_RESULT count=1 ns={delay} stopped=1"] * 2
 
 
@@ -130,5 +132,7 @@ def test_async_generated_channel_names_match_native(tmp_path: Path) -> None:
             "    assert [str(channel.m_event.basename()) for channel in channels] == [name + '_event' for name in names]\n"
             "print('ASYNC_NAMES ' + ','.join(names))\n"
         )
-        observations.append(next(line for line in run_example(tmp_path, script).splitlines() if line.startswith("ASYNC_NAMES")))
+        observations.append(
+            next(line for line in run_example(tmp_path, script).splitlines() if line.startswith("ASYNC_NAMES"))
+        )
     assert observations == ["ASYNC_NAMES async_event_0,async_event_1,explicit"] * 2

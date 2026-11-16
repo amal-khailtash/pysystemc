@@ -1,8 +1,9 @@
 """Compare cached member method registration reset/kill with native SystemC."""
+
 from amal.eda.systemc import sc_core as sc
 import cppyy
 
-cppyy.cppdef(r'''
+cppyy.cppdef(r"""
 
 #include <systemc>
 #include <vector>
@@ -46,7 +47,7 @@ struct Reference : sc_core::sc_module
   }
 };
 }  // namespace member_trigger_control
-''')
+""")
 
 
 class Model(sc.sc_module):
@@ -55,12 +56,12 @@ class Model(sc.sc_module):
     def __init__(self, name):
         """Register the method before saving its handle and controller thread."""
         super().__init__(name)
-        self.event = sc.sc_event('target')
+        self.event = sc.sc_event("target")
         self.times = []
         self.control_times = []
-        self.sc_method('tick', self.tick)
+        self.sc_method("tick", self.tick)
         self.handle = sc.sc_get_last_created_process_handle()
-        self.sc_thread('control', self.control)
+        self.sc_thread("control", self.control)
         self.controller = sc.sc_get_last_created_process_handle()
 
     def tick(self):
@@ -81,10 +82,10 @@ class Model(sc.sc_module):
         sc.wait(1, sc.SC_NS)
 
 
-native_name = sc.sc_module_name('native')
+native_name = sc.sc_module_name("native")
 native = cppyy.gbl.member_trigger_control.Reference(native_name)
 del native_name
-python_name = sc.sc_module_name('python')
+python_name = sc.sc_module_name("python")
 model = Model(python_name)
 del python_name
 sc.sc_start()
@@ -94,4 +95,4 @@ assert model.handle.valid() and model.handle.terminated()
 assert native.method.valid() and native.method.terminated()
 assert model.controller.valid() and model.controller.terminated()
 assert int(sc.sc_time_stamp().value()) == 5000
-print('MEMBER_TRIGGER_CONTROL_OK times=0,2000 reset=2000 kill=3000 final=5000')
+print("MEMBER_TRIGGER_CONTROL_OK times=0,2000 reset=2000 kill=3000 final=5000")

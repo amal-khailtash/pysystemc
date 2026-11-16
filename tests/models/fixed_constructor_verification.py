@@ -146,7 +146,9 @@ def owner_cases():
     before = observer_probe.Observer.destroyed
     slow_observer = observer_probe.Observer()
     try:
-        dt.sc_fxnum(dt.sc_logic("1"), dt.sc_fxtype_params(16, 8), dt.SC_TC_, dt.sc_fxcast_switch(dt.SC_OFF), slow_observer)
+        dt.sc_fxnum(
+            dt.sc_logic("1"), dt.sc_fxtype_params(16, 8), dt.SC_TC_, dt.sc_fxcast_switch(dt.SC_OFF), slow_observer
+        )
     except TypeError:
         unsupported_rejected = True
     assert unsupported_rejected

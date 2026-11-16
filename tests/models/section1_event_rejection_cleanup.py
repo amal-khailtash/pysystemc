@@ -83,8 +83,7 @@ def assert_report_sequence(label, operation, expected, thrown_report=None):
         assert thrown_report is None, label
     actual = report_calls[before:]
     assert actual == [
-        (report_id, report_type[report_id], message, actions, "")
-        for report_id, message, actions in expected
+        (report_id, report_type[report_id], message, actions, "") for report_id, message, actions in expected
     ], (label, actual, expected)
 
 
@@ -439,14 +438,16 @@ assert [(row[0], row[3], row[4]) for row in report_calls] == [
 ], report_calls
 assert report_calls[-1][1:3] == ("/OSCI/SystemC", "Simulation stopped by user.")
 wait_deletions = int(native_bridge.python_wait_expression_list_deletion_count()) - wait_deletions_before
-trigger_deletions = (
-    int(native_bridge.python_next_trigger_expression_list_deletion_count()) - trigger_deletions_before
-)
+trigger_deletions = int(native_bridge.python_next_trigger_expression_list_deletion_count()) - trigger_deletions_before
 assert wait_deletions == 17, wait_deletions
 assert trigger_deletions == 14, trigger_deletions
 sc.set_report_handler()
 sc.sc_report_handler.set_actions(report_type[EMPTY_LIST_ERROR], sc.SC_ERROR, previous_empty)
 sc.sc_report_handler.set_actions(report_type[WAIT_ERROR], sc.SC_ERROR, previous_wait)
 sc.sc_report_handler.set_actions(report_type[TRIGGER_ERROR], sc.SC_ERROR, previous_trigger)
-print(f"SECTION1_REJECTED_EXPR wait_deletes={wait_deletions} trigger_deletes={trigger_deletions} reports={len(report_calls) - 1}")
-print("SECTION1_REJECTED_EXPR_RECOVERY method=1 thread=1 reset=1 kill=1 empty=throw/suppress channel=numeric actions=throw/suppress")
+print(
+    f"SECTION1_REJECTED_EXPR wait_deletes={wait_deletions} trigger_deletes={trigger_deletions} reports={len(report_calls) - 1}"
+)
+print(
+    "SECTION1_REJECTED_EXPR_RECOVERY method=1 thread=1 reset=1 kill=1 empty=throw/suppress channel=numeric actions=throw/suppress"
+)

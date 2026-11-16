@@ -86,7 +86,11 @@ sc.sc_start(1, sc.SC_NS)
 assert len(records) == 3, records
 assert records[-1][4] == str(low.to_string(sc_dt.SC_DEC)), records
 
-assert [row[4] for row in records] == [str(high.to_string(sc_dt.SC_DEC)), str(high_and_low.to_string(sc_dt.SC_DEC)), "1"]
+assert [row[4] for row in records] == [
+    str(high.to_string(sc_dt.SC_DEC)),
+    str(high_and_low.to_string(sc_dt.SC_DEC)),
+    "1",
+]
 ns = int(sc.sc_time(1, sc.SC_NS).value())
 assert [row[2] for row in records] == [0, ns, 2 * ns], records
 assert all(records[index][3] < records[index + 1][3] for index in range(len(records) - 1)), records

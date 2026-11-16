@@ -79,8 +79,7 @@ def test_event_registration_rollback(tmp_path, process_kind, expression_kind, ti
     timeout_ns = 3
     event_time = f"{event_ns} ns"
     expected_native = (
-        f"{native_prefix}{process_kind} {expression_kind} {timed_arg} "
-        f"event={event_time} timeout={timeout_ns} ns"
+        f"{native_prefix}{process_kind} {expression_kind} {timed_arg} event={event_time} timeout={timeout_ns} ns"
     )
     assert native_records == [expected_native], native.stdout + native.stderr
 

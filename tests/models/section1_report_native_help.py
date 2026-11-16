@@ -161,11 +161,7 @@ def check_existing_report_member_help():
             rendered = systemc.format_native_help(bound_member)
             stream = StringIO()
             assert systemc.native_help(bound_member, file=stream) is None
-            signature_lines = [
-                line
-                for line in rendered.splitlines()
-                if f"sc_core::sc_report::{member_name}(" in line
-            ]
+            signature_lines = [line for line in rendered.splitlines() if f"sc_core::sc_report::{member_name}(" in line]
             assert signature_lines, rendered
             assert stream.getvalue() == rendered + "\n"
             assert bound_member.__doc__ == original_doc

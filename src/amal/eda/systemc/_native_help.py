@@ -13,9 +13,7 @@ _QUALIFIED_IDENTIFIER = re.compile(r"\b([A-Za-z_]\w*)::([A-Za-z_]\w*)")
 _SIGNATURE_DECLARATION = re.compile(r"^\s*.*?\b([A-Za-z_]\w*)::([A-Za-z_]\w*)(?:::|\s*[<(])")
 _SCMODULE_NAMES = {"ScModule", "sc_module", "sc_core::ScModule", "sc_core::sc_module", "sc_core.ScModule"}
 _NATIVE_NAMESPACES = {"sc_core", "sc_dt", "tlm", "tlm_utils"}
-_SC_REPORT_DECLARATION_SOURCE = (
-    "submodules/systemc/src/sysc/utils/sc_report.h, public sc_report declarations"
-)
+_SC_REPORT_DECLARATION_SOURCE = "submodules/systemc/src/sysc/utils/sc_report.h, public sc_report declarations"
 _SC_REPORT_DECLARATIONS_BY_CPP_NAME = {
     "sc_core::sc_report": (
         "const char* sc_core::sc_report::get_file_name() const",

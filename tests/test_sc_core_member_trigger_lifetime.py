@@ -13,8 +13,7 @@ def test_sc_core_member_trigger_lifetime(tmp_path):
     assert len(records) == 1
     result = json.loads(records[0])
     python_rows = {
-        label: [[row["step"], row["ticks"]] for row in rows]
-        for label, rows in result["python_rows"].items()
+        label: [[row["step"], row["ticks"]] for row in rows] for label, rows in result["python_rows"].items()
     }
     assert python_rows == result["native_rows"]
     assert result["owner_methods_valid_after_simulation"]

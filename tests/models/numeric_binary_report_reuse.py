@@ -93,9 +93,7 @@ try:
         if not callable(cached_callable):
             raise AssertionError("binary dispatch cache retained a non-callable failure value")
         cached_callable_id = id(cached_callable)
-    public_messages.append(
-        _capture_report("public remainder zero, cached call", lambda: numerator % denominator)
-    )
+    public_messages.append(_capture_report("public remainder zero, cached call", lambda: numerator % denominator))
     cache_after_second_failure = _binary_cache(descriptor)
     if cache is not None and (
         cache_after_second_failure is not cache
@@ -119,10 +117,13 @@ try:
     reference_result_type = type(reference_result).__cpp_name__
     public_result_address = int(cppyy.addressof(public_result))
     reference_result_address = int(cppyy.addressof(reference_result))
-    result_addresses_independent = all(
-        address not in (numerator_address, denominator_address)
-        for address in (public_result_address, reference_result_address)
-    ) and public_result_address != reference_result_address
+    result_addresses_independent = (
+        all(
+            address not in (numerator_address, denominator_address)
+            for address in (public_result_address, reference_result_address)
+        )
+        and public_result_address != reference_result_address
+    )
     results_owned = bool(public_result.__python_owns__) and bool(reference_result.__python_owns__)
     sources_unchanged = (
         _value(numerator) == numerator_value
@@ -148,7 +149,9 @@ finally:
 
 
 messages_match_native = public_messages == reference_messages
-messages_report_division_by_zero = all("division by zero" in message.lower() for message in public_messages + reference_messages)
+messages_report_division_by_zero = all(
+    "division by zero" in message.lower() for message in public_messages + reference_messages
+)
 native_parity = public_result_type == reference_result_type and public_result_value == reference_result_value == "1"
 cache_reused = cache is None or (
     dispatch_key in cache

@@ -37,19 +37,13 @@ invalid_calls = (
     ("too_many", lambda table_type: table_type(*([cppyy.nullptr] * 8))),
     ("invalid_growth", lambda table_type: table_type(grow="invalid-growth")),
 )
-original_errors = {
-    label: native_type_error(lambda call=call: call(Probe), label)
-    for label, call in invalid_calls
-}
+original_errors = {label: native_type_error(lambda call=call: call(Probe), label) for label, call in invalid_calls}
 
 # The second distinct native class reuses the already installed C++ predicate.
 assert sc.adapt_inherited_hash_constructor(Probe) is Probe
 assert sc.adapt_inherited_hash_constructor(ProbeWithTag) is ProbeWithTag
 
-adapted_errors = {
-    label: native_type_error(lambda call=call: call(Probe), label)
-    for label, call in invalid_calls
-}
+adapted_errors = {label: native_type_error(lambda call=call: call(Probe), label) for label, call in invalid_calls}
 assert adapted_errors == original_errors
 
 
@@ -81,13 +75,6 @@ except TypeError as error:
 else:
     raise AssertionError("the adapter accepted native sc_phash<int, int>")
 
-retry_shapes = [
-    label
-    for label, message in original_errors.items()
-    if "takes at least 7 arguments" in message
-]
-print(
-    "HASH_ADAPTER_EDGES predicate_reuse=ProbeWithTag "
-    "signature_rejection=sc_phash preserved_errors=4"
-)
+retry_shapes = [label for label, message in original_errors.items() if "takes at least 7 arguments" in message]
+print("HASH_ADAPTER_EDGES predicate_reuse=ProbeWithTag signature_rejection=sc_phash preserved_errors=4")
 print(f"HASH_ADAPTER_RETRY_DIAGNOSTICS {','.join(retry_shapes) or 'none'}")

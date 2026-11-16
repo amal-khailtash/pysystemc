@@ -112,21 +112,17 @@ void Owner::callback() {}
     """
     raw_entries = _compile_entries(source, tmp_path, monkeypatch)
     callback_declaration_id = next(
-        entry["ast_id"] for entry in raw_entries
+        entry["ast_id"]
+        for entry in raw_entries
         if entry["name"] == "fixture::Owner::callback" and not entry.get("previous_decl")
     )
     value_declaration_id = next(
-        entry["ast_id"] for entry in raw_entries
+        entry["ast_id"]
+        for entry in raw_entries
         if entry["name"] == "fixture::Owner::value" and not entry.get("previous_decl")
     )
-    callback_definition = next(
-        entry for entry in raw_entries
-        if entry.get("previous_decl") == callback_declaration_id
-    )
-    value_definition = next(
-        entry for entry in raw_entries
-        if entry.get("previous_decl") == value_declaration_id
-    )
+    callback_definition = next(entry for entry in raw_entries if entry.get("previous_decl") == callback_declaration_id)
+    value_definition = next(entry for entry in raw_entries if entry.get("previous_decl") == value_declaration_id)
     removed_ids = {callback_definition["previous_decl"], value_definition["previous_decl"]}
     retained = [entry for entry in raw_entries if entry.get("ast_id") not in removed_ids]
     entries = _INVENTORY["reconcile_declarations"](retained)

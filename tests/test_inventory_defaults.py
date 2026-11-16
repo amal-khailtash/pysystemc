@@ -158,14 +158,10 @@ template<template<class> class Container> struct Wrapped {};
 """
     entries = _ast_entries(source, tmp_path, monkeypatch)
     sequences = [
-        entry
-        for entry in entries
-        if entry["name"] == "fixture::Sequence" and entry["kind"] == "ClassTemplateDecl"
+        entry for entry in entries if entry["name"] == "fixture::Sequence" and entry["kind"] == "ClassTemplateDecl"
     ]
     wrapped = [
-        entry
-        for entry in entries
-        if entry["name"] == "fixture::Wrapped" and entry["kind"] == "ClassTemplateDecl"
+        entry for entry in entries if entry["name"] == "fixture::Wrapped" and entry["kind"] == "ClassTemplateDecl"
     ]
     assert len(sequences) == len(wrapped) == 2
 
