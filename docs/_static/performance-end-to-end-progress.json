@@ -1,0 +1,39 @@
+{
+  "schema": "pysystemc-end-to-end-progress-v1",
+  "status": "running",
+  "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+  "current_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+  "pairs_per_workload": 10,
+  "cycles": 20000,
+  "transfers": 20000,
+  "subprocess_timeout_seconds": 60,
+  "measurement_deadline_seconds": 1800,
+  "no_resampling": true,
+  "tracking": "VCD off; coverage off; profiling off; recorder and validation outside phase timing",
+  "gates": {
+    "contract": {
+      "status": "pending"
+    },
+    "equivalence": {
+      "status": "pending"
+    },
+    "import": {
+      "status": "pending"
+    },
+    "event_signal": {
+      "status": "pending"
+    },
+    "tlm_transport": {
+      "status": "pending"
+    },
+    "report": {
+      "status": "pending"
+    },
+    "validation_commit": {
+      "status": "pending"
+    }
+  },
+  "completed_measurement_pairs": 0,
+  "total_measurement_pairs": 30,
+  "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload."
+}
