@@ -41,6 +41,21 @@ GIL costs. See :doc:`performance-callback-boundary` and
 :doc:`performance-callback-progress` for the evidence and closed finite tracker.
 Historical accepted-slice/optimization-commit accounting remains 25/20.
 
+Actual verification recorder overhead
+---------------------------------------
+
+Ten fixed alternating pairs measured the actual local verification recorder
+on/off around fresh Python TLM invocations, with profiling, coverage and VCD off.
+Median whole invocation was 6.430736 seconds off versus
+6.775435 seconds on: 5.36% overhead
+relative to off, or 5.09% reduction by disabling it
+relative to on. On was slower in 8/10 pairs. This includes
+an extra interpreter, launch/output-sink differences, log persistence and actual
+ledger/plan synchronization. It does not isolate bookkeeping statements or
+establish a runtime optimization. The original transport loop is unchanged.
+See :doc:`todo-batch-results` for all samples, source/state provenance and limits.
+No resampling or optimization followed; historical accounting remains 25/20.
+
 Fixed end-to-end revision comparison
 ------------------------------------
 

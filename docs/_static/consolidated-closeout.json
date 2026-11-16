@@ -36,8 +36,10 @@
     "Python 3.15 deferred.",
     "Arbitrary template/lifecycle/GIL/configuration and example topology contracts outside finite verification.",
     "Seven Python coverage misses remain classified and unexercised.",
-    "Tracking/bookkeeping overhead not measured.",
     "GLM/Qwen review unavailable due to AMD HTTP401."
   ],
-  "next_task_queued": false
+  "next_task_queued": false,
+  "scope_checkpoint": "Prior verification and three performance rounds; subsequent named TODO batch recorded separately.",
+  "follow_up_batch": "todo-batch-progress.json",
+  "tracking_overhead_evidence": "performance-tracking-overhead.json (actual verification recorder only)"
 }

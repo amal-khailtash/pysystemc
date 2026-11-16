@@ -39,8 +39,9 @@ and :doc:`performance-callback-progress` for each closed tracker. The consolidat
 machine record is ``docs/_static/consolidated-closeout.json``. No additional
 candidate or broader audit is queued. Python 3.15 remains deferred; broader
 API/template/lifecycle/GIL/configuration and example-topology contracts, the seven
-classified coverage misses, and tracking/bookkeeping overhead remain outside
-this completed scope. Requested GLM/Qwen review was unavailable due to AMD
+classified coverage misses, and profiling/coverage instrumentation overhead remain
+outside this completed scope. Tracking/bookkeeping overhead is measured separately
+in the subsequent :doc:`todo-batch-results` batch. Requested GLM/Qwen review was unavailable due to AMD
 HTTP 401; no on-prem review was accepted.
 
 Baseline obligation dispositions

@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Finish the finite tracking, correctness and example batch: measure actual
+  recorder on/off overhead in ten fixed pairs, add native/Python wide-signal
+  contracts at 65/137/257 bits, and expand packet-switch comparisons to three
+  seeds. Preserve historical full-regression scope and close the batch tracker.
+
 - Reconcile the consolidated verification/performance finish line: 21/21
   performance gates closed and 113 current runtime hashes match final regression
   evidence. Align embedded end-to-end progress with completion while retaining
