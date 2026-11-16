@@ -29,6 +29,18 @@ was not run. Runtime source and the 25-slice/20-commit accounting are unchanged.
 See :doc:`performance-tlm-profile` for evidence and limitations and
 :doc:`performance-tlm-profile-progress` for the seven-gate closure tracker.
 
+Bounded callback boundary investigation
+-----------------------------------------
+
+A single registration-time void-validator specialization was screened on the
+same 20,000-transfer TLM model. Its median reduction was
+1.59% with 2/3 wins, failing the fixed 5%/all-wins
+screen. No confirmation or runtime change followed. Diagnostic callback self
+time includes model work and native cppyy calls; it does not isolate removable
+GIL costs. See :doc:`performance-callback-boundary` and
+:doc:`performance-callback-progress` for the evidence and closed finite tracker.
+Historical accepted-slice/optimization-commit accounting remains 25/20.
+
 Fixed end-to-end revision comparison
 ------------------------------------
 

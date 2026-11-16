@@ -8,6 +8,10 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Close a bounded callback-cost investigation and reject the sole void-validator
+  specialization at its fixed TLM screen. Preserve source/behavior evidence,
+  callback lifecycle checks and the unchanged production runtime.
+
 - Complete a bounded TLM profile and single-candidate screen with source and
   behavior evidence. Reject guarded module lookup at 1.37% median improvement,
   below the fixed 5% threshold; preserve runtime code and close the tracker.

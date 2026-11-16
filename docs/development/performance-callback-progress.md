@@ -1,16 +1,16 @@
 # Callback boundary candidate progress
 
-Status: **stopped_failed_gate**.
+Status: **complete**.
 
 | Gate | Status | Detail |
 |---|---|---|
 | contract | passed | One candidate, fixed original TLM loop; no retries or additional workload. |
 | cost_classification | passed | Reuse three published diagnostic profiles; callback body self time includes cppyy native calls; result wrapper is distinct ~8ms. |
 | candidate_choice | passed | Freeze void-return validation branch at registration, retaining *args, None enforcement, callable ownership, and native bridge. |
-| correctness | failed | Child failed: build/performance/callback-boundary/correctness-baseline.log |
-| measurement | pending |  |
-| decision | pending |  |
-| docs_commit | pending |  |
+| correctness | passed | 2 void-wrapper/native result checks and 4 Python/native TLM models agree. Six lifecycle/error/duplicate models passed. |
+| measurement | passed | screen 3/3, 1.59% reduction, 2/3 wins; fixed measurement finished |
+| decision | passed | Rejected: 1.59% median reduction, 2/3 wins; no confirmation or runtime change. |
+| docs_commit | passed | Root/Luna evidence reconciliation, strict Sphinx and lint passed; report and seven-gate closure grouped in result commit. |
 
 Fixed scope: callback cost review of the existing 20,000-transfer workload.
 At most one candidate; three alternating feasibility pairs. Confirmation runs only

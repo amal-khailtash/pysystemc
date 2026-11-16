@@ -1,5 +1,5 @@
 {
-  "status": "stopped_failed_gate",
+  "status": "complete",
   "baseline_commit": "ca86205",
   "candidate_limit": 1,
   "screen_pairs": 3,
@@ -23,17 +23,20 @@
       "detail": "Freeze void-return validation branch at registration, retaining *args, None enforcement, callable ownership, and native bridge."
     },
     "correctness": {
-      "status": "failed",
-      "detail": "Child failed: build/performance/callback-boundary/correctness-baseline.log"
+      "status": "passed",
+      "detail": "2 void-wrapper/native result checks and 4 Python/native TLM models agree. Six lifecycle/error/duplicate models passed."
     },
     "measurement": {
-      "status": "pending"
+      "status": "passed",
+      "detail": "screen 3/3, 1.59% reduction, 2/3 wins; fixed measurement finished"
     },
     "decision": {
-      "status": "pending"
+      "status": "passed",
+      "detail": "Rejected: 1.59% median reduction, 2/3 wins; no confirmation or runtime change."
     },
     "docs_commit": {
-      "status": "pending"
+      "status": "passed",
+      "detail": "Root/Luna evidence reconciliation, strict Sphinx and lint passed; report and seven-gate closure grouped in result commit."
     }
   }
 }
