@@ -8,8 +8,8 @@ Portability is dropped from this batch. Python 3.14; 3.15 deferred.
 |---|---|---|
 | contract | passed | Three named jobs, fixed acceptance and stopping point. |
 | tracking | pending | 10 alternating actual recorder on/off pairs; whole-process and original loop statistics, hashes/behavior reconciled. |
-| correctness | pending | Native/Python wide-signal contracts at 65/137/257 bits; values/events/times/lifetime. |
-| examples | pending | Existing packet-switch port expanded to seeds1/7/23; complete native send/receive/drop comparison. |
+| correctness | passed | 3/3 widths match native values/events/times/deltas; retained callback ownership. Commit648cabe. |
+| examples | passed | 3/3 packet seeds agree;16 installed-harness checks passed;43 selectable installed cases. Commit04c5d55. |
 | final_closeout | pending | Root acceptance, docs/lint/diff and grouped commits; no pending batch item. |
 
 Fixed scope: ten tracking on/off pairs with no resampling; three wide-signal

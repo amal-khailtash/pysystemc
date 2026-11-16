@@ -1,0 +1,80 @@
+{
+  "schema": "pysystemc-todo-validation-v1",
+  "status": "accepted_named_cases",
+  "root_cases": [
+    {
+      "classname": "tests.test_wide_signal_contracts",
+      "name": "test_wide_signal_value_change_contract_matches_native[65]"
+    },
+    {
+      "classname": "tests.test_wide_signal_contracts",
+      "name": "test_wide_signal_value_change_contract_matches_native[137]"
+    },
+    {
+      "classname": "tests.test_wide_signal_contracts",
+      "name": "test_wide_signal_value_change_contract_matches_native[257]"
+    },
+    {
+      "classname": "tests.test_upstream",
+      "name": "test_upstream_packet_switch_seed_matches_native"
+    },
+    {
+      "classname": "tests.test_upstream",
+      "name": "test_upstream_packet_switch_seed_one_matches_native"
+    },
+    {
+      "classname": "tests.test_upstream",
+      "name": "test_upstream_packet_switch_seed_twenty_three_matches_native"
+    }
+  ],
+  "installed_harness_checks": 16,
+  "current_collected_tests": 1002,
+  "historical_full_regression_tests": 997,
+  "fresh_full_regression_run": false,
+  "wide_signal": {
+    "widths": [
+      65,
+      137,
+      257
+    ],
+    "callbacks_per_case": 3,
+    "callback_times_ns": [
+      0,
+      1,
+      2
+    ],
+    "scope": "Full high/low values, deferred update, unchanged write suppression, value_changed sensitivity, exact native time/delta equivalence, Python callback owner retention after GC.",
+    "commit": "648cabe"
+  },
+  "examples": {
+    "directory": "examples/sysc/pkt_switch",
+    "seeds": [
+      1,
+      7,
+      23
+    ],
+    "port_status": "Existing mapped port; expanded input/native comparison coverage.",
+    "scope": "Entire send/receive/detail/drop record equality, meaningful traffic and final drop arithmetic; staged native wall-time seed replaced only in test copy.",
+    "commit": "04c5d55",
+    "installed_harness_selectable_cases": 43,
+    "fresh_43_case_installed_run": false
+  },
+  "initial_failure": "Initial three wide-signal fixture cases failed; mirrored bounded 1ns progression and zero initial delta support fixed assertions/stimulus, without runtime edits. Root failure log/XML preserved.",
+  "source_hashes": {
+    "tests/models/wide_signal_contracts.py": "e0a0435fb28f2ae088c39a5c18442d327cc78cf11b10605c6687fa2e38405f43",
+    "tests/native/wide_signal_contracts.cpp": "5d0b8b602fb03c26656a11fe2461151298ab3c2665a7cfa36cbec6a53661812d",
+    "tests/test_wide_signal_contracts.py": "7c3e66c3729c302082153c8eb89b232a3ad56b3ec260395fdb073dc65a048c0d",
+    "tests/test_upstream.py": "eff9ffb1647f1573944d829ba8bf366850df4b7d35469cd13ae373291decca71",
+    "tests/test_installed_example_staging.py": "3b5b425c2a38cef51d0a6aae652d4b64853579d6473dc85b5e98bd1789c1a044",
+    "tools/check_installed_examples.py": "dbd000a0ae80690a71cdecfd225ca8b72421d4c5da1f32be8d84fab49e4dfefc"
+  },
+  "evidence": {
+    "build/verification/todo-batch/root-tests.log": "447141445bb88448799a142541e0beef2e2f0fc858c9efa056438490f3c7f30e",
+    "build/verification/todo-batch/root-tests.xml": "1ef54e8f1b77a451f89d6c55cbdbfc4db350967a2a0dd1f913b7774e5f26b0d8",
+    "build/verification/todo-batch/root-corrected.log": "99edd7612d737414f7c6593d27426c60f2e1772d4a3a4794bc9ca0dd8030c75d",
+    "build/verification/todo-batch/root-corrected.xml": "6a6b645827666149c073dc1981966cb9f2ac36b9fb1092ffdf95dbb793e0779c",
+    "build/verification/todo-batch/installed-harness.xml": "66239ddef2d45562f392804f33a2cc67be10a2c5a2aa4b0729378da337cf8917",
+    "build/verification/todo-batch/collection.log": "8c3ddf622f663a69355544f6954aea3b7d765e4fe527593224193924ae80d9a0",
+    "build/verification/todo-batch/selection.log": "d82bd1380afc21961c7cf4b3704c38cfb65ec00cb2ecb36400e58d22c93429c4"
+  }
+}

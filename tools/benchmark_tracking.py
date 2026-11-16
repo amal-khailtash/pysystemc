@@ -28,20 +28,27 @@ def source_hashes() -> dict[str, str]:
     return {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in paths}
 
 
-def run_sample(role: str, pair: int, hashes: dict[str, str]) -> dict:
+def infrastructure_hashes() -> dict[str, str]:
+    """Guard workload and recorder code independently of runtime source files."""
+    return {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in
+            ("tools/benchmark_end_to_end.py", ".ai/record_verification_run.py", ".ai/sync_verification_plan.py")}
+
+
+def run_sample(role: str, pair: int, hashes: dict[str, str], infrastructure: dict[str, str]) -> dict:
     """Run one fresh checked simulation, with a 60-second whole-child deadline.
 
     Args:
         role: ``off`` for direct execution or ``on`` for the actual recorder.
         pair: Fixed alternating pair index, zero through nine.
         hashes: Frozen current runtime source hashes.
+        infrastructure: Frozen workload and recorder code hashes.
     Returns:
         Checked simulation result, whole invocation wall time and relative logs.
     Raises:
         AssertionError: Source, native behavior or output markers disagree.
         subprocess.TimeoutExpired: The fresh child exceeds its deadline.
     """
-    assert source_hashes() == hashes
+    assert source_hashes() == hashes and infrastructure_hashes() == infrastructure
     log = HERE / f"{pair:02d}-{role}.log"
     command = [
         sys.executable, str(ROOT / "tools/benchmark_end_to_end.py"), "--child",
@@ -69,11 +76,28 @@ def run_sample(role: str, pair: int, hashes: dict[str, str]) -> dict:
     assert len(payload) == 1, log
     result = payload[0]
     assert result["python"] == "3.14.0"
+    assert result["workload"] == "tlm_transport" and result["engine"] == "python"
     assert result["behavior"] == {"callbacks": 20000, "responses": 20000, "checksum": 600110000,
                                   "last_address": 60004, "annotated_ns": 20000, "time_ns": 0}
-    assert source_hashes() == hashes
+    assert source_hashes() == hashes and infrastructure_hashes() == infrastructure
     return {"pair": pair, "role": role, "wall_seconds": wall,
             "log": log.relative_to(ROOT).as_posix(), **result}
+
+
+def update_progress(pairs: int) -> None:
+    """Update the public batch measurement count outside all sample timing."""
+    path = ROOT / "docs/_static/todo-batch-progress.json"
+    if not path.exists():
+        return
+    value = json.loads(path.read_text())
+    item = value["items"]["tracking"]
+    item["status"] = "running"
+    item["detail"] = f"Actual recorder on/off: {pairs}/10 alternating pairs retained; no resampling."
+    path.write_text(json.dumps(value, indent=2) + "\n")
+    page = ROOT / "docs/development/todo-batch-progress.md"
+    lines = page.read_text().splitlines()
+    lines = [f"| tracking | running | {item['detail']} |" if line.startswith("| tracking |") else line for line in lines]
+    page.write_text("\n".join(lines) + "\n")
 
 
 def main() -> None:
@@ -84,12 +108,20 @@ def main() -> None:
     if report.exists() or partial.exists():
         raise RuntimeError("Fixed tracking round already started; do not resample")
     hashes = source_hashes()
+    infrastructure = infrastructure_hashes()
+    recorder_source_sha256 = hashlib.sha256((ROOT / ".ai/record_verification_run.py").read_bytes()).hexdigest()
+    records_path = ROOT / ".ai/VERIFICATION_RUNS.json"
+    initial_records = json.loads(records_path.read_text())
+    initial_ledger_bytes = records_path.stat().st_size
+    initial_ledger_sha256 = hashlib.sha256(records_path.read_bytes()).hexdigest()
+    sync_source_sha256 = hashlib.sha256((ROOT / ".ai/sync_verification_plan.py").read_bytes()).hexdigest()
     samples = []
     for pair in range(PAIRS):
         for role in ("off", "on") if pair % 2 == 0 else ("on", "off"):
-            samples.append(run_sample(role, pair, hashes))
+            samples.append(run_sample(role, pair, hashes, infrastructure))
             partial.write_text(json.dumps(samples, indent=2) + "\n")
         assert samples[-1]["native_library_sha256"] == samples[-2]["native_library_sha256"]
+        update_progress(pair + 1)
         print(f"tracking {pair + 1}/{PAIRS} pairs", flush=True)
     medians = {role: statistics.median(s["wall_seconds"] for s in samples if s["role"] == role)
                for role in ("off", "on")}
@@ -98,10 +130,25 @@ def main() -> None:
     deltas = [next(s["wall_seconds"] for s in samples if s["role"] == "on" and s["pair"] == p)
               - next(s["wall_seconds"] for s in samples if s["role"] == "off" and s["pair"] == p)
               for p in range(PAIRS)]
+    final_records = json.loads(records_path.read_text())
+    added_records = final_records[len(initial_records):]
+    assert [row["label"] for row in added_records] == [f"tracking-on-{p:02d}" for p in range(PAIRS)]
+    assert all(row["status"] == "passed" for row in added_records)
+    assert len({s["native_library_sha256"] for s in samples}) == 1
+    assert hashlib.sha256((ROOT / ".ai/record_verification_run.py").read_bytes()).hexdigest() == recorder_source_sha256
     result = {"schema": "pysystemc-tracking-overhead-v1", "status": "measured", "pairs": PAIRS,
-              "source_hashes": hashes, "samples": samples, "wall_medians": medians,
+              "source_hashes": hashes, "infrastructure_hashes": infrastructure, "samples": samples,
+              "recorder_source_sha256": recorder_source_sha256,
+              "recorder_rows_appended": len(added_records),
+              "initial_ledger_records": len(initial_records),
+              "initial_ledger_bytes": initial_ledger_bytes,
+              "initial_ledger_sha256": initial_ledger_sha256,
+              "final_ledger_bytes": records_path.stat().st_size,
+              "sync_source_sha256": sync_source_sha256,
+              "recorder_source": (ROOT / ".ai/record_verification_run.py").read_text(), "wall_medians": medians,
               "loop_medians": loop_medians, "paired_wall_deltas_seconds": deltas,
               "wall_overhead_percent": 100 * (medians["on"] / medians["off"] - 1),
+              "off_reduction_percent": 100 * (1 - medians["off"] / medians["on"]),
               "on_slower_pairs": sum(d > 0 for d in deltas),
               "tracking": "Actual .ai/record_verification_run.py: extra interpreter, launch/log capture, ledger and plan synchronization.",
               "scope": "Whole fresh Python TLM invocation; original 20000-transfer loop also retained. Profiling, coverage and VCD off.",
