@@ -347,55 +347,103 @@ def sample(source: Path, workload: str, count: int, engine: str, log: Path) -> d
     return result
 
 
-def run() -> None:
-    """Complete one fixed round or publish its failure and stop without retries."""
-    progress = contract()
+def run(resume: bool = False, elapsed_before: float = 0.0) -> None:
+    """Complete the fixed round without retrying failed workloads.
+
+    Args:
+        resume: Retain every completed sample after recorder interruption.
+        elapsed_before: Seconds since the original round launch, preserving its deadline.
+
+    Raises:
+        AssertionError: A frozen source, pair outcome or deadline check fails.
+        RuntimeError: An isolated child fails; failure evidence is retained.
+
+    Continuation handles an outer recorder interruption only. It does not retry
+    failed workload gates, remove samples or change the frozen contract.
+    """
+    progress = json.loads(PROGRESS.read_text()) if resume else contract()
     save(PROGRESS, progress)
     here = ROOT / "build/performance/end-to-end"
     here.mkdir(parents=True, exist_ok=True)
     evidence = {"schema": "pysystemc-end-to-end-v1", "contract": contract(), "preflight": [], "samples": []}
-    started = perf_counter()
+    if resume:
+        assert progress["status"] == "running" and progress["gates"]["equivalence"]["status"] == "passed"
+        evidence = json.loads((here / "raw.json").read_text())
+        assert len(evidence["preflight"]) == 8, "Cannot resume a failed equivalence gate"
+        assert evidence["contract"] == contract()
+        evidence["retained_launch_issue"] = (
+            "Initial recorder had a five-minute outer timeout. Completed samples retained exactly; continuation uses the original round deadline and no sample is discarded or resampled."
+        )
+    started = perf_counter() - elapsed_before
     active = "contract"
     try:
         sources = {label: here / label for label in ("baseline", "current")}
-        evidence["snapshots"] = {
-            label: snapshot(revision, sources[label])
-            for label, revision in [("baseline", BASELINE), ("current", CURRENT)]
-        }
-        progress["gates"][active] = {"status": "passed"}
-        save(PROGRESS, progress)
-        active = "equivalence"
-        for workload in ("import", "event_signal", "tlm_transport"):
-            checked = []
-            for label in ("baseline", "current"):
-                item = sample(sources[label], workload, 100, "python", here / f"preflight-{label}-{workload}.log")
-                evidence["preflight"].append({"revision": label, **item})
-                checked.append(item)
-            assert checked[0]["behavior"] == checked[1]["behavior"]
-            assert checked[0]["native_library_sha256"] == checked[1]["native_library_sha256"]
-            if workload != "import":
-                native = sample(sources["current"], workload, 100, "native", here / f"preflight-native-{workload}.log")
-                evidence["preflight"].append({"revision": "current", **native})
-                assert native["behavior"] == checked[0]["behavior"]
-        progress["gates"][active] = {
-            "status": "passed",
-            "checks": "Baseline/current and native reference behavior match; source imports guarded; native library identical.",
-        }
-        save(PROGRESS, progress)
+        if resume:
+            for label, frozen in evidence["snapshots"].items():
+                for path, digest in frozen["source_hashes"].items():
+                    assert hashlib.sha256((sources[label] / path).read_bytes()).hexdigest() == digest
+        else:
+            evidence["snapshots"] = {
+                label: snapshot(revision, sources[label])
+                for label, revision in [("baseline", BASELINE), ("current", CURRENT)]
+            }
+            progress["gates"][active] = {"status": "passed"}
+            save(PROGRESS, progress)
+            active = "equivalence"
+            for workload in ("import", "event_signal", "tlm_transport"):
+                checked = []
+                for label in ("baseline", "current"):
+                    item = sample(sources[label], workload, 100, "python", here / f"preflight-{label}-{workload}.log")
+                    evidence["preflight"].append({"revision": label, **item})
+                    checked.append(item)
+                assert checked[0]["behavior"] == checked[1]["behavior"]
+                assert checked[0]["native_library_sha256"] == checked[1]["native_library_sha256"]
+                if workload != "import":
+                    native = sample(
+                        sources["current"], workload, 100, "native", here / f"preflight-native-{workload}.log"
+                    )
+                    evidence["preflight"].append({"revision": "current", **native})
+                    assert native["behavior"] == checked[0]["behavior"]
+            progress["gates"][active] = {
+                "status": "passed",
+                "checks": "Baseline/current and native reference behavior match; source imports guarded; native library identical.",
+            }
+            save(PROGRESS, progress)
         for workload, count in [("import", 1), ("event_signal", CYCLES), ("tlm_transport", TRANSFERS)]:
             active = workload
             for pair in range(PAIRS):
                 for label in ("baseline", "current") if pair % 2 == 0 else ("current", "baseline"):
+                    existing = [
+                        row
+                        for row in evidence["samples"]
+                        if row["workload"] == workload and row["pair"] == pair and row["revision"] == label
+                    ]
+                    assert len(existing) <= 1
+                    if existing:
+                        continue
                     assert perf_counter() - started < 1800, "Measurement deadline exceeded"
                     item = sample(
                         sources[label], workload, count, "python", here / f"{workload}-{pair:02d}-{label}.log"
                     )
                     evidence["samples"].append({"revision": label, "pair": pair, **item})
                     save(here / "raw.json", evidence)
-                pair_samples = evidence["samples"][-2:]
+                pair_samples = [
+                    row for row in evidence["samples"] if row["workload"] == workload and row["pair"] == pair
+                ]
+                assert len(pair_samples) == 2
                 assert pair_samples[0]["behavior"] == pair_samples[1]["behavior"]
                 assert pair_samples[0]["native_library_sha256"] == pair_samples[1]["native_library_sha256"]
-                progress["completed_measurement_pairs"] += 1
+                progress["completed_measurement_pairs"] = sum(
+                    all(
+                        any(
+                            row["workload"] == w and row["pair"] == p and row["revision"] == label
+                            for row in evidence["samples"]
+                        )
+                        for label in ("baseline", "current")
+                    )
+                    for w in ("import", "event_signal", "tlm_transport")
+                    for p in range(PAIRS)
+                )
                 progress["gates"][active] = {"status": "running", "pairs_completed": pair + 1, "pairs_total": PAIRS}
                 save(PROGRESS, progress)
                 print(
@@ -449,6 +497,7 @@ def run() -> None:
                 "TLM workload uses a reused payload and nonwaiting address transform with delay annotation, not a memory or thread-throughput model.",
                 "Native preflight uses shared Python stimulus; selected behavior equivalence does not certify every API.",
                 "No single package-wide percentage; no timing percentages summed; no optimization adopted.",
+                "Both revisions emit native W509 in the TLM workload because the retained top sc_module_name leaves construction open until sc_start. Values, callbacks and time are checked; this benchmark does not verify module-construction lifecycle contracts.",
             ],
         )
         save(here / "raw.json", evidence)
@@ -479,6 +528,8 @@ def main() -> None:
     parser.add_argument("--count", type=int, default=100)
     parser.add_argument("--engine", choices=["python", "native"], default="python")
     parser.add_argument("--initialize", action="store_true")
+    parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--elapsed-before", type=float, default=0.0)
     args = parser.parse_args()
     if args.initialize:
         save(PROGRESS, contract())
@@ -486,7 +537,7 @@ def main() -> None:
         assert args.source and args.workload and args.count > 0
         print(MARKER + json.dumps(child(args.source, args.workload, args.count, args.engine)))
     else:
-        run()
+        run(args.resume, args.elapsed_before)
 
 
 if __name__ == "__main__":
