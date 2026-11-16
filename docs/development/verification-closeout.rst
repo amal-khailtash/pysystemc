@@ -13,6 +13,36 @@ These counts describe the fresh final checkpoint, including the method
 self-kill correction described below. Earlier 995- and 996-test results
 retain their historical scopes.
 
+Consolidated finish line
+-------------------------
+
+The selected verification and performance work is complete. All three performance
+rounds have seven closed gates each: **21/21 gates, zero pending**.
+The end-to-end comparison completed 30/30 alternating pairs (result ``29251f0``).
+The TLM module-lookup candidate was rejected at 1.37% median improvement with
+3/3 wins (``ca86205``); callback validator specialization was rejected at 1.59%
+with 2/3 wins (``d3d5a7c``). Both screens required at least 5% and all wins.
+Neither candidate changed production runtime code or proceeded to confirmation.
+
+Final record reconciliation confirms that all 113 current runtime source hashes
+still match the accepted 997-test regression evidence. That regression is reused;
+no new full-suite run or timing samples were collected for this reconciliation.
+Historical accounting remains 25 accepted workload slices /20 optimization commits.
+
+The end-to-end JSON now embeds final progress consistently with its completed
+tracker. Its original pre-execution contract is explicitly preserved as an initial
+snapshot; samples, timing summaries, source identities and raw evidence hashes
+are unchanged. Stale active-round local handoff text has been archived.
+
+See :doc:`performance-end-to-end-progress`, :doc:`performance-tlm-profile-progress`
+and :doc:`performance-callback-progress` for each closed tracker. The consolidated
+machine record is ``docs/_static/consolidated-closeout.json``. No additional
+candidate or broader audit is queued. Python 3.15 remains deferred; broader
+API/template/lifecycle/GIL/configuration and example-topology contracts, the seven
+classified coverage misses, and tracking/bookkeeping overhead remain outside
+this completed scope. Requested GLM/Qwen review was unavailable due to AMD
+HTTP 401; no on-prem review was accepted.
+
 Baseline obligation dispositions
 --------------------------------
 

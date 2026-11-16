@@ -2,7 +2,7 @@
   "schema": "pysystemc-end-to-end-v1",
   "contract": {
     "schema": "pysystemc-end-to-end-progress-v1",
-    "status": "running",
+    "status": "complete",
     "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
     "current_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
     "pairs_per_workload": 10,
@@ -14,30 +14,44 @@
     "tracking": "VCD off; coverage off; profiling off; recorder and validation outside phase timing",
     "gates": {
       "contract": {
-        "status": "pending"
+        "status": "passed"
       },
       "equivalence": {
-        "status": "pending"
+        "status": "passed",
+        "checks": "Baseline/current and native reference behavior match; source imports guarded; native library identical."
       },
       "import": {
-        "status": "pending"
+        "status": "passed",
+        "pairs_completed": 10,
+        "pairs_total": 10
       },
       "event_signal": {
-        "status": "pending"
+        "status": "passed",
+        "pairs_completed": 10,
+        "pairs_total": 10
       },
       "tlm_transport": {
-        "status": "pending"
+        "status": "passed",
+        "pairs_completed": 10,
+        "pairs_total": 10
       },
       "report": {
-        "status": "pending"
+        "status": "passed",
+        "report": "docs/_static/performance-end-to-end.json"
       },
       "validation_commit": {
-        "status": "pending"
+        "status": "passed",
+        "checks": "Independent source/log/behavior/statistics acceptance, strict Sphinx, lint and diff checks passed; final results and tracker committed together."
       }
     },
-    "completed_measurement_pairs": 0,
+    "completed_measurement_pairs": 30,
     "total_measurement_pairs": 30,
-    "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload."
+    "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload.",
+    "measurement_elapsed_seconds": 590.5871817134321,
+    "retained_preparation_issues": [
+      "Initial recorder five-minute timeout; all 30 completed samples retained, original 30-minute deadline preserved.",
+      "Initial strict docs check lacked progress-page navigation entry; added to development index and strict build passed."
+    ]
   },
   "preflight": [
     {
@@ -2000,5 +2014,45 @@
     "build/performance/end-to-end/tlm_transport-08-current.log": "4b5d081e3a1130eba384379b1d032a37fc95db62e6128d4bf4e807390e2b42cc",
     "build/performance/end-to-end/tlm_transport-09-current.log": "fa0bd3bf4a544a675732bee13e8440b15c1465863166251090d6072882c16881",
     "build/performance/end-to-end/tlm_transport-09-baseline.log": "b582fa84e0a6349a2b763d14cda31f059fc4ed8ca0e5bfe79ffb315b7d184d78"
-  }
+  },
+  "initial_contract_snapshot": {
+    "schema": "pysystemc-end-to-end-progress-v1",
+    "status": "running",
+    "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+    "current_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+    "pairs_per_workload": 10,
+    "cycles": 20000,
+    "transfers": 20000,
+    "subprocess_timeout_seconds": 60,
+    "measurement_deadline_seconds": 1800,
+    "no_resampling": true,
+    "tracking": "VCD off; coverage off; profiling off; recorder and validation outside phase timing",
+    "gates": {
+      "contract": {
+        "status": "pending"
+      },
+      "equivalence": {
+        "status": "pending"
+      },
+      "import": {
+        "status": "pending"
+      },
+      "event_signal": {
+        "status": "pending"
+      },
+      "tlm_transport": {
+        "status": "pending"
+      },
+      "report": {
+        "status": "pending"
+      },
+      "validation_commit": {
+        "status": "pending"
+      }
+    },
+    "completed_measurement_pairs": 0,
+    "total_measurement_pairs": 30,
+    "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload."
+  },
+  "initial_contract_snapshot_phase": "Before execution; mutable progress below is historical, not current status."
 }

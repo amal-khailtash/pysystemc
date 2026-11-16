@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Reconcile the consolidated verification/performance finish line: 21/21
+  performance gates closed and 113 current runtime hashes match final regression
+  evidence. Align embedded end-to-end progress with completion while retaining
+  its initial contract snapshot and unchanged measurements.
+
 - Close a bounded callback-cost investigation and reject the sole void-validator
   specialization at its fixed TLM screen. Preserve source/behavior evidence,
   callback lifecycle checks and the unchanged production runtime.
