@@ -1,0 +1,39 @@
+{
+  "status": "stopped_failed_gate",
+  "baseline_commit": "ca86205",
+  "candidate_limit": 1,
+  "screen_pairs": 3,
+  "confirmation_pairs": 10,
+  "minimum_reduction_percent": 5,
+  "required_wins": "all",
+  "resampling": false,
+  "transfers": 20000,
+  "child_timeout_seconds": 60,
+  "gates": {
+    "contract": {
+      "status": "passed",
+      "detail": "One candidate, fixed original TLM loop; no retries or additional workload."
+    },
+    "cost_classification": {
+      "status": "passed",
+      "detail": "Reuse three published diagnostic profiles; callback body self time includes cppyy native calls; result wrapper is distinct ~8ms."
+    },
+    "candidate_choice": {
+      "status": "passed",
+      "detail": "Freeze void-return validation branch at registration, retaining *args, None enforcement, callable ownership, and native bridge."
+    },
+    "correctness": {
+      "status": "failed",
+      "detail": "Child failed: build/performance/callback-boundary/correctness-baseline.log"
+    },
+    "measurement": {
+      "status": "pending"
+    },
+    "decision": {
+      "status": "pending"
+    },
+    "docs_commit": {
+      "status": "pending"
+    }
+  }
+}
