@@ -926,6 +926,29 @@
     "latest_performance_commit": "854707d"
   },
   "latest_regression_acceptance": {
+    "date": "2026-11-16",
+    "source_commit": "79246018b0383365357ff1c0097d93f297c893f5",
+    "python": "3.14.0",
+    "tests": 997,
+    "passed": 997,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "pytest_seconds": 2119.5,
+    "runtime_files_matched": 113,
+    "evidence": [
+      "build/verification/finish-line/full/results.xml",
+      "build/verification/finish-line/full/coverage.json",
+      "build/verification/finish-line/full/run.log"
+    ],
+    "evidence_sha256": {
+      "build/verification/finish-line/full/results.xml": "292ef555b01383c800972371cdc438eda7eab1cef52d42c619641b5329afec36",
+      "build/verification/finish-line/full/coverage.json": "436fd68b5c99f4a90ecd609ea8e79c1b6bf50e04b2d45c8c9c331f5e37be5192",
+      "build/verification/finish-line/full/run.log": "779ca7894e27a9b409cbcbb9bd7a96af0b6bdf7bbe336fe75fd1d331fdfb488d"
+    },
+    "limits": "Fresh regression and Python coverage acceptance; no new performance measurement or cumulative package gain."
+  },
+  "historical_regression_acceptance": {
     "date": "2026-11-12",
     "source_commit": "b565a39",
     "python": "3.14.0",

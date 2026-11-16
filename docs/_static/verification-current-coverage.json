@@ -1,6 +1,6 @@
 {
   "status": "classified_all_current_misses",
-  "tests": 996,
+  "tests": 997,
   "python": "3.14.0",
   "runtime_hashes_matched": 113,
   "coverage": {
@@ -79,9 +79,9 @@
     }
   ],
   "unclassified": [],
-  "coverage_evidence": "build/verification/remaining-current-coverage/coverage.json",
-  "regression_evidence": "build/verification/remaining-current-coverage/full-suite.xml",
-  "root_acceptance": "build/verification/remaining-current-coverage/root-acceptance.json",
+  "coverage_evidence": "build/verification/finish-line/full/coverage.json",
+  "regression_evidence": "build/verification/finish-line/full/results.xml",
+  "root_acceptance": "build/verification/finish-line/full-root.json",
   "historical_reconciliation": "build/verification/remaining-residual-reconciliation/root-acceptance.json",
   "metadata_probe": "build/verification/remaining-residual-reconciliation/public-metadata-member-symbol.log",
   "no_lines_excluded": true,
@@ -153,7 +153,7 @@
     "amal/eda/systemc/sc_core/report_legacy.cpp": "cd7cbaf48a296782d3cdfaeb1331e94ffef86ed27b4ec4208349364ddcb89ae7",
     "amal/eda/systemc/sc_core/runner_log.h": "b1805aa0dff13d1ba823b78d36e5e7fed5cf9f4357c623ef75ab5ccff3a0bc0d",
     "amal/eda/systemc/sc_core/sc_main.cpp": "158d86a1b190f1caefdb98751e34eecf3c1e81c44d39883e51d2e533817615bf",
-    "amal/eda/systemc/sc_core/sc_module.cpp": "c6b4420821b88f34130166a82b61c44fdfa0ae6380112c97c7767e11f2b245e3",
+    "amal/eda/systemc/sc_core/sc_module.cpp": "3d115d4eabdec57b1127563b9c5db811b503e6a9e0808991697ddef34340f629",
     "amal/eda/systemc/sc_core/signal_values.cpp": "ba603ac91a481ddd4c602b4aa55997c447d9aefa1ff3cd1612630de555e4870c",
     "amal/eda/systemc/sc_core/spawn_result.cpp": "68e1dcc024cc0d55c0ebdf5d1f8b8b1d04ac07c8e6287c845ff33643032252dd",
     "amal/eda/systemc/sc_core/time_operations.cpp": "b1f10d485207bb26b4ec2f6d8b9210e8bbc774eb6027fcf7534866b50614a57b",
@@ -221,5 +221,27 @@
     "exploration": "paused",
     "cumulative_gain": "unmeasured",
     "tracking_overhead": "unmeasured"
+  },
+  "historical_previous_measurement": {
+    "tests": 996,
+    "coverage": {
+      "covered_lines": 4587,
+      "num_statements": 4594,
+      "percent_covered": 99.84762734000871,
+      "percent_covered_display": "99",
+      "missing_lines": 7,
+      "excluded_lines": 0,
+      "percent_statements_covered": 99.84762734000871,
+      "percent_statements_covered_display": "99"
+    },
+    "coverage_evidence": "build/verification/remaining-current-coverage/coverage.json",
+    "regression_evidence": "build/verification/remaining-current-coverage/full-suite.xml",
+    "root_acceptance": "build/verification/remaining-current-coverage/root-acceptance.json"
+  },
+  "validated_runtime_commit": "79246018b0383365357ff1c0097d93f297c893f5",
+  "evidence_sha256": {
+    "build/verification/finish-line/full/results.xml": "292ef555b01383c800972371cdc438eda7eab1cef52d42c619641b5329afec36",
+    "build/verification/finish-line/full/coverage.json": "436fd68b5c99f4a90ecd609ea8e79c1b6bf50e04b2d45c8c9c331f5e37be5192",
+    "build/verification/finish-line/full/run.log": "779ca7894e27a9b409cbcbb9bd7a96af0b6bdf7bbe336fe75fd1d331fdfb488d"
   }
 }

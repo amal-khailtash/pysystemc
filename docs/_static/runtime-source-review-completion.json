@@ -81,7 +81,21 @@
     }
   ],
   "whole_api_statuses_changed": false,
-  "regression_evidence": "build/verification/remaining-closeout/full-suite.xml",
-  "regression_testcases": 996,
-  "default_loader_evidence_note": "Legacy native_tests=29 field describes 29 focused cases:20 unit and9 native scopes; retained original artifact not reclassified as29native comparisons"
+  "regression_evidence": "build/verification/finish-line/full/results.xml",
+  "regression_testcases": 997,
+  "default_loader_evidence_note": "Legacy native_tests=29 field describes 29 focused cases:20 unit and9 native scopes; retained original artifact not reclassified as29native comparisons",
+  "historical_regression": {
+    "testcases": 996,
+    "evidence": "build/verification/remaining-closeout/full-suite.xml"
+  },
+  "subsequent_source_refresh": {
+    "path": "src/amal/eda/systemc/sc_core/sc_module.cpp",
+    "sha256": "3d115d4eabdec57b1127563b9c5db811b503e6a9e0808991697ddef34340f629",
+    "change_commit": "2b16429",
+    "scope": "Method self-kill pending Python error correction; GIL-held clear before native unwind restoration. Selected lifecycle regression and installed cases accepted; broader whole-API statuses unchanged.",
+    "evidence": [
+      "docs/_static/verification-method-unwind.json",
+      "docs/_static/verification-finish-line.json"
+    ]
+  }
 }
