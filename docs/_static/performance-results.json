@@ -867,6 +867,31 @@
         }
       ],
       "limits": "DirectPyObject_CallNoArgs method-only prototype. Matched ordinaryreport/lifetime and all3self-kill cleanup modes pass for both frozen roles after2b16429. All113production bytes unchanged; no confirmation, integration, repeatedfullsuite/packagegate or adopted gain. Qwen/GLM gave no usable result during boundedwait; none accepted."
+    },
+    {
+      "id": "event-delayed-helper-callable-cache",
+      "date": "2026-11-16",
+      "baseline_commit": "c1e8cd9",
+      "status": "rejected_confirmation_consistency",
+      "before_ms": 55.50183914601803,
+      "candidate_ms": 42.17921942472458,
+      "elapsed_reduction_percent": 24.00392478210207,
+      "pairs": 10,
+      "wins": 9,
+      "initial_screen": {
+        "pairs": 3,
+        "wins": 3,
+        "elapsed_reduction_percent": 24.2876385887288
+      },
+      "scope": "Reusable event and 1 ns sc_time; schedule/cancel pairs; Python wrapper elapsed time excludes import, native compilation, warmup, and final delivery check.",
+      "reason": "Below frozen10/10confirmation-win requirement, despite24.00%median reduction. No resampling or integration.",
+      "evidence": [
+        {
+          "path": "docs/_static/performance-event-delayed-cache.json",
+          "sha256": "3ac5fc8d858a642008fe9091fa3e53e56fccb5c07cd8c9c37d5a5029a8300dc6"
+        }
+      ],
+      "limits": "All26freshprocesssamples check schedule/cancel counts and1nsnative/Pythondelivery. Frozenrole/nativeeventnotification andargumentrecovery pass. All113runtimefilesunchanged;25acceptedworkloads/20optimizationcommits retain scopes. Native deprecatedAPI diagnostic preserved; no cumulativegain."
     }
   ],
   "current_working_tree_acceptance": {

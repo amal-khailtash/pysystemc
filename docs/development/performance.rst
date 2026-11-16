@@ -531,3 +531,28 @@ The method-only prototype establishes no additional thread or wait support.
 Accepted accounting remains 25 workload slices across 20 performance commits;
 there is no adopted gain from this screen. Evidence is available in
 :download:`the direct callback screen report <../_static/performance-direct-callback-screen.json>`.
+
+Delayed event helper cache confirmation rejected
+------------------------------------------------
+
+Capturing the three existing ``notify_delayed`` helper callables once reduced
+median elapsed time for 100,000 delayed notification/cancellation pairs from
+55.502 ms to 42.179 ms (24.00%) across ten alternating pairs. The candidate
+won nine pairs, missing the frozen ten-of-ten confirmation requirement. It is
+rejected without integration or resampling. The initial three-pair screen
+measured 24.29% less elapsed time with three wins.
+
+All 26 fresh-process samples verify scheduling/cancellation counts and final
+Python and native callbacks at 1 ns, with simulation ending at 2 ns. Both
+frozen wrappers match the native event notification model's eight callback
+timestamps and three duplicate-notification reports; argument recovery passes.
+The timed loop includes Python bookkeeping and excludes imports, native
+compilation, warmup and final delivery. VCD tracing is disabled. The native
+``notify_delayed`` deprecation diagnostic is preserved and occurs during warmup.
+
+Independent acceptance verifies the samples, medians, paired wins, wrapper
+hashes and all 113 unchanged production paths. No package build or new full
+regression is needed for this rejected prototype. Accepted accounting remains
+25 workload slices across 20 performance commits, with no adopted gain from
+this candidate. The complete records are in
+:download:`the delayed event cache report <../_static/performance-event-delayed-cache.json>`.
