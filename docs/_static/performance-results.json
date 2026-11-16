@@ -603,7 +603,7 @@
   "limitations": [
     "Historical timings through 21497a9 precede correctness completion; port-value dispatch was measured and validated afterward and committed as f0daf48.",
     "Recorder I/O and correctness checks are outside timed operations; these measurements are not a whole-process estimate of tracking overhead.",
-    "No final combined startup, representative end-to-end throughput, cold-cache, or cross-platform gain has been measured.",
+    "Three fixed before/after workloads now measured separately; no aggregate model-suite gain, cold-cache or cross-platform gain measured.",
     "Absent pair win counts remain null. Failure logs with reconstructed provenance cannot prove original byte identity."
   ],
   "exploratory_screens": [
@@ -966,5 +966,15 @@
       "build/verification/full-suite-995-root-accept.json"
     ],
     "limits": "No new global coverage or performance measurement; first whole-command recorder timeout retained."
-  }
+  },
+  "end_to_end_revision_comparison": {
+    "status": "measured_three_fixed_workloads",
+    "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+    "current_runtime_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+    "pairs_per_workload": 10,
+    "report": "docs/_static/performance-end-to-end.json",
+    "progress": "docs/_static/performance-end-to-end-progress.json",
+    "scope": "Guarded frozen source trees and shared native library; VCD/coverage/profiling off; separate import, elaboration, run and process-wall metrics. No new optimization or universal package gain."
+  },
+  "historical_limit_before_end_to_end": "No final combined startup, representative end-to-end throughput, cold-cache, or cross-platform gain has been measured."
 }

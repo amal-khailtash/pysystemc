@@ -12,6 +12,7 @@ this repository's validation, publication and recovery workflow.
    verification
    verification-closeout
    performance
+   performance-end-to-end-progress
    releases
    ../intro/architecture
    ../intro/roadmap

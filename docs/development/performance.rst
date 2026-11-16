@@ -17,6 +17,91 @@ The timing loops measure the named operations. Recorder output and native
 correctness checks run outside those loops. These results therefore do not
 measure the whole-process cost of tracking, tracing, or verification.
 
+Fixed end-to-end revision comparison
+------------------------------------
+
+A separate finite round compares baseline ``291d569`` with runtime checkpoint
+``fc53a97`` on Python 3.14.0 and cppyy 3.5.0. Each revision uses its exact tracked
+source tree with guarded imports and the same native SystemC library. Ten pairs
+per workload alternate revision order; every sample has a fresh interpreter and
+kernel. VCD, coverage and profiling are off. No new optimization is adopted.
+The revision difference includes correctness and API changes as well as
+optimizations, so their individual timing contributions are not isolated.
+
+.. list-table:: Median elapsed times in milliseconds; positive reduction means faster
+   :header-rows: 1
+   :widths: 36 16 16 18 14
+
+   * - Metric
+     - Baseline ms
+     - Current ms
+     - Reduction
+     - Current wins
+   * - SystemC import
+     - 9606.624
+     - 4783.774
+     - +50.20%
+     - 10/10
+   * - Event/signal process wall
+     - 10810.332
+     - 5738.226
+     - +46.92%
+     - 10/10
+   * - Event/signal elaboration
+     - 585.616
+     - 483.522
+     - +17.43%
+     - 10/10
+   * - Event/signal simulation
+     - 156.216
+     - 140.040
+     - +10.36%
+     - 10/10
+   * - TLM process wall
+     - 11350.157
+     - 6564.465
+     - +42.16%
+     - 10/10
+   * - TLM elaboration
+     - 1059.507
+     - 1111.215
+     - -4.88%
+     - 3/10
+   * - TLM transport loop
+     - 130.144
+     - 131.645
+     - -1.15%
+     - 3/10
+
+Simulation and transport timing exclude imports, elaboration and final
+assertions. They include the identical Python driver and checksum work. Process
+wall time includes interpreter launch, import, elaboration, simulation, checks,
+shutdown and temporary-directory handling; it is a separate metric. Filesystem
+caches remain warm. These are three scoped before/after results, with no summed
+percentage or universal package-wide improvement claim.
+
+The event/signal workload checks 20,000 rising-edge callbacks, output values,
+checksum and 40,000 ns kernel time. TLM checks 20,000 calls to a reused payload,
+address transforms, successful responses and 20,000 ns of delay annotation;
+its callback does not wait and kernel time stays zero. Eight preflight records
+check both revisions and native counter/target references at 100 operations.
+Native references share Python stimulus. Both revisions emit W509 for the
+retained top-module name in the TLM setup; the warning is retained and this
+benchmark does not verify module-construction lifecycle contracts.
+
+The initial recorder's unintended five-minute timeout interrupted the launch.
+All 30 completed samples were retained exactly. Continuation completed the
+remaining samples with the original 30-minute deadline; source hashes, sample
+order and unchanged timed-model code were independently reconciled. No completed
+sample was discarded or resampled. The failed launch record remains visible.
+
+The seven-gate checklist and the fixed 30-pair count are complete. No follow-up
+profiling or optimization search is queued by this comparison. Raw samples,
+paired reductions, ranges, source identities and evidence hashes are in
+``docs/_static/performance-end-to-end.json``. The readable tracker is
+``docs/development/performance-end-to-end-progress.md`` and its machine-readable
+counterpart is ``docs/_static/performance-end-to-end-progress.json``.
+
 Final bounded measurements
 --------------------------
 

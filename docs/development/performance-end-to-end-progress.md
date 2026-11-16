@@ -1,18 +1,18 @@
 # End-to-end performance progress
 
-Status: **running**.
+Status: **complete**.
 
-Measured pairs: **0/30**.
+Measured pairs: **30/30**.
 
 | Gate | Status | Detail |
 |---|---|---|
-| contract | pending |  |
-| equivalence | pending |  |
-| import | pending |  |
-| event_signal | pending |  |
-| tlm_transport | pending |  |
-| report | pending |  |
-| validation_commit | pending |  |
+| contract | passed |  |
+| equivalence | passed | Baseline/current and native reference behavior match; source imports guarded; native library identical. |
+| import | passed | 10/10 pairs |
+| event_signal | passed | 10/10 pairs |
+| tlm_transport | passed | 10/10 pairs |
+| report | passed | docs/_static/performance-end-to-end.json |
+| validation_commit | passed | Independent source/log/behavior/statistics acceptance, strict Sphinx, lint and diff checks passed; final results and tracker committed together. |
 
 Baseline: `291d569cc6bf396bed2f89c019adb9452d2b9580`. Current: `fc53a971a6d6db0c01db5986affa4ae1d8953212`.
 

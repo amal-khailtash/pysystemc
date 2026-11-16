@@ -8,6 +8,11 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Add a finite end-to-end performance comparison with a seven-gate progress
+  tracker, three workloads and ten alternating revision pairs each. Separate
+  import, elaboration, simulation and process-wall results with VCD, coverage
+  and profiling off; retain source identities, warnings and launch evidence.
+
 - Close the finite Python 3.14 verification gates with 997 passing regression
   tests, 41 installed-example comparators, and 113 matching runtime files across
   checkout, wheel and source archive. Reconcile 99.85% Python statement coverage
