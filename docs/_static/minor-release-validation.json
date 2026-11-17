@@ -1,6 +1,6 @@
 {
   "schema": "pysystemc-minor-release-validation-v1",
-  "status": "accepted_pre_release_validation",
+  "status": "accepted_release_validation",
   "target_version": "1.1.0",
   "candidate_metadata_version": "1.0.0",
   "account": "amal-khailtash",
@@ -283,7 +283,7 @@
     "Python 3.15 deferred.",
     "Statement coverage does not certify C++ or whole-API contracts.",
     "The seven explicit robustness fixtures do not establish additional supported native configurations.",
-    "The final 1.1.0 artifacts, PyPI hashes, GitHub release and documentation remain publication gates."
+    "Final 1.1.0 PyPI artifacts, 43 installed comparators, GitHub release, released coverage and completed documentation have passed their recorded gates."
   ],
   "retained_preparation_issues": [
     {
@@ -291,5 +291,136 @@
       "reason": "Short RST heading underline; corrected without runtime/test changes.",
       "resolved_by": "build/verification/minor-release/final-docs-corrected.log"
     }
-  ]
+  ],
+  "released_version": "1.1.0",
+  "publication_record": "minor-release-publication.json",
+  "feature_ci": {
+    "status": "accepted",
+    "head": "a665b81",
+    "ci_run": 43996097726,
+    "tests": 1003,
+    "passed": 1003,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 2097.0,
+    "coverage": {
+      "covered": 4593,
+      "statements": 4594,
+      "missing": [
+        [
+          "_runtime.py",
+          64
+        ]
+      ],
+      "percent": 99.9782324771441
+    },
+    "coverage_disposition": "Bundled-wheel fmt header selection is not taken in clean checkout CI; isolated installed-wheel validation clears FMT_HOME and exercises bundled resources. Local full statement coverage remains 4594/4594. Original seven robustness lines are covered in CI.",
+    "runtime_hashes_matched": 113
+  },
+  "released_validation": {
+    "status": "accepted_release_validation",
+    "version": "1.1.0",
+    "tag": "v1.1.0",
+    "tag_commit": "005afb6ba8cd3452221e1ba088662c852121c09a",
+    "account": "amal-khailtash",
+    "author_email": "amal.khailtash@gmail.com",
+    "installed_examples": {
+      "passed": 43,
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exact_node_set": true,
+      "native_equivalence": "passed",
+      "source_isolation": "passed",
+      "runtime_sources_matched": 113,
+      "python": "3.14.0"
+    },
+    "archive_hashes": {
+      "pysystemc-1.1.0-py3-none-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl": "a83ad5e98de046771220b40ba1cf5b092488c57d9be914ac26deda8d8e71e1f1",
+      "pysystemc-1.1.0.tar.gz": "0ea4e04f02548c053ab19d869cf4ec5e25851b98aa31564d6aff003519508cc1"
+    },
+    "runtime_sources_match_checkout_wheel_sdist_install": 113,
+    "pypi_hashes": "verified_exactly",
+    "github_release": {
+      "url": "https://github.com/amal-khailtash/pysystemc/releases/tag/v1.1.0",
+      "is_draft": false,
+      "published_at": "2026-11-17T02:25:56Z"
+    },
+    "documentation": {
+      "active": true,
+      "built": true,
+      "tag_commit": "005afb6ba8cd3452221e1ba088662c852121c09a",
+      "build_id": 35945538,
+      "success": true,
+      "url": "https://pysystemc.readthedocs.io/en/v1.1.0/"
+    },
+    "released_coverage": {
+      "status": "accepted",
+      "tests": 1003,
+      "passed": 1003,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1883.55,
+      "python": "3.14.10",
+      "statements": 4594,
+      "covered": 4593,
+      "missing": [
+        {
+          "path": "src/amal/eda/systemc/_runtime.py",
+          "line": 64,
+          "disposition": "Bundled fmt selection is exercised by installed-wheel validation with FMT_HOME unset; checkout CI uses the explicit fmt prefix."
+        }
+      ],
+      "percent": 99.9782324771441,
+      "codecov_upload": "succeeded"
+    },
+    "publication_workflow": {
+      "run": 44002446538,
+      "url": "https://github.com/amal-khailtash/pysystemc/actions/runs/44002446538",
+      "status": "success"
+    },
+    "local_statement_coverage": {
+      "statements": 4594,
+      "covered": 4594,
+      "missing": 0,
+      "excluded": 0,
+      "python": "3.14.0"
+    },
+    "limits": [
+      "Python 3.14 baseline; Python 3.15 deferred.",
+      "The seven robustness fixtures do not establish broader native API configurations.",
+      "Installed-example acceptance covers the selected 43 native comparators and their recorded inputs.",
+      "Python statement coverage does not certify whole-API or C++ contracts."
+    ],
+    "retained_preparation_issues": [
+      {
+        "log": "build/verification/minor-release/pypi-hashes.log",
+        "reason": "Local Python CA trust failed; trusted workflow CLI passed and independent curl metadata/repository hash checker verified both exact artifacts.",
+        "resolved_by": "build/verification/minor-release/pypi-curl-hashes.log"
+      },
+      {
+        "log": "build/verification/minor-release/pypi-cli-system-trust.log",
+        "reason": "Task-scoped system CA retry also failed; no TLS verification disabled.",
+        "resolved_by": "build/verification/minor-release/pypi-curl-hashes.log"
+      },
+      {
+        "log": "build/verification/minor-release/released-root.log",
+        "reason": "Acceptance launcher lacked repository module path; corrected launcher passed.",
+        "resolved_by": "build/verification/minor-release/released-root-corrected.log"
+      }
+    ],
+    "evidence": {
+      "build/verification/minor-release/released-ci-full.log": "3bf219598e13978704868390d3f2309a803a41d66ccd73b2336209b4104b1693",
+      "build/verification/minor-release/released-ci-coverage/coverage.xml": "f0f3bce9508e6a8da79cefdb5c929a2c436bcc173a3e106f3007b09dc6d71669",
+      "build/verification/minor-release/released-installed/installed-example-report.json": "c0cdc4cb4193145a7ab026c0b01b4c536e268c1b8b7e07fac3e2134adab78767",
+      "build/verification/minor-release/released-installed/installed-example-results.xml": "1bb102f109e0e186c286a09412725a1266bc974e0fb1f2b98375fec39af1b8e1",
+      "build/verification/minor-release/pypi-release-curl.json": "eab61d12fa4c61f85eeae0fac016d007ceb76e56e8d4f11c7c84a75abf9e1d9a",
+      "build/verification/minor-release/github-release.json": "c97361e9f35cb7d634164475ff148535a508ca1818e0bff82b42678607c5decc",
+      "build/verification/minor-release/rtd-version-curl.json": "634d09639c05a3804e64cb8fd4963a0fc43a50cc3e61e51225c281c85865936b",
+      "build/verification/minor-release/rtd-builds-curl.json": "7b17ab710a5200196945b0842569df1d5d6823ed5bc436bfa58c2c57dc2a19de"
+    }
+  }
 }
