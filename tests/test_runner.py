@@ -185,6 +185,10 @@ def test_installed_cpp_help_uses_shared_usage_tokens_without_native_imports():
     environment["PYSYSTEMC_COLOR"] = "always"
     environment["NO_COLOR"] = "1"
     environment["COLUMNS"] = "80"
+    # The CLI forces ANSI output; TERM fixes Rich's palette at 256 colors.
+    environment["TERM"] = "xterm-256color"
+    # Empty overrides an inherited COLORTERM because the helper merges env maps.
+    environment["COLORTERM"] = ""
     result = _run_blocked_entrypoint("systemc-cpp", ["--help"], environment=environment)
     assert result.returncode == 0, result.stdout + result.stderr
     plain_output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)

@@ -90,6 +90,9 @@ def test_help_parser_colors_wrapped_usage_metavariables_options_and_commands(
 
     monkeypatch.setenv("PYSYSTEMC_COLOR", "always")
     monkeypatch.setenv("NO_COLOR", "1")
+    # Rich uses TERM's suffix to choose 256-color styles for forced terminals.
+    monkeypatch.setenv("TERM", "xterm-256color")
+    monkeypatch.delenv("COLORTERM", raising=False)
     formatted = parser.format_help()
     parser.print_help()
     output = capsys.readouterr().out
