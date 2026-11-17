@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build distributions
     runs-on: ubuntu-latest
-    container: ${{ github.event.repository.name == 'pysystemc' && 'quay.io/pypa/manylinux_2_28_x86_64' || '' }}
+    container: quay.io/pypa/manylinux_2_28_x86_64
     outputs:
       artifact-id: ${{ steps.artifacts.outputs.artifact-id }}
     steps:
@@ -28,7 +28,6 @@ jobs:
       - name: Build distributions
         run: uv build
       - name: Repair native distributions
-        if: github.event.repository.name == 'pysystemc'
         run: |
           uv tool run --from auditwheel auditwheel repair --plat manylinux_2_28_x86_64 --wheel-dir repaired dist/*.whl
           rm dist/*.whl

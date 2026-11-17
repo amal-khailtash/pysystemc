@@ -14,7 +14,64 @@
       "bump-minor-pre-major": false,
       "bump-patch-for-minor-pre-major": false,
       "draft": true,
-      "force-tag-creation": true
+      "force-tag-creation": true,
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance Improvements"
+        },
+        {
+          "type": "deps",
+          "section": "Dependencies"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Docs",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Style",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Chore",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Refactor",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Test",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Build",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Ci",
+          "hidden": true
+        }
+      ]
     }
   }
 }
