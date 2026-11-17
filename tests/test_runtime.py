@@ -80,3 +80,17 @@ def test_runtime_header_repair_and_override_preservation(tmp_path):
         )
         assert result.returncode == 0, result.stdout + result.stderr
         assert "RUNTIME_REPAIR_OK" in result.stdout
+
+
+def test_runtime_fmt_bundle_override_and_checkout_discovery(tmp_path):
+    """Select bundled fmt, respect an explicit prefix and retain checkout fallback."""
+    for scenario in ("bundled", "override", "checkout"):
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "tests/models/runtime_fmt.py"), str(ROOT), scenario],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "RUNTIME_FMT_OK" in result.stdout

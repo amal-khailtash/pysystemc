@@ -5,6 +5,14 @@ Features marked ☑ are complete for the scope described: runtime items are
 implemented and tested; inventory items record source contracts and explicit gaps.
 Items marked ☐ remain incomplete or untested.
 
+The accepted Python 3.14 release verification passed 1,003 tests, covered all
+4,594 Python statements in the local run, passed all 43 installed-example
+comparators, and matched all 113 runtime files across checkout, wheel, source
+archive and installed package. These finite results close the selected release
+gates; they do not certify every public API contract or configuration. Python
+3.15 is deferred. See :doc:`../development/verification-closeout` and
+:doc:`../development/minor-release-progress` for evidence and remaining scope.
+
 The frozen inventory below retains its original declaration identities. The
 downloadable CSV also contains four explicitly added declarations from
 ``sysc/kernel/sc_name_gen.h``, which the original extraction omitted: the complete
@@ -24,6 +32,8 @@ Environment and runtime
 * ☑ uv dependency locking, synchronization and native distribution builds through uv_build.
 * ☑ CMake and Autotools native preparation with a shared discovered installation prefix.
 * ☑ Header/library discovery, external installation overrides and dependency diagnostics.
+* ☑ Bundled fmt header selection, explicit FMT_HOME precedence and checkout fallback,
+  verified with isolated header trees; the runtime discovery statements are fully covered.
 * ☑ Cling configuration, native ABI configuration and CPyCppyy header compatibility repair.
 * ☑ Installed-header operation without reading kernel implementation source at import.
 * ☑ One-time native library/bridge loading and consistent public exports, namespace
@@ -41,10 +51,10 @@ Modules, processes and simulation
 * ☑ Python module hosts, unique process registration and independent callback dispatch.
 * ☑ Native module hierarchy and lifecycle hooks in elaboration/simulation order.
 * ☑ Static sensitivity to interfaces, ports, events and clock edges; dont_initialize.
-* ☑ Method, thread, clocked-thread and dynamically spawned processes.
+* ☑ Method, thread, clocked-thread and dynamically spawned processes in selected tested cases.
 * ☑ Guarded timed, event, OR/AND event-list and cycle waits; dynamic next_trigger.
 * ☑ Dynamic joins and process termination events.
-* ☑ Selected synchronous/asynchronous reset and kill cleanup through guarded Python waits.
+* ☑ Selected synchronous/asynchronous reset and kill cleanup through guarded Python waits, including method self-kill cleanup.
 * ☑ Bounded simulation, pause/resume, stop, simulation status and terminal lifecycle hooks.
 * ☑ Entry callable/argv handling, exception propagation and idempotent shutdown.
 * ☑ Python process callback retention and selected native shutdown release checks.
@@ -186,12 +196,12 @@ including 12,698 public and 3,080 internal entries. Both modeling and compatibil
 configurations, recorded active/inactive macros, friends, aliases and inheritance
 links are accounted for. These checkmarks describe inventory completion.
 
-The selected public contract catalog contains 12,681 supported, reviewed
-declarations across 794 families. These runtime catalog counts are distinct
-from the original source extraction counts above. Contracts record native
-overload selection, template instantiation, ownership, callback retention,
-GIL and error behavior with source and runtime evidence. Tested combinations
-are finite; native-valid types and widths instantiate on demand.
+The selected public declaration catalog covers 12,681 entries across 794
+families. These catalog counts are distinct from the original source extraction
+counts above. Per-entry mapping and review statuses, ownership notes, callback
+retention, GIL and error evidence are recorded; source review and selected
+runtime checks do not establish every declaration's complete contract. Tested
+combinations are finite; native-valid types and widths instantiate on demand.
 
 All 33 upstream executable targets have source/input/configuration records:
 All 33 native/Python baseline comparisons pass (performance FIFO uses a fixed seed). Alternate inputs, platforms and build configurations remain untested.
@@ -314,10 +324,10 @@ F. Core semantics and final gates — complete
 * ☑ **F2** — Full writer/port/fixed-point policy audit.
 * ☑ **F3** — Full tracing type/format and vector assembly audit.
 * ☑ **F4** — Full report/process-control/lifecycle error audit.
-* ☑ **F5** — Implement applicable arbitrary throw_it, channel-internal reset and direct-wait behavior.
+* ☑ **F5** — Disposition applicable arbitrary throw_it, channel-internal reset and direct-wait behavior within the audited scope.
 * ☑ **F6** — Verify host/kernel lifetime and adapter ownership release.
-* ☑ **F7** — Reconciled regression and coverage at the validated checkpoint (664 tests; 96.59% coverage, 3394/3514 lines).
-* ☑ **F8** — Review first-party adapters and verify latest installed wheel and sdist.
+* ☑ **F7** — Accepted Python 3.14 release regression and coverage: 1,003 tests passed; local coverage exercised 4,594/4,594 statements with zero exclusions.
+* ☑ **F8** — Review first-party adapters and verify the published 1.1.0 wheel and sdist, including 113/113 runtime-source matches across checkout, wheel, source archive and installation.
 * ☑ **F9** — Verify every selected public-contract entry; obtain explicit scope decisions for unrepresentable APIs.
 
 Implemented and tested: The source-derived datatype audit covers integer,
@@ -420,9 +430,13 @@ Packaging, documentation and quality
 * ☑ manylinux distribution build and repaired-wheel consumer verification workflow.
 * ☑ Tag-driven trusted PyPI publication and documentation build triggers.
 * ☑ Semantic regression CI, lint/format checks and strict Sphinx documentation builds.
+* ☑ Documentation-only CI selection and strict release-metadata checks, retaining full
+  validation for code, dependency and workflow changes and manual CI runs.
+* ☑ Release automation excludes ordinary documentation and CI commits from release
+  proposals while preserving feature, fix and breaking-change version rules.
 * ☑ Quickstart, architecture/lifetime, API guides, examples and troubleshooting.
 * ☑ Optional native sanitizer/leak validation tooling.
-* ☐ Final full regression, measured coverage and installed wheel/sdist gates for the complete public API.
+* ☑ Final Python 3.14 release regression, measured coverage and installed wheel/sdist gates for the accepted finite scope.
 * ☐ Complete public declaration-to-Python semantic mapping and upstream reconciliation.
 
 Fixed public API feature inventory
@@ -456,10 +470,11 @@ excluded from the public feature list.
 sc_core public families
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The selected sc_core catalog contains 2,738 supported, reviewed declarations.
-The family entries below include callable overloads, mutable-global contracts
-and exact native callback pointer-value adapters. Native ownership and lifecycle
-preconditions apply; tested combinations are recorded in :doc:`../api/coverage`.
+The selected sc_core catalog covers 2,738 declarations. The family entries
+below include callable overloads, mutable-global contracts and exact native
+callback pointer-value adapters. Per-entry statuses and finite tested
+combinations are recorded in :doc:`../api/coverage`; native ownership and
+lifecycle preconditions apply.
 
 * ☑ ``sc_core::CFT`` — 1 declaration; exact native comparator pointer values support null/copy/equality, signature-checked function selection and typed consumers. The Python value adapter does not require standalone cppyy typedef reflection.
 * ☑ ``sc_core::PHASH_DEFAULT_GROW_FACTOR`` — 1 declarations; runtime: 1 supported; mapping: 1 reviewed.
