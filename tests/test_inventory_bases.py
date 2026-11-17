@@ -73,11 +73,21 @@ template<class... Bases> struct Pack : Bases... {};
         name: _INVENTORY["declaration_id"](row) for name, row in repeated.items()
     }
 
+    raw_aliased_record = next(
+        node
+        for node in _nested_values(ast)
+        if isinstance(node, dict)
+        and node.get("kind") == "CXXRecordDecl"
+        and node.get("name") == "ProtectedVirtual"
+        and node.get("bases")
+    )
+    raw_aliased_base_type = raw_aliased_record["bases"][0]["type"]
     aliased = extracted["fixture::ProtectedVirtual"]["bases"][0]
     assert aliased["access"] == "protected"
     assert aliased["writtenAccess"] == "protected"
     assert aliased["isVirtual"] is True
-    assert aliased["type"]["qualType"] == "fixture::Alias"
+    assert raw_aliased_base_type["qualType"] in {"Alias", "fixture::Alias"}
+    assert aliased["type"]["qualType"] == raw_aliased_base_type["qualType"]
     assert aliased["type"]["desugaredQualType"] == "fixture::Root"
     assert "typeAliasDeclId" not in aliased["type"]
 
@@ -102,14 +112,6 @@ template<class... Bases> struct Pack : Bases... {};
     second_alias = alias_decl(second_ast)
     assert first_alias["id"]
     assert second_alias["id"]
-    raw_aliased_record = next(
-        node
-        for node in _nested_values(ast)
-        if isinstance(node, dict)
-        and node.get("kind") == "CXXRecordDecl"
-        and node.get("name") == "ProtectedVirtual"
-        and node.get("bases")
-    )
     assert raw_aliased_record["bases"][0]["type"]["typeAliasDeclId"] == first_alias["id"]
 
 
