@@ -6,6 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [1.1.0](https://github.com/amal-khailtash/pysystemc/compare/v1.0.0...v1.1.0) (2026-11-17)
+
+
+### Features
+
+* complete Python 3.14 binding verification and refresh dependencies ([#24](https://github.com/amal-khailtash/pysystemc/issues/24)) ([ff2ec22](https://github.com/amal-khailtash/pysystemc/commit/ff2ec227c3838338f14900eae1ec6a6659506d4f))
+
 ## [Unreleased]
 
 - Refresh 13 locked dependencies for the Python 3.14 baseline and exercise the
