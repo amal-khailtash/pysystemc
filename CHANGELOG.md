@@ -8,6 +8,8 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Exercise bundled fmt discovery, explicit-prefix precedence and checkout fallback in isolated regression tests, covering the remaining runtime loader statement.
+- Reconcile feature checkmarks and validation counts with the accepted Python 3.14 release and current workflow checks.
 - Select documentation-only CI without redundant test/package builds and suppress documentation-only release proposals; preserve project-specific publication validation.
 
 ## [1.1.0](https://github.com/amal-khailtash/pysystemc/compare/v1.0.0...v1.1.0) (2026-11-17)
