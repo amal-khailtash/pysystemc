@@ -281,5 +281,7 @@
     "Broader arbitrary-template, lifecycle/GIL/configuration and example input/topology contracts remain outside selected finite gates.",
     "Raw cppyy member-pointer views remain unsupported; typed adapter retains recorded supported scope.",
     "No new performance experiment, deployment, push or release."
-  ]
+  ],
+  "superseded_runtime_validation_by": "minor-release-validation.json",
+  "scope_note": "Historical 997-test/41-comparator checkpoint; current release-candidate validation is in minor-release-validation.json."
 }

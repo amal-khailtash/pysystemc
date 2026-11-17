@@ -1,6 +1,23 @@
 Python 3.14 verification closeout
 =================================
 
+The current minor-release candidate passed all **1,003 tests**, with zero
+failures, errors or skips. All **4,594/4,594 Python statements** were exercised,
+with no exclusions or missing statements. The seven formerly missed statements
+are covered by explicit helper, reflected-metadata and backend-fault robustness
+fixtures; those fixtures do not establish additional native configurations.
+All **43 installed-example comparators** passed, and **113/113 runtime files**
+match checkout, wheel, source archive and installed package.
+
+See :doc:`minor-release-progress` and
+``docs/_static/minor-release-validation.json`` for the accepted candidate
+evidence and the remaining release workflow stages. Candidate packages retain
+1.0.0 metadata; Release Please and Publish generate the final 1.1.0 artifacts.
+Python 3.14 remains the baseline; Python 3.15 is deferred.
+
+Earlier checkpoint (historical)
+-------------------------------
+
 The five remaining baseline obligations have concrete dispositions: three
 speculative compatibility branches are retired, and both runtime native
 member-pointer assembly routes have a supported typed adapter. Final integrated

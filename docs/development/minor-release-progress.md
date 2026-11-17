@@ -2,14 +2,16 @@
 
 Status: **running**. Target: **1.1.0**; account: **amal-khailtash**.
 
+Progress: **5/7 gates passed**. Five local validation gates, then PR/release metadata and publication.
+
 | Gate | Status | Detail |
 |---|---|---|
 | dependencies | passed | uv lock --upgrade and uv sync --locked: 13 packages updated; Python 3.14 retained. Commit 1caaca5. |
-| seven_misses | targeted_pass | Seven explicit defensive/helper/reflection/backend statements; targeted fresh-process test passed. Commit 26d7137; full coverage confirmation pending. |
-| full_suite_coverage | running | Full current suite with four workers and subprocess coverage; frozen 113 runtime source hashes. |
-| fresh_distributions | passed | Fresh uv_build wheel/sdist built; 113/113 tracked runtime files match checkout and both archives. Installed parity remains in installed_examples. |
-| installed_examples | running | All 43 selected installed-wheel comparators in isolation; Python/native behavior and installed source parity required. |
-| feature_and_release_prs | pending | Existing workflow; minor 1.1.0, matching metadata and changelog. |
+| seven_misses | passed | All seven former misses executed and reconciled; explicit helper/reflection/backend robustness scope retained. |
+| full_suite_coverage | passed | 1,003/1,003 passed; no failures/errors/skips. 4594/4594 Python statements covered; zero exclusions or misses; 113 frozen runtime hashes unchanged. |
+| fresh_distributions | passed | Fresh uv_build candidate wheel/sdist built with current 1.0.0 metadata; 113/113 tracked runtime files match both archives. Final 1.1.0 artifacts will be built by Publish. |
+| installed_examples | passed | 43/43 selected comparators; no failures/errors/skips; exact node set, Python/native equivalence and 113/113 installed runtime hashes accepted. Wheel pthread/resource check passed. |
+| feature_and_release_prs | pending | Feature feat: PR, required CI and Release Please metadata PR for minor 1.1.0; matching versions and changelog. |
 | publication | pending | Trusted PyPI publication, hash verification, final GitHub release and documentation. |
 
 Python 3.14 baseline; 3.15 deferred. Upgrade dependencies with existing uv settings.
