@@ -113,5 +113,27 @@
     "build/verification/minor-release/full-coverage.log": "3548f4d876728465de2fa2669181e6c1ec3e7f0e23e22844d4b7856c47868fe8"
   },
   "historical_snapshot": "verification-current-coverage-before-minor-release.json",
-  "release_validation": "minor-release-validation.json"
+  "release_validation": "minor-release-validation.json",
+  "release_ci_validation": {
+    "status": "accepted",
+    "tests": 1003,
+    "passed": 1003,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1883.55,
+    "python": "3.14.10",
+    "statements": 4594,
+    "covered": 4593,
+    "missing": [
+      {
+        "path": "src/amal/eda/systemc/_runtime.py",
+        "line": 64,
+        "disposition": "Bundled fmt selection is exercised by installed-wheel validation with FMT_HOME unset; checkout CI uses the explicit fmt prefix."
+      }
+    ],
+    "percent": 99.9782324771441,
+    "codecov_upload": "succeeded",
+    "publication_record": "minor-release-publication.json"
+  }
 }

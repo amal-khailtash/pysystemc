@@ -1,5 +1,5 @@
 {
-  "status": "running",
+  "status": "complete",
   "target_version": "1.1.0",
   "account": "amal-khailtash",
   "gates": {
@@ -13,23 +13,25 @@
     },
     "full_suite_coverage": {
       "status": "passed",
-      "detail": "1,003/1,003 passed; no failures/errors/skips. 4594/4594 Python statements covered; zero exclusions or misses; 113 frozen runtime hashes unchanged."
+      "detail": "Local 1,003/1,003 passed; 4594/4594 statements covered with zero exclusions. Feature and released CI each passed all 1,003; 4593/4594 covered, with bundled fmt selection independently exercised in installed-wheel mode. All seven original robustness misses covered."
     },
     "fresh_distributions": {
       "status": "passed",
-      "detail": "Fresh uv_build candidate wheel/sdist built with current 1.0.0 metadata; 113/113 tracked runtime files match both archives. Final 1.1.0 artifacts will be built by Publish."
+      "detail": "Final 1.1.0 wheel/sdist built by trusted Publish; both exact PyPI hashes verified; 113 runtime sources match checkout/wheel/sdist/install. Historical 1.0.0 candidate evidence retained."
     },
     "installed_examples": {
       "status": "passed",
-      "detail": "43/43 selected comparators; no failures/errors/skips; exact node set, Python/native equivalence and 113/113 installed runtime hashes accepted. Wheel pthread/resource check passed."
+      "detail": "Final 1.1.0 wheel: 43/43 native comparators passed; exact selected nodes, source isolation and 113/113 source parity verified; Python 3.14.0."
     },
     "feature_and_release_prs": {
-      "status": "pending",
-      "detail": "Feature feat: PR, required CI and Release Please metadata PR for minor 1.1.0; matching versions and changelog."
+      "status": "passed",
+      "detail": "PR #24 merged ff2ec227 after all feature checks; generated 1.1.0 metadata PR #25 merged 005afb6 after exact four-file and uv lock checks."
     },
     "publication": {
-      "status": "pending",
-      "detail": "Trusted PyPI publication, hash verification, final GitHub release and documentation."
+      "status": "passed",
+      "detail": "Publish 44002446538 succeeded: exact PyPI wheel/sdist hashes, non-draft GitHub release, released 1,003-test suite/Codecov upload and completed RTD tag build 35945538 verified."
     }
-  }
+  },
+  "release_url": "https://github.com/amal-khailtash/pysystemc/releases/tag/v1.1.0",
+  "publication_record": "minor-release-publication.json"
 }
