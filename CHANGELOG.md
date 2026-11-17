@@ -6,6 +6,13 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The project version is maintained in
 `pyproject.toml`. Unreleased changes have not been published as a new release.
 
+## [1.1.1](https://github.com/amal-khailtash/pysystemc/compare/v1.1.0...v1.1.1) (2026-11-17)
+
+
+### Documentation
+
+* close 1.1.0 publication and validation ([#26](https://github.com/amal-khailtash/pysystemc/issues/26)) ([4f1b81a](https://github.com/amal-khailtash/pysystemc/commit/4f1b81add04c38eda58ec62d920e01ee0ec72450))
+
 ## [Unreleased]
 
 ## [1.1.0](https://github.com/amal-khailtash/pysystemc/compare/v1.0.0...v1.1.0) (2026-11-17)
