@@ -27,11 +27,13 @@ def _constructor(native_type):
     native_assignment = native_type.__assign__
     string_assignment = native_assignment.__overload__("const char*")
 
+    constructions = {}
+
     def construct(owner, *args, **kwargs):
         """Initialize owned native integer storage from an exact value.
 
         Args:
-            args: Native constructor arguments. Python integers use exact
+            args: Native constructor arguments. Python integers and booleans use exact
                 decimal text, preserving all bits before native width wrapping.
                 Native value/generic sources use exact C++ overload resolution.
             kwargs: Native single-source keyword arguments (a or v) use the
@@ -49,21 +51,31 @@ def _constructor(native_type):
             kwargs = {}
         if len(args) == 1 and not kwargs:
             value = args[0]
-            if type(value) is int:
+            if type(value) in (int, bool):
                 return string_constructor(owner, _integer_text(value))
             if hasattr(type(value), "__cpp_name__"):
-                converted = cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, type(value)].construct(value)
+                key = type(value)
+                call = constructions.get(key)
+                if call is None:
+                    call = cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, key].construct
+                    converted = call(value)
+                    result = copy_constructor(owner, converted)
+                    constructions[key] = call
+                    return result
+                converted = call(value)
                 return copy_constructor(owner, converted)
         return native(owner, *args, **kwargs)
 
     construct.__overload__ = native.__overload__
     native_type.__init__ = construct
 
+    assignments = {}
+
     def assign(owner, source):
         """Assign exact native integer storage and return the live target.
 
         Args:
-            source: Python integer or native assignment source.
+            source: Python integer, boolean, or native assignment source.
         Returns:
             The target integer, borrowing its existing storage.
         Raises:
@@ -72,10 +84,17 @@ def _constructor(native_type):
         Python integers retain every bit before native width wrapping. Calls
         hold the GIL and retain no source references or callbacks.
         """
-        if type(source) is int:
+        if type(source) in (int, bool):
             return string_assignment(owner, _integer_text(source))
         if hasattr(type(source), "__cpp_name__"):
-            return cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, type(source)].assign(owner, source)
+            key = type(source)
+            call = assignments.get(key)
+            if call is None:
+                call = cppyy.gbl.pysystemc_datatypes.IntegerConversion[native_type, key].assign
+                result = call(owner, source)
+                assignments[key] = call
+                return result
+            return call(owner, source)
         return native_assignment(owner, source)
 
     assign.__overload__ = native_assignment.__overload__

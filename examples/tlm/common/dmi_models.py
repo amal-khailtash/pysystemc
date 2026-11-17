@@ -66,28 +66,22 @@ class Target(LTTarget):
             f"Target: {self.identifier} returned delay of {old} + 20 ns + {latency} = {delay}",
         )
 
-    def operation(self, gp):
-        """Reuse source transfer while adapting array storage to bytes slice writes."""
-        # The native memory owner must retain its address for all DMI grants.
-        address = int(gp.get_address())
-        data = gp.get_data_ptr()
-        write = gp.get_command() == tlm.TLM_WRITE_COMMAND
-        for i in range(4):
-            if write:
-                self.memory[address + i] = data[i]
-            else:
-                data[i] = self.memory[address + i]
-        value = int.from_bytes(bytes(data[i] for i in range(4)), "little")
-        report(
-            "memory.cpp",
-            "print",
-            f"ID: {self.identifier} COMMAND: {'WRITE' if write else 'READ'} Length: 04\n      Addr: 0x{address:016X} Data: 0x{value:08X}",
-        )
-        gp.set_response_status(tlm.TLM_OK_RESPONSE)
+    def operation(self, gp, delay=None):
+        """Transfer the declared payload length while retaining DMI buffer storage.
+
+        Args:
+            gp: Borrowed native payload with live data storage.
+            delay: Optional native memory-operation time updated in place.
+        Returns:
+            None; response status and bytes follow the common native memory helper.
+        """
+        super().operation(gp, delay)
 
     def dmi(self, gp, result):
         """Grant source inclusive 0..4096 region and native read/write pointer."""
         if not self.enabled:
+            return False
+        if int(gp.get_address()) > 4096:
             return False
         result.allow_read_write()
         result.set_start_address(0)

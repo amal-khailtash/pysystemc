@@ -1,0 +1,26 @@
+{
+  "status": "complete",
+  "portability": "dropped",
+  "items": {
+    "contract": {
+      "status": "passed",
+      "detail": "Three named jobs, fixed acceptance and stopping point."
+    },
+    "tracking": {
+      "status": "passed",
+      "detail": "10/10 pairs reconciled; on overhead 5.36%; no resampling."
+    },
+    "correctness": {
+      "status": "passed",
+      "detail": "3/3 widths match native values/events/times/deltas; retained callback ownership. Commit 648cabe."
+    },
+    "examples": {
+      "status": "passed",
+      "detail": "3/3 packet seeds agree; 16 installed-harness checks passed; 43 selectable installed cases. Commit 04c5d55."
+    },
+    "final_closeout": {
+      "status": "passed",
+      "detail": "Root acceptance and independent measurement reconciliation; strict docs/lint/native-format passed; grouped commits complete this batch."
+    }
+  }
+}

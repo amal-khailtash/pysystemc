@@ -1,6 +1,7 @@
 """Compare sc_in constructor, event, lifecycle and trace behavior with C++."""
 
 import os
+from collections import Counter
 import subprocess
 import sys
 
@@ -86,6 +87,23 @@ def test_sc_in_public_families(tmp_path):
     python_lines = [line for line in python_output.splitlines() if line.startswith(marker)]
     native_lines = [line for line in native_output.splitlines() if line.startswith(marker)]
     assert python_lines == native_lines, (python_lines, native_lines)
+
+    events = [line.split("|")[1:] for line in python_lines if line.startswith("INPUT_PORT_EVENT|")]
+    expected_events = Counter(
+        (label, kind, timestamp)
+        for timestamp in ("0 s", "1 ns")
+        for label in ("wide", "bool", "logic")
+        for kind in (("value",) if label == "wide" else ("value", "pos" if timestamp == "0 s" else "neg"))
+    )
+    assert Counter(tuple(event[:3]) for event in events) == expected_events
+    for label, kind, timestamp, value, changed, positive, negative in events:
+        assert changed == "1"
+        if label == "wide":
+            assert (positive, negative) == ("0", "0")
+        else:
+            assert value == ("1" if timestamp == "0 s" else "0")
+            assert (positive, negative) == (("1", "0") if timestamp == "0 s" else ("0", "1"))
+    assert "INPUT_PORT_TIME|2 ns" in python_lines
 
     python_widths, python_transitions = read_trace(python_dir / "sc_core_input_ports_public.vcd")
     native_widths, native_transitions = read_trace(native_dir / "sc_core_input_ports_public.vcd")

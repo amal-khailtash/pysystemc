@@ -60,14 +60,17 @@ def test_toy_up_counter_reset_enable_wrap(tmp_path):
 
 
 def test_counter_matches_native_values_and_trace(tmp_path):
-    """Compare every increment and VCD transition with the native tutorial."""
+    """Compare both Python entrypoint names' increments and traces with native."""
     import re
 
-    python_dir = tmp_path / "python"
+    python_dir = tmp_path / "python-counter-tb"
+    compatibility_dir = tmp_path / "python-tb"
     native_dir = tmp_path / "native"
     python_dir.mkdir()
+    compatibility_dir.mkdir()
     native_dir.mkdir()
     output = run_example(python_dir, "examples/counter/py/counter_tb.py")
+    compatibility_output = run_example(compatibility_dir, "examples/counter/py/tb.py")
     result = subprocess.run(
         [sys.executable, "-m", "amal.eda.systemc._runner", str(ROOT / "examples/counter/cpp/counter_tb.cpp")],
         cwd=native_dir,
@@ -77,8 +80,15 @@ def test_counter_matches_native_values_and_trace(tmp_path):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     pattern = r"@(\d+ ns) :: Incremented Counter (\d+)"
-    assert re.findall(pattern, output) == re.findall(pattern, result.stdout)
-    assert len(re.findall(pattern, output)) == 20
+    native_increments = re.findall(pattern, result.stdout)
+    assert re.findall(pattern, output) == native_increments
+    assert re.findall(pattern, compatibility_output) == native_increments
+    assert len(native_increments) == 20
     python_trace = (python_dir / "counter.vcd").read_text()
+    compatibility_trace = (compatibility_dir / "counter.vcd").read_text()
     native_trace = (native_dir / "counter.vcd").read_text()
     assert python_trace[python_trace.index("$timescale") :] == native_trace[native_trace.index("$timescale") :]
+    assert (
+        compatibility_trace[compatibility_trace.index("$timescale") :]
+        == native_trace[native_trace.index("$timescale") :]
+    )

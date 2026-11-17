@@ -1,0 +1,2058 @@
+{
+  "schema": "pysystemc-end-to-end-v1",
+  "contract": {
+    "schema": "pysystemc-end-to-end-progress-v1",
+    "status": "complete",
+    "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+    "current_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+    "pairs_per_workload": 10,
+    "cycles": 20000,
+    "transfers": 20000,
+    "subprocess_timeout_seconds": 60,
+    "measurement_deadline_seconds": 1800,
+    "no_resampling": true,
+    "tracking": "VCD off; coverage off; profiling off; recorder and validation outside phase timing",
+    "gates": {
+      "contract": {
+        "status": "passed"
+      },
+      "equivalence": {
+        "status": "passed",
+        "checks": "Baseline/current and native reference behavior match; source imports guarded; native library identical."
+      },
+      "import": {
+        "status": "passed",
+        "pairs_completed": 10,
+        "pairs_total": 10
+      },
+      "event_signal": {
+        "status": "passed",
+        "pairs_completed": 10,
+        "pairs_total": 10
+      },
+      "tlm_transport": {
+        "status": "passed",
+        "pairs_completed": 10,
+        "pairs_total": 10
+      },
+      "report": {
+        "status": "passed",
+        "report": "docs/_static/performance-end-to-end.json"
+      },
+      "validation_commit": {
+        "status": "passed",
+        "checks": "Independent source/log/behavior/statistics acceptance, strict Sphinx, lint and diff checks passed; final results and tracker committed together."
+      }
+    },
+    "completed_measurement_pairs": 30,
+    "total_measurement_pairs": 30,
+    "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload.",
+    "measurement_elapsed_seconds": 590.5871817134321,
+    "retained_preparation_issues": [
+      "Initial recorder five-minute timeout; all 30 completed samples retained, original 30-minute deadline preserved.",
+      "Initial strict docs check lacked progress-page navigation entry; added to development index and strict build passed."
+    ]
+  },
+  "preflight": [
+    {
+      "revision": "baseline",
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 11.742082837969065,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 12.010577391833067,
+      "log": "build/performance/end-to-end/preflight-baseline-import.log"
+    },
+    {
+      "revision": "current",
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 5.051142308861017,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 5.336188182234764,
+      "log": "build/performance/end-to-end/preflight-current-import.log"
+    },
+    {
+      "revision": "baseline",
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.859239134937525,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5933687165379524,
+      "run_seconds": 0.024775013327598572,
+      "behavior": {
+        "callbacks": 100,
+        "value": 100,
+        "checksum": 5050,
+        "time_ns": 200
+      },
+      "process_wall_seconds": 10.776573788374662,
+      "log": "build/performance/end-to-end/preflight-baseline-event_signal.log"
+    },
+    {
+      "revision": "current",
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.7719884887337685,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.49993762746453285,
+      "run_seconds": 0.028952565044164658,
+      "behavior": {
+        "callbacks": 100,
+        "value": 100,
+        "checksum": 5050,
+        "time_ns": 200
+      },
+      "process_wall_seconds": 5.663246624171734,
+      "log": "build/performance/end-to-end/preflight-current-event_signal.log"
+    },
+    {
+      "revision": "current",
+      "workload": "event_signal",
+      "engine": "native",
+      "import_seconds": 4.674997586756945,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.2785959914326668,
+      "run_seconds": 0.028033912181854248,
+      "behavior": {
+        "callbacks": 100,
+        "value": 100,
+        "checksum": 5050,
+        "time_ns": 200
+      },
+      "process_wall_seconds": 5.306410498917103,
+      "log": "build/performance/end-to-end/preflight-native-event_signal.log"
+    },
+    {
+      "revision": "baseline",
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 10.358223799616098,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0758247263729572,
+      "run_seconds": 0.02944517880678177,
+      "behavior": {
+        "callbacks": 100,
+        "responses": 100,
+        "checksum": 15550,
+        "last_address": 304,
+        "annotated_ns": 100,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.767313215881586,
+      "log": "build/performance/end-to-end/preflight-baseline-tlm_transport.log"
+    },
+    {
+      "revision": "current",
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 4.879740126430988,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.1163116954267025,
+      "run_seconds": 0.029274672269821167,
+      "behavior": {
+        "callbacks": 100,
+        "responses": 100,
+        "checksum": 15550,
+        "last_address": 304,
+        "annotated_ns": 100,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.3595240116119385,
+      "log": "build/performance/end-to-end/preflight-current-tlm_transport.log"
+    },
+    {
+      "revision": "current",
+      "workload": "tlm_transport",
+      "engine": "native",
+      "import_seconds": 4.806878484785557,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.9003722965717316,
+      "run_seconds": 0.015205103904008865,
+      "behavior": {
+        "callbacks": 100,
+        "responses": 100,
+        "checksum": 15550,
+        "last_address": 304,
+        "annotated_ns": 100,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.123443864285946,
+      "log": "build/performance/end-to-end/preflight-native-tlm_transport.log"
+    }
+  ],
+  "samples": [
+    {
+      "revision": "baseline",
+      "pair": 0,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.542828399688005,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.769342094659805,
+      "log": "build/performance/end-to-end/import-00-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 0,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.591347731649876,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 4.784268815070391,
+      "log": "build/performance/end-to-end/import-00-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 1,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.645406901836395,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 4.861271560192108,
+      "log": "build/performance/end-to-end/import-01-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 1,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.417222186923027,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.64261920005083,
+      "log": "build/performance/end-to-end/import-01-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 2,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.751837484538555,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.944243308156729,
+      "log": "build/performance/end-to-end/import-02-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 2,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 5.43583432212472,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 5.649750325828791,
+      "log": "build/performance/end-to-end/import-02-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 3,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.6295711025595665,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 4.820557858794928,
+      "log": "build/performance/end-to-end/import-03-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 3,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.396867018193007,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.602755475789309,
+      "log": "build/performance/end-to-end/import-03-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 4,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.503936737775803,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.718283642083406,
+      "log": "build/performance/end-to-end/import-04-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 4,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.83734554797411,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 5.037725277245045,
+      "log": "build/performance/end-to-end/import-04-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 5,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.56939222663641,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 4.775576040148735,
+      "log": "build/performance/end-to-end/import-05-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 5,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.281820498406887,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.486838150769472,
+      "log": "build/performance/end-to-end/import-05-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 6,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.771813288331032,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.993840552866459,
+      "log": "build/performance/end-to-end/import-06-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 6,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.8903163224458694,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 5.115885954350233,
+      "log": "build/performance/end-to-end/import-06-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 7,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.73020326346159,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 4.938036948442459,
+      "log": "build/performance/end-to-end/import-07-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 7,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.839192125946283,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 10.05665810406208,
+      "log": "build/performance/end-to-end/import-07-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 8,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 10.099297273904085,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 10.327724758535624,
+      "log": "build/performance/end-to-end/import-08-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 8,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.987427316606045,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 5.193283189088106,
+      "log": "build/performance/end-to-end/import-08-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 9,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 4.849001612514257,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 5.0884377136826515,
+      "log": "build/performance/end-to-end/import-09-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 9,
+      "workload": "import",
+      "engine": "python",
+      "import_seconds": 9.670419950038195,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.0,
+      "run_seconds": 0.0,
+      "behavior": {
+        "imported": true
+      },
+      "process_wall_seconds": 9.885763559490442,
+      "log": "build/performance/end-to-end/import-09-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 0,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.770946521311998,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.604430016130209,
+      "run_seconds": 0.1577484831213951,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.86132475361228,
+      "log": "build/performance/end-to-end/event_signal-00-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 0,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.596194934099913,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.49730512872338295,
+      "run_seconds": 0.14019450172781944,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.559556443244219,
+      "log": "build/performance/end-to-end/event_signal-00-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 1,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.73935991153121,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.485620342195034,
+      "run_seconds": 0.1377291977405548,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.762707971036434,
+      "log": "build/performance/end-to-end/event_signal-01-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 1,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.774407152086496,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5820468217134476,
+      "run_seconds": 0.1554185003042221,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.844059601426125,
+      "log": "build/performance/end-to-end/event_signal-01-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 2,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.464353527873755,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5524834655225277,
+      "run_seconds": 0.15512625500559807,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.470199566334486,
+      "log": "build/performance/end-to-end/event_signal-02-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 2,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.827629171311855,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.46419108659029007,
+      "run_seconds": 0.14226071164011955,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.750492848455906,
+      "log": "build/performance/end-to-end/event_signal-02-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 3,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.796722650527954,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.4796333648264408,
+      "run_seconds": 0.14131397381424904,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.744657207280397,
+      "log": "build/performance/end-to-end/event_signal-03-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 3,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 10.542673207819462,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5815270841121674,
+      "run_seconds": 0.15621420368552208,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 11.60357415303588,
+      "log": "build/performance/end-to-end/event_signal-03-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 4,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.52110481634736,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5441775508224964,
+      "run_seconds": 0.15182281658053398,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.51739851757884,
+      "log": "build/performance/end-to-end/event_signal-04-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 4,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.8537022434175014,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.4814242795109749,
+      "run_seconds": 0.14349611103534698,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.827343098819256,
+      "log": "build/performance/end-to-end/event_signal-04-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 5,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.834947109222412,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.4613620564341545,
+      "run_seconds": 0.13628480955958366,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.731794588267803,
+      "log": "build/performance/end-to-end/event_signal-05-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 5,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.975601896643639,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5978237763047218,
+      "run_seconds": 0.1562184914946556,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 11.052946764975786,
+      "log": "build/performance/end-to-end/event_signal-05-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 6,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.576588999480009,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5431395843625069,
+      "run_seconds": 0.15122830495238304,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.578624688088894,
+      "log": "build/performance/end-to-end/event_signal-06-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 6,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.855547744780779,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5359202958643436,
+      "run_seconds": 0.1384047344326973,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.9281584694981575,
+      "log": "build/performance/end-to-end/event_signal-06-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 7,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.660383373498917,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5022840760648251,
+      "run_seconds": 0.1398848406970501,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.660204231739044,
+      "log": "build/performance/end-to-end/event_signal-07-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 7,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.719153478741646,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.6362508311867714,
+      "run_seconds": 0.15728529542684555,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.878775548189878,
+      "log": "build/performance/end-to-end/event_signal-07-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 8,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.702318243682384,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.606641735881567,
+      "run_seconds": 0.15760568156838417,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.776604518294334,
+      "log": "build/performance/end-to-end/event_signal-08-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 8,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.718139298260212,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.4549652151763439,
+      "run_seconds": 0.13700784370303154,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.61288633197546,
+      "log": "build/performance/end-to-end/event_signal-08-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 9,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 4.628532126545906,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.49153443425893784,
+      "run_seconds": 0.14551547542214394,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 5.593685694038868,
+      "log": "build/performance/end-to-end/event_signal-09-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 9,
+      "workload": "event_signal",
+      "engine": "python",
+      "import_seconds": 9.406363405287266,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 0.5891858786344528,
+      "run_seconds": 0.15706034377217293,
+      "behavior": {
+        "callbacks": 20000,
+        "value": 20000,
+        "checksum": 200010000,
+        "time_ns": 40000
+      },
+      "process_wall_seconds": 10.47304968163371,
+      "log": "build/performance/end-to-end/event_signal-09-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 0,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.661709245294333,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0613687634468079,
+      "run_seconds": 0.1314644291996956,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.140171900391579,
+      "log": "build/performance/end-to-end/tlm_transport-00-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 0,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 4.8301128931343555,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.3089104257524014,
+      "run_seconds": 0.13623950257897377,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.682941030710936,
+      "log": "build/performance/end-to-end/tlm_transport-00-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 1,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 4.753760248422623,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0972732044756413,
+      "run_seconds": 0.12884313985705376,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.281188551336527,
+      "log": "build/performance/end-to-end/tlm_transport-01-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 1,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.54861307516694,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0388443395495415,
+      "run_seconds": 0.12637849524617195,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 10.998887229710817,
+      "log": "build/performance/end-to-end/tlm_transport-01-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 2,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.733310487121344,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0418784879148006,
+      "run_seconds": 0.13562548160552979,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.213091488927603,
+      "log": "build/performance/end-to-end/tlm_transport-02-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 2,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 5.854262098670006,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.125157579779625,
+      "run_seconds": 0.13144081830978394,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 7.423905808478594,
+      "log": "build/performance/end-to-end/tlm_transport-02-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 3,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 5.169255837798119,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.050018910318613,
+      "run_seconds": 0.12972058728337288,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.681090984493494,
+      "log": "build/performance/end-to-end/tlm_transport-03-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 3,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.91806723549962,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0576451979577541,
+      "run_seconds": 0.12842845916748047,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.401301961392164,
+      "log": "build/performance/end-to-end/tlm_transport-03-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 4,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.729710727930069,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.2271767035126686,
+      "run_seconds": 0.1327991969883442,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.445421025156975,
+      "log": "build/performance/end-to-end/tlm_transport-04-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 4,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 4.688953191041946,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.08515590056777,
+      "run_seconds": 0.13184846937656403,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.19541772082448,
+      "log": "build/performance/end-to-end/tlm_transport-04-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 5,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 5.314884167164564,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.1360849551856518,
+      "run_seconds": 0.13300206884741783,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.9038165137171745,
+      "log": "build/performance/end-to-end/tlm_transport-05-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 5,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 10.496167104691267,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.1343514025211334,
+      "run_seconds": 0.13030420243740082,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 12.062702797353268,
+      "log": "build/performance/end-to-end/tlm_transport-05-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 6,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 10.385980919003487,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0837093070149422,
+      "run_seconds": 0.13183024898171425,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.905631769448519,
+      "log": "build/performance/end-to-end/tlm_transport-06-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 6,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 5.004663050174713,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.033829040825367,
+      "run_seconds": 0.1279548667371273,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.4478387124836445,
+      "log": "build/performance/end-to-end/tlm_transport-06-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 7,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 5.193535473197699,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.1297336295247078,
+      "run_seconds": 0.13341452926397324,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.771904494613409,
+      "log": "build/performance/end-to-end/tlm_transport-07-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 7,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.912302669137716,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0740768015384674,
+      "run_seconds": 0.12998361885547638,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.422805350273848,
+      "log": "build/performance/end-to-end/tlm_transport-07-baseline.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 8,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.871777787804604,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.01624820753932,
+      "run_seconds": 0.12766331061720848,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 11.299012526869774,
+      "log": "build/performance/end-to-end/tlm_transport-08-baseline.log"
+    },
+    {
+      "revision": "current",
+      "pair": 8,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 4.928624603897333,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0683101564645767,
+      "run_seconds": 0.12792835012078285,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.428666930645704,
+      "log": "build/performance/end-to-end/tlm_transport-08-current.log"
+    },
+    {
+      "revision": "current",
+      "pair": 9,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 4.684173800051212,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.1897377632558346,
+      "run_seconds": 0.13685496896505356,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 6.33721961453557,
+      "log": "build/performance/end-to-end/tlm_transport-09-current.log"
+    },
+    {
+      "revision": "baseline",
+      "pair": 9,
+      "workload": "tlm_transport",
+      "engine": "python",
+      "import_seconds": 9.541382759809494,
+      "cppyy": "3.5.0",
+      "python": "3.14.0",
+      "native_library_sha256": "ec90352b62154d6022cc5f5ba1661ac234f3ee0e6dfec446babc32def671695d",
+      "elaboration_seconds": 1.0390605181455612,
+      "run_seconds": 0.1271030679345131,
+      "behavior": {
+        "callbacks": 20000,
+        "responses": 20000,
+        "checksum": 600110000,
+        "last_address": 60004,
+        "annotated_ns": 20000,
+        "time_ns": 0
+      },
+      "process_wall_seconds": 10.98039984703064,
+      "log": "build/performance/end-to-end/tlm_transport-09-baseline.log"
+    }
+  ],
+  "snapshots": {
+    "baseline": {
+      "revision": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+      "tracked_files": 111,
+      "source_hashes": {
+        "src/amal/eda/cli/__init__.py": "46e4932998083aeffc88caf0dcbf1656142ba5e38ce2a101b2f2da2ae0e99622",
+        "src/amal/eda/cli/__main__.py": "aba6c43ab670168b6d6984cbca0dbf1c66285f05bd5dae181396e9d52e63a50b",
+        "src/amal/eda/cli/_formatting.py": "7b595870e22344154bce4f40f465868d9d6134c9a43a0d8649819f719b1cd5e5",
+        "src/amal/eda/cli/_run.py": "4e6a07ae39aa0a719296916fe3b52371b5075115792e740ebbe3920acf193782",
+        "src/amal/eda/cli/commands.py": "f29c9db2f981178cf6055679a6fc78fa162f5ac43dae92fc8177d18efb7b4881",
+        "src/amal/eda/cli/cpp.py": "62ef2e2497a5b9e840c2a6fa5ad174a1a0a9279afacbe9fa8d5b85bd0e657e1c",
+        "src/amal/eda/systemc/__init__.py": "0027a724ba5faffb8a7d8e803aa43138301479971b5f5380649899b34b3a9c90",
+        "src/amal/eda/systemc/_logging.py": "42602155c758d1ee943367a854bceecde8dc77140cd35f6c21381f739e732dc3",
+        "src/amal/eda/systemc/_namespace.py": "d1174fc6322622c27c1a40e26a08aec5a34aff384d878dc16a7da41bcd52d1c2",
+        "src/amal/eda/systemc/_native_help.py": "2bb9b09d494d9d0a8d740480762c23787e2203f301d89f6da879c918286548fe",
+        "src/amal/eda/systemc/_runner.py": "5445a890062fb7228866822ce92336b17cd8179a285d964179430d910745d5c4",
+        "src/amal/eda/systemc/_runtime.py": "7ec802869fe7fc97f8965efae2e9ad89eb6becdc3d568928025c5a8cd21036f4",
+        "src/amal/eda/systemc/repl.py": "5163324a09bc9f4e68067f3c6fc0a9002f66fb92da44c0153e1e00b8c0a2a0cd",
+        "src/amal/eda/systemc/sc_core/__init__.py": "f6f1eb86762e0eb820b51091cd84328e1687577833e4362448f78244fd0c5500",
+        "src/amal/eda/systemc/sc_core/_blocking.py": "c4f03f7676fd533658ed1a9e9bd84bf723c28146762c68d5a45f84a8add0948a",
+        "src/amal/eda/systemc/sc_core/_byte_heap.py": "f49b78f9ef2f477992568a4e1bdea5b3bce8d60120d9e4daed3029ead5f6d398",
+        "src/amal/eda/systemc/sc_core/_callback_pointers.py": "0789c170955df40ae5a35186dfb445423ff8399184b259e1266c211d767fc147",
+        "src/amal/eda/systemc/sc_core/_channel_interfaces.py": "11b9c5316ca583a19eed96fa388d329116d275e839769db7072499113cce14c3",
+        "src/amal/eda/systemc/sc_core/_clock.py": "348cb2d913e93f7adb59487ad4a1955abfa7746b98486d81e77f54e821e0e093",
+        "src/amal/eda/systemc/sc_core/_event_expressions.py": "e6fd7c78c58c9f512ae454e5a247903e5ff6609e7335955e826142a98cf1c310",
+        "src/amal/eda/systemc/sc_core/_event_finders.py": "15b1a938680801695f1b131481922703322c842ec7b5dc56b6a122fdcb0c4adc",
+        "src/amal/eda/systemc/sc_core/_exports.py": "9821acb2315b435870ab9198320224611df6f1e9328069872e1c7466aa374c55",
+        "src/amal/eda/systemc/sc_core/_fifo.py": "a1578fb5bb621d18990fc4de1d95c21830b2d82ac3a3cb2b885ba83cb3750cd8",
+        "src/amal/eda/systemc/sc_core/_hashes.py": "b0aba36fff341407091f3e7899acd19d6fff7592256e1237af3bd8d50f196f07",
+        "src/amal/eda/systemc/sc_core/_interfaces.py": "d625981724e4e76f4e3e2988363ab7ab312648b33b3ffad934960a1d14124711",
+        "src/amal/eda/systemc/sc_core/_kernel_flags.py": "fb3b2b87c0449f43307b74cb1d6117b997f7751de6b41af052cf1f3ded545db7",
+        "src/amal/eda/systemc/sc_core/_list_handles.py": "e849bdbf031bc2cacb94710a420903ad32d3db631dc4192f44a8e322e1f3e19f",
+        "src/amal/eda/systemc/sc_core/_member_scheduler.py": "d9a9d4a64857d07012dc5b5a292b0508ebee92d423e30bf328aaa59b5a8d4a33",
+        "src/amal/eda/systemc/sc_core/_native_call.py": "de9106204ef187ab1e9fdf7aaba232f28990b296a35248facbf7ab1dce431b7f",
+        "src/amal/eda/systemc/sc_core/_native_setup.py": "bf9de05c1487d3a4f2e1b64c181a8ddb48a136396253f70d51b54ff522679d7e",
+        "src/amal/eda/systemc/sc_core/_pvector.py": "ef36aaf2769f74046ef45364a00c6ed7283ef3a9f23570aa6c73baf6748802b7",
+        "src/amal/eda/systemc/sc_core/_references.py": "b58bb332e1834d40cc849cd77be73312d1d44db0d3787e95e241d42fe49a7178",
+        "src/amal/eda/systemc/sc_core/_report_policy.py": "595ecba126b52c1ddb4ce9711d063678783cbc367a5782799ca82eb5732c1b06",
+        "src/amal/eda/systemc/sc_core/_scheduler.py": "f73a20b690b47e366e709e8356e9bf41fe3efa1777d719479523734d8b3154f5",
+        "src/amal/eda/systemc/sc_core/_signal_values.py": "eee49df4f22b641422d6adc57dc661afd28cff85bbb223eb8e2fad1b5a72e9d0",
+        "src/amal/eda/systemc/sc_core/_streams.py": "d55eaa6f143cc02a657709ee2796b313fcd822fd650c51cea79da009f11e628e",
+        "src/amal/eda/systemc/sc_core/_time.py": "0fe82b653e86047909373b0edde2a9e934e802bafa597fe8fb90dfbdd0f477f2",
+        "src/amal/eda/systemc/sc_core/_trace_printf.py": "a997c19501f6603fca2661866d419bfe6a8cbeb3473972e29792555b5e84ce25",
+        "src/amal/eda/systemc/sc_core/_trace_values.py": "e2c7e1a0e52dec41510079984e506b9847d60b0d049c1bf1f0a2f1588dad9d0e",
+        "src/amal/eda/systemc/sc_core/_tracing.py": "c23a6bcecc1dbe23ff68d7f8b2ef0168791d50ddc7f404508721db5ffda37a6b",
+        "src/amal/eda/systemc/sc_core/_vector_policies.py": "bc1a105534f1c6e631ac0471a8dc61d34ed901e66cd53c72ce3eb0f26e1fb4fd",
+        "src/amal/eda/systemc/sc_core/_vectors.py": "b770dc8d3ae651a21990aaaa1d73b36550de8f98a9de3b58c73f9d6499745173",
+        "src/amal/eda/systemc/sc_core/bind.cpp": "aa672da5023b00b74ec0a801258f4097069e8a9f29543d2fa523a6fc3a94a68d",
+        "src/amal/eda/systemc/sc_core/binding_log.h": "d85da2d41fdace59d6dc2673d99f7c21173abe1bd6b3bde8fff5f5b3443dbaa6",
+        "src/amal/eda/systemc/sc_core/byte_heap.cpp": "507925013a19e0549f70316fe06cd3be37738740cc8c81dc058aab2f307cce62",
+        "src/amal/eda/systemc/sc_core/callback_pointers.h": "e8eea50dc42b6de8d823549ce7ae1b0696d748744b6471c8cefe8234180920e0",
+        "src/amal/eda/systemc/sc_core/event_expressions.cpp": "2aea68f716e7f450461f0bca0b52af64c7fdfdb650d324e14e956191fa2d6b92",
+        "src/amal/eda/systemc/sc_core/event_finders.cpp": "6257525ad2b39a04d923a131ac84ed4485fdaab0f15c8c9a4149b97edf21830d",
+        "src/amal/eda/systemc/sc_core/event_lists.cpp": "83ae04168035235e0eb07e06176fa260f4e2b24aa56a4957b5b0a89215b5fb3e",
+        "src/amal/eda/systemc/sc_core/hash_helpers.cpp": "9e8d4b01b3f67e51db4e14147feda86637ba195d454d7acf8b84e8f5af6db10a",
+        "src/amal/eda/systemc/sc_core/hierarchy.cpp": "aa53904099f554309edffa5bb99f61c15692565536b782aa58ef16d2fc256c23",
+        "src/amal/eda/systemc/sc_core/hierarchy.h": "f3a92d1c77183abd92c55a9658cf9c99d9ac3a590852f541904b8c2a830319b0",
+        "src/amal/eda/systemc/sc_core/interface_teardown.cpp": "a1fed23caf10c754fca9c63c28292929213f4d4564635379d2bb8c13ad3830c4",
+        "src/amal/eda/systemc/sc_core/native_blocking.h": "91986ff21f46ca5bb8731fd328ae6a2d9fdba30425807c1d71621a5566f5a539",
+        "src/amal/eda/systemc/sc_core/native_entry.cpp": "aed930aae65ab70629483865a47eeae7cf2116c4a1f501e2e23e926048619a9d",
+        "src/amal/eda/systemc/sc_core/owned_copy.h": "094d100f069061077d8264e68876e8bf4217a5c86f64e333631b8150ec6a54e8",
+        "src/amal/eda/systemc/sc_core/process_exceptions.cpp": "da0c54e89318f0cecf763de982d1eb512f00c477a2a4c4ca256503530de75a6a",
+        "src/amal/eda/systemc/sc_core/process_utilities.cpp": "55c25532a06cccc928a09c39da856c4086660f4b4423a983a187e677397f7bcc",
+        "src/amal/eda/systemc/sc_core/pvector_access.cpp": "d994a1af6b7f594163f30cca82c8f5cb72c1017e1f0bb75d96caed3c02dcd1e3",
+        "src/amal/eda/systemc/sc_core/report_handler.cpp": "af30cffb6482935f0b9bae270b5f2e8e856c63022617e085a28c6be30fca0465",
+        "src/amal/eda/systemc/sc_core/report_handler_pointer.h": "6419cc0c7f89ffdce102d461dca0a4f4693de0f34ee7ea837cf1f8b98e9b2395",
+        "src/amal/eda/systemc/sc_core/report_legacy.cpp": "cd7cbaf48a296782d3cdfaeb1331e94ffef86ed27b4ec4208349364ddcb89ae7",
+        "src/amal/eda/systemc/sc_core/runner_log.h": "b1805aa0dff13d1ba823b78d36e5e7fed5cf9f4357c623ef75ab5ccff3a0bc0d",
+        "src/amal/eda/systemc/sc_core/sc_main.cpp": "afef6785285ab369c76637608aa2819a1a57b30be9c5fcef160f2b45e13f8bdd",
+        "src/amal/eda/systemc/sc_core/sc_module.cpp": "a076da77511e1f272cf2a4889e2b4c6ca0ea24560a5343daf48a2ed99c62785b",
+        "src/amal/eda/systemc/sc_core/signal_values.cpp": "ba603ac91a481ddd4c602b4aa55997c447d9aefa1ff3cd1612630de555e4870c",
+        "src/amal/eda/systemc/sc_core/spawn_result.cpp": "68e1dcc024cc0d55c0ebdf5d1f8b8b1d04ac07c8e6287c845ff33643032252dd",
+        "src/amal/eda/systemc/sc_core/time_operations.cpp": "b1f10d485207bb26b4ec2f6d8b9210e8bbc774eb6027fcf7534866b50614a57b",
+        "src/amal/eda/systemc/sc_core/trace_printf.cpp": "f2804b37a159e6dedad5365246239343182aa350fac2056aacad8c6d4018a9f8",
+        "src/amal/eda/systemc/sc_core/trace_values.cpp": "b26e8f9ecbdc90d5521351a795f492b42a17e2cd9d9247638e4b96f1f7e6ea46",
+        "src/amal/eda/systemc/sc_core/vector_creator.cpp": "1d574088b26b49bea18ca3c617d4d75967664e9931953828aff9655f5d5b9391",
+        "src/amal/eda/systemc/sc_core/vector_policies.cpp": "253104e638ad06fd00696fb9083614303bf1ad71680a2bacb32395f54e5b4d3a",
+        "src/amal/eda/systemc/sc_dt/__init__.py": "09cacca8cc0697daa14674f7b0160dd10e90705452d0f6e8cc56ed4ce110d0a2",
+        "src/amal/eda/systemc/sc_dt/_bit.py": "9d3a94ed75ab8b3d710889eb3c45c5ba00b7f9abd53b5cac60fdd999916c8d1f",
+        "src/amal/eda/systemc/sc_dt/_concat.py": "30b1cc7a62c316f2d6fd86d448b7a99254b1898509511e6cdd230cb7f08d6cb8",
+        "src/amal/eda/systemc/sc_dt/_fixed_constructors.py": "a68f746d61cf46534c0c90e7f534b2e9f2712d1beef8f2a9908512d70137b6a6",
+        "src/amal/eda/systemc/sc_dt/_fxnum_owners.py": "5d5ceef14c7a51761e4b79f8e99be79f866b21bb8b306105e230f72f8a59895b",
+        "src/amal/eda/systemc/sc_dt/_integer_owners.py": "6874d8082f40f5c25233458f71d3951f1ee014416564eba28297fcabece1d076",
+        "src/amal/eda/systemc/sc_dt/_integers.py": "42a78ec55a952b5b8fe038719c84917e53020a552dbee1c72ec91e9824bc9751",
+        "src/amal/eda/systemc/sc_dt/_native_methods.py": "7a407ba73332330ba7ad021883309686766b0d5522aa35b41c780df1657f132f",
+        "src/amal/eda/systemc/sc_dt/_native_setup.py": "f446356ad7ab5ec4ccc59b159ba0181491a0294325f7ec2132fa13ed60faa0dc",
+        "src/amal/eda/systemc/sc_dt/_numeric_operators.py": "43dcb1f014f7994e8671f11a4622b286577319be6dce7d812ee04b4742884716",
+        "src/amal/eda/systemc/sc_dt/_operators.py": "0de582fff83bd74d5eb968a5783541b63e4cef2787643002e4eb97dd98f2f70b",
+        "src/amal/eda/systemc/sc_dt/_ranges.py": "89ab86efcaca633eb765652221206403f2cdda40efa229c6ccd17fae936035ee",
+        "src/amal/eda/systemc/sc_dt/_shifts.py": "84da0a6c493b5968b20a22970e7052ae7b325085acf61ba77267ab10b2f54e1c",
+        "src/amal/eda/systemc/sc_dt/_streams.py": "24a093b36d1184258576df921641e7a446fff9618a839997f5b1b1819c63c4c3",
+        "src/amal/eda/systemc/sc_dt/_strings.py": "de0fd1602f066da544a3db505395d204bc4ad8d739f362dee61206cf17fbd82c",
+        "src/amal/eda/systemc/sc_dt/_vectors.py": "f792460619d0e6e3146a619793558049176d839c13d0c94e9b245358decacebb",
+        "src/amal/eda/systemc/sc_dt/adapters.h": "810a0a53c1ff08d0c4beeb57f6f529f8d5bb04a80d1abff4709c2c2800f9a461",
+        "src/amal/eda/systemc/sc_dt/concat_adapters.h": "0276f648eaf44e107fe537bf07c863467dfa8a13ea127c513d86c704ddf92b3e",
+        "src/amal/eda/systemc/sc_dt/fixed_constructors.h": "c16a0fd40e64dd8e4d0ae8e0202d1c5ac8458f86262f10d0e88fd19fc374818b",
+        "src/amal/eda/systemc/sc_dt/fxnum_owners.h": "410878dddaf0c351a69185cc14dbd5f4acb98ef91d34fbbccca55afc6df63e3e",
+        "src/amal/eda/systemc/sc_dt/integers.h": "ebca39c034a24c7190200e273ff611b72a34ce76e554d848f7e8372b3d1477e2",
+        "src/amal/eda/systemc/sc_dt/numeric_operators.h": "92ba9540cf3a35dba7ee6b2d452a73ada651df6c9eb1ecbe0a1ac6d55742c16e",
+        "src/amal/eda/systemc/sc_dt/operators.h": "a9d8e3df10abf2d6da64693e27530e5de747d34eaf0b4b454664628c7cae9b48",
+        "src/amal/eda/systemc/sc_dt/ranges.h": "acfcfc4514e95d33afbcc1822b150773e64940c5fff42268328e7626b96b1391",
+        "src/amal/eda/systemc/sc_dt/shift_adapters.h": "ee003863522dc6ac327ddf3d9d54d798ee4fcb2f3aef0ce421b32cfe576d01af",
+        "src/amal/eda/systemc/sc_dt/stream_adapters.h": "b394609d56ee9fcae0fb971a34ccad420539856c0d796d12b6992884f706a03c",
+        "src/amal/eda/systemc/sc_dt/string_adapters.h": "22da0299ba0c80a0ab86ea07e9318db9167a333146e00bba6efac38bcfc6970a",
+        "src/amal/eda/systemc/sc_dt/vectors.h": "077f04bbba482a009e1cb208af06ad9148dfb33d93fceb33885c13e0f7619212",
+        "src/amal/eda/systemc/tlm/__init__.py": "b396115f03dd8b438000316155fe0d26d45da00ca14a179f1c5fa37f06560798",
+        "src/amal/eda/systemc/tlm/_analysis.py": "be114f5941c406c90878d66b9b16047006749c4e09e5919eb311337751bdc128",
+        "src/amal/eda/systemc/tlm/_endian.py": "40e02bd7cd37d972f3c886e13129e32d00a53d1222462329293da19149be06fe",
+        "src/amal/eda/systemc/tlm/_fifo.py": "80d4b483e3a06c2ca2467b2ceb771f7264a5f377e126c7aeb598aa25b6e79e70",
+        "src/amal/eda/systemc/tlm/_interfaces.py": "579174239bf747feb0e3def98c0ed9a2edd3fe82d0f10e65222a4a5520ed4de3",
+        "src/amal/eda/systemc/tlm/fifo_operations.h": "9a6ad8e6067ba8c866b14b8e0a72d6ff3dd377ef1231ec762b8fe5d14b650ef4",
+        "src/amal/eda/systemc/tlm_utils/__init__.py": "ffa8a233441e115ba63a17e6aac10cbe5f22f33de9ebb5aa61edd3593db682d6",
+        "src/amal/eda/systemc/tlm_utils/callback_peq.h": "7b086b530245853eba58786b40f7898505c9f2d78f13be661d49c77410d6b3ff",
+        "src/amal/eda/systemc/tlm_utils/callback_quantumkeeper.h": "a23fafb535cad2241270245b9929b63638d806e178fa42fb16cd50e7a05bda53",
+        "src/amal/eda/systemc/tlm_utils/socket_callbacks.h": "891dab556353aa58fc99eb0a05bbb2636793c2c1d6f51c5ac9e0a1d1e79368e5",
+        "src/amal/eda/systemc/tlm_utils/socket_member_pointer.h": "4460d57bbf3f31311ac791c8f265801b1f26b08b094b99bbadbf0528ecde8647"
+      }
+    },
+    "current": {
+      "revision": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+      "tracked_files": 113,
+      "source_hashes": {
+        "src/amal/eda/cli/__init__.py": "46e4932998083aeffc88caf0dcbf1656142ba5e38ce2a101b2f2da2ae0e99622",
+        "src/amal/eda/cli/__main__.py": "aba6c43ab670168b6d6984cbca0dbf1c66285f05bd5dae181396e9d52e63a50b",
+        "src/amal/eda/cli/_formatting.py": "7b595870e22344154bce4f40f465868d9d6134c9a43a0d8649819f719b1cd5e5",
+        "src/amal/eda/cli/_run.py": "4e6a07ae39aa0a719296916fe3b52371b5075115792e740ebbe3920acf193782",
+        "src/amal/eda/cli/commands.py": "f29c9db2f981178cf6055679a6fc78fa162f5ac43dae92fc8177d18efb7b4881",
+        "src/amal/eda/cli/cpp.py": "62ef2e2497a5b9e840c2a6fa5ad174a1a0a9279afacbe9fa8d5b85bd0e657e1c",
+        "src/amal/eda/systemc/__init__.py": "0027a724ba5faffb8a7d8e803aa43138301479971b5f5380649899b34b3a9c90",
+        "src/amal/eda/systemc/_bootstrap.py": "0d42b3350c5e4887952b70a8e4c590ddbad31f139f44685fa3ca0d5a182d900f",
+        "src/amal/eda/systemc/_logging.py": "42602155c758d1ee943367a854bceecde8dc77140cd35f6c21381f739e732dc3",
+        "src/amal/eda/systemc/_namespace.py": "a010874ce49bb1258e5d2e732cbdfbc67eb60075d7668d7254b7847333f78269",
+        "src/amal/eda/systemc/_native_help.py": "17b9acab495f750b3f97d995deec0d5c8d50d8549b6b83006cd2936b154dbe37",
+        "src/amal/eda/systemc/_runner.py": "5445a890062fb7228866822ce92336b17cd8179a285d964179430d910745d5c4",
+        "src/amal/eda/systemc/_runtime.py": "63168376efef6602bc2769885a24dd02312ef6df0714d1d7ea122024e8d00f22",
+        "src/amal/eda/systemc/repl.py": "5163324a09bc9f4e68067f3c6fc0a9002f66fb92da44c0153e1e00b8c0a2a0cd",
+        "src/amal/eda/systemc/sc_core/__init__.py": "1a916364eb58fe781354907d663fe2b68d6c43da1cf48957e93d9fbfebd68718",
+        "src/amal/eda/systemc/sc_core/_blocking.py": "c4f03f7676fd533658ed1a9e9bd84bf723c28146762c68d5a45f84a8add0948a",
+        "src/amal/eda/systemc/sc_core/_byte_heap.py": "f49b78f9ef2f477992568a4e1bdea5b3bce8d60120d9e4daed3029ead5f6d398",
+        "src/amal/eda/systemc/sc_core/_callback_pointers.py": "5ccc59c99079c169409288d704b299025659eae5883c5f5f33932952a616b786",
+        "src/amal/eda/systemc/sc_core/_channel_interfaces.py": "11b9c5316ca583a19eed96fa388d329116d275e839769db7072499113cce14c3",
+        "src/amal/eda/systemc/sc_core/_clock.py": "348cb2d913e93f7adb59487ad4a1955abfa7746b98486d81e77f54e821e0e093",
+        "src/amal/eda/systemc/sc_core/_event_expressions.py": "e6fd7c78c58c9f512ae454e5a247903e5ff6609e7335955e826142a98cf1c310",
+        "src/amal/eda/systemc/sc_core/_event_finders.py": "15b1a938680801695f1b131481922703322c842ec7b5dc56b6a122fdcb0c4adc",
+        "src/amal/eda/systemc/sc_core/_exports.py": "9821acb2315b435870ab9198320224611df6f1e9328069872e1c7466aa374c55",
+        "src/amal/eda/systemc/sc_core/_fifo.py": "a1578fb5bb621d18990fc4de1d95c21830b2d82ac3a3cb2b885ba83cb3750cd8",
+        "src/amal/eda/systemc/sc_core/_hashes.py": "9460c7c04f857e52d82e323a1424e7e8bb3f76036461dd27a3790425f4412174",
+        "src/amal/eda/systemc/sc_core/_interfaces.py": "d625981724e4e76f4e3e2988363ab7ab312648b33b3ffad934960a1d14124711",
+        "src/amal/eda/systemc/sc_core/_kernel_flags.py": "fb3b2b87c0449f43307b74cb1d6117b997f7751de6b41af052cf1f3ded545db7",
+        "src/amal/eda/systemc/sc_core/_list_handles.py": "e849bdbf031bc2cacb94710a420903ad32d3db631dc4192f44a8e322e1f3e19f",
+        "src/amal/eda/systemc/sc_core/_member_scheduler.py": "cb432627257a40ece556023335eeacf39d01f270040fcf89b61fb2d35ac726c8",
+        "src/amal/eda/systemc/sc_core/_native_call.py": "de9106204ef187ab1e9fdf7aaba232f28990b296a35248facbf7ab1dce431b7f",
+        "src/amal/eda/systemc/sc_core/_native_setup.py": "bf9de05c1487d3a4f2e1b64c181a8ddb48a136396253f70d51b54ff522679d7e",
+        "src/amal/eda/systemc/sc_core/_pvector.py": "ef36aaf2769f74046ef45364a00c6ed7283ef3a9f23570aa6c73baf6748802b7",
+        "src/amal/eda/systemc/sc_core/_references.py": "2afb3dc918c7e39ad4161b8d2f8300f5532a407d8c20f14f1f2cf7f6fbd0616e",
+        "src/amal/eda/systemc/sc_core/_report_policy.py": "595ecba126b52c1ddb4ce9711d063678783cbc367a5782799ca82eb5732c1b06",
+        "src/amal/eda/systemc/sc_core/_scheduler.py": "f73a20b690b47e366e709e8356e9bf41fe3efa1777d719479523734d8b3154f5",
+        "src/amal/eda/systemc/sc_core/_signal_values.py": "092dc8841eba2402c74d28a3f9ed9f4a7eba2bbefbac47ed5147e5bdc05caa2f",
+        "src/amal/eda/systemc/sc_core/_streams.py": "d55eaa6f143cc02a657709ee2796b313fcd822fd650c51cea79da009f11e628e",
+        "src/amal/eda/systemc/sc_core/_time.py": "0fe82b653e86047909373b0edde2a9e934e802bafa597fe8fb90dfbdd0f477f2",
+        "src/amal/eda/systemc/sc_core/_trace_printf.py": "a997c19501f6603fca2661866d419bfe6a8cbeb3473972e29792555b5e84ce25",
+        "src/amal/eda/systemc/sc_core/_trace_values.py": "e2c7e1a0e52dec41510079984e506b9847d60b0d049c1bf1f0a2f1588dad9d0e",
+        "src/amal/eda/systemc/sc_core/_tracing.py": "c23a6bcecc1dbe23ff68d7f8b2ef0168791d50ddc7f404508721db5ffda37a6b",
+        "src/amal/eda/systemc/sc_core/_vector_policies.py": "0c71433fc96e2447a08e48efc6f858be6f4331cf60ff8f35cf28dd2676ae8eff",
+        "src/amal/eda/systemc/sc_core/_vectors.py": "93e39791d3adc89c26179fc5169b917948c07133b64486d22c3d5eb1a535a157",
+        "src/amal/eda/systemc/sc_core/bind.cpp": "aa672da5023b00b74ec0a801258f4097069e8a9f29543d2fa523a6fc3a94a68d",
+        "src/amal/eda/systemc/sc_core/binding_log.h": "b4a0ed60173f2fe1e2569b487776c709bf636a76e4fa3c2caec52ebe693e3418",
+        "src/amal/eda/systemc/sc_core/byte_heap.cpp": "507925013a19e0549f70316fe06cd3be37738740cc8c81dc058aab2f307cce62",
+        "src/amal/eda/systemc/sc_core/callback_pointers.h": "5208087b6cd3538a0a1f0ea30d2bd7b34767f2fdbc9eec4da5031299a7fac2a5",
+        "src/amal/eda/systemc/sc_core/event_expressions.cpp": "2aea68f716e7f450461f0bca0b52af64c7fdfdb650d324e14e956191fa2d6b92",
+        "src/amal/eda/systemc/sc_core/event_finders.cpp": "6257525ad2b39a04d923a131ac84ed4485fdaab0f15c8c9a4149b97edf21830d",
+        "src/amal/eda/systemc/sc_core/event_list_registration.h": "27de57d2a2d9ab00e54e155471524a6fc071cdd31056f06e8d977fb6b980b892",
+        "src/amal/eda/systemc/sc_core/event_lists.cpp": "83ae04168035235e0eb07e06176fa260f4e2b24aa56a4957b5b0a89215b5fb3e",
+        "src/amal/eda/systemc/sc_core/hash_helpers.cpp": "9e8d4b01b3f67e51db4e14147feda86637ba195d454d7acf8b84e8f5af6db10a",
+        "src/amal/eda/systemc/sc_core/hierarchy.cpp": "aa53904099f554309edffa5bb99f61c15692565536b782aa58ef16d2fc256c23",
+        "src/amal/eda/systemc/sc_core/hierarchy.h": "f3a92d1c77183abd92c55a9658cf9c99d9ac3a590852f541904b8c2a830319b0",
+        "src/amal/eda/systemc/sc_core/interface_teardown.cpp": "a1fed23caf10c754fca9c63c28292929213f4d4564635379d2bb8c13ad3830c4",
+        "src/amal/eda/systemc/sc_core/native_blocking.h": "91986ff21f46ca5bb8731fd328ae6a2d9fdba30425807c1d71621a5566f5a539",
+        "src/amal/eda/systemc/sc_core/native_entry.cpp": "aed930aae65ab70629483865a47eeae7cf2116c4a1f501e2e23e926048619a9d",
+        "src/amal/eda/systemc/sc_core/owned_copy.h": "094d100f069061077d8264e68876e8bf4217a5c86f64e333631b8150ec6a54e8",
+        "src/amal/eda/systemc/sc_core/process_exceptions.cpp": "da0c54e89318f0cecf763de982d1eb512f00c477a2a4c4ca256503530de75a6a",
+        "src/amal/eda/systemc/sc_core/process_utilities.cpp": "55c25532a06cccc928a09c39da856c4086660f4b4423a983a187e677397f7bcc",
+        "src/amal/eda/systemc/sc_core/pvector_access.cpp": "d994a1af6b7f594163f30cca82c8f5cb72c1017e1f0bb75d96caed3c02dcd1e3",
+        "src/amal/eda/systemc/sc_core/report_handler.cpp": "af30cffb6482935f0b9bae270b5f2e8e856c63022617e085a28c6be30fca0465",
+        "src/amal/eda/systemc/sc_core/report_handler_pointer.h": "6419cc0c7f89ffdce102d461dca0a4f4693de0f34ee7ea837cf1f8b98e9b2395",
+        "src/amal/eda/systemc/sc_core/report_legacy.cpp": "cd7cbaf48a296782d3cdfaeb1331e94ffef86ed27b4ec4208349364ddcb89ae7",
+        "src/amal/eda/systemc/sc_core/runner_log.h": "b1805aa0dff13d1ba823b78d36e5e7fed5cf9f4357c623ef75ab5ccff3a0bc0d",
+        "src/amal/eda/systemc/sc_core/sc_main.cpp": "158d86a1b190f1caefdb98751e34eecf3c1e81c44d39883e51d2e533817615bf",
+        "src/amal/eda/systemc/sc_core/sc_module.cpp": "3d115d4eabdec57b1127563b9c5db811b503e6a9e0808991697ddef34340f629",
+        "src/amal/eda/systemc/sc_core/signal_values.cpp": "ba603ac91a481ddd4c602b4aa55997c447d9aefa1ff3cd1612630de555e4870c",
+        "src/amal/eda/systemc/sc_core/spawn_result.cpp": "68e1dcc024cc0d55c0ebdf5d1f8b8b1d04ac07c8e6287c845ff33643032252dd",
+        "src/amal/eda/systemc/sc_core/time_operations.cpp": "b1f10d485207bb26b4ec2f6d8b9210e8bbc774eb6027fcf7534866b50614a57b",
+        "src/amal/eda/systemc/sc_core/trace_printf.cpp": "f2804b37a159e6dedad5365246239343182aa350fac2056aacad8c6d4018a9f8",
+        "src/amal/eda/systemc/sc_core/trace_values.cpp": "b26e8f9ecbdc90d5521351a795f492b42a17e2cd9d9247638e4b96f1f7e6ea46",
+        "src/amal/eda/systemc/sc_core/vector_creator.cpp": "1d574088b26b49bea18ca3c617d4d75967664e9931953828aff9655f5d5b9391",
+        "src/amal/eda/systemc/sc_core/vector_policies.cpp": "ad2a36e8c23eec88e48d657ca75649b2bccb7297795a20d44d01c8b8a7413f8b",
+        "src/amal/eda/systemc/sc_dt/__init__.py": "5d09c688170aadc8ec4a7fac30f86b7433f9ae85430a497eed0f00299b3b30b1",
+        "src/amal/eda/systemc/sc_dt/_bit.py": "9d3a94ed75ab8b3d710889eb3c45c5ba00b7f9abd53b5cac60fdd999916c8d1f",
+        "src/amal/eda/systemc/sc_dt/_concat.py": "5003564955ec4d1a313b743c7662dc236493422ec24dfe3c651596b58e952494",
+        "src/amal/eda/systemc/sc_dt/_fixed_constructors.py": "a68f746d61cf46534c0c90e7f534b2e9f2712d1beef8f2a9908512d70137b6a6",
+        "src/amal/eda/systemc/sc_dt/_fxnum_owners.py": "5d5ceef14c7a51761e4b79f8e99be79f866b21bb8b306105e230f72f8a59895b",
+        "src/amal/eda/systemc/sc_dt/_integer_owners.py": "6874d8082f40f5c25233458f71d3951f1ee014416564eba28297fcabece1d076",
+        "src/amal/eda/systemc/sc_dt/_integers.py": "3b869c393e527a870e53f74d44c00409d7d2f955df3c5b288cd26aa003878eca",
+        "src/amal/eda/systemc/sc_dt/_native_methods.py": "7a407ba73332330ba7ad021883309686766b0d5522aa35b41c780df1657f132f",
+        "src/amal/eda/systemc/sc_dt/_native_setup.py": "f446356ad7ab5ec4ccc59b159ba0181491a0294325f7ec2132fa13ed60faa0dc",
+        "src/amal/eda/systemc/sc_dt/_numeric_operators.py": "bde43ba9ab34c94096aabf210a0a7104500ae0c2c5549a09b56ba1eef336a398",
+        "src/amal/eda/systemc/sc_dt/_operators.py": "651ab2a367a703c3bc4c989c9bd0c512afa537b8bb0ab40ea3f2759ac1bf5912",
+        "src/amal/eda/systemc/sc_dt/_ranges.py": "89ab86efcaca633eb765652221206403f2cdda40efa229c6ccd17fae936035ee",
+        "src/amal/eda/systemc/sc_dt/_shifts.py": "a516a20fb2307c55bf423e300c299f92b5090cef9efb32a72a2735476ee54a5e",
+        "src/amal/eda/systemc/sc_dt/_streams.py": "7ba176a52598a0bf3d43d99e1835729a7e09455ffc9dcd3157bdccdc58156414",
+        "src/amal/eda/systemc/sc_dt/_strings.py": "de0fd1602f066da544a3db505395d204bc4ad8d739f362dee61206cf17fbd82c",
+        "src/amal/eda/systemc/sc_dt/_vectors.py": "5c2cd8c85d1b2337cb5defa29d0f3006a9ebf2b2522c2b780606378bd1c72988",
+        "src/amal/eda/systemc/sc_dt/adapters.h": "810a0a53c1ff08d0c4beeb57f6f529f8d5bb04a80d1abff4709c2c2800f9a461",
+        "src/amal/eda/systemc/sc_dt/concat_adapters.h": "0276f648eaf44e107fe537bf07c863467dfa8a13ea127c513d86c704ddf92b3e",
+        "src/amal/eda/systemc/sc_dt/fixed_constructors.h": "c16a0fd40e64dd8e4d0ae8e0202d1c5ac8458f86262f10d0e88fd19fc374818b",
+        "src/amal/eda/systemc/sc_dt/fxnum_owners.h": "410878dddaf0c351a69185cc14dbd5f4acb98ef91d34fbbccca55afc6df63e3e",
+        "src/amal/eda/systemc/sc_dt/integers.h": "ebca39c034a24c7190200e273ff611b72a34ce76e554d848f7e8372b3d1477e2",
+        "src/amal/eda/systemc/sc_dt/numeric_operators.h": "92ba9540cf3a35dba7ee6b2d452a73ada651df6c9eb1ecbe0a1ac6d55742c16e",
+        "src/amal/eda/systemc/sc_dt/operators.h": "a9d8e3df10abf2d6da64693e27530e5de747d34eaf0b4b454664628c7cae9b48",
+        "src/amal/eda/systemc/sc_dt/ranges.h": "acfcfc4514e95d33afbcc1822b150773e64940c5fff42268328e7626b96b1391",
+        "src/amal/eda/systemc/sc_dt/shift_adapters.h": "ee003863522dc6ac327ddf3d9d54d798ee4fcb2f3aef0ce421b32cfe576d01af",
+        "src/amal/eda/systemc/sc_dt/stream_adapters.h": "28f77404ce76c8bcfa190e6ecf4b96a40a8d39dc067d055ae88b0c8c054dd6fc",
+        "src/amal/eda/systemc/sc_dt/string_adapters.h": "22da0299ba0c80a0ab86ea07e9318db9167a333146e00bba6efac38bcfc6970a",
+        "src/amal/eda/systemc/sc_dt/vectors.h": "077f04bbba482a009e1cb208af06ad9148dfb33d93fceb33885c13e0f7619212",
+        "src/amal/eda/systemc/tlm/__init__.py": "b396115f03dd8b438000316155fe0d26d45da00ca14a179f1c5fa37f06560798",
+        "src/amal/eda/systemc/tlm/_analysis.py": "be114f5941c406c90878d66b9b16047006749c4e09e5919eb311337751bdc128",
+        "src/amal/eda/systemc/tlm/_endian.py": "965025109ba4d004b1f5aab6ec32e7a54f22b099e562586f673d5dc568bd4f99",
+        "src/amal/eda/systemc/tlm/_fifo.py": "80d4b483e3a06c2ca2467b2ceb771f7264a5f377e126c7aeb598aa25b6e79e70",
+        "src/amal/eda/systemc/tlm/_interfaces.py": "20b5a0ba06f8df886577b61afe2b5524ca5243ae5cbdefd66de7074390f686c0",
+        "src/amal/eda/systemc/tlm/fifo_operations.h": "9a6ad8e6067ba8c866b14b8e0a72d6ff3dd377ef1231ec762b8fe5d14b650ef4",
+        "src/amal/eda/systemc/tlm_utils/__init__.py": "23c1cb6faca88beae0336980cacebb74dd0d8033ef0458e203596d00a191699e",
+        "src/amal/eda/systemc/tlm_utils/callback_peq.h": "7b086b530245853eba58786b40f7898505c9f2d78f13be661d49c77410d6b3ff",
+        "src/amal/eda/systemc/tlm_utils/callback_quantumkeeper.h": "a23fafb535cad2241270245b9929b63638d806e178fa42fb16cd50e7a05bda53",
+        "src/amal/eda/systemc/tlm_utils/socket_callbacks.h": "891dab556353aa58fc99eb0a05bbb2636793c2c1d6f51c5ac9e0a1d1e79368e5",
+        "src/amal/eda/systemc/tlm_utils/socket_member_pointer.h": "4460d57bbf3f31311ac791c8f265801b1f26b08b094b99bbadbf0528ecde8647"
+      }
+    }
+  },
+  "retained_launch_issue": "Initial recorder had a five-minute outer timeout. Completed samples retained exactly; continuation uses the original round deadline and no sample is discarded or resampled.",
+  "status": "completed_measurement",
+  "summaries": {
+    "import": {
+      "import_seconds": {
+        "baseline_median_seconds": 9.6066241748631,
+        "current_median_seconds": 4.78377440571785,
+        "elapsed_reduction_percent": 50.203377183889664,
+        "paired_reduction_percent": [
+          51.88692975135143,
+          50.67115536164035,
+          44.258358173593614,
+          50.73282303988781,
+          49.101665115816104,
+          50.77051719088199,
+          49.95487349020863,
+          51.92488160701849,
+          50.61609554267476,
+          49.857383261880926
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          9.281820498406887,
+          10.099297273904085
+        ],
+        "current_range_seconds": [
+          4.56939222663641,
+          5.43583432212472
+        ]
+      },
+      "elaboration_seconds": {
+        "baseline_median_seconds": 0.0,
+        "current_median_seconds": 0.0,
+        "elapsed_reduction_percent": null,
+        "paired_reduction_percent": [],
+        "current_wins": 0,
+        "baseline_range_seconds": [
+          0.0,
+          0.0
+        ],
+        "current_range_seconds": [
+          0.0,
+          0.0
+        ]
+      },
+      "run_seconds": {
+        "baseline_median_seconds": 0.0,
+        "current_median_seconds": 0.0,
+        "elapsed_reduction_percent": null,
+        "paired_reduction_percent": [],
+        "current_wins": 0,
+        "baseline_range_seconds": [
+          0.0,
+          0.0
+        ],
+        "current_range_seconds": [
+          0.0,
+          0.0
+        ]
+      },
+      "process_wall_seconds": {
+        "baseline_median_seconds": 9.827552827075124,
+        "current_median_seconds": 4.987881112843752,
+        "elapsed_reduction_percent": 49.24594962133371,
+        "paired_reduction_percent": [
+          51.027727673846066,
+          49.58556944604343,
+          43.18571910650453,
+          49.800264403809614,
+          48.162397160029215,
+          49.661036013759855,
+          48.80961000640658,
+          50.897834078222374,
+          49.71512786690041,
+          48.52762072386715
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          9.486838150769472,
+          10.327724758535624
+        ],
+        "current_range_seconds": [
+          4.775576040148735,
+          5.649750325828791
+        ]
+      }
+    },
+    "event_signal": {
+      "import_seconds": {
+        "baseline_median_seconds": 9.710735861212015,
+        "current_median_seconds": 4.768041281029582,
+        "elapsed_reduction_percent": 50.89927942459271,
+        "paired_reduction_percent": [
+          52.96059676434749,
+          51.51255889192705,
+          48.9914534881452,
+          54.50183690631478,
+          49.021648883815594,
+          51.53227685590416,
+          49.29773278309818,
+          52.049492955405995,
+          51.37101072382979,
+          50.79360718782954
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          9.406363405287266,
+          10.542673207819462
+        ],
+        "current_range_seconds": [
+          4.596194934099913,
+          4.855547744780779
+        ]
+      },
+      "elaboration_seconds": {
+        "baseline_median_seconds": 0.5856163501739502,
+        "current_median_seconds": 0.48352231085300446,
+        "elapsed_reduction_percent": 17.433604661246214,
+        "paired_reduction_percent": [
+          17.723290463415488,
+          16.566790835580935,
+          15.980999331578637,
+          17.52174955725241,
+          11.531764075286311,
+          22.82641227722102,
+          1.3291773801824114,
+          21.055651097864015,
+          25.00265176856121,
+          16.57396212581338
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          0.5431395843625069,
+          0.6362508311867714
+        ],
+        "current_range_seconds": [
+          0.4549652151763439,
+          0.5359202958643436
+        ]
+      },
+      "run_seconds": {
+        "baseline_median_seconds": 0.15621634759008884,
+        "current_median_seconds": 0.14003967121243477,
+        "elapsed_reduction_percent": 10.35530315950135,
+        "paired_reduction_percent": [
+          11.127828963063324,
+          11.381722593540399,
+          8.293595023623968,
+          9.538332315330933,
+          5.484488914596131,
+          12.760129575155899,
+          8.479610033137297,
+          11.062988871638368,
+          13.069222924184587,
+          7.350594091896068
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          0.15122830495238304,
+          0.1577484831213951
+        ],
+        "current_range_seconds": [
+          0.13628480955958366,
+          0.14551547542214394
+        ]
+      },
+      "process_wall_seconds": {
+        "baseline_median_seconds": 10.81033205986023,
+        "current_median_seconds": 5.7382258977741,
+        "elapsed_reduction_percent": 46.91905978466038,
+        "paired_reduction_percent": [
+          48.8132749055753,
+          46.85838899042414,
+          45.07752395717613,
+          50.492347172380455,
+          44.5933032861748,
+          48.14238492100111,
+          43.96097182488168,
+          47.9702085343525,
+          47.916003390056304,
+          46.58971489605024
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          10.470199566334486,
+          11.60357415303588
+        ],
+        "current_range_seconds": [
+          5.559556443244219,
+          5.9281584694981575
+        ]
+      }
+    },
+    "tlm_transport": {
+      "import_seconds": {
+        "baseline_median_seconds": 9.802544137462974,
+        "current_median_seconds": 4.966643827036023,
+        "elapsed_reduction_percent": 49.33311436921053,
+        "paired_reduction_percent": [
+          50.00767700097343,
+          50.215175638588626,
+          39.85333041192831,
+          47.880411424356325,
+          51.80788697466765,
+          49.36357134797259,
+          51.81328476140797,
+          47.605156475215956,
+          50.073586441683716,
+          50.90676144151733
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          9.541382759809494,
+          10.496167104691267
+        ],
+        "current_range_seconds": [
+          4.684173800051212,
+          5.854262098670006
+        ]
+      },
+      "elaboration_seconds": {
+        "baseline_median_seconds": 1.059506980702281,
+        "current_median_seconds": 1.111215392127633,
+        "elapsed_reduction_percent": -4.880421966741344,
+        "paired_reduction_percent": [
+          -23.322870507484982,
+          -5.624410000774072,
+          -7.993167421231417,
+          0.7210629475619013,
+          11.572970912695657,
+          -0.1528232486569303,
+          4.602734872414215,
+          -5.181829447067443,
+          -5.1229560395797735,
+          -14.501296361369898
+        ],
+        "current_wins": 3,
+        "baseline_range_seconds": [
+          1.01624820753932,
+          1.2271767035126686
+        ],
+        "current_range_seconds": [
+          1.033829040825367,
+          1.3089104257524014
+        ]
+      },
+      "run_seconds": {
+        "baseline_median_seconds": 0.1301439106464386,
+        "current_median_seconds": 0.13164464384317398,
+        "elapsed_reduction_percent": -1.153133626676106,
+        "paired_reduction_percent": [
+          -3.632217025051543,
+          -1.9502088595697797,
+          3.0854550680358472,
+          -1.006107310068538,
+          0.7159136751885731,
+          -2.070436992477731,
+          2.939676041364747,
+          -2.639494452229063,
+          -0.20760820183418627,
+          -7.67243559814379
+        ],
+        "current_wins": 3,
+        "baseline_range_seconds": [
+          0.12637849524617195,
+          0.13562548160552979
+        ],
+        "current_range_seconds": [
+          0.12792835012078285,
+          0.13685496896505356
+        ]
+      },
+      "process_wall_seconds": {
+        "baseline_median_seconds": 11.350157244130969,
+        "current_median_seconds": 6.564464848488569,
+        "elapsed_reduction_percent": 42.16410656440046,
+        "paired_reduction_percent": [
+          40.01043170190193,
+          42.89250884971868,
+          33.792515509131896,
+          41.400631198810075,
+          45.86990109663083,
+          42.76725017852573,
+          45.84211205801206,
+          40.71592496801969,
+          43.104170250648686,
+          42.2860760735475
+        ],
+        "current_wins": 10,
+        "baseline_range_seconds": [
+          10.98039984703064,
+          12.062702797353268
+        ],
+        "current_range_seconds": [
+          6.19541772082448,
+          7.423905808478594
+        ]
+      }
+    }
+  },
+  "elapsed_seconds": 590.5871817134321,
+  "limits": [
+    "One host, warm filesystem caches; each sample is a fresh interpreter/kernel.",
+    "Same installed dependencies and native SystemC; revision source trees are frozen and guarded.",
+    "Python driver/checksum work is included in simulation timing; assertions and recorder I/O are outside phase timing.",
+    "TLM workload uses a reused payload and nonwaiting address transform with delay annotation, not a memory or thread-throughput model.",
+    "Native preflight uses shared Python stimulus; selected behavior equivalence does not certify every API.",
+    "No single package-wide percentage; no timing percentages summed; no optimization adopted.",
+    "Both revisions emit native W509 in the TLM workload because the retained top sc_module_name leaves construction open until sc_start. Values, callbacks and time are checked; this benchmark does not verify module-construction lifecycle contracts.",
+    "Revision differences include correctness and API changes as well as optimizations; timing does not isolate individual optimization commits.",
+    "Process wall includes post-run assertions, native-library hashing, import guards, shutdown and temporary-directory handling; import/elaboration/run phase timing excludes final assertions."
+  ],
+  "evidence_sha256": {
+    "build/performance/end-to-end/harness-lint.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "build/performance/end-to-end/harness-format.log": "fd2299c9f1c6dc869070883e281051bfe93aacf66c1a3b0069f45b4aa410ca50",
+    "build/performance/end-to-end/round.log": "592f64a4ce1fe3b4eda3fe52ebc66dabd22e6ba5ef22cef6579eb35c721b675e",
+    "build/performance/end-to-end/preflight-baseline-import.log": "1114566d588c245c9355e8f3280006d740a4d3043649b93ada4cf2ce451e0e8e",
+    "build/performance/end-to-end/preflight-current-import.log": "b2dff38eb149c87ce12befe0c8329452ed7e097c672d76d51752ed75bd3cb267",
+    "build/performance/end-to-end/preflight-baseline-event_signal.log": "0dfa9da7e5d98b02b043b508103b8b3420b938da242de3c8d21ca75c2dbd5e04",
+    "build/performance/end-to-end/preflight-current-event_signal.log": "91437703dfb74936ba641d6d2fa94b809bb73e1a40d72855c289640ea0dee59e",
+    "build/performance/end-to-end/preflight-native-event_signal.log": "5c3015560cfb5951ea504fd39dae902a4f02814915ba350bf5b9d8edb181bd03",
+    "build/performance/end-to-end/preflight-baseline-tlm_transport.log": "9f8349cd9b82eaa1e3aebd900bea8e5cac935e047a1f193db41e98ec9d50e082",
+    "build/performance/end-to-end/preflight-current-tlm_transport.log": "fa7a7eb3f0f13bd12966e3ec866e8584f2716e1dbbc801fd05227f5f46f12be9",
+    "build/performance/end-to-end/preflight-native-tlm_transport.log": "3aafaa2921b5d458a77ef4b66fae693137d178d9e6667b9b9d6bccb3f6da8d5b",
+    "build/performance/end-to-end/import-00-baseline.log": "b0fcb638de5069cd3393e578a515b44c6dec26bc76060db54bd145960c077a3d",
+    "build/performance/end-to-end/import-00-current.log": "3b3b539ffd047d8b4c940999c7488d4f53e0ef1880efe5c072e86ed6d546d614",
+    "build/performance/end-to-end/import-01-current.log": "d07acdd7c8918e569e06aecb344a0a40b17d6f4720912319a89eef68b51290ad",
+    "build/performance/end-to-end/import-01-baseline.log": "77e197a064e8d69bc368843d41928d76295598477a813a25a241e3895237a024",
+    "build/performance/end-to-end/import-02-baseline.log": "877e6e895f59284ae7abe70b60e35eb354d87365c88e63f4fe1fb5d03b3c4d8c",
+    "build/performance/end-to-end/import-02-current.log": "1e3ecd4c430626bfe4dfbd5a51833a474f3b374a0440cc547c528350434e38a9",
+    "build/performance/end-to-end/import-03-current.log": "6954787947e69aeabbbb9c904a3dc3a6796db7f3ce05cedb4c86714adb4220c3",
+    "build/performance/end-to-end/import-03-baseline.log": "cb10e1abd6a0f984298968987915cccfb096b74cf7af1318d324be6d836af493",
+    "build/performance/end-to-end/import-04-baseline.log": "72975e31653f1cb452f72171da36e05773f7a79140c04e8e0d5690b4df4dee39",
+    "build/performance/end-to-end/import-04-current.log": "28249b72b5e7008109889979e5c0a8a06154e8275def6899ec331ee4c294077d",
+    "build/performance/end-to-end/import-05-current.log": "1fc46ad9d9148cf1b7f14192cf2aa90e09d88ad493644b0b2ae35edbe9d629b2",
+    "build/performance/end-to-end/import-05-baseline.log": "e95303a74e4de95510c279be8155bbaea2490c95ce6899f6cd2113c31f83c248",
+    "build/performance/end-to-end/resume-lint.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "build/performance/end-to-end/import-06-baseline.log": "ccfaf8c6bb5c54a048279ce1f4fe7c8ce1633defc8528fe7d6d6dbf024799689",
+    "build/performance/end-to-end/import-06-current.log": "44c0ecb44938f951086b6edc2f65dedd467951cc587998dd3bf340aade41b22b",
+    "build/performance/end-to-end/import-07-current.log": "ce0f0776c69a9a35107a5f6ec92d2f5fec2ea348623ae4d4cbd094a0b2ff78be",
+    "build/performance/end-to-end/import-07-baseline.log": "ecd8ed0ea78af776d2e3511fe8bbdb9aa6d2e1a4f61e5bb484bee5cf15c45be5",
+    "build/performance/end-to-end/import-08-baseline.log": "850a44caa361b63c49b498a2951dbbf61de790eb48ee6161fc4f1d1afc7b41e5",
+    "build/performance/end-to-end/import-08-current.log": "618c772376680e0d4ffff5a7491fc51b8d7cddfe9329b0e647ff2f29ecc4c575",
+    "build/performance/end-to-end/import-09-current.log": "f1f92dba1638a764a08bc097bc3b22e02e620cd1dacae7d0a538cda4b05bf459",
+    "build/performance/end-to-end/import-09-baseline.log": "e3e8cf84ae170a2b8dadc441cfcf54d78ba15ae7322b877b4af7cb5c62c4fa21",
+    "build/performance/end-to-end/event_signal-00-baseline.log": "c8fc6195540220f53eb57449de07b0b015a41442117ae2b9b0425bbe985c8b26",
+    "build/performance/end-to-end/event_signal-00-current.log": "2af612c1ac80ead475cb6f84976c63754c482048f250311ab1312a8ccdee4418",
+    "build/performance/end-to-end/event_signal-01-current.log": "60dbd4a7e5fc25e16656ade9a9ce867dc6dd658f7523a229f815a81adf33fef3",
+    "build/performance/end-to-end/event_signal-01-baseline.log": "e1308b38d11c35575598ff84163f6814b2f77cf79cf0b186c7742fb56ef9122c",
+    "build/performance/end-to-end/event_signal-02-baseline.log": "537225ba4643176989369e4223328d395e3a3b19458cd82b82da6e29208ef54f",
+    "build/performance/end-to-end/event_signal-02-current.log": "2d3748b243d9aa459fae2b4f8c97f58f1b8646501159a8ec19fd9516c5aecfd8",
+    "build/performance/end-to-end/continuation-tool-check.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "build/performance/end-to-end/event_signal-03-current.log": "a115b2d0d6984e8e750b365ef0ad436d1b255122cbb9ffd48d450827a9bdde96",
+    "build/performance/end-to-end/event_signal-03-baseline.log": "e4c34f6092ebc07ef73cb61c53660c068cff1a4c06f49677820cb042c4539f6a",
+    "build/performance/end-to-end/event_signal-04-baseline.log": "f207175ed8746ccc305df7a6639d0aaecc16e66ffc1e163db8d764994bbecf14",
+    "build/performance/end-to-end/event_signal-04-current.log": "fef9ce74726218818ce18612899fccb684ad4aa8106731415e048cc8c2c869d7",
+    "build/performance/end-to-end/continuation.log": "e3f681f83bfc3795784252e5a5c283923fa78de5d62da4411a0d7b2b54884567",
+    "build/performance/end-to-end/event_signal-05-current.log": "1ce3755426f1bd2c000ee4600f5b0e56bcd14d94710910b901af5e9801f5fd5e",
+    "build/performance/end-to-end/event_signal-05-baseline.log": "89e1c60fef0ec64f0316c93d6a8acea137ae7e232875888b53d7315d20cb8c80",
+    "build/performance/end-to-end/event_signal-06-baseline.log": "3412b2dadf823c006fa091dbb25bc57213a7f3c85eb73aede1b9cfe789266401",
+    "build/performance/end-to-end/event_signal-06-current.log": "f7e3d278cccbc9f599c3e00179172106e22bc26291d94c764e6d5bfd5c9411a6",
+    "build/performance/end-to-end/event_signal-07-current.log": "190374934d6de038f57e1cee49eb2479a62f4cfeb7358505b9f9cbc75acb0b3a",
+    "build/performance/end-to-end/event_signal-07-baseline.log": "6f167332614121b45298b035201ef7e9f27e231f491abc2b0284fea10826e57b",
+    "build/performance/end-to-end/event_signal-08-baseline.log": "8d1387c168bfd2ccfd8b53cbf58742deeefa500297e7c51f10da5ef019d7fdb4",
+    "build/performance/end-to-end/event_signal-08-current.log": "e43b09bd9ce63c5be208d9ae29073848fd7e8fb94ea185e9e02d1256cc16757b",
+    "build/performance/end-to-end/event_signal-09-current.log": "999efa2f6b99de45c70139a40a149d03d101e9174b327cf062515febeae64688",
+    "build/performance/end-to-end/event_signal-09-baseline.log": "724b8f93f25fe663ac610e471cb4f98f9fdcc3fa95936f52dc817f20ad409507",
+    "build/performance/end-to-end/tlm_transport-00-baseline.log": "4530229151c67463c6d72b9d6341174cc24701624c43fbd7beff7552bc159fe7",
+    "build/performance/end-to-end/tlm_transport-00-current.log": "9b816dba44658da1cb244a932630d841da7553f9f6aaa7c0dafdb5e2638f5ddb",
+    "build/performance/end-to-end/tlm_transport-01-current.log": "33b7a17d303fb8233458cefb19adb0424b37afc94b5fc857d402c2cfff7e6f58",
+    "build/performance/end-to-end/tlm_transport-01-baseline.log": "f5998f8d10b33909bb963642c92fc882f6f4cb66d0c675836aafa427a30a7628",
+    "build/performance/end-to-end/tlm_transport-02-baseline.log": "f44f8213160abf332ce3b98520b628f30530bbb5bac5b1c42fd22188418c695e",
+    "build/performance/end-to-end/tlm_transport-02-current.log": "ba71f8e595f2068027a32c85263d1e08342b1fbc0df03a409268f2dc31a1d21c",
+    "build/performance/end-to-end/tlm_transport-03-current.log": "6e784bac7a60972072e4935f223d59a13dfe59467edad304d1c9f42ff6489144",
+    "build/performance/end-to-end/tlm_transport-03-baseline.log": "8386cdfb5529d448f3e2034a9e4f9cbe87908d820ac9517eefc6b605244fd190",
+    "build/performance/end-to-end/tlm_transport-04-baseline.log": "620f8d48877d5c26dda1b69878e86e6ee6109a676458c5bc8467563ef88b433f",
+    "build/performance/end-to-end/tlm_transport-04-current.log": "1f7220ecd80ff07879d608c7cc919ae1c4aefcead6d602942b2642d5487297fa",
+    "build/performance/end-to-end/tlm_transport-05-current.log": "1708ef4a4d665b200f976a32f24e1c984f07eb768345ecb7b194ac54a2018030",
+    "build/performance/end-to-end/tlm_transport-05-baseline.log": "b47f6fe8fec35ce3646ab378feb0f1f1f84f344ae13deb7d93a735c426aa473c",
+    "build/performance/end-to-end/tlm_transport-06-baseline.log": "450281158a444acec4dee329948aec74a35b58d470bc02291f97061c76058395",
+    "build/performance/end-to-end/tlm_transport-06-current.log": "edfdb7a6cad9b393b5fc49364380d62005028a690a9304ebcc1432a10f20fdde",
+    "build/performance/end-to-end/tlm_transport-07-current.log": "18de241bb20dc7f262287e7de163410fa94b48b9490502cba637dec74800d9ce",
+    "build/performance/end-to-end/tlm_transport-07-baseline.log": "91e41d28a32f63cc13b28dd88b9e9f5036d1d495c339eb6ab5cc250e0ff06744",
+    "build/performance/end-to-end/tlm_transport-08-baseline.log": "a38fb622b0bafa9da7b7196dd7563eeacc58a8f1b1d4ce8d28661dc5e9005eb0",
+    "build/performance/end-to-end/tlm_transport-08-current.log": "4b5d081e3a1130eba384379b1d032a37fc95db62e6128d4bf4e807390e2b42cc",
+    "build/performance/end-to-end/tlm_transport-09-current.log": "fa0bd3bf4a544a675732bee13e8440b15c1465863166251090d6072882c16881",
+    "build/performance/end-to-end/tlm_transport-09-baseline.log": "b582fa84e0a6349a2b763d14cda31f059fc4ed8ca0e5bfe79ffb315b7d184d78"
+  },
+  "initial_contract_snapshot": {
+    "schema": "pysystemc-end-to-end-progress-v1",
+    "status": "running",
+    "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+    "current_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+    "pairs_per_workload": 10,
+    "cycles": 20000,
+    "transfers": 20000,
+    "subprocess_timeout_seconds": 60,
+    "measurement_deadline_seconds": 1800,
+    "no_resampling": true,
+    "tracking": "VCD off; coverage off; profiling off; recorder and validation outside phase timing",
+    "gates": {
+      "contract": {
+        "status": "pending"
+      },
+      "equivalence": {
+        "status": "pending"
+      },
+      "import": {
+        "status": "pending"
+      },
+      "event_signal": {
+        "status": "pending"
+      },
+      "tlm_transport": {
+        "status": "pending"
+      },
+      "report": {
+        "status": "pending"
+      },
+      "validation_commit": {
+        "status": "pending"
+      }
+    },
+    "completed_measurement_pairs": 0,
+    "total_measurement_pairs": 30,
+    "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload."
+  },
+  "initial_contract_snapshot_phase": "Before execution; mutable progress below is historical, not current status."
+}

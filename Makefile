@@ -52,18 +52,18 @@ ARGS ?=
 TEST_WORKERS ?= 4
 
 # ----------------------------------------------------------------------------------------------------------------------
-# cli: ## Run the pysystemc CLI (ARGS selects a command or options; default: help)
+# cli: ## Run the systemc-py CLI (ARGS selects a command or options; default: help)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: cli
 cli:
-	$(run) pysystemc $(ARGS)
+	$(run) systemc-py $(ARGS)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # repl: ## Start the SystemC Python playground (optional ARGS)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: repl
 repl:
-	$(run) pysystemc repl $(ARGS)
+	$(run) systemc-py repl $(ARGS)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -262,14 +262,30 @@ format-python:
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage
 coverage:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest --cov=src/amal/eda/systemc --cov=src/amal/eda/cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml
 
 # ----------------------------------------------------------------------------------------------------------------------
 # coverage-parallel: ## Run coverage in isolated pytest workers (TEST_WORKERS defaults to 4)
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: coverage-parallel
 coverage-parallel:
-	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -n $(TEST_WORKERS) --dist=worksteal --cov=amal.eda.systemc --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml $(ARGS)
+	SYSTEMC_HOME=$(MAKEFILE_DIR)/submodules/systemc uv run pytest -n $(TEST_WORKERS) --dist=worksteal --cov=src/amal/eda/systemc --cov=src/amal/eda/cli --cov-report=term-missing --cov-report=html:build/coverage/html --cov-report=xml:build/coverage/coverage.xml $(ARGS)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# benchmark-startup: ## Measure fresh-process startup and first-use latency
+# ----------------------------------------------------------------------------------------------------------------------
+BENCHMARK_REPORT ?= build/startup/baseline.json
+.PHONY: benchmark-startup
+benchmark-startup:
+	uv run python tools/benchmark_startup.py --output "$(BENCHMARK_REPORT)" $(ARGS)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# profile-startup: ## Attribute startup time to imports and cppyy operations
+# ----------------------------------------------------------------------------------------------------------------------
+STARTUP_PROFILE_REPORT ?= build/startup/profile.json
+.PHONY: profile-startup
+profile-startup:
+	uv run python tools/profile_startup.py --output "$(STARTUP_PROFILE_REPORT)" $(ARGS)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # native-sanitize: ## Run optional ASan/UBSan first-party native references
@@ -294,6 +310,21 @@ test-wheel:
 	env -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
 		uv run --no-project --with "$$wheel" \
 		python "$(MAKEFILE_DIR)/tools/check_installed_examples.py"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# test-wheel-examples: ## Compare all runnable examples using an installed wheel
+# ----------------------------------------------------------------------------------------------------------------------
+INSTALLED_EXAMPLE_REPORT_DIR ?= $(MAKEFILE_DIR)/build/verification/installed
+.PHONY: test-wheel-examples
+test-wheel-examples:
+	@set -e; \
+	example_wheel=$$(find "$(WHEEL_DIR)" -maxdepth 1 -name 'pysystemc-$(PACKAGE_VERSION)-*.whl' -print -quit); \
+	test -n "$$example_wheel" || { echo "No wheel for $(PACKAGE_VERSION) in $(WHEEL_DIR); run uv build --out-dir $(WHEEL_DIR)" >&2; exit 1; }; \
+	example_wheel=$$(realpath "$$example_wheel"); \
+	cd /tmp; \
+	env -u PYTHONPATH -u PYTHONHOME -u FMT_HOME -u SPDLOG_HOME -u SYSTEMC_HOME -u SYSTEMC_SOURCE_DIR -u SYSTEMC_INSTALL_DIR -u SYSTEMC_LIBRARY_DIR \
+		uv run --no-project --with "$$example_wheel" --with pytest --with pytest-xdist \
+		python -I "$(MAKEFILE_DIR)/tools/check_installed_examples.py" --all --output-dir "$(INSTALLED_EXAMPLE_REPORT_DIR)"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # test-testpypi: ## Check installed TestPyPI release (override PACKAGE_VERSION to select a version)
@@ -435,8 +466,14 @@ example-counter-py:
 # ----------------------------------------------------------------------------------------------------------------------
 .PHONY: example-simple_fifo-py
 example-simple_fifo-py:
-	@SYSTEMC_HOME=$(PWD)/submodules/systemc \
-		uv run examples/simple_fifo/py/simple_fifo.py
+	$(run) systemc-py run examples/simple_fifo/py/simple_fifo.py
+
+# ----------------------------------------------------------------------------------------------------------------------
+# example-simple_fifo-cpp: ## Run the native simple_fifo example and print its hierarchy
+# ----------------------------------------------------------------------------------------------------------------------
+.PHONY: example-simple_fifo-cpp
+example-simple_fifo-cpp:
+	$(run) systemc-cpp run examples/simple_fifo/cpp/simple_fifo.cpp
 
 # ----------------------------------------------------------------------------------------------------------------------
 # example-pipe-cpp: ## Run the pipe example in C++

@@ -8,6 +8,356 @@ Notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 
 ## [Unreleased]
 
+- Refresh 13 locked dependencies for the Python 3.14 baseline and exercise the
+  seven previously classified Python misses with explicit defensive helper,
+  reflection-metadata and backend-fault contracts. Retain their distinction
+  from supported native API configurations.
+
+- Finish the finite tracking, correctness and example batch: measure actual
+  recorder on/off overhead in ten fixed pairs, add native/Python wide-signal
+  contracts at 65/137/257 bits, and expand packet-switch comparisons to three
+  seeds. Preserve historical full-regression scope and close the batch tracker.
+
+- Reconcile the consolidated verification/performance finish line: 21/21
+  performance gates closed and 113 current runtime hashes match final regression
+  evidence. Align embedded end-to-end progress with completion while retaining
+  its initial contract snapshot and unchanged measurements.
+
+- Close a bounded callback-cost investigation and reject the sole void-validator
+  specialization at its fixed TLM screen. Preserve source/behavior evidence,
+  callback lifecycle checks and the unchanged production runtime.
+
+- Complete a bounded TLM profile and single-candidate screen with source and
+  behavior evidence. Reject guarded module lookup at 1.37% median improvement,
+  below the fixed 5% threshold; preserve runtime code and close the tracker.
+
+- Add a finite end-to-end performance comparison with a seven-gate progress
+  tracker, three workloads and ten alternating revision pairs each. Separate
+  import, elaboration, simulation and process-wall results with VCD, coverage
+  and profiling off; retain source identities, warnings and launch evidence.
+
+- Close the finite Python 3.14 verification gates with 997 passing regression
+  tests, 41 installed-example comparators, and 113 matching runtime files across
+  checkout, wheel and source archive. Reconcile 99.85% Python statement coverage
+  with all seven misses classified; broader API contracts remain unverified.
+
+- Clear the private Python reset/kill signal before restoring native process
+  unwind, preserving cleanup ordering and preventing a pending error from
+  causing `SystemError` on the next Python API call.
+
+- Capture runtime native member-pointer variables with
+  `sc_member_access[Element, Member].member_type.from_pointer("namespace::symbol")`
+  for both vector assembly APIs. Preserve current values, copied tokens, native
+  conversions and vector ownership; reject unsafe raw cppyy views clearly.
+
+- Require the inherited native resolved-signal read and callback socket port
+  accessors, retiring three speculative compatibility branches. Both socket
+  accessors configure blocking transport for Python thread waits.
+
+- Add member trigger lifetime regressions for interleaved owner instances,
+  consumed event expressions, and native method reset/kill behavior.
+
+- Reuse successful native member `next_trigger` dispatch by exact argument type
+  while preserving current values, event ownership, native reports and GIL
+  behavior. A matched 200,000-registration workload used 13.3% less elapsed
+  time across ten pairs, with ten wins.
+
+- Format native numeric `str` and f-string values through exact C++ stream
+  insertion, avoiding cppyy shift-template crashes while preserving arbitrary
+  integer and fixed-point widths, current values and stream spelling.
+
+- Cache successful native `sc_port_value` conversion callables while preserving
+  per-call native reads and borrowed interface storage. A matched 20,000-call
+  input/inout/output workload used 26.7% less elapsed time across ten pairs,
+  with ten paired wins.
+
+- Hide three internal wait/trigger bridge helpers from public help and REPL
+  completion while retaining similarly named user-defined native types.
+
+- Convert Python booleans through the exact decimal integer overload so native
+  integer constructors and assignments receive `0` and `1` before width wrapping.
+
+- Clean up unpublished dynamic event-list registrations when a native scheduling
+  call throws, balancing list ownership and canceling staged process timeouts.
+
+- Complete the counter tutorial's `system.py` and `tb.py` compatibility paths,
+  preserve native asynchronous event defaults, and load FFT/FIR sibling modules
+  by their source paths to avoid collisions between example entrypoints.
+
+- Preserve the upstream TLM memory helper's address checks, response precedence,
+  transfer lengths and delays; reject DMI grants beyond its inclusive native range.
+
+- Resolve nonmethod virtual-property applicability before missing redeclaration
+  links in the source inventory scanner, while retaining unknown member flags.
+
+- Record historical performance workloads, checkpoints and measurement limits in
+  a versioned report. No cumulative package-wide improvement is established.
+
+- Cache successful native integer-template constructor dispatch by exact source
+  type after conversion and copying succeed, preserving fresh owned storage
+  and current values. A matched 20,000-call signed/unsigned and vector-source
+  constructor workload used 14.6% less elapsed time across ten pairs, with ten
+  paired wins.
+
+- Cache successful native integer-template assignment dispatch by exact source
+  type, preserving target identity, current values and conversion reports.
+  A matched 20,000-call signed/unsigned and vector-source assignment workload
+  used 33.3% less elapsed time across ten pairs, with ten paired wins.
+
+- Cache successful native vector constructor dispatch by exact source type
+  after native construction and copying succeed, preserving fresh owned
+  storage and current values. A matched 20,000-call arbitrary-width vector
+  constructor workload used 8.6% less elapsed time across ten pairs,
+  with ten paired wins.
+
+- Cache successful native vector assignment dispatch by exact source type,
+  preserving target identity, current values and failure recovery. A matched
+  20,000-call arbitrary-width vector workload used 17.6% less elapsed time
+  across ten pairs, with ten paired wins.
+
+- Capture canonical native TLM synchronization enum metadata once when
+  registering nonblocking transport callbacks, preserving callback mutation,
+  result validation and error recovery. A matched 20,000-call forward/backward
+  socket workload used 7.8% less elapsed time across ten pairs, with ten wins.
+
+- Cache successful native text and boolean-bit concatenation dispatch by exact
+  operand type and direction, preserving live borrowed views and native result
+  ownership. A matched 20,000-call text-concatenation workload used
+  30.5% less elapsed time across ten pairs, with ten paired wins.
+
+- Cache successful native scalar bit/logic bitwise and comparison dispatch by
+  exact ordered operand types, preserving current values, fresh owned results
+  and native reports. A matched 20,000-call `&` workload used 10.2% less elapsed
+  time across ten pairs, with ten paired wins.
+
+- Cache successful native numeric left/right shift dispatch by exact value and
+  count types, preserving fresh result ownership and current input values. A
+  matched 20,000-call integer/fixed-point workload used 19.1% less elapsed time
+  across ten pairs, with ten paired wins.
+
+- Cache successful native compound operator dispatch by exact owner and source
+  types, preserving in-place mutation, current values and native report behavior.
+  A matched 20,000-call integer/fixed-point `+=` workload used 15.9% less elapsed
+  time across ten pairs, with ten paired wins.
+
+- Cache successful native binary arithmetic, bitwise and comparison dispatch
+  by exact ordered operand types, preserving current values and independently
+  owned native results. A matched 20,000-addition integer/fixed-point workload
+  used 11.8% less elapsed time across ten pairs, with ten paired wins.
+
+- Cache successful native dispatch for named fixed-point `add`, `sub`, `mult`
+  and `div` calls by exact output and operand types, preserving fresh values,
+  output ownership and native overload behavior. A matched 20,000-call `add`
+  workload used 34.7% less elapsed time across ten pairs, with ten paired wins.
+
+- Convert explicit `None` tags to native null pointers for combined TLM blocking
+  peek interfaces, so `peek(None)` returns the same nonconsuming value as
+  `peek()` and `peek(cppyy.nullptr)` for arbitrary transaction types.
+
+- Retain generic native `sc_ref` and `sc_cref` template proxies, preserving
+  per-value type deduction and reference-owner lifetime. A matched 20,000-call
+  custom/257-bit wrapper workload used 10.7% less elapsed time across ten pairs,
+  with ten paired wins.
+
+- Cache exact native datatype enum formatters lazily, preserving unknown-value
+  spellings, numeric fallback and the native overload selector. A matched
+  20,000-conversion workload used 17.3% less elapsed time across ten pairs,
+  with nine paired wins.
+
+- Cache resolved native signal-value conversion adapters by full datatype and
+  writer-policy specialization, preserving current values and borrowed references.
+  A matched 20,000-read int/257-bit workload used 56.1% less elapsed time across
+  ten pairs.
+
+- Cache generic TLM endian converter proxies for resolved string word names,
+  preserving arbitrary native word types and payload/buffer semantics. A matched
+  20,000 request/response workload used 26.7% less elapsed time across ten pairs.
+
+- Cache the exact native integer-cycle wait overload after first use, preserving
+  default and explicit contexts, GIL release and reset/kill cleanup. A matched
+  20,000-cycle workload used 67.1% less simulation time across ten pairs.
+
+- Cache exact native overloads for reusable OR/AND event-list waits, preserving
+  list ownership, explicit contexts, GIL release and reset/kill cleanup. A matched
+  20,000-resumption workload used 56.5% less simulation time across ten pairs.
+
+- Cache exact native expression-wait overloads by signature, avoiding repeated
+  cppyy overload resolution while preserving context, expression ownership,
+  GIL release and reset/kill cleanup. A matched 20,000-resumption workload used
+  86.4% less simulation time across ten pairs.
+
+- Reuse canonical event-expression types in `next_trigger()` classification,
+  reducing dynamic-method overhead while preserving native overloads, context
+  handling and expression consumption.
+
+- Retain the two canonical event-expression type proxies used by `wait()`
+  classification, avoiding repeated cppyy template lookup while preserving
+  expression consumption, overload selection and reset/kill cleanup.
+
+- Speed up native binding startup by avoiding header-only fmt compilation for
+  four diagnostic messages; preserve message, color and write-error behavior
+  and skip disabled debug formatting. Matched warm imports improved from
+  7.22 to 4.68 seconds; disabled-debug method workloads also ran faster.
+
+- Prefer native-first Linux loader ordering during single-threaded cppyy
+  startup, with exact PATH restoration and ordinary-import fallback for
+  unsupported environments or observable Python thread concurrency.
+  `PYSC_NATIVE_FIRST_LDD=0` disables it; `1` explicitly enables it. The temporary
+  PATH change is process-wide. Matched warm imports improved from 23.49 to
+  7.36 seconds on the measured Linux host; results depend on loader layout.
+
+- Avoid duplicate native enum metadata checks while generating namespace help,
+  preserving public discovery, native proxy identity and documentation.
+
+- Show 12 public `sc_report` member signatures in native help using the pinned
+  header, with timestamp lifetime notes and preserved native proxy identity.
+
+- Expose exact native hash and comparison callback holders under the familiar
+  hash-base typedef names, accepting them in setters and preserving Python
+  callback retention and qualified template arguments. Reflected constructors
+  continue to reject holder objects with `TypeError`.
+
+- Preserve written static and virtual declaration flags separately from their
+  effective values, retaining compiler resolution provenance in inventory
+  variants and leaving unavailable inheritance information explicit.
+
+- Verify expression-list deletion and process termination when a forbidden
+  wait is attempted during self-reset or self-kill unwind.
+
+- Avoid a cppyy constructor metadata crash when formatting native help; retain
+  the existing constructor signature documentation.
+
+- Release event-expression storage when native `wait` or `next_trigger` rejects
+  a call, preserving native report order and normal, reset, and kill cleanup.
+
+- Add an opt-in adapter for inherited hash-base constructor defaults, retaining
+  native overload selection and Python callbacks. Measure coverage by source
+  path so isolated helper-module aliases are included.
+
+- Exercise residual lifecycle, cleanup and native-free adapter guards, retaining
+  explicit unsupported and configuration-dependent coverage limits.
+
+- Refresh the runtime source roster regression guard for the added help module;
+  separate startup timeout output checks from interpreter startup timing.
+
+- Record parallel native FIFO value/stream and port/interface checks, including
+  meaningful 137-bit values, trace transitions and selected lifetime ordering.
+
+- Record parallel native module member/reset and finder cache/report validation;
+  require nonempty output for every finder parity marker group.
+
+- Record finite full-name and parent-scoped external-name registry checks,
+  copied-name retention and object/event namespace behavior.
+
+- Record finite attribute value/copy and borrowed collection comparisons for
+  int, string and 137-bit values; distinguish Python-only regression checks.
+
+- Record finite object hierarchy, attributes, output and protected native-probe
+  checks, with exact native/Python reference-record comparison.
+
+- Record finite hierarchy lookup and borrowed top-level context checks; require
+  one exact native/Python lookup reference record.
+
+- Record finite OR/AND event-list value operations and busy mutation/recovery
+  checks with native waiter timing.
+
+- Record finite event metadata, notification priority/cancellation, delayed
+  reports and pending-event destruction comparisons against native SystemC.
+
+- Record finite name-generator, unique-name scope and module-name lifetime
+  comparisons; require the exact generator reference record.
+
+- Record finite mutex/semaphore construction, protected state/report and native
+  interface-probe comparisons; require all five reference records.
+
+- Record finite native checks for seven free time-operator overloads and
+  scoped-lock contention, release, destruction and blocked reset/kill cleanup.
+
+- Record finite native comparisons for time construction/conversion, compound
+  arithmetic, diagnostics/recovery and kernel time configuration.
+
+- Record finite native checks for halt/stack utilities, process-handle
+  comparisons and join timing with reset/kill cleanup and rejected handles.
+
+- Record finite native checks for priority-queue ordering and comparator
+  retention, byte-heap state, time-parameter defaults and inactive unwind copies.
+
+- Record finite native comparisons for eight core aliases, two write-through
+  flags and exception-to-report conversion; retain random-seed limitations.
+
+- Record finite native-reference checks for time tuple normalization/overflow,
+  DMI state restoration, phase values and quantumkeeper timing/reset/kill order.
+
+- Verify all 48 members of the ten named SystemC core enums retain native enum
+  types and integer round-trips; check version getter argument rejection.
+
+- Check every declared TLM enum member against native C++ (30 members across
+  seven types), and strengthen version and host query argument checks. Document
+  cppyy 3.5 host-endianness results as Python integers.
+
+### Added
+
+- Compare inherited native hash constructor defaults and four hash-default constants with explicit and custom settings; record cppyy's missing inherited trailing defaults.
+- Verify tuple-based native trace overload selection and preserve cppyy selector errors with valid-selection recovery.
+- Add native/Python behavioral comparisons for omitted start policies, FIFO capacity, event-queue naming and timing, inherited virtual defaults, and port/signal template defaults.
+- Associate declaration source occurrences with textual preprocessor branch histories, keeping macro invocation and spelling contexts separate and preserving API identities.
+- Record lexical friend owners and exact declaration targets in separate API inventory source relationships, preserving unresolved type-only friends and configuration variants.
+- Record using-declaration target relationships in API inventories, retaining unresolved targets explicitly and preserving declaration identities.
+- Record function and template parameter defaults with source provenance in API inventories while preserving existing declaration identities.
+- Expose typed native data-member pointer values through `sc_member_access[Element, Member].member_type` for reusable vector member assemblies and member-access policy construction.
+- Add `native_help` and `format_native_help` for native overloads, templates and enums, available from Python and the playground without inherited cppyy proxy metadata.
+- Add `make profile-startup` to attribute startup costs to module imports, library/header loading and bridge compilation, with separate reflection/template probes and retained failure output.
+- Add `make test-wheel-examples` to stage runnable examples and reuse native/tutorial comparison assertions against an installed wheel, with subprocess import guards and persistent reports.
+- Add `make benchmark-startup` to measure fresh-process CLI, imports, model/template construction and REPL setup, with checked outputs, peak memory and retained failure diagnostics.
+- Add a native `pysystemc_public::print_hierarchy` helper with readable Python/native module types, global C++ calls, nested instance names and internal-module filtering; show the hierarchy in Python and C++ FIFO examples.
+- Add `systemc-cpp run SOURCE.cpp -- ARGS...` with source/include handling and native argument/status forwarding.
+- Add `systemc-py run SOURCE.py -- ARGS...` to execute Python models with script arguments and sibling imports.
+
+### Fixed
+
+- Remove the VCD context manager's unreachable null-handle check; preserve native creation reports and the missing-directory precheck.
+- Remove the C++ runner's unreachable false-return compilation branch; cppyy compilation errors propagate as `SyntaxError` with native diagnostics.
+- Remove an unreachable CLI error after command dispatch; bare invocation continues to print help successfully.
+- Omit compiler-local alias references from API inventory base-class metadata while preserving type spelling, access and inheritance flags.
+
+- Preserve source and configuration metadata variants when combining API inventories, including information from definitions that follows forward declarations.
+- Validate comparators and leave empty pointer vectors unchanged without entering native sorting.
+- Clear pending Python callback errors before allocating a captured simulation report, preserving error cleanup if the report copy fails.
+- Reject Python `bytes` arguments to legacy string formatting with `TypeError` before native variadic dispatch, avoiding a native crash; use `str` or native `std::string` arguments.
+- Keep public nested declarations visible in native help when their names match an excluded top-level bridge declaration.
+
+- Return the original destination from instance and explicit class report-assignment calls without converting a native exception reference; document timestamp invalidation on assignment and ownership transfer on swap.
+
+- Reject missing, inaccessible and incompatible named vector members safely, preserve native error causes, and keep later valid member selection usable.
+- Preserve the original Python creator exception after native vector construction rolls back.
+- Identify the fixed-point type and supported configuration forms when rejecting unsupported parameter constructor shapes.
+- Align namespace exports, help summaries, and REPL completion with public native declarations and Python adapters, keeping bridge utilities in the raw cppyy namespaces.
+- Include context adapters, analysis FIFOs, and TLM utility socket templates in wildcard imports and namespace help.
+- Reject const-to-mutable member-access policy conversions that cppyy previously accepted despite native SystemC const restrictions.
+- Keep Python kernel flag reads synchronized with native SystemC storage after Python or native assignments.
+- Preserve native reference return types for text/integer concatenation, avoiding forbidden copies of native concatenation views.
+- Avoid crashes when extracting into native `std::string` targets and reject immutable scalar stream targets with `TypeError`.
+- Render namespace enum details from the selected public adapter, preserving its member values.
+- Preserve literal `--` script arguments after the `systemc-py run` argument delimiter.
+- Reject unsupported fixed-point parameter constructor shapes with `TypeError` instead of silently producing a zero-valued number.
+- Preserve macro declaration header locations in API inventories when Clang omits repeated filenames across spelling, expansion and range locations.
+
+- Report C++ runner initialization failures through the CLI diagnostic and exit status instead of an uncaught Python traceback.
+
+- Normalize the packaged SystemC library name so separately linked native executables can load the wheel's single shared-library payload.
+- Avoid native re-reflection of existing Python adapters when generating namespace help, including adapters with falsy values.
+- Handle `systemc-cpp` help, version output and argument errors before loading the native SystemC kernel.
+- Show help successfully when `systemc-cpp` is invoked without arguments.
+
+### Changed
+
+- Clarify borrowed storage requirements for pointer and reference members in native callback value copies.
+
+- Align the export examples' member names and hierarchical bindings with their native references, and remove redundant native-call flags from the Python FIFO example.
+- Include CLI modules in local and CI coverage reports, and explicitly map upstream native example targets to Python entry points and support files.
+- Show `systemc vVERSION` in the runtime banner, with a magenta name, cyan version and white description.
+- Rename the executable commands to `systemc-py` and `systemc-cpp` and group help/version flags under `Global options`, adding `-V` as a version alias. Use uv-style help colors with muted magenta program names and cyan versions.
+
 ## [1.0.0](https://github.com/amal-khailtash/pysystemc/compare/v0.16.0...v1.0.0) (2026-10-28)
 
 

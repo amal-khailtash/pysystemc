@@ -1,23 +1,46 @@
 Command line and playground
 ===========================
 
-The ``pysystemc`` command provides installed-version information, command help
+The ``systemc-py`` command provides installed-version information, command help
 and an interactive Python playground:
 
 .. code-block:: console
 
-   uv run pysystemc --version
-   uv run pysystemc version
-   uv run pysystemc --help
-   uv run pysystemc help repl
-   uv run pysystemc repl
+   uv run systemc-py --version
+   uv run systemc-py version
+   uv run systemc-py --help
+   uv run systemc-py help repl
+   uv run systemc-py help help
+   uv run systemc-py repl
+   uv run systemc-py run examples/helloworld/py/helloworld.py
 
 From a source checkout, ``make cli`` shows help, ``make cli ARGS=version``
 prints the version, and ``make repl`` launches the playground. Both targets
 forward ``ARGS``; for example, ``make repl ARGS=--no-history``.
 
+The command synopsis is ``Usage: systemc-py [OPTIONS] <COMMAND>``.
+
 Version and help commands do not load the native simulation kernel. The existing
-``pysystemc-cpp`` command remains available for compiling and running C++ models.
+``systemc-cpp`` command remains available for compiling and running C++ models.
+
+Running Python models
+---------------------
+
+Use ``systemc-py run SOURCE.py`` to run a Python model as ``__main__``. Arguments
+after the filename are available through ``sys.argv``; use ``--`` to separate
+script arguments explicitly::
+
+   uv run systemc-py run model.py -- --cycles 20
+
+The source directory is available for sibling imports. The command preserves
+the working directory and the script's exit status. Each invocation runs in a
+fresh interpreter; use a separate invocation for an independent SystemC kernel.
+``systemc-py help run`` describes the command without loading native bindings.
+``systemc-py help help`` explains help targets, and ``systemc-py help version``
+explains the version command.
+
+Interactive playground
+----------------------
 
 The playground preloads ``sc_core``, ``sc_dt``, ``tlm``, ``tlm_utils`` and
 ``cppyy``, together with public kernel names such as ``sc_time``, ``sc_start``
@@ -39,13 +62,29 @@ callbacks. Incomplete statements show a continuation prompt; pasted multiline
 input is supported. Python and native binding exceptions are displayed while
 session variables remain available for inspection.
 
+Inspect native declarations with ``native_help``. It displays available native
+constructor or function overloads, template names and enum values without
+traversing cppyy's inherited proxy metadata::
+
+   native_help(sc_core.sc_time)
+   native_help(sc_core.sc_time.to_seconds)
+   native_help(sc_dt.sc_uint)
+   native_help(sc_dt.sc_uint[73])
+
+Both ``native_help`` and ``format_native_help`` are preloaded in the playground
+and available from ``amal.eda.systemc``. ``format_native_help`` returns the text;
+``native_help`` prints it, optionally to a text stream supplied with ``file=``.
+If native signature metadata is unavailable, the output says so and retains
+available documentation. These helpers preserve native objects and Python's
+ordinary ``help()`` behavior.
+
 The prompt provides Python syntax highlighting, tab completion, history
 suggestions, arrow-key navigation and line editing. Ctrl+C clears unfinished
 input and returns to the prompt. Ctrl+D or ``exit()`` leaves the playground.
 History persists at ``$XDG_STATE_HOME/pysystemc/history`` when configured, or
 ``~/.local/state/pysystemc/history`` otherwise. Choose another location with
-``pysystemc repl --history PATH`` or keep history in memory with
-``pysystemc repl --no-history``.
+``systemc-py repl --history PATH`` or keep history in memory with
+``systemc-py repl --no-history``.
 
 Each process has one native SystemC kernel. Further ``sc_start`` calls advance
 the same design. Retain modules, channels and callback dependencies while the

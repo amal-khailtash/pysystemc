@@ -4,14 +4,13 @@ import cppyy
 
 
 def _arguments(arguments, *, cycles):
-    """Select native template types once and consume borrowed event expressions."""
+    """Select native template types once while retaining event expressions."""
     values = []
     types = []
     for index, value in enumerate(arguments):
         name = getattr(type(value), "__cpp_name__", "")
-        if name.startswith("sc_core::sc_event_expr<"):
-            value = value.release()
-            name = getattr(type(value), "__cpp_name__", "")
+        # Keep event-expression proxies intact; C++ establishes list ownership
+        # before native process validation or a potentially blocking wait.
         if index == 0 and isinstance(value, (int, float)):
             name = "int" if cycles and len(arguments) == 1 and isinstance(value, int) else "double"
         elif index == 1 and isinstance(arguments[0], (int, float)):
@@ -26,6 +25,8 @@ def _arguments(arguments, *, cycles):
 
 def _scheduling_member(owner_type, method, unwind):
     """Bind one exact native member adapter to a public bridge class."""
+    if method == "next_trigger":
+        return _next_trigger_member(owner_type)
     dispatch = getattr(cppyy.gbl.sc_core, "python_member_" + method)
 
     def invoke(self, *args):
@@ -33,7 +34,8 @@ def _scheduling_member(owner_type, method, unwind):
 
         Args:
             *args: Native time, event, OR/AND list or numeric duration arguments;
-                wait also accepts an integer cycle count. Expressions are consumed.
+                wait also accepts an integer cycle count. Expressions are consumed
+                by the native adapter after it establishes temporary-list ownership.
 
         Returns:
             None after completion or registration of method sensitivity.
@@ -53,6 +55,40 @@ def _scheduling_member(owner_type, method, unwind):
         result = operation(self, *values)
         if method == "wait" and not result:
             raise unwind()
+
+    return invoke
+
+
+def _next_trigger_member(owner_type):
+    """Bind native method sensitivity with successful callable metadata reuse."""
+    dispatch = cppyy.gbl.sc_core.python_member_next_trigger
+    operations = {}
+
+    def invoke(self, *args):
+        """Register native sensitivity without suspending the current method.
+
+        Args:
+            *args: Native time, event, OR/AND list or numeric duration arguments.
+        Returns:
+            None after successful native sensitivity registration.
+        Raises:
+            TypeError: Arguments cannot match a native member overload.
+            sc_report: The current process cannot register method sensitivity.
+
+        Call from a SystemC method; the GIL stays held. Retain this owner and
+        referenced events for their native registration lifetime. Expressions
+        retain native consumption and ownership semantics. Cache entries retain
+        callable metadata only, never owners, arguments, expressions or results.
+        Native exceptions propagate without caching a failed first invocation.
+        """
+        types, values = _arguments(args, cycles=False)
+        key = tuple(types)
+        operation = operations.get(key)
+        if operation is None:
+            operation = dispatch[tuple([owner_type, *types])].invoke
+        operation.__release_gil__ = False
+        operation(self, *values)
+        operations[key] = operation
 
     return invoke
 

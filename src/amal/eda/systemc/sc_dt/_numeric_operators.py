@@ -21,6 +21,7 @@ def _argument_type(value):
 def named_function(name):
     """Build an exact native output-parameter arithmetic callable."""
     native = getattr(cppyy.gbl.sc_dt, name)
+    dispatches = {}
 
     def apply(target, left, right):
         """Write native arithmetic into existing output storage.
@@ -43,10 +44,13 @@ def named_function(name):
         overload-specific native alias behavior; no blanket alias guarantee is
         made.
         """
-        adapter = cppyy.gbl.pysystemc_datatypes.NumericFunctions[
-            type(target), _argument_type(left), _argument_type(right)
-        ]
-        getattr(adapter, "perform_" + name)(target, left, right)
+        key = (type(target), _argument_type(left), _argument_type(right))
+        operation = dispatches.get(key)
+        if operation is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.NumericFunctions[key]
+            operation = getattr(adapter, "perform_" + name)
+            dispatches[key] = operation
+        operation(target, left, right)
 
     apply.__overload__ = native.__overload__
     apply.__name__ = name
@@ -56,6 +60,7 @@ def named_function(name):
 
 def _binary(operation, reverse=False):
     """Build a native expression wrapper with exact argument dispatch."""
+    dispatches = {}
 
     def apply(owner, other):
         """Return an independent native result or a comparison boolean.
@@ -73,14 +78,20 @@ def _binary(operation, reverse=False):
         Python floats use double. Native arithmetic preconditions apply.
         """
         left, right = (other, owner) if reverse else (owner, other)
-        adapter = cppyy.gbl.pysystemc_datatypes.NumericOperators[_argument_type(left), _argument_type(right)]
-        return getattr(adapter, operation)(left, right)
+        key = (_argument_type(left), _argument_type(right))
+        native = dispatches.get(key)
+        if native is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.NumericOperators[key]
+            native = getattr(adapter, operation)
+            dispatches[key] = native
+        return native(left, right)
 
     return apply
 
 
 def _compound(operation):
     """Build a native compound expression on the existing numeric owner."""
+    dispatches = {}
 
     def apply(owner, source):
         """Mutate numeric storage and return the original Python owner.
@@ -97,8 +108,13 @@ def _compound(operation):
         """
         if operation == "assign" and type(source) is int and not -(1 << 31) <= source < (1 << 31):
             source = _integer_text(source)
-        adapter = cppyy.gbl.pysystemc_datatypes.NumericMutation[type(owner), _argument_type(source)]
-        getattr(adapter, operation)(owner, source)
+        key = (type(owner), _argument_type(source))
+        native = dispatches.get(key)
+        if native is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.NumericMutation[key]
+            native = getattr(adapter, operation)
+            dispatches[key] = native
+        native(owner, source)
         return owner
 
     return apply

@@ -1,0 +1,45 @@
+{
+  "schema": "pysystemc-consolidated-closeout-v1",
+  "status": "complete_selected_scope",
+  "regression_evidence_reused": true,
+  "regression_tests": 997,
+  "runtime_hashes_matched_current_checkout": 113,
+  "rounds": [
+    {
+      "tracker": "performance-end-to-end-progress.json",
+      "result_commit": "29251f0",
+      "closed_gates": 7,
+      "pending_gates": 0
+    },
+    {
+      "tracker": "performance-tlm-profile-progress.json",
+      "result_commit": "ca86205",
+      "closed_gates": 7,
+      "pending_gates": 0
+    },
+    {
+      "tracker": "performance-callback-progress.json",
+      "result_commit": "d3d5a7c",
+      "closed_gates": 7,
+      "pending_gates": 0
+    }
+  ],
+  "closed_performance_gates": 21,
+  "pending_performance_gates": 0,
+  "new_runtime_change": false,
+  "new_measurements": false,
+  "historical_accounting": {
+    "accepted_workload_slices": 25,
+    "optimization_commits": 20
+  },
+  "deferred_or_outside_scope": [
+    "Python 3.15 deferred.",
+    "Arbitrary template/lifecycle/GIL/configuration and example topology contracts outside finite verification.",
+    "Seven Python coverage misses remain classified and unexercised.",
+    "GLM/Qwen review unavailable due to AMD HTTP401."
+  ],
+  "next_task_queued": false,
+  "scope_checkpoint": "Prior verification and three performance rounds; subsequent named TODO batch recorded separately.",
+  "follow_up_batch": "todo-batch-progress.json",
+  "tracking_overhead_evidence": "performance-tracking-overhead.json (actual verification recorder only)"
+}

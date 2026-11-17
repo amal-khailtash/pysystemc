@@ -144,8 +144,9 @@ hosts are unsupported. Native blocking operations require the appropriate guarde
 reset/kill cleanup. Python FIFO direct/port read/write and native TLM FIFO
 get/peek/put use guarded native operations.
 
-Further upstream examples and platform combinations remain unverified. No
-namespace export is counted as an executed example.
+The 60-file Python example source audit is accepted; broader example behavior
+and platform combinations remain unverified. No namespace export is counted
+as an executed example.
 
 Trace errors and ownership
 --------------------------
@@ -616,12 +617,373 @@ An independent native reference compares every inventoried public scalar/string/
 constant (239 declarations), including hash defaults, stack size, version strings,
 report IDs and enum values. Tracing report IDs require the native tracing-ID header,
 which package initialization now loads. Mutable globals, native tables and pointer
-proxies are excluded from scalar-value claims. Bind-proxy default/interface/port
+proxies are excluded from scalar-value claims. All 48 members of the ten named
+``sc_core`` enums also retain enum type identity and support typed integer
+construction and round-trip; C++ compile checks verify their exact native types.
+``sc_status_type`` names the native status enum alongside the compatibility state
+query. The three native version getters match exact C++ strings across repeated
+calls and reject extra arguments. These finite checks apply to the current
+baseline; broader configuration and whole-declaration contracts remain open.
+
+Bind-proxy default/interface/port
 constructors and native nil storage preserve borrowed pointer identity. The CFT
 comparison signature executes a Python callback during native pointer-vector sort
 and matches native C++ pointee ordering; the vector owns no pointees.
 
 All sixteen native logic-resolution table cells match C++ and retain symmetry.
 Initial public configuration booleans are readable and match native storage;
-assigning a copied Python module boolean is not claimed to mutate native globals,
-so those mutable-global entries remain open for a complete write contract.
+ordinary copied Python module booleans do not mutate native globals. The two
+explicitly forwarded flags below have separate write-through checks; other
+mutable globals remain open for complete write contracts.
+
+Finite time tuple checks
+------------------------
+
+The native comparison covers both public ``sc_time_tuple`` constructors, six
+getters and conversion to ``sc_time`` across five selected values. A separate
+fresh process checks normalization overflow at 10 fs resolution, the native
+report and safe recovery. This closes that bounded normalization/overflow
+scenario; other resolutions and whole-declaration contracts remain open.
+
+Finite core alias, flag and exception checks
+--------------------------------------------
+
+The small-type reference checks eight selected aliases: action bits, three clock
+ports, channel and behavior module aliases, the event-queue port and the native
+exception alias. Live clock and queue callbacks match C++ at 0/2/4 ns and 1/3 ns.
+These are selected alias identities and uses; their underlying templates retain
+separate contracts.
+
+Assignments to ``sc_enable_name_checking`` and
+``sc_allow_process_control_corners`` update native storage, reject non-boolean
+values and restore the tested initial flags. The native comparison checks name
+diagnostics and strict/permitted process-control behavior. Concurrent flag
+changes and other configurations remain open.
+
+The active-catch helper checks four exception kinds plus suppression. Returned
+report pointers are owned by the caller; copied messages and native diagnostic
+records match C++. This does not establish arbitrary exception/lifetime cases.
+``sc_set_random_seed`` emits the native not-implemented warning; random sequence
+control remains unsupported. The current simulation context and process query
+return borrowed pointers; deletion or use after native teardown is unverified.
+
+Finite priority queue and storage checks
+----------------------------------------
+
+The priority-queue reference checks four selected configurations: the base
+queue, a custom item-pointer template, time pointers and null timed-event
+pointers. It verifies ordering, duplicate values, capacity growth, extraction
+counts and borrowed pointees. The Python comparator remains retained while its
+queue lives, runs on the calling thread and is released after queue destruction.
+These checks do not establish every template type, comparator failure or empty
+extraction behavior.
+
+The byte-heap comparison checks default initialization, aligned allocation and
+wrap reuse, resizing and selected teardown. Borrowed views may outlive their heap
+proxy but become invalid when native storage is freed or replaced; the teardown
+fixture deliberately performs no later memory access. Default time-parameter
+values and proxy release have their own native comparison. Other heap sizes,
+allocation failures and arbitrary lifetime orders remain open.
+
+Two copied inactive unwind markers preserve ``RESET``/``KILL`` text and flags
+across the Python exception boundary. The probe confirms inactivity before
+throwing the copy; this finite check does not establish active scheduler-unwind
+behavior.
+
+Finite process utility and join checks
+--------------------------------------
+
+The native reference checks four clocked-thread halt scenarios plus an invalid
+outside-process call. It compares normal completion, default/explicit simulation
+contexts, reset cleanup at 0.5 ns and kill cleanup at 1 ns. Stack-size setup is
+checked through process handles and native thread pointers, including stored
+sizes and invalid argument rejection. Other process kinds and stack limits
+remain open.
+
+Three process-handle comparison functions match native equality, inequality and
+ordering for selected valid, copied and empty handles. Their six source
+declaration IDs include equivalent ``this_type`` signatures; they represent
+three functions. Address ordering is compared within each process and is not
+asserted across independent runs.
+
+The join reference compares five progress records, eight reset/kill cleanup
+records and two rejected-handle diagnostics. Dynamic and clocked waits complete
+at 3 ns and 6 ns; late registration retains the tested native count behavior.
+Joins and workers remain owned throughout the wait. The monitor exit constant
+is read in both models; direct monitor-subclass signaling is tested only by C++
+and remains outside Python parity. Other schedules and teardown orders remain
+open.
+
+Finite time value and configuration checks
+------------------------------------------
+
+The selected time-value reference compares 31 records: twenty scalar/conversion
+and mutation records, six relation outcomes in one record, nine native error
+records and one recovery record. Constructor cases include six units, numeric
+ticks above 2^63, copied values, default/explicit contexts and string units.
+Compound operators preserve native object identity for selected operands; string
+and unit failures permit a later valid parse. These finite cases do not close
+arbitrary rounding, overflow, inputs or configuration contracts.
+
+A separate fresh-kernel comparison checks time resolution/default-unit setup,
+eight rejected changes, the native maximum tick value, simulated time and
+recovery under the selected settings. Duplicate source declarations and getter
+type spellings retain distinct inventory IDs but represent the same native
+functions. Other platforms, resolutions and concurrent configuration access
+remain open.
+
+Finite free-time operator and scoped-lock checks
+------------------------------------------------
+
+The free-time operator reference compares seven overloads across basic,
+fractional and large positive values: 21 exact numeric records plus rejection of
+a time-by-time product. It checks both scalar multiplication orders, both
+division forms and unchanged operands. Native compile-time detection also
+rejects the invalid product. Zero divisors, arbitrary rounding/overflow and
+other operands remain open.
+
+Four scoped-lock records compare contention, idempotent release, destruction
+unlock and reset/kill cleanup during blocked construction. The contender
+acquires at 2 ns; blocked-constructor cleanup occurs at 4 ns and 5 ns. The Python
+lock retains its mutex owner, rejects a non-mutex argument and keeps the native
+lockable type identity. These checks cover the selected schedule; other
+lockable implementations, lifetime orders and scheduling combinations remain
+open.
+
+Finite mutex and semaphore family checks
+----------------------------------------
+
+Five required native/Python records compare constructible native interface
+probes, protected semaphore report fields, process-owned mutex/semaphore state
+transitions and concrete probe destruction. Named and default constructors are
+used on both sides; generated default names and kind strings are asserted. The mutex transitions from unlocked to
+locked and back; the semaphore count changes from one to zero and back to one.
+The report is caught and serialized while its native storage is alive.
+
+Interface probe return values exercise native C++ implementations called from
+Python; they do not establish Python virtual callback parity. Protected members
+are reached through small native subclasses. This finite scope does not close
+contention schedules, invalid counts, arbitrary report actions, interface
+destruction or whole-declaration contracts. The concrete trylock and trywait
+methods are outside this comparison. Required record labels prevent two empty
+outputs from passing the equality check.
+
+Finite naming utility checks
+----------------------------
+
+The name-generator reference requires one exact record containing independent
+generator counters, the preserve-first flag and a valid call after an empty
+base-name error. Python results remain unchanged after subsequent native calls,
+matching C++ strings copied from the generator's temporary buffer. Generator
+destruction ordering and arbitrary invalid names remain open.
+
+Five unique-name records compare counters in global scope, two module scopes
+and two process scopes. They check default/explicit flags, empty-name rejection,
+valid recovery and global counter continuity across simulation. Duplicate
+source declarations map to the same free function; they are not independent
+behaviors. Other concurrent schedules and naming environments remain open.
+
+The module-name reference requires one exact nine-value record. It compares
+construction from a live native string, copied-name conversion, nested module
+and event paths, and scope restoration after name destruction. Conversion uses
+a native helper while the borrowed name storage is alive. These selected
+lifetime orders do not establish arbitrary borrowed-string or teardown safety,
+whole-declaration contracts, or additional module/event API coverage.
+
+Finite event metadata and notification checks
+---------------------------------------------
+
+One required metadata record compares default/named event construction, full
+names and basenames, hierarchy membership, null or borrowed parent identity,
+and a copied name after event destruction. The parent module stays alive while
+the child event is inspected and destroyed. Event-list exercises present in
+the fixture are outside this finite declaration review.
+
+Two notification records compare eight callback times and three duplicate
+notify-delayed reports. The selected schedule exercises all three notify and
+notify-delayed signatures, immediate notification during elaboration, earlier
+timed notification priority, delta priority, repeated cancellation and trigger
+state during and after callbacks. It also checks destruction of pending delta
+and timed events and stable identity of the native none sentinel.
+
+The native reference and Python observer both assert the callback times
+1, 3, 5, 8, 11, 12, 15 and 17 ns. These records cover the selected schedule and
+report actions; arbitrary timing inputs, concurrent schedules, borrowed-parent
+lifetime orders, other report configurations and whole-declaration contracts
+remain open. Forward declarations retain separate source IDs without counting
+as additional behaviors.
+
+Finite event-list value and busy-state checks
+---------------------------------------------
+
+One required ten-size reference record compares OR and AND list construction,
+duplicate suppression, event/list union overloads, copies, swaps, and assignment
+through borrowed base views. The events and derived lists remain alive while
+these views are used. Derived copy construction delegates to the public native
+base copy constructor. Expression helpers used by the fixture are outside this
+finite declaration mapping; their storage must follow their documented native
+consumption rules.
+
+A separate busy-state reference compares four rejected mutations for each list
+kind, unchanged list sizes after errors, OR wakeup at 2 ns and AND wakeup at
+3 ns, and successful assignment/swap after the waiters resume. The selected
+mutations are assignment, swapping either busy operand, and busy self-swap.
+These checks preserve native report behavior under the default action policy.
+
+The two records do not close arbitrary event lifetimes, expression ownership,
+concurrent mutation, other schedules/report actions, or whole-declaration
+contracts. Duplicate operator declarations with equivalent alias/template
+return types retain separate source IDs without becoming additional behaviors.
+
+Finite hierarchy lookup checks
+------------------------------
+
+One exact required record compares present and missing object/event lookups,
+current-object selection during module construction, null current-object after
+leaving that scope, and parent identity or a null parent for a root module.
+Top-level object/event views are checked with default and explicit simulation
+contexts: they contain the live root module and root event, while excluding its
+child event. All returned objects, events and context pointers are borrowed;
+the model keeps their native owners alive throughout these checks.
+
+Python additionally checks stable context identity, rejection of invalid context
+arguments, an initially empty top-level event view, and a lookup after starting
+simulation. Those assertions are useful Python regression checks; the native
+reference does not establish parity for those extra cases. The finite category
+excludes arbitrary registry mutations, owner destruction, other contexts,
+concurrent access and whole-declaration contracts.
+
+Finite object state and native probe checks
+-------------------------------------------
+
+One required reference record compares object naming, parent/child hierarchy,
+attribute counts and formatting, with native assertions for mutable/const
+attribute lookup and collection identity. Duplicate attributes are rejected;
+missing lookup/removal returns null; remove-all restores an empty collection.
+Borrowed attribute and hierarchy pointers remain valid because their owners
+stay alive during these operations.
+
+Small native subclasses exercise protected default/named/copy construction,
+assignment identity and unchanged destination state, child/event link helpers,
+and phase-mask registration/unregistration returns. These probes retain no
+Python callbacks. Mask returns do not establish actual simulation-phase callback
+dispatch. The unsigned phase-mask typedef is checked within this selected scope.
+Print/dump output and a null trace-file call are compared; null tracing does not
+establish VCD output behavior. Deleting the tree removes its registered objects.
+
+The finite category retains open arbitrary attribute types, borrowed-pointer
+lifetimes, teardown orders, phase callbacks, non-null tracing, concurrent
+registry access and whole-declaration contracts. Supporting attribute/module
+APIs are not added to the reviewed declaration set by this comparison.
+
+Finite attribute value and collection checks
+--------------------------------------------
+
+The attribute-family reference uses int, std::string and sc_biguint<137> values
+to compare value/copy construction and retained copied names and values. The
+integer case checks that changing the original value leaves the copy unchanged.
+Default constructors are exercised on both sides; Python alone asserts their
+default values, so default-value parity remains open. These three types do not
+close arbitrary template types or copying/lifetime contracts.
+
+One required collection record checks base-name copying, null and repeated
+pointer rejection, present/missing lookup, shallow collection-copy identity,
+const iteration order, removal, remove-all and live attribute values after the
+copied collection is destroyed. Pointer and iterator typedefs are checked
+against native vector types. Collections borrow their attributes; removal and
+collection destruction do not transfer or destroy those live attributes.
+
+Python additionally checks distinct equal-name duplicates, invalid Python
+objects, mutable iteration, empty iteration and swap-with-last removal order.
+Those extra assertions are recorded as Python regression evidence rather than
+native parity. Arbitrary iterator invalidation, owner destruction, custom value
+types, concurrent mutation and whole-declaration contracts remain open.
+
+Finite hierarchical name registry checks
+----------------------------------------
+
+Three required records compare full-name and explicit-parent overloads for
+external name registration, existence, lookup and removal. Missing entries
+return false or null; first registration succeeds and its duplicate fails;
+first removal succeeds and its repetition fails. A copied Python/C++ string
+keeps the full name after unregistering the native entry. External entries
+remain distinct from object/event lookup results.
+
+The final record verifies that registered module and event names cannot be
+unregistered as external entries and that an existing event name cannot be
+registered again. The native reference constructs its event with an explicit
+full name, while Python creates it inside the module-name scope; the resulting
+registry path is equivalent. The parent module/event owners remain alive.
+
+This finite category covers eight overload declarations with the selected
+names. It leaves arbitrary naming inputs, parent destruction, other hierarchy
+contexts, concurrent registry changes and whole-declaration contracts open.
+Supporting object/event lookup and construction APIs are outside this mapping.
+
+Finite module member and reset checks
+-------------------------------------
+
+The module references compare thirteen guarded wait overload results and twelve
+next-trigger results, including callback times and timeout state, plus four
+bool/logic edge helper wakeups. Separate records check hierarchy/context,
+selected positional binding calls, sensitivity callbacks, configured stack
+size, legacy destruction and four lifecycle callbacks in native order. The
+64-argument binding signature is reviewed only for the selected calls.
+
+Eight exact active-high reset overloads compare synchronous/asynchronous
+CTHREAD restart and Python finally-cleanup timestamps for input, inout, output
+and signal-interface arguments. This does not establish reset behavior for
+other process kinds, active-low or composed resets, repeated pulses, arbitrary
+schedules, or whole-declaration contracts. Supporting port/process APIs are
+outside this module declaration mapping.
+
+Finite event-finder cache and diagnostic checks
+-----------------------------------------------
+
+The finder comparison requires nonempty records for every parity marker group.
+Selected wide, bool, logic, overloaded and inherited interface methods check
+lookup identity, cache reuse, port identity and typed finder construction.
+Reports from unbound/incompatible interfaces and native protected report probes
+are compared; the selected no-throw report policy returns the none sentinel and
+restores the previous policy. Probe lifetime evidence is scoped to its native
+destruction counter.
+
+Python-only factory argument checks and the native-only lifetime marker retain
+separate evidence. Cached finders are borrowed from their cache owner, which
+must stay alive until references are released. Cross-port cache assertion
+behavior, arbitrary signatures/interfaces/report actions and destruction orders
+remain outside this category, along with whole-declaration contracts.
+
+Finite FIFO value, trace and stream checks
+------------------------------------------
+
+The successful FIFO reference compares default/named capacities, selected
+blocking and nonblocking values, event/process records, assignment/conversion,
+formatted output and observed destruction. A 137-bit trace must declare its
+width and contain the two expected values at native timestamps 0 and 1. This
+batch does not rerun invalid-size or duplicate FIFO registration scenarios.
+
+Six stream records compare string, combined, derived and file streams, generic
+wide/custom samples and failure propagation. Chaining preserves the adjusted
+native ostream identity, insertion preserves queued values, and the emitted
+file contents match native output. Other stream types, state/exception masks,
+value types and failure paths remain open.
+
+Finite FIFO port and interface checks
+-------------------------------------
+
+The port reference exercises eight input and eight output constructor forms
+with retained parent ports, selected blocking/nonblocking transfers and event
+finders. It compares the port matrix, protected native probes, lifetime and
+value/event records, scoped port errors and a meaningful activity trace whose
+values are 0, 1 and 0 at matching native timestamps. Supporting base-port and
+trace APIs are outside this FIFO declaration mapping. Twelve port aliases are
+asserted in Python and retain metadata review; native alias parity stays open.
+
+The interface reference compares integer and 137-bit values, event callbacks
+at native time/delta coordinates, FIFO registry removal and six native
+interface destruction counters. Native implementations called through Python
+interface views do not establish Python implementations of all pure virtual
+methods. Borrowed interfaces/events and parent ports remain alive through
+consumers. Arbitrary types, iterator/pointer lifetime orders, scheduling,
+policies, repeated teardown and whole-declaration contracts remain open.

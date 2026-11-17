@@ -12,6 +12,7 @@ import sysconfig
 import shutil
 from importlib.metadata import files as _distribution_files
 from ._logging import log
+from ._bootstrap import import_cppyy
 
 # Some CPyCppyy distributions install lowercase headers although generated
 # bindings include CPyCppyy/API.h. Repair only the active environment.
@@ -39,7 +40,7 @@ if (_api_parent / "cpycppyy" / "API.h").is_file() and not _api_alias.exists():
 if (_api_alias / "API.h").is_file():
     os.environ.setdefault("CPPYY_API_PATH", str(_api_parent))
 
-import cppyy
+cppyy = import_cppyy()
 
 cppyy.add_include_path(sysconfig.get_path("include"))
 if (_api_alias / "API.h").is_file():

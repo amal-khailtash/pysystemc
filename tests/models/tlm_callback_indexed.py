@@ -69,7 +69,11 @@ payload = tlm.tlm_generic_payload()
 payload.set_address(17)
 delay = sc.sc_time(2, sc.SC_NS)
 records = []
+assert callable(initiator.get_interface) and callable(initiator.__getitem__)
 interface = initiator[0]
+direct_interface = initiator.get_interface()
+assert direct_interface == interface
+assert direct_interface.b_transport.__release_gil__
 assert interface.b_transport.__release_gil__
 phase = tlm.tlm_phase(tlm.BEGIN_REQ)
 assert interface.nb_transport_fw(payload, phase, delay) == tlm.TLM_UPDATED

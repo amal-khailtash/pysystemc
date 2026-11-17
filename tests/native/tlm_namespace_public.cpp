@@ -106,5 +106,80 @@ int sc_main(int, char**)
   if (array.size() != 5 || tlm_namespace_probe::null_slots(array) != 5) return 2;
   std::cout << "TLM_ARRAY|" << array.kind() << "|" << array.size() << "|" << tlm_namespace_probe::null_slots(array)
             << "\n";
+  static_assert(std::is_same_v<decltype(tlm::BEGIN_REQ), tlm::tlm_phase_enum>);
+  std::cout << "TLM_ENUM_MEMBER|BEGIN_REQ|tlm_phase_enum|" << static_cast<int>(tlm::BEGIN_REQ) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::BEGIN_RESP), tlm::tlm_phase_enum>);
+  std::cout << "TLM_ENUM_MEMBER|BEGIN_RESP|tlm_phase_enum|" << static_cast<int>(tlm::BEGIN_RESP) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::END_REQ), tlm::tlm_phase_enum>);
+  std::cout << "TLM_ENUM_MEMBER|END_REQ|tlm_phase_enum|" << static_cast<int>(tlm::END_REQ) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::END_RESP), tlm::tlm_phase_enum>);
+  std::cout << "TLM_ENUM_MEMBER|END_RESP|tlm_phase_enum|" << static_cast<int>(tlm::END_RESP) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_ACCEPTED), tlm::tlm_sync_enum>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_ACCEPTED|tlm_sync_enum|" << static_cast<int>(tlm::TLM_ACCEPTED) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_ADDRESS_ERROR_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_ADDRESS_ERROR_RESPONSE|tlm_response_status|"
+            << static_cast<int>(tlm::TLM_ADDRESS_ERROR_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_BIG_ENDIAN), tlm::tlm_endianness>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_BIG_ENDIAN|tlm_endianness|" << static_cast<int>(tlm::TLM_BIG_ENDIAN) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_BURST_ERROR_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_BURST_ERROR_RESPONSE|tlm_response_status|"
+            << static_cast<int>(tlm::TLM_BURST_ERROR_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_BYTE_ENABLE_ERROR_RESPONSE|tlm_response_status|"
+            << static_cast<int>(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_COMMAND_ERROR_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_COMMAND_ERROR_RESPONSE|tlm_response_status|"
+            << static_cast<int>(tlm::TLM_COMMAND_ERROR_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_COMPLETED), tlm::tlm_sync_enum>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_COMPLETED|tlm_sync_enum|" << static_cast<int>(tlm::TLM_COMPLETED) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_FULL_PAYLOAD), tlm::tlm_gp_option>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_FULL_PAYLOAD|tlm_gp_option|" << static_cast<int>(tlm::TLM_FULL_PAYLOAD) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_FULL_PAYLOAD_ACCEPTED), tlm::tlm_gp_option>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_FULL_PAYLOAD_ACCEPTED|tlm_gp_option|"
+            << static_cast<int>(tlm::TLM_FULL_PAYLOAD_ACCEPTED) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_GENERIC_ERROR_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_GENERIC_ERROR_RESPONSE|tlm_response_status|"
+            << static_cast<int>(tlm::TLM_GENERIC_ERROR_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_IGNORE_COMMAND), tlm::tlm_command>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_IGNORE_COMMAND|tlm_command|" << static_cast<int>(tlm::TLM_IGNORE_COMMAND) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_INCOMPLETE_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_INCOMPLETE_RESPONSE|tlm_response_status|"
+            << static_cast<int>(tlm::TLM_INCOMPLETE_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_INITIATOR_SOCKET), tlm::tlm_socket_category>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_INITIATOR_SOCKET|tlm_socket_category|"
+            << static_cast<int>(tlm::TLM_INITIATOR_SOCKET) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_LITTLE_ENDIAN), tlm::tlm_endianness>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_LITTLE_ENDIAN|tlm_endianness|" << static_cast<int>(tlm::TLM_LITTLE_ENDIAN) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_MIN_PAYLOAD), tlm::tlm_gp_option>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_MIN_PAYLOAD|tlm_gp_option|" << static_cast<int>(tlm::TLM_MIN_PAYLOAD) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_MULTI_INITIATOR_SOCKET), tlm::tlm_socket_category>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_MULTI_INITIATOR_SOCKET|tlm_socket_category|"
+            << static_cast<int>(tlm::TLM_MULTI_INITIATOR_SOCKET) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_MULTI_SOCKET), tlm::tlm_socket_category>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_MULTI_SOCKET|tlm_socket_category|" << static_cast<int>(tlm::TLM_MULTI_SOCKET)
+            << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_MULTI_TARGET_SOCKET), tlm::tlm_socket_category>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_MULTI_TARGET_SOCKET|tlm_socket_category|"
+            << static_cast<int>(tlm::TLM_MULTI_TARGET_SOCKET) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_OK_RESPONSE), tlm::tlm_response_status>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_OK_RESPONSE|tlm_response_status|" << static_cast<int>(tlm::TLM_OK_RESPONSE) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_READ_COMMAND), tlm::tlm_command>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_READ_COMMAND|tlm_command|" << static_cast<int>(tlm::TLM_READ_COMMAND) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_TARGET_SOCKET), tlm::tlm_socket_category>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_TARGET_SOCKET|tlm_socket_category|" << static_cast<int>(tlm::TLM_TARGET_SOCKET)
+            << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_UNKNOWN_ENDIAN), tlm::tlm_endianness>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_UNKNOWN_ENDIAN|tlm_endianness|" << static_cast<int>(tlm::TLM_UNKNOWN_ENDIAN)
+            << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_UNKNOWN_SOCKET), tlm::tlm_socket_category>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_UNKNOWN_SOCKET|tlm_socket_category|" << static_cast<int>(tlm::TLM_UNKNOWN_SOCKET)
+            << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_UPDATED), tlm::tlm_sync_enum>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_UPDATED|tlm_sync_enum|" << static_cast<int>(tlm::TLM_UPDATED) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::TLM_WRITE_COMMAND), tlm::tlm_command>);
+  std::cout << "TLM_ENUM_MEMBER|TLM_WRITE_COMMAND|tlm_command|" << static_cast<int>(tlm::TLM_WRITE_COMMAND) << "\n";
+  static_assert(std::is_same_v<decltype(tlm::UNINITIALIZED_PHASE), tlm::tlm_phase_enum>);
+  std::cout << "TLM_ENUM_MEMBER|UNINITIALIZED_PHASE|tlm_phase_enum|" << static_cast<int>(tlm::UNINITIALIZED_PHASE)
+            << "\n";
   return 0;
 }

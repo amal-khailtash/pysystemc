@@ -12,6 +12,8 @@ def _adapt_vector(native_type):
     copy = original.__overload__(f"const {native_type.__cpp_name__}&")
     assignment = native_type.__assign__
 
+    constructors = {}
+
     def construct(owner, *args, **kwargs):
         """Construct independent vector storage from native sources.
 
@@ -30,9 +32,17 @@ def _adapt_vector(native_type):
             source = args[0]
             if isinstance(source, (cppyy.gbl.sc_dt.sc_fxnum_subref_r, cppyy.gbl.sc_dt.sc_fxnum_fast_subref_r)):
                 source = cppyy.gbl.pysystemc_datatypes.range_to_vector[type(source)](source)
-            result = cppyy.gbl.pysystemc_datatypes.vector_construct[native_type, type(source)](source)
-            return copy(owner, result)
+            key = type(source)
+            call = constructors.get(key)
+            if call is None:
+                call = cppyy.gbl.pysystemc_datatypes.vector_construct[native_type, key]
+                result = copy(owner, call(source))
+                constructors[key] = call
+                return result
+            return copy(owner, call(source))
         return original(owner, *args, **kwargs)
+
+    assignments = {}
 
     def assign(owner, source):
         """Assign a native vector source and return the live target.
@@ -47,7 +57,14 @@ def _adapt_vector(native_type):
         Calls hold the GIL and never suspend or retain source references.
         """
         if hasattr(type(source), "__cpp_name__"):
-            return cppyy.gbl.pysystemc_datatypes.vector_assign[native_type, type(source)](owner, source)
+            key = type(source)
+            call = assignments.get(key)
+            if call is None:
+                call = cppyy.gbl.pysystemc_datatypes.vector_assign[native_type, key]
+                result = call(owner, source)
+                assignments[key] = call
+                return result
+            return call(owner, source)
         return assignment(owner, source)
 
     construct.__overload__ = original.__overload__

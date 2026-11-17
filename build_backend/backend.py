@@ -11,6 +11,7 @@ import csv
 import hashlib
 import base64
 import io
+import tempfile
 import uv_build
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,6 +90,45 @@ def _native():
             shutil.copy2(source / "src/sysc/kernel/sc_main_main.cpp", target)
 
 
+def _systemc_wheel_payload(source):
+    """Return a SONAME-normalized copy of the packaged SystemC library.
+
+    The installed native tree is treated as read-only. ``patchelf`` operates on
+    a temporary copy and the wheel receives the copy's bytes only after its
+    SONAME has been checked.
+
+    Args:
+        source: Installed SystemC shared library or its unversioned symlink.
+
+    Returns:
+        bytes: Library bytes with SONAME ``libsystemc.so``.
+
+    Raises:
+        FileNotFoundError: The source library does not exist.
+        RuntimeError: ``patchelf`` reports a SONAME other than the expected one.
+        subprocess.CalledProcessError: Either ``patchelf`` command fails.
+    """
+    source = Path(source)
+    if not source.is_file():
+        raise FileNotFoundError(f"SystemC library is missing: {source}")
+    with tempfile.TemporaryDirectory(prefix="pysystemc-systemc-wheel-") as directory:
+        copy = Path(directory) / "libsystemc.so"
+        # copy2 follows the unversioned install symlink and leaves its target
+        # untouched. Only this temporary file is passed to patchelf.
+        shutil.copy2(source, copy)
+        _run("patchelf", "--set-soname", "libsystemc.so", str(copy))
+        result = subprocess.run(
+            ("patchelf", "--print-soname", str(copy)),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        soname = result.stdout.strip()
+        if soname != "libsystemc.so":
+            raise RuntimeError(f"Expected packaged SystemC SONAME 'libsystemc.so', got {soname!r}")
+        return copy.read_bytes()
+
+
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build native resources and emit a platform-specific wheel with uv_build."""
     _native()
@@ -100,18 +140,21 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
         # Directory entries are ZIP structure, not installed files. Including
         # them in RECORD makes auditwheel attempt to read a directory as ELF.
         files = {name: archive.read(name) for name in archive.namelist() if not name.endswith(("/", "/RECORD"))}
+    systemc_library = NATIVE / "lib" / "libsystemc.so"
+    if not systemc_library.is_file():
+        raise FileNotFoundError(f"SystemC library is missing: {systemc_library}")
     for resource in NATIVE.rglob("*"):
         if resource.is_file():
-            # Wheels have no portable symlink installation contract. Store the
-            # SystemC payload once under the name used by runtime discovery;
-            # read_bytes follows the installation's unversioned symlink.
-            if resource.parent == NATIVE / "lib" and resource.name.startswith("libsystemc.so."):
+            # Normalize and add SystemC from a temporary copy below. Do not
+            # package either the versioned target or a duplicate symlink alias.
+            if resource.parent == NATIVE / "lib" and resource.name.startswith("libsystemc.so"):
                 continue
             # Installed CMake/pkg-config files refer to the build prefix and
             # are unnecessary for cppyy's runtime header/library discovery.
             if any(part in ("cmake", "pkgconfig") for part in resource.relative_to(NATIVE).parts):
                 continue
             files["amal/eda/systemc/_native/" + resource.relative_to(NATIVE).as_posix()] = resource.read_bytes()
+    files["amal/eda/systemc/_native/lib/libsystemc.so"] = _systemc_wheel_payload(systemc_library)
     for name in files:
         if name.endswith("/WHEEL"):
             files[name] = (

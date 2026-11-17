@@ -6,12 +6,14 @@
 namespace pysystemc_interfaces
 {
 /** @brief Invoke exact public blocking interfaces for arbitrary FIFO value types.
- * @tparam T Native default-constructible, copyable FIFO value type.
+ * @tparam T Native default-constructible, assignable, copy-constructible FIFO value type.
  * @details Channels, tags and input/output storage remain borrowed throughout
  * suspension. Callers release the GIL on entry and retain their arguments.
  * Native allocation, conversion and callback errors propagate. False completion
  * requires Python frame cleanup before the shared scheduler adapter rethrows
  * the original reset/kill exception. No kernel state is reset or duplicated.
+ * Value results follow T's native construction and assignment semantics;
+ * pointer and reference members still borrow their referents.
  */
 template <class T>
 struct guarded_tlm_fifo

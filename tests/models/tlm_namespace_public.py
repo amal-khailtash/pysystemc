@@ -78,12 +78,32 @@ for name, representative in ENUMS.items():
 FUNCTIONS = ["get_host_endianness", "host_has_little_endianness", "tlm_copyright", "tlm_release", "tlm_version"]
 for name in FUNCTIONS:
     print("TLM_FUNCTION|" + name + "|" + text(getattr(tlm, name)()))
+    try:
+        getattr(tlm, name)(0)
+    except TypeError:
+        pass
+    else:
+        raise AssertionError(f"no-argument query accepted an argument: {name}")
 for value in (tlm.TLM_UNKNOWN_ENDIAN, tlm.TLM_LITTLE_ENDIAN, tlm.TLM_BIG_ENDIAN):
+    assert isinstance(tlm.has_host_endianness(value), bool)
     print(f"TLM_HOST|{int(value)}|{int(tlm.has_host_endianness(value))}")
 expected = tlm.TLM_LITTLE_ENDIAN if sys.byteorder == "little" else tlm.TLM_BIG_ENDIAN
 assert tlm.get_host_endianness() == expected
 assert tlm.host_has_little_endianness() == (sys.byteorder == "little")
 assert tlm.has_host_endianness(expected) and not tlm.has_host_endianness(tlm.TLM_UNKNOWN_ENDIAN)
+assert isinstance(tlm.get_host_endianness(), int)
+assert isinstance(tlm.host_has_little_endianness(), bool)
+for arguments in ((), ("invalid",), (expected, expected)):
+    try:
+        tlm.has_host_endianness(*arguments)
+    except TypeError:
+        pass
+    else:
+        raise AssertionError(f"endianness query accepted invalid arguments: {arguments!r}")
+for name in ("tlm_release", "tlm_version", "tlm_copyright"):
+    captured = getattr(tlm, name)()
+    assert isinstance(captured, str)
+    assert captured == getattr(tlm, name)()
 assert str(tlm.tlm_release()) == str(tlm.tlm_version_string)
 assert str(tlm.tlm_version()) == str(tlm.tlm_version_string_2)
 assert str(tlm.tlm_copyright()) == str(tlm.tlm_copyright_string)
@@ -101,3 +121,35 @@ assert array.size() == 5 and probe.null_slots(array) == 5
 array.expand(3)
 assert array.size() == 5
 print("TLM_ARRAY|tlm_array|5|5")
+
+ENUM_MEMBERS = {
+    "tlm_command": ("TLM_IGNORE_COMMAND", "TLM_READ_COMMAND", "TLM_WRITE_COMMAND"),
+    "tlm_endianness": ("TLM_BIG_ENDIAN", "TLM_LITTLE_ENDIAN", "TLM_UNKNOWN_ENDIAN"),
+    "tlm_gp_option": ("TLM_FULL_PAYLOAD", "TLM_FULL_PAYLOAD_ACCEPTED", "TLM_MIN_PAYLOAD"),
+    "tlm_phase_enum": ("BEGIN_REQ", "BEGIN_RESP", "END_REQ", "END_RESP", "UNINITIALIZED_PHASE"),
+    "tlm_response_status": (
+        "TLM_ADDRESS_ERROR_RESPONSE",
+        "TLM_BURST_ERROR_RESPONSE",
+        "TLM_BYTE_ENABLE_ERROR_RESPONSE",
+        "TLM_COMMAND_ERROR_RESPONSE",
+        "TLM_GENERIC_ERROR_RESPONSE",
+        "TLM_INCOMPLETE_RESPONSE",
+        "TLM_OK_RESPONSE",
+    ),
+    "tlm_socket_category": (
+        "TLM_INITIATOR_SOCKET",
+        "TLM_MULTI_INITIATOR_SOCKET",
+        "TLM_MULTI_SOCKET",
+        "TLM_MULTI_TARGET_SOCKET",
+        "TLM_TARGET_SOCKET",
+        "TLM_UNKNOWN_SOCKET",
+    ),
+    "tlm_sync_enum": ("TLM_ACCEPTED", "TLM_COMPLETED", "TLM_UPDATED"),
+}
+for member, enum_name in sorted((member, name) for name, members in ENUM_MEMBERS.items() for member in members):
+    enum_type = getattr(tlm, enum_name)
+    value = getattr(tlm, member)
+    assert isinstance(value, enum_type)
+    assert isinstance(enum_type(int(value)), enum_type)
+    assert int(enum_type(int(value))) == int(value)
+    print(f"TLM_ENUM_MEMBER|{member}|{enum_name}|{int(value)}")

@@ -43,6 +43,10 @@ Run the regression suite in independent native simulation processes::
    make coverage-parallel
    make docs
 
+Coverage includes both the SystemC bindings and command-line modules.
+It measures Python statements; native API and example equivalence require
+their separate semantic tests.
+
 The coverage target prints a terminal summary and writes an HTML report to
 ``build/coverage/html/index.html``. Open that file in a browser to inspect
 coverage by module and line. Parallel coverage combines worker and simulation
@@ -50,6 +54,50 @@ subprocess data; each simulation remains isolated. See :doc:`releases` for CI
 validation, publication ordering and recovery.
 Both parallel targets default to four workers. Override the count with
 ``TEST_WORKERS``, for example ``make test-parallel TEST_WORKERS=2``.
+
+Startup measurements use fresh subprocesses and record the initial sample
+separately from ten measured repetitions::
+
+   make benchmark-startup
+   make benchmark-startup BENCHMARK_REPORT=build/startup/after.json
+   make benchmark-startup ARGS="--scenario systemc-import"
+
+The JSON report contains elapsed time, peak memory, environment metadata and
+first-use checks. Run benchmarks without coverage or concurrent tests/builds.
+Existing cppyy and operating-system caches are preserved; a fresh interpreter
+does not imply a cold filesystem cache. Compare repeated results on the same
+machine and configuration, including first-use latency as well as import time.
+
+To attribute startup costs to module imports and cppyy operations, run::
+
+   make profile-startup
+   make profile-startup ARGS="--case reflection"
+   make profile-startup ARGS="--case first-use --probe sc_biguint_257"
+
+The profiler preserves initialization order and records library loading,
+header inclusion and JIT declaration calls in fresh interpreters. Module
+durations include nested imports and must not be summed. Failed samples retain
+their output and are excluded from timing summaries. Instrumentation adds
+overhead; use the separate benchmark to assess changes in startup latency.
+
+For installed-wheel example validation, build the artifact and run::
+
+   uv build --out-dir build/installed-example-validation
+   make test-wheel-examples WHEEL_DIR=build/installed-example-validation
+
+This target stages Python examples, their support/data files and native
+references outside the checkout. It reuses the upstream and tutorial regression
+assertions in a wheel environment with four workers, checks the package import
+origin in each subprocess, verifies installed runtime source bytes against the
+checkout, and writes JUnit, logs and a JSON summary under
+``build/verification/installed``. The summary separates runnable entries from
+support modules and installed behavior from native comparisons. The existing
+``make test-wheel`` target retains the shorter console and tutorial checks.
+
+The build environment uses ``patchelf`` to normalize the packaged SystemC
+SONAME to ``libsystemc.so``. Only a temporary copy is modified; the native
+installation remains unchanged. This keeps separately linked C++ executables
+compatible with the wheel's single shared-library payload.
 
 Conditional TLM socket getters have a separate validation target::
 
@@ -62,19 +110,86 @@ ordinary test suite uses the default kernel. To reuse an existing matching
 installation, set ``PYSYSTEMC_COVARIANT_TEST_PREFIX`` to its prefix. The target
 does not replace the normal development installation.
 
+Callback initiator factories configure both ``get_interface()`` and indexed
+access when the concrete socket type exposes them. In the default Python 3.14
+configuration, both accessors are reflected for simple and multi initiator
+sockets. The missing-accessor guard therefore remains a compatibility path;
+successful transport tests in this configuration do not verify that branch.
+Construct sockets inside a live native module, bind before elaboration, and
+retain the module, sockets and callback owners while using returned interfaces.
+
 Tests verify callbacks, lifecycle, sensitivity, integer wraparound and VCD
 transitions. Upstream fork/join, report and barrier ports are compared with native
 C++ examples. Coverage measures Python code, including subprocesses, not native
 C++. Sphinx HTML is written to ``build/docs``.
 
+Exact native trace overloads can be selected with a comma-separated signature
+string or a tuple of argument-type strings. Tuple selection of the boolean
+pointer overload is checked against native trace records. Use the exact string
+signature for the typed ctypes char-pointer adapter. Invalid selectors preserve
+cppyy errors; on cppyy 3.5.0, a ``None`` selector raises ``SystemError``.
+
+``vcd_trace`` rejects a missing parent directory with ``RuntimeError`` before
+native creation. An empty trace name raises the native ``sc_report``. The pinned
+SystemC factory allocates a trace object with throwing ``new``; it has no null
+return path. Native file opening is lazy, so creation does not establish that the
+file can be written. Keep traced values alive until the context closes.
+
+Coverage obligations distinguish public inputs from private invariants.
+``sc_member_access[Element, Member]`` first reflects the native two-argument
+specialization. The spelling splitter's malformed-metadata guard is tested with
+a fabricated proxy only as a private invariant. That check does not establish
+additional public API coverage; nested native policies and live member access
+have separate native reference comparisons.
+
+Use typed member tokens for reusable vector assemblies::
+
+   token = sc.sc_member_access[Element, Member].member_type.from_member("field")
+   assembly = vector.assemble(token)
+   same_field = sc.sc_assemble_vector(vector, token)
+
+Both routes preserve native member identity, arbitrary value widths and vector
+ownership. Tokens must match the element and member signature and must be
+nonnull. Capture a runtime native pointer variable through the same typed alias::
+
+   token = sc.sc_member_access[Element, Member].member_type.from_pointer("model::selection")
+   assembly = vector.assemble(token)
+
+The adapter samples the current native variable directly and copies its value.
+Raw cppyy views still cannot be marshalled safely; passing one raises an
+actionable ``TypeError`` directing callers to symbol capture. Symbol capture
+has an independent C++ reference comparison through both assembly APIs.
+
 The synchronous reset port matches native C++. Guarded wait adapters preserve
 reset/kill unwind while Python cleanup runs; use the Python wait adapter and
 issue handle controls from running processes. See :doc:`../intro/features` for limits.
 
+Native-first loader startup
+---------------------------
+
+On Linux with glibc, cppyy startup may spend time trying a compatibility ELF
+loader before the loader matching Python. Single-threaded main-thread startup
+prefers the matching loader automatically. To disable this optimization::
+
+    PYSC_NATIVE_FIRST_LDD=0 systemc-py run model.py
+
+The optimization uses a temporary copy of the discovered ``ldd`` script and restores
+the original ``PATH`` after cppyy imports, including when import fails. It does
+not change the installed script or caches. Unsupported scripts and platforms
+use ordinary imports. It has no effect when cppyy is already imported.
+
+Imports from worker threads or with other Python threads present use ordinary
+cppyy startup. ``PYSC_NATIVE_FIRST_LDD=1`` explicitly enables the optimization
+in those cases. Native threads and threads starting during import can still
+observe the temporary process-wide ``PATH``; disable the optimization if they
+resolve executables or spawn processes concurrently. The benefit depends on
+the host's installed loader order; benchmark the target environment.
+
 Logging and startup banners
 ---------------------------
 
-Python diagnostics use Loguru and Rich; native binding diagnostics use fmt.
+Python diagnostics use Loguru and Rich; native binding diagnostics use
+standard C++ strings and C stdio.
 Debug messages are opt-in and go to stderr::
 
    PYSYSTEMC_LOG_LEVEL=DEBUG make example-hello-py
@@ -89,16 +204,34 @@ Native model output remains on its original streams.
 keep their original form.
 
 The binding exposes ``amal.eda.systemc.__version__`` and prints it before the
-kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
+kernel banner as ``systemc vVERSION — SystemC Python bindings``, with a magenta
+name, cyan version and white description. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the binding banner;
 ``SC_COPYRIGHT_MESSAGE=DISABLE`` suppresses the native SystemC banner.
 
 Native C++ source runner
 ------------------------
 
-``pysystemc-cpp`` compiles source files in the order supplied and runs their
+The synopsis is ``Usage: systemc-cpp [OPTIONS] <COMMAND>``.
+
+``systemc-cpp`` compiles source files in the order supplied and runs their
 native ``sc_main`` through the packaged startup adapter::
 
-   uv run pysystemc-cpp -I include helper.cpp model.cpp -- --cycles 20
+   uv run systemc-cpp run -I include helper.cpp model.cpp -- --cycles 20
+
+Use ``systemc-cpp help run`` for source and include options,
+``systemc-cpp help help`` for help targets, and ``systemc-cpp help version``
+for version-command information.
+
+Help, version output and argument errors are handled before loading cppyy or
+SystemC. Running the command without arguments prints help and exits successfully
+without initializing the native kernel. Help uses green headings, muted magenta
+program names and dim placeholders. Source arguments are green,
+all option names are dim cyan and include-directory placeholders are yellow in both the
+usage line and option descriptions. Command names are bright cyan. The ``Usage:`` label is blue. ``Global options``
+lists ``-h, --help`` and ``-V, --version``; version output uses a muted magenta
+program name and cyan version prefixed with ``v``. Color follows terminal detection by default. Set
+``PYSYSTEMC_COLOR=always`` or ``PYSYSTEMC_COLOR=never`` to override detection;
+``NO_COLOR`` disables automatic coloring.
 
 Each source directory is also an include directory. Arguments after ``--``
 are passed unchanged; ``argv[0]`` is the first source filename. Native return
@@ -115,8 +248,87 @@ Run ``uv run python tools/inventory_public_api.py`` to extract the modeling
 configuration, or add ``--configuration baseline`` to omit explicit dynamic-process
 and fixed-point defines. The JSON records both requested configuration and effective
 feature defines: convenience socket and PEQ headers can enable dynamic processes.
-Inheritance metadata and parameter default presence help reconcile inherited APIs
-and callable overloads. These records do not establish semantic support.
+Inheritance metadata and parameter defaults help reconcile inherited APIs
+and callable overloads. Function and template parameter ``default_argument``
+records retain source text and portable byte-range provenance when available.
+Macro spelling and expansion locations are distinguished; a macro invocation
+is not treated as its expanded expression. Unreadable or ambiguous ranges carry
+an explicit unavailable reason. Defaults produced by declaration-generating macros
+retain the initializer spelling; inherited defaults retain the original declaration
+source. These records do not establish semantic support.
+Default metadata is excluded from declaration identity keys.
+Behavioral default checks compare omitted arguments with explicit native values
+in fresh kernels. ``sc_start(duration)`` uses ``SC_RUN_TO_TIME`` and advances to
+the requested end time even when the kernel has no work; choose
+``SC_EXIT_ON_STARVATION`` explicitly to return when work runs out.
+Default ``sc_fifo[int]()`` capacity is 16. Omitted template arguments retain
+native defaults: ``sc_port[IF]`` uses capacity 1 and ``SC_ONE_OR_MORE_BOUND``;
+``sc_signal[T]`` uses the configured ``SC_DEFAULT_WRITER_POLICY``.
+For native overrides, default arguments belong to the selected declaration.
+A borrowed base proxy calls virtually using the base declaration's default;
+an explicit reflected base-method call is qualified and invokes the base
+implementation. Keep the owning derived object alive while using the base proxy.
+These checks cover selected call forms, not all overload or lifecycle contracts.
+Inherited hash constructor checks compare omitted arguments with the explicit
+``PHASH_DEFAULT_*`` values: table size 11, maximum density 5, growth factor 2.0
+and reordering enabled. A custom configuration distinguishes those values from
+other accepted settings. These checks cover constructor configuration and
+constant values; hash insertion, rehashing and callback lifetime have separate
+validation obligations.
+On cppyy 3.5.0, a constructor inherited through a native ``using`` declaration
+can lose its trailing default arguments. For a user-defined native subclass of
+``sc_phash_base``, opt in with
+``sc_core.adapt_inherited_hash_constructor(DerivedHash)`` before constructing
+instances. The adapter returns the same native class and restores omitted
+arguments using SystemC's default values when cppyy reports the known inherited
+arity error. Successful native overload selection remains unchanged, including
+other constructors defined by the subclass. Explicit overload selection and
+Python callback retention are preserved. Raw, unadapted cppyy constructors
+retain the upstream limitation; this adapter covers the inherited hash-base
+signature, not arbitrary inherited C++ constructors.
+The top-level ``sc_core`` constant comparison checks 239 declaration records
+for 238 symbols: 177 variable declarations and 62 enum constants. Two headers
+declare ``SC_ID_REGISTER_ID_FAILED_``; both identities retain the same value
+evidence. Mutable bools, the logic-value table and the bind proxy are excluded.
+Read-value parity does not verify mutation, address lifetime, enum use in every
+API, or alternate configuration contracts.
+Base-class metadata preserves spelled and desugared types, access and virtual
+inheritance flags. Compiler-local ``typeAliasDeclId`` references are omitted from
+base records so repeated compiler invocations retain comparable source metadata.
+Using declarations retain their target relationships when Clang supplies an exact
+reference. Targets represented in the extraction use canonical declaration IDs;
+filtered targets carry an explicit unresolved reason. Dependent using node kinds
+not represented by the inventory remain outside this relationship metadata.
+Relationships are source metadata and do not establish Python exposure or
+inherited access.
+Friendship is recorded separately in ``friend_relationships`` source-site records.
+Each record distinguishes the lexical class owner from namespace-level targets;
+canonical target links require exact compiler declaration references. Type-only
+friends and filtered targets retain unresolved reasons. Owner template context
+is kept separate from target template parameters. Friendship metadata does not
+establish Python visibility, argument-dependent lookup or an inherited API.
+Friends without a portable source location are excluded. Type-only dependent
+friends retain their written type without an inferred declaration link.
+``declaration_conditions`` records textual preprocessor branch histories at
+individual declaration source occurrences. Include guards and preceding
+``elif``/``else`` alternatives remain in the history. Macro invocation context
+is separate from available spelling context. Unavailable locations or malformed
+source conditions carry explicit reasons. This metadata does not evaluate
+preprocessor expressions or establish active APIs or Python support.
+
+Use ``tools/reconcile_api_inventory.py`` to combine snapshots from the same
+SystemC revision. Each declaration retains its source occurrences and
+configurations. Its ``semantic_variants`` also retain extracted access, bases,
+parameter defaults and other type metadata with the source and configuration
+that produced them. A forward declaration and its definition can differ within
+the same configuration; multiple variants do not establish incompatible behavior.
+The remaining-work report identifies families whose variants need reconciliation.
+Declaration IDs and support status are preserved when metadata variants are added.
+Friend source sites retain their own configuration variants outside declaration
+rows. ``friend_relationship_coverage`` distinguishes configurations that collected
+an empty sidecar from older snapshots that did not collect friendship metadata.
+Condition observations likewise retain independent configuration variants and
+``declaration_condition_coverage`` without changing declaration identities.
 
 To retain an audit, pass ``--reviews path/to/reviews.json``. The file is a JSON
 object keyed by the emitted declaration ``id``. IDs distinguish overloads and
@@ -130,7 +342,7 @@ Classified declarations require a rationale. Supported declarations must be
 public and supply nonempty Python spelling, ownership, GIL, errors and an evidence
 list identifying executable checks. Review validation checks the record structure;
 a reviewer must assess the cited evidence and source rationale. Unreviewed rows
-remain untested. Keep local audit records under the ignored ``.ai/`` directory.
+remain untested.
 
 The tool discovers every ``tlm_utils/*.h`` header in the selected checkout and
 records that list. ``macro_declarations`` attributes active preprocessor definitions

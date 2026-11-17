@@ -90,7 +90,8 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
         Native sc_trace_file accepted by sc_trace().
 
     Raises:
-        RuntimeError: If the kernel cannot create the trace file.
+        RuntimeError: If the trace directory does not exist.
+        sc_report: Native trace creation or setup reports.
         Exception: Exceptions from the body propagate after trace closure.
 
     Retain traced signals until the context exits. Closing a trace does not
@@ -101,8 +102,6 @@ def vcd_trace(filename: str | pathlib.Path, *, time_unit: tuple[float, Any] | No
     if not trace_path.parent.is_dir():
         raise RuntimeError(f"Cannot create VCD trace: directory does not exist: {trace_path.parent}")
     trace = sc_create_vcd_trace_file(str(filename))
-    if not trace:
-        raise RuntimeError(f"Cannot create VCD trace: {filename}")
     try:
         if time_unit is not None:
             trace.set_time_unit(*time_unit)

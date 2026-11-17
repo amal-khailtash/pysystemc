@@ -1,0 +1,117 @@
+{
+  "status": "all_current_statements_covered",
+  "tests": 1003,
+  "python": "3.14.0",
+  "runtime_hashes_matched": 113,
+  "coverage": {
+    "covered_lines": 4594,
+    "num_statements": 4594,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100",
+    "missing_lines": 0,
+    "excluded_lines": 0,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100"
+  },
+  "classified": [
+    {
+      "path": "src/amal/eda/systemc/_native_help.py",
+      "line": 154,
+      "function": "_enum_members",
+      "statement": "except TypeError:",
+      "source_sha256": "48c554e236fa611fabed9c6a89c0c332cdd4ff4f7239a4bef6fac1c7d70d5cb1",
+      "status": "covered_defensive_contract",
+      "rationale": "Explicit helper robustness: missing object dictionary yields empty enum metadata.",
+      "historical_status": "defensive_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "The supported public formatter checks readable enum metadata before calling this helper; the guard retains private error containment."
+    },
+    {
+      "path": "src/amal/eda/systemc/_native_help.py",
+      "line": 155,
+      "function": "_enum_members",
+      "statement": "return []",
+      "source_sha256": "48c554e236fa611fabed9c6a89c0c332cdd4ff4f7239a4bef6fac1c7d70d5cb1",
+      "status": "covered_defensive_contract",
+      "rationale": "Explicit helper robustness: missing object dictionary yields empty enum metadata.",
+      "historical_status": "defensive_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "Empty enum metadata fallback follows the same guarded dictionary error."
+    },
+    {
+      "path": "src/amal/eda/systemc/sc_core/_callback_pointers.py",
+      "line": 213,
+      "function": "_wrap_hash_consumer",
+      "statement": "set_hash_fn.__overload__ = native_hash_setter.__overload__",
+      "source_sha256": "5ccc59c99079c169409288d704b299025659eae5883c5f5f33932952a616b786",
+      "status": "covered_defensive_contract",
+      "rationale": "Alternate reflected C++ overload fixture verifies metadata selectors and native hash/comparator execution.",
+      "historical_status": "conditional_metadata_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "Actual native hash setter wrappers are Python functions without __overload__; a future or different reflected wrapper is needed to execute forwarding."
+    },
+    {
+      "path": "src/amal/eda/systemc/sc_core/_callback_pointers.py",
+      "line": 215,
+      "function": "_wrap_hash_consumer",
+      "statement": "set_cmpr_fn.__overload__ = native_compare_setter.__overload__",
+      "source_sha256": "5ccc59c99079c169409288d704b299025659eae5883c5f5f33932952a616b786",
+      "status": "covered_defensive_contract",
+      "rationale": "Alternate reflected C++ overload fixture verifies metadata selectors and native hash/comparator execution.",
+      "historical_status": "conditional_metadata_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "Actual native comparison setter wrappers have no __overload__; no supported current missing/alternate metadata configuration was established."
+    },
+    {
+      "path": "src/amal/eda/systemc/sc_core/_vector_policies.py",
+      "line": 164,
+      "function": "__getattr__",
+      "statement": "return getattr(self._native_alias, name)",
+      "source_sha256": "0c71433fc96e2447a08e48efc6f858be6f4331cf60ff8f35cf28dd2676ae8eff",
+      "status": "covered_defensive_contract",
+      "rationale": "Alternate reflected alias fixture verifies delegated type identity and missing-attribute propagation.",
+      "historical_status": "conditional_metadata_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "Actual sc_member_access<sc_time,int> and WideElement<137> specializations expose no member_type alias; the public adapter synthesizes its type and cannot delegate to an absent native alias."
+    },
+    {
+      "path": "src/amal/eda/systemc/sc_core/_vectors.py",
+      "line": 63,
+      "function": "_pointer_member_token",
+      "statement": "except (SyntaxError, TypeError, ValueError) as error:",
+      "source_sha256": "93e39791d3adc89c26179fc5169b917948c07133b64486d22c3d5eb1a535a157",
+      "status": "covered_defensive_contract",
+      "rationale": "Cached native getter fault-injected for each backend exception; translated cause/message, restoration and native recovery asserted.",
+      "historical_status": "defensive_cppyy_invocation_error_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "The cached zero-argument getter was compiled for the exact native pointer signature and only copies its value. This guard converts a later cppyy invocation failure; no supported way to induce that backend failure was established."
+    },
+    {
+      "path": "src/amal/eda/systemc/sc_core/_vectors.py",
+      "line": 64,
+      "function": "_pointer_member_token",
+      "statement": "raise TypeError(f\"native pointer symbol {symbol!r} is unavailable or incompatible\") from error",
+      "source_sha256": "93e39791d3adc89c26179fc5169b917948c07133b64486d22c3d5eb1a535a157",
+      "status": "covered_defensive_contract",
+      "rationale": "Cached native getter fault-injected for each backend exception; translated cause/message, restoration and native recovery asserted.",
+      "historical_status": "defensive_cppyy_invocation_error_unexercised",
+      "native_scope": "No additional supported native configuration claimed.",
+      "test": "tests/test_coverage_defensive_contracts.py",
+      "historical_rationale": "The cached zero-argument getter was compiled for the exact native pointer signature and only copies its value. This guard converts a later cppyy invocation failure; no supported way to induce that backend failure was established."
+    }
+  ],
+  "classification_scope": "Seven formerly missed statements now exercised through explicit helper/reflection/backend robustness fixtures; no additional native configurations claimed.",
+  "evidence": {
+    "build/verification/minor-release/full.xml": "103058eb1d46e3497cb44db14ead5293159812812ca54ac164fa044aeae5854b",
+    "build/verification/minor-release/coverage.json": "ee6a1e16fe2a0b97dfcc656c427614d1aa87d9b0842a9a55e79508acba073d47",
+    "build/verification/minor-release/full-coverage.log": "3548f4d876728465de2fa2669181e6c1ec3e7f0e23e22844d4b7856c47868fe8"
+  },
+  "historical_snapshot": "verification-current-coverage-before-minor-release.json",
+  "release_validation": "minor-release-validation.json"
+}

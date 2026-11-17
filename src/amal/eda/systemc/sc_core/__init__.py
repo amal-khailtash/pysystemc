@@ -19,7 +19,8 @@ import cppyy
 
 from .._logging import log
 from .._namespace import (
-    public_names as _public_names,
+    presented_names as _presented_names,
+    is_public_name as _is_public_name,
     document_member as _document_member,
     namespace_help as _namespace_help,
 )
@@ -31,6 +32,7 @@ from ._interfaces import release_interface_callbacks as release_interface_callba
 from ._interfaces import teardown_interfaces as teardown_interfaces
 from ._tracing import sc_trace as _python_sc_trace
 from ._tracing import vcd_trace as _python_vcd_trace
+from ._hashes import adapt_inherited_hash_constructor as adapt_inherited_hash_constructor
 from . import _tracing
 from ._report_policy import install_report_policy as _install_report_policy
 
@@ -164,11 +166,11 @@ for _name in ("sc_method", "sc_thread", "sc_cthread"):
 sc_core_namespace = cppyy.gbl.sc_core
 
 
-def add_sc_core_members():
+def _add_sc_core_members():
     """Populate resolvable native names while preserving Python print()."""
     module_globals = globals()
     for name in dir(sc_core_namespace):
-        if name == "print":
+        if not _is_public_name(sc_core_namespace, name):
             continue
         try:
             member = getattr(sc_core_namespace, name)
@@ -178,12 +180,11 @@ def add_sc_core_members():
 
 
 # Add all sc_core members to this module
-add_sc_core_members()
+_add_sc_core_members()
 
 # Manually add each public member of the `sc_core` namespace to the module"s globals
 for name, member in sc_core_namespace.__dict__.items():
-    # Filter out internal or irrelevant attributes
-    if not name.startswith("__"):
+    if _is_public_name(sc_core_namespace, name):
         globals()[name] = member
 
 # Publish Python helpers after namespace copying so native overloads cannot
@@ -195,6 +196,32 @@ sc_create_wif_trace_file = _tracing.sc_create_wif_trace_file
 sc_close_vcd_trace_file = _tracing.sc_close_vcd_trace_file
 sc_close_wif_trace_file = _tracing.sc_close_wif_trace_file
 sc_module = cppyy.gbl.sc_core.ScModule
+
+
+_native_sc_module_init = sc_module.__init__
+
+
+def _label_python_module(self, *args, **kwargs):
+    """Construct a native module and copy its Python class name into native storage.
+
+    Args:
+        args: Positional arguments accepted by the native module constructor.
+        kwargs: Keyword arguments accepted by the native module constructor.
+
+    Returns:
+        None after native construction and label registration succeed.
+
+    Raises:
+        Exception: Propagates native construction or label allocation failures.
+
+    The copied label is owned by the native module and retains no Python reference.
+    Call with the GIL held on the simulation thread during elaboration.
+    """
+    _native_sc_module_init(self, *args, **kwargs)
+    sc_module.set_hierarchy_type_name(self, type(self).__name__)
+
+
+sc_module.__init__ = _label_python_module
 sc_channel = sc_module
 sc_interface = cppyy.gbl.sc_core.PythonInterface
 sc_prim_channel = cppyy.gbl.sc_core.PythonPrimChannel
@@ -265,25 +292,48 @@ for _method in (
 
 
 def _assign_report(self, source):
-    """Copy source report fields into this report and return the borrowed self.
+    """Copy source report fields into this report and return the destination.
 
     Args:
         source: Live native report; self-assignment preserves values.
 
     Returns:
-        Borrowed native reference to self. Both reports retain their own fields.
+        The same Python destination proxy. The destination owns copied fields.
 
     Raises:
         TypeError: source cannot convert to a native report.
         Exception: Native copying/allocation fails.
 
     Call on the simulation thread with the GIL held; no callbacks or ownership
-    transfer. Any borrowed field views require the owning report to remain alive.
+    transfer. Assignment invalidates the destination's borrowed field views,
+    including its timestamp, even on self-assignment. Copy needed values before
+    assignment and obtain fresh views afterward. Keep each view's owner alive.
     """
-    return cppyy.gbl.pysystemc.report_assign(self, source)
+    cppyy.gbl.pysystemc.report_assign(self, source)
+    return self
 
 
 cppyy.gbl.sc_core.sc_report.__assign__ = _assign_report
+
+_native_report_getattribute = cppyy.gbl.sc_core.sc_report.__getattribute__
+
+
+def _report_getattribute(self, name):
+    """Bind the report copy adapter for the familiar instance spelling.
+
+    cppyy resolves ``__assign__`` through its native assignment special method
+    on instances, even when the class attribute has been replaced. Intercept
+    only that spelling so it uses the same native copy bridge and returns the
+    exact destination proxy. The type-local hook adds one name comparison per
+    report attribute access; every other name immediately delegates to cppyy's
+    original lookup, including native exception metadata.
+    """
+    if name == "__assign__":
+        return _assign_report.__get__(self, type(self))
+    return _native_report_getattribute(self, name)
+
+
+cppyy.gbl.sc_core.sc_report.__getattribute__ = _report_getattribute
 
 
 def _report(severity, message_type, message, *args):
@@ -651,13 +701,8 @@ def read_interface(value_type: Any, name: str, callback: Callable[[], Any]) -> A
     return channel
 
 
-def _read_resolved(self: Any) -> Any:
-    """Return a copy of native resolved logic after the channel update phase."""
-    return cppyy.gbl.sc_core.python_read_resolved(self)
-
-
-if not hasattr(cppyy.gbl.sc_core.sc_signal_resolved, "read"):
-    cppyy.gbl.sc_core.sc_signal_resolved.read = _read_resolved
+# sc_signal_resolved inherits the public native virtual read() from sc_signal_t.
+# Require that native API rather than installing a speculative reflection fallback.
 
 
 def _time_modulo(self: Any, other: Any) -> Any:
@@ -673,15 +718,18 @@ _install_time(cppyy.gbl.sc_core.sc_time)
 
 
 def __getattr__(name):
-    """Resolve a native kernel name or raise AttributeError."""
+    """Resolve a presented native kernel name or raise AttributeError."""
+    if not _is_public_name(cppyy.gbl.sc_core, name):
+        raise AttributeError(name)
     mod = _document_member(getattr(cppyy.gbl.sc_core, name))
     return mod
 
 
 # Define a custom __dir__ for listing available attributes
 def __dir__():
-    """List Python adapters and resolvable native kernel API names."""
-    return sorted(set(globals()) | set(_public_names(cppyy.gbl.sc_core)))
+    """List eligible Python adapters, metadata, and native kernel API names."""
+    module_names = {name for name in globals() if name.startswith("_") or _is_public_name(cppyy.gbl.sc_core, name)}
+    return sorted(module_names | set(_presented_names(globals(), cppyy.gbl.sc_core, adapters=_PYTHON_ADAPTERS)))
 
 
 def sc_argv() -> tuple[str, ...]:
@@ -1018,6 +1066,7 @@ def set_report_handler(callback: Callable[[Any, int], None] | None = None) -> No
 
 
 _native_next_trigger = cppyy.gbl.sc_core.next_trigger
+_python_next_trigger = cppyy.gbl.sc_core.python_next_trigger
 _next_trigger_adapters = {}
 
 
@@ -1026,8 +1075,9 @@ def next_trigger(*args: Any) -> Any:
 
     Args:
         *args: Native next_trigger time/event arguments. Expressions are consumed
-            once; referenced events must outlive the scheduled invocation. An
-            optional native simulation context follows the sensitivity arguments.
+            once by the native adapter after it establishes list ownership;
+            referenced events must outlive the scheduled invocation. An optional
+            native simulation context follows the sensitivity arguments.
 
     Returns:
         None after configuring the next method invocation.
@@ -1041,12 +1091,17 @@ def next_trigger(*args: Any) -> Any:
     if args and isinstance(args[-1], native.sc_simcontext):
         context, args = args[-1], args[:-1]
     types, values = [], []
+    has_expression = False
     for index, value in enumerate(args):
-        for list_type in (native.sc_event_or_list, native.sc_event_and_list):
-            if isinstance(value, native.sc_event_expr[list_type]):
-                value = value.release()
+        expression_name = None
+        for list_type, expression_type in _wait_expression_types:
+            if isinstance(value, expression_type):
+                expression_name = f"sc_core::sc_event_expr<{list_type.__cpp_name__}>"
+                has_expression = True
                 break
-        if index == 0 and isinstance(value, (int, float)):
+        if expression_name is not None:
+            name = f"const {expression_name}&"
+        elif index == 0 and isinstance(value, (int, float)):
             name = "double"
         elif index == 1 and types[0] == "double":
             name = "sc_core::sc_time_unit"
@@ -1062,7 +1117,8 @@ def next_trigger(*args: Any) -> Any:
     signature = ", ".join((*types, "sc_core::sc_simcontext*"))
     operation = _next_trigger_adapters.get(signature)
     if operation is None:
-        operation = _native_next_trigger.__overload__(signature)
+        source = _python_next_trigger if has_expression else _native_next_trigger
+        operation = source.__overload__(signature)
         _next_trigger_adapters[signature] = operation
     return operation(*values, context)
 
@@ -1152,6 +1208,15 @@ class _ProcessUnwind(BaseException):
     """Private signal that unwinds Python frames before native reset or kill."""
 
 
+_wait_expression_types = tuple(
+    (list_type, cppyy.gbl.sc_core.sc_event_expr[list_type])
+    for list_type in (cppyy.gbl.sc_core.sc_event_or_list, cppyy.gbl.sc_core.sc_event_and_list)
+)
+_wait_expression_adapters = {}
+_wait_list_adapters = {}
+_wait_cycle_adapter = None
+
+
 def wait(*args: Any) -> None:
     """Suspend a native thread with cycle, time, event or event-list sensitivity.
 
@@ -1171,14 +1236,76 @@ def wait(*args: Any) -> None:
     wait during unwind cleanup. Events and sensitivity targets must outlive waits.
     Blocking scheduler calls release the GIL.
     """
+    global _wait_cycle_adapter
+
     native = cppyy.gbl.sc_core
     operation = native.python_wait
+    has_expression = False
+    for index, value in enumerate(args):
+        for list_type, expression_type in _wait_expression_types:
+            if isinstance(value, expression_type):
+                has_expression = True
+                break
+        if has_expression:
+            break
+
+    if has_expression:
+        values = list(args)
+        context = native.sc_get_curr_simcontext()
+        if values and isinstance(values[-1], native.sc_simcontext):
+            context = values.pop()
+        types = []
+        for index, value in enumerate(values):
+            expression_name = None
+            for list_type, expression_type in _wait_expression_types:
+                if isinstance(value, expression_type):
+                    expression_name = f"sc_core::sc_event_expr<{list_type.__cpp_name__}>"
+                    break
+            if expression_name is not None:
+                name = f"const {expression_name}&"
+            elif index == 0 and isinstance(value, (int, float)):
+                # Expression timed waits use the native value/unit overload;
+                # integer cycle waits have no expression-list form.
+                name = "double"
+            elif index == 1 and isinstance(values[0], (int, float)):
+                name = "sc_core::sc_time_unit"
+            else:
+                for argument_type in (
+                    native.sc_time,
+                    native.sc_event,
+                    native.sc_event_or_list,
+                    native.sc_event_and_list,
+                ):
+                    if isinstance(value, argument_type):
+                        name = f"const {argument_type.__cpp_name__}&"
+                        break
+                else:
+                    raise TypeError("wait requires native time/event arguments or a numeric duration")
+            types.append(name)
+        signature = ", ".join((*types, "sc_core::sc_simcontext*"))
+        cached_operation = _wait_expression_adapters.get(signature)
+        if cached_operation is None:
+            cached_operation = operation.__overload__(signature)
+            _wait_expression_adapters[signature] = cached_operation
+        operation = cached_operation
+        operation.__release_gil__ = True
+        if not operation(*values, context):
+            raise _ProcessUnwind()
+        return
+
     # A native diagnostic must not retry a different wait and enter the kernel.
     if args and isinstance(args[0], int) and (len(args) == 1 or isinstance(args[1], native.sc_simcontext)):
-        operation = operation.__overload__("int, sc_core::sc_simcontext*")
+        if _wait_cycle_adapter is None:
+            _wait_cycle_adapter = operation.__overload__("int, sc_core::sc_simcontext*")
+        operation = _wait_cycle_adapter
     elif args and isinstance(args[0], (native.sc_event_or_list, native.sc_event_and_list)):
         name = type(args[0]).__cpp_name__
-        operation = operation.__overload__(f"const {name}&, sc_core::sc_simcontext*")
+        signature = f"const {name}&, sc_core::sc_simcontext*"
+        cached_operation = _wait_list_adapters.get(signature)
+        if cached_operation is None:
+            cached_operation = operation.__overload__(signature)
+            _wait_list_adapters[signature] = cached_operation
+        operation = cached_operation
     operation.__release_gil__ = True
     if not operation(*args):
         raise _ProcessUnwind()
@@ -1281,42 +1408,43 @@ sc_cref = _python_sc_cref
 sc_assemble_vector = _assemble_vector
 sc_member_access = _MemberAccessTemplate()
 
-__all__ = sorted(
-    set(_public_names(cppyy.gbl.sc_core))
-    | {
-        "CFT",
-        "sc_plist_map_fn",
-        "sc_report_handler_proc",
-        "ScStatus",
-        "sc_status",
-        "sc_status_type",
-        "sc_trace",
-        "sc_spawn",
-        "sc_bind",
-        "sc_placeholder",
-        "sc_trace_value",
-        "sc_signal_value",
-        "sc_port_value",
-        "sc_assemble_vector",
-        "sc_member_access",
-        "wait",
-        "native_blocking_call",
-        "set_report_handler",
-        "sc_elab_and_sim",
-        "sc_stop",
-        "vcd_trace",
-        "interface",
-        "release_interface_callbacks",
-        "teardown_interfaces",
-        "declare_interface",
-        "channel_interface",
-        "read_interface",
-        "signal_channel",
-        "fifo_channel",
-    }
+_PYTHON_ADAPTERS = (
+    "CFT",
+    "sc_plist_map_fn",
+    "sc_report_handler_proc",
+    "ScStatus",
+    "ScModule",
+    "sc_module",
+    "sc_status",
+    "sc_status_type",
+    "sc_trace",
+    "sc_spawn",
+    "sc_bind",
+    "sc_placeholder",
+    "sc_trace_value",
+    "sc_signal_value",
+    "sc_port_value",
+    "sc_assemble_vector",
+    "sc_member_access",
+    "wait",
+    "native_blocking_call",
+    "set_report_handler",
+    "sc_elab_and_sim",
+    "sc_stop",
+    "vcd_trace",
+    "interface",
+    "release_interface_callbacks",
+    "teardown_interfaces",
+    "declare_interface",
+    "channel_interface",
+    "read_interface",
+    "signal_channel",
+    "fifo_channel",
 )
-
-__doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)
 
 _install_kernel_flags(sys.modules[__name__])
 _install_member_scheduler(sc_module, sc_prim_channel, _ProcessUnwind)
+
+# Publish only reviewed native names and explicit Python-facing adapters.
+__all__ = _presented_names(globals(), cppyy.gbl.sc_core, adapters=_PYTHON_ADAPTERS)
+__doc__ = _namespace_help(globals(), cppyy.gbl.sc_core)

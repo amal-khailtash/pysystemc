@@ -1,0 +1,35 @@
+{
+  "status": "running",
+  "target_version": "1.1.0",
+  "account": "amal-khailtash",
+  "gates": {
+    "dependencies": {
+      "status": "passed",
+      "detail": "uv lock --upgrade and uv sync --locked: 13 packages updated; Python 3.14 retained. Commit 1caaca5."
+    },
+    "seven_misses": {
+      "status": "passed",
+      "detail": "All seven former misses executed and reconciled; explicit helper/reflection/backend robustness scope retained."
+    },
+    "full_suite_coverage": {
+      "status": "passed",
+      "detail": "1,003/1,003 passed; no failures/errors/skips. 4594/4594 Python statements covered; zero exclusions or misses; 113 frozen runtime hashes unchanged."
+    },
+    "fresh_distributions": {
+      "status": "passed",
+      "detail": "Fresh uv_build candidate wheel/sdist built with current 1.0.0 metadata; 113/113 tracked runtime files match both archives. Final 1.1.0 artifacts will be built by Publish."
+    },
+    "installed_examples": {
+      "status": "passed",
+      "detail": "43/43 selected comparators; no failures/errors/skips; exact node set, Python/native equivalence and 113/113 installed runtime hashes accepted. Wheel pthread/resource check passed."
+    },
+    "feature_and_release_prs": {
+      "status": "pending",
+      "detail": "Feature feat: PR, required CI and Release Please metadata PR for minor 1.1.0; matching versions and changelog."
+    },
+    "publication": {
+      "status": "pending",
+      "detail": "Trusted PyPI publication, hash verification, final GitHub release and documentation."
+    }
+  }
+}

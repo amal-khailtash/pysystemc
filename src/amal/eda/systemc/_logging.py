@@ -50,8 +50,10 @@ def show_banner(version: str) -> None:
     """Print the version before native startup unless PYSC_COPYRIGHT_MESSAGE=DISABLE."""
     if os.environ.get("PYSC_COPYRIGHT_MESSAGE") == "DISABLE":
         return
-    _console().print(
-        Text(f"pysystemc {version} — SystemC Python bindings\nCopyright (c) 2026 Amal Khailtash", style="cyan"),
-        soft_wrap=True,
-    )
+    banner = Text()
+    banner.append("systemc", style="magenta")
+    banner.append(" ")
+    banner.append(f"v{version}", style="cyan")
+    banner.append(" — SystemC Python bindings\nCopyright (c) 2026 Amal Khailtash", style="white")
+    _console().print(banner, soft_wrap=True)
     sys.stderr.flush()

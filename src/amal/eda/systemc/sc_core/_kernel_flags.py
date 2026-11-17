@@ -8,7 +8,25 @@ _FLAGS = frozenset(("sc_enable_name_checking", "sc_allow_process_control_corners
 
 
 class _KernelModule(ModuleType):
-    """Route supported boolean flag assignments to native kernel storage."""
+    """Read and assign supported boolean flags through native kernel storage."""
+
+    def __getattribute__(self, name):
+        """Read native flags live while preserving ordinary module lookup.
+
+        Args:
+            name: Module member name.
+
+        Returns:
+            Current native bool for a kernel flag; otherwise the ordinary module
+            member.
+
+        Native flag reads hold the GIL and must occur on the simulation thread.
+        They do not advance the kernel. ``from module import flag`` evaluates
+        this once and retains an independent Python bool snapshot.
+        """
+        if name in _FLAGS:
+            return getattr(cppyy.gbl.sc_core, name)
+        return super().__getattribute__(name)
 
     def __setattr__(self, name, value):
         """Assign native flags synchronously, retaining ordinary module attributes.

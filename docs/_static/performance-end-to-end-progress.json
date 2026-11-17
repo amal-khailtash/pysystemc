@@ -1,0 +1,53 @@
+{
+  "schema": "pysystemc-end-to-end-progress-v1",
+  "status": "complete",
+  "baseline_commit": "291d569cc6bf396bed2f89c019adb9452d2b9580",
+  "current_commit": "fc53a971a6d6db0c01db5986affa4ae1d8953212",
+  "pairs_per_workload": 10,
+  "cycles": 20000,
+  "transfers": 20000,
+  "subprocess_timeout_seconds": 60,
+  "measurement_deadline_seconds": 1800,
+  "no_resampling": true,
+  "tracking": "VCD off; coverage off; profiling off; recorder and validation outside phase timing",
+  "gates": {
+    "contract": {
+      "status": "passed"
+    },
+    "equivalence": {
+      "status": "passed",
+      "checks": "Baseline/current and native reference behavior match; source imports guarded; native library identical."
+    },
+    "import": {
+      "status": "passed",
+      "pairs_completed": 10,
+      "pairs_total": 10
+    },
+    "event_signal": {
+      "status": "passed",
+      "pairs_completed": 10,
+      "pairs_total": 10
+    },
+    "tlm_transport": {
+      "status": "passed",
+      "pairs_completed": 10,
+      "pairs_total": 10
+    },
+    "report": {
+      "status": "passed",
+      "report": "docs/_static/performance-end-to-end.json"
+    },
+    "validation_commit": {
+      "status": "passed",
+      "checks": "Independent source/log/behavior/statistics acceptance, strict Sphinx, lint and diff checks passed; final results and tracker committed together."
+    }
+  },
+  "completed_measurement_pairs": 30,
+  "total_measurement_pairs": 30,
+  "stop_rule": "One fixed round. Stop on timeout or behavior mismatch; publish failures. No optimization or extra workload.",
+  "measurement_elapsed_seconds": 590.5871817134321,
+  "retained_preparation_issues": [
+    "Initial recorder five-minute timeout; all 30 completed samples retained, original 30-minute deadline preserved.",
+    "Initial strict docs check lacked progress-page navigation entry; added to development index and strict build passed."
+  ]
+}

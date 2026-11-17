@@ -10,6 +10,8 @@ _native_fmt = _type.fmt
 
 def _argument(value):
     """Select explicit native formatting types without parsing format strings."""
+    if isinstance(value, bytes):
+        raise TypeError("printf bytes arguments require str or native std::string")
     if isinstance(value, str):
         return cppyy.gbl.std.string, cppyy.gbl.std.string(value)
     if type(value) is int:
@@ -31,6 +33,8 @@ def _format(format, *args):
         sc_string_old: Independent native string storage.
     Raises:
         TypeError: Argument conversion or template instantiation fails.
+            Python bytes arguments require explicit conversion to str or a
+            native std::string before formatting.
         Native exception: Native allocation or a configured report throws.
     Matching formats and argument types are native preconditions. Calls hold
     the GIL, never suspend, and retain no argument references or callbacks.
@@ -45,11 +49,14 @@ def _fmt(owner, value):
     """Apply one native format argument and return the live string.
 
     Args:
-        value: Matching native printf value, with the same type rules as to_string.
+        value: Matching native printf value, with the same type rules as
+            sc_string_old.to_string.
     Returns:
         sc_string_old: The mutated owner.
     Raises:
         TypeError: Native argument conversion fails.
+            Python bytes arguments require explicit conversion to str or a
+            native std::string before formatting.
         Native exception: Native allocation or configured reporting throws.
     Native format/type preconditions apply. The GIL stays held and no source
     references or callbacks are retained beyond the call.
@@ -69,6 +76,7 @@ def _setitem(owner, index, value):
     Raises:
         Native exception: Native allocation or configured reporting throws.
         TypeError: Index or character conversion fails.
+        ValueError: The character argument is not exactly one character.
     Valid bounds are a native precondition. Calls hold the GIL and retain no
     references or callbacks.
     """

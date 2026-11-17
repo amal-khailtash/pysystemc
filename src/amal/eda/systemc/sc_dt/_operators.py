@@ -58,6 +58,8 @@ def _complement(native_type):
 def _scalar_bit_operator(operation, reverse=False):
     """Select native bit/logic expressions with exact scalar operand types."""
 
+    dispatches = {}
+
     def apply(owner, other):
         """Return a native bit/logic value or comparison boolean.
 
@@ -76,8 +78,13 @@ def _scalar_bit_operator(operation, reverse=False):
         left, right = (other, owner) if reverse else (owner, other)
         left_type = "char" if type(left) is str else _native_argument_type(left)
         right_type = "char" if type(right) is str else _native_argument_type(right)
-        adapter = cppyy.gbl.pysystemc_datatypes.binary_operator[left_type, right_type]
-        return getattr(adapter, operation)(left, right)
+        key = (left_type, right_type)
+        native = dispatches.get(key)
+        if native is None:
+            adapter = cppyy.gbl.pysystemc_datatypes.binary_operator[key]
+            native = getattr(adapter, operation)
+            dispatches[key] = native
+        return native(left, right)
 
     return apply
 

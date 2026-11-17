@@ -1,0 +1,101 @@
+{
+  "status": "accepted_source_review_and_existing_selected_tests",
+  "source_review_entries_before": 111,
+  "source_review_entries_after": 113,
+  "packaged_runtime_paths": 113,
+  "missing_review_entries": 0,
+  "newly_reviewed_sources": [
+    {
+      "path": "src/amal/eda/systemc/_bootstrap.py",
+      "status": "reviewed but unverified",
+      "scope": "Native-first loader source review; selected Linux/glibc import, environment restoration and fallback tests",
+      "selected_testcases": [
+        "test_bootstrap_restores_path_and_resources[None-False-None]",
+        "test_bootstrap_restores_path_and_resources[None-False-]",
+        "test_bootstrap_restores_path_and_resources[None-False-/original/bin]",
+        "test_bootstrap_restores_path_and_resources[None-True-None]",
+        "test_bootstrap_restores_path_and_resources[None-True-]",
+        "test_bootstrap_restores_path_and_resources[None-True-/original/bin]",
+        "test_bootstrap_restores_path_and_resources[1-False-None]",
+        "test_bootstrap_restores_path_and_resources[1-False-]",
+        "test_bootstrap_restores_path_and_resources[1-False-/original/bin]",
+        "test_bootstrap_restores_path_and_resources[1-True-None]",
+        "test_bootstrap_restores_path_and_resources[1-True-]",
+        "test_bootstrap_restores_path_and_resources[1-True-/original/bin]",
+        "test_bootstrap_falls_back[disabled]",
+        "test_bootstrap_falls_back[platform]",
+        "test_bootstrap_falls_back[unrecognized]",
+        "test_bootstrap_falls_back[unsafe]",
+        "test_bootstrap_falls_back[preparation]",
+        "test_default_thread_conditions_fall_back[worker]",
+        "test_default_thread_conditions_fall_back[multiple]",
+        "test_already_imported_cppyy_bypasses_loader_preparation",
+        "test_bad_rtld_lists_report_and_fall_back[non-ascii]",
+        "test_bad_rtld_lists_report_and_fall_back[empty]",
+        "test_missing_ldd_reports_and_falls_back",
+        "test_elf_class_rejects_malformed_headers[short-header]",
+        "test_elf_class_rejects_malformed_headers[non-elf]",
+        "test_elf_class_rejects_malformed_headers[unsupported-class]",
+        "test_elf_class_reports_unreadable_file",
+        "test_unreadable_optional_loader_is_retained",
+        "test_unusable_or_unneeded_ordering_falls_back[no-matching]",
+        "test_unusable_or_unneeded_ordering_falls_back[already-native]",
+        "test_temp_directory_creation_failure_falls_back",
+        "test_cleanup_oserror_does_not_mask_cppyy_import_error"
+      ],
+      "remaining": "Process-wide PATH can be observed by concurrent native or newly starting threads. Arbitrary import/finalization/filesystem races and other platform/layout configurations are not certified.",
+      "source_sha256": "0d42b3350c5e4887952b70a8e4c590ddbad31f139f44685fa3ca0d5a182d900f",
+      "evidence": [
+        "docs/_static/runtime-source-review-completion.json",
+        "build/verification/remaining-runtime-source-review/report.md",
+        "build/verification/remaining-closeout/full-suite.xml"
+      ]
+    },
+    {
+      "path": "src/amal/eda/systemc/sc_core/event_list_registration.h",
+      "status": "reviewed but unverified",
+      "scope": "Protected-member access and unpublished event-list registration rollback ownership review",
+      "selected_testcases": [
+        "test_event_registration_rollback[method-or-timed-partial]",
+        "test_event_registration_rollback[thread-or-untimed-full]",
+        "test_event_registration_rollback[thread-or-timed-full]",
+        "test_event_registration_rollback[thread-and-untimed-full]",
+        "test_event_registration_rollback[thread-and-timed-full]",
+        "test_event_registration_rollback[cthread-or-untimed-full]",
+        "test_event_registration_rollback[cthread-or-timed-full]",
+        "test_event_registration_rollback[cthread-and-untimed-full]",
+        "test_event_registration_rollback[cthread-and-timed-full]",
+        "test_event_registration_rollback[method-or-untimed-full]",
+        "test_event_registration_rollback[method-or-timed-full]",
+        "test_event_registration_rollback[method-and-untimed-full]",
+        "test_event_registration_rollback[method-and-timed-full]",
+        "test_event_registration_rollback[cthread-and-timed-partial]"
+      ],
+      "remaining": "Tests inject bad_alloc after real registration and cover two partial states; they do not certify genuine allocator exhaustion, queue corruption, arbitrary cross-thread kernel use or every unwind state.",
+      "source_sha256": "27de57d2a2d9ab00e54e155471524a6fc071cdd31056f06e8d977fb6b980b892",
+      "evidence": [
+        "docs/_static/runtime-source-review-completion.json",
+        "build/verification/remaining-runtime-source-review/report.md",
+        "build/verification/remaining-closeout/full-suite.xml"
+      ]
+    }
+  ],
+  "whole_api_statuses_changed": false,
+  "regression_evidence": "build/verification/finish-line/full/results.xml",
+  "regression_testcases": 997,
+  "default_loader_evidence_note": "Legacy native_tests=29 field describes 29 focused cases:20 unit and9 native scopes; retained original artifact not reclassified as29native comparisons",
+  "historical_regression": {
+    "testcases": 996,
+    "evidence": "build/verification/remaining-closeout/full-suite.xml"
+  },
+  "subsequent_source_refresh": {
+    "path": "src/amal/eda/systemc/sc_core/sc_module.cpp",
+    "sha256": "3d115d4eabdec57b1127563b9c5db811b503e6a9e0808991697ddef34340f629",
+    "change_commit": "2b16429",
+    "scope": "Method self-kill pending Python error correction; GIL-held clear before native unwind restoration. Selected lifecycle regression and installed cases accepted; broader whole-API statuses unchanged.",
+    "evidence": [
+      "docs/_static/verification-method-unwind.json",
+      "docs/_static/verification-finish-line.json"
+    ]
+  }
+}

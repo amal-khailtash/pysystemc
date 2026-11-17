@@ -7,7 +7,8 @@ overflow policies are the native sc_dt enums, not Python substitutes.
 import cppyy
 
 from .._namespace import (
-    public_names as _public_names,
+    is_public_name as _is_public_name,
+    presented_names as _presented_names,
     document_member as _document_member,
     namespace_help as _namespace_help,
 )
@@ -34,6 +35,8 @@ sc_fxtype_context = sc_context[_namespace.sc_fxtype_params]
 sc_fxcast_context = sc_context[_namespace.sc_fxcast_switch]
 sc_length_context = sc_context[_namespace.sc_length_param]
 _native_to_string = _namespace.to_string
+# Keep resolved cppyy enum callables for the sc_dt module lifetime.
+_enum_string_dispatches = {}
 
 
 def to_string(value):
@@ -59,7 +62,11 @@ def to_string(value):
         "sc_dt::sc_o_mode",
         "sc_dt::sc_switch",
     }:
-        return str(cppyy.gbl.pysystemc_datatypes.enum_string[enum_type](value))
+        operation = _enum_string_dispatches.get(enum_type)
+        if operation is None:
+            operation = cppyy.gbl.pysystemc_datatypes.enum_string[enum_type]
+            _enum_string_dispatches[enum_type] = operation
+        return str(operation(value))
     return _native_to_string(value)
 
 
@@ -137,7 +144,22 @@ sc_fxnum, sc_fxnum_fast = _fxnum_owners.install()
 for _function_name in ("add", "sub", "mult", "div"):
     globals()[_function_name] = _numeric_operators.named_function(_function_name)
 
-__all__ = _public_names(_namespace)
+_PYTHON_ADAPTERS = (
+    "concat",
+    "sc_context",
+    "sc_fxtype_context",
+    "sc_fxcast_context",
+    "sc_length_context",
+    "to_string",
+    "sc_fxnum",
+    "sc_fxnum_fast",
+    "add",
+    "sub",
+    "mult",
+    "div",
+)
+
+__all__ = _presented_names(globals(), _namespace, adapters=_PYTHON_ADAPTERS)
 
 
 def __getattr__(name):
@@ -145,7 +167,7 @@ def __getattr__(name):
 
     Raises AttributeError for names absent from the native sc_dt namespace.
     """
-    if name.startswith("_"):
+    if not _is_public_name(_namespace, name):
         raise AttributeError(name)
     member = _document_member(getattr(_namespace, name))
     globals()[name] = member
@@ -154,7 +176,8 @@ def __getattr__(name):
 
 def __dir__():
     """List Python exports and discoverable native sc_dt members."""
-    return sorted(set(globals()) | set(_public_names(_namespace)))
+    module_names = {name for name in globals() if name.startswith("_") or _is_public_name(_namespace, name)}
+    return sorted(module_names | set(_presented_names(globals(), _namespace, adapters=_PYTHON_ADAPTERS)))
 
 
 __doc__ = _namespace_help(globals(), _namespace)

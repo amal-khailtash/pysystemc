@@ -155,7 +155,11 @@ pass-through availability does not by itself establish tested support.
 ``sc_report``
    Copy a borrowed callback report before retaining it. Copies own their message,
    file, process name and timestamp. ``__assign__(source)`` copies fields into
-   an existing report; ``swap(other)`` exchanges them. ``valid()`` reflects native
+   an existing report and returns the original destination proxy, through either
+   ``destination.__assign__(source)`` or the explicit class spelling. Assignment
+   replaces borrowed field views, including the timestamp, even on self-assignment;
+   reacquire them afterward. ``swap(other)`` exchanges report fields and their
+   timestamp ownership. ``valid()`` reflects native
    process-name context and can be false for populated reports outside a process.
    Legacy static methods ``register_id``, ``get_message``, ``is_suppressed``,
    ``suppress_id``, ``suppress_infos``, ``suppress_warnings`` and
@@ -292,7 +296,9 @@ retention requirements.
 
 Pass a ``CFT`` value to ``sc_pvector.sort`` or a ``sc_plist_map_fn`` value to
 ``sc_plist.mapcar``. Vector comparators receive pointer-slot addresses; list
-mappers receive borrowed payload/context pointers. A comparator's
+mappers receive borrowed payload/context pointers. Sorting an empty vector
+validates the comparator and returns without invoking it. Null native comparators
+and non-callable Python comparators are still rejected. A comparator's
 ``create_queue(sc_ppq[T], size)`` method returns a Python-owned native queue
 that borrows pointees and the selected native comparator code. Null values
 raise ``ValueError`` in these adapter consumers. Report-handler values work
@@ -580,13 +586,33 @@ waiter has exited. Register threads before they terminate: adding an already
 terminated handle leaves its join count pending. Method handles are rejected by
 the native join report.
 
+Module hierarchy
+----------------
+
+``print_hierarchy(all_modules=False)`` prints the current design's module tree.
+Rows show Python model class names or readable native module types and full
+instance names, with indentation for nested modules. Generated dispatcher and
+anonymous-namespace prefixes are omitted. Blank lines surround the design tree.
+Channels and other non-module objects are omitted. The
+native type prefix ``cynw::`` is filtered by default; pass ``all_modules=True``
+to include those modules.
+
+Include ``hierarchy.h`` and call ``print_hierarchy()`` directly from C++.
+The same overloads are also available as ``pysystemc_public::print_hierarchy``.
+The Python wrapper writes the native formatted
+result through Python's output stream, so ``contextlib.redirect_stdout`` works.
+``print_module_hierarchy(obj, level=0, all_modules=False)`` prints a single
+module subtree. Call from elaboration or a paused simulation on the simulation
+thread while the inspected objects remain alive.
+
 Diagnostics
 -----------
 
 ``PYSYSTEMC_LOG_LEVEL=DEBUG`` enables binding diagnostics. Color follows
 ``PYSYSTEMC_COLOR=auto/always/never``. Explicit ``always`` overrides ``NO_COLOR``;
-automatic mode honors it. Native messages use fmt; Python messages use Loguru
-and Rich without changing application logging sinks.
+automatic mode honors it. Native messages use standard C++ strings and C
+stdio; Python messages use Loguru and Rich without changing application
+logging sinks.
 
 The package exposes ``__version__`` from installed metadata and prints it before
 the native kernel banner. ``PYSC_COPYRIGHT_MESSAGE=DISABLE`` suppresses only the
@@ -982,8 +1008,25 @@ Creator failures propagate and native partial initialization deletes elements
 already created; initialization can then be retried under native elaboration rules.
 
 ``vector.assemble("port")`` and ``sc_assemble_vector(vector, "port")`` construct
-native member pointers for public data members. Native member-pointer arguments
-also remain accepted. Assemblies retain their known Python vector owner across
+native member pointers for public data members. For a reusable typed pointer value,
+select ``sc_member_access[Element, Member].member_type`` and call
+``from_member("port")`` on that alias. Pass the result to either assembly API.
+For a runtime C++ pointer variable, use
+``from_pointer("namespace::pointer_variable")`` on the same alias. C++ copies
+the variable's current value directly, including compatible base-to-derived
+member-pointer conversions. Only getter callables are cached; later variable
+changes affect new tokens and leave existing tokens unchanged. The symbol must
+be a qualified identifier, not an expression. Invalid spelling raises
+``ValueError``; missing or incompatible symbols raise ``TypeError`` with the
+compiler error as cause. Calls hold the GIL and invoke no callbacks or kernel
+operations. The alias also accepts default construction for a null pointer and copy
+construction from a token of the same type. Null assembly arguments raise
+``ValueError``; incompatible element types raise ``TypeError``. Member selection
+supports arbitrary native element templates and member types.
+
+These tokens store the exact native member pointer and own no elements. Raw
+cppyy member-pointer views cannot currently be marshalled into these overloads.
+Assemblies retain their known Python vector owner across
 copy construction, assignment, self-assignment and swap. Views created entirely
 in native code remain borrowed unless a Python owner is attached. Keep bound
 channels alive through port destruction, and retain owners while using iterators.
@@ -996,8 +1039,13 @@ unused source entries untouched. Source subranges and nonzero destination
 positions preserve these rules. Bind any required remaining ports before
 elaboration; the range operation does not relax their binding policy.
 
-``sc_member_access[Element, Member]("member")`` creates a native access policy;
-policy copies and mutable-to-const conversions preserve native type rules.
+``sc_member_access[Element, Member]("member")`` creates a native access policy.
+The same constructor accepts a typed ``member_type.from_member("member")``
+value with the exact element/member signature. Null tokens raise ``ValueError``
+and mismatched signatures raise ``TypeError`` before policy construction.
+Policies own no elements: retain each element while using ``get()`` and its
+borrowed result. Policy copies and mutable-to-const conversions preserve native
+type rules.
 ``sc_direct_access`` remains a native template. Iterator ``__follow__()`` invokes
 native ``operator->`` and returns a borrowed element or scalar member pointer.
 For a scalar pointer, index zero accesses the member. Range checks and diagnostics

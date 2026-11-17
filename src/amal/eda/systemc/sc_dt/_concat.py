@@ -6,6 +6,7 @@ import cppyy
 
 cppyy.include(str(Path(__file__).with_name("concat_adapters.h")))
 _native_concat = cppyy.gbl.sc_dt.concat
+_concat_calls = {}
 
 
 def _is_vector_bit(value):
@@ -32,13 +33,41 @@ def concat(left, right):
     available through ``concat.__overload__``.
     """
     if type(right) is bool and _is_vector_bit(left):
-        return cppyy.gbl.pysystemc_datatypes.BoolBitConcat[type(left)].tail(left, right)
+        key = ("BoolBitConcat.tail", type(left))
+        call = _concat_calls.get(key)
+        if call is None:
+            call = cppyy.gbl.pysystemc_datatypes.BoolBitConcat[key[1]].tail
+            result = call(left, right)
+            _concat_calls[key] = call
+            return result
+        return call(left, right)
     if type(left) is bool and _is_vector_bit(right):
-        return cppyy.gbl.pysystemc_datatypes.BoolBitConcat[type(right)].head(left, right)
+        key = ("BoolBitConcat.head", type(right))
+        call = _concat_calls.get(key)
+        if call is None:
+            call = cppyy.gbl.pysystemc_datatypes.BoolBitConcat[key[1]].head
+            result = call(left, right)
+            _concat_calls[key] = call
+            return result
+        return call(left, right)
     if type(right) is str:
-        return cppyy.gbl.pysystemc_datatypes.ConcatText[type(left)].tail(left, right)
+        key = ("ConcatText.tail", type(left))
+        call = _concat_calls.get(key)
+        if call is None:
+            call = cppyy.gbl.pysystemc_datatypes.ConcatText[key[1]].tail
+            result = call(left, right)
+            _concat_calls[key] = call
+            return result
+        return call(left, right)
     if type(left) is str:
-        return cppyy.gbl.pysystemc_datatypes.ConcatText[type(right)].head(left, right)
+        key = ("ConcatText.head", type(right))
+        call = _concat_calls.get(key)
+        if call is None:
+            call = cppyy.gbl.pysystemc_datatypes.ConcatText[key[1]].head
+            result = call(left, right)
+            _concat_calls[key] = call
+            return result
+        return call(left, right)
     return _native_concat(left, right)
 
 

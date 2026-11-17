@@ -101,6 +101,8 @@ def _seed_namespace() -> tuple[dict[str, Any], tuple[object, ...]]:
         "tlm": tlm,
         "tlm_utils": tlm_utils,
         "cppyy": cppyy,
+        "native_help": systemc.native_help,
+        "format_native_help": systemc.format_native_help,
     }
     for name in sc_core.__all__:
         # Preserve Python's useful builtins if a native export happens to share

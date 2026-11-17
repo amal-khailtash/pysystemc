@@ -23,8 +23,8 @@ Documentation = "https://pysystemc.readthedocs.io/"
 Issues = "https://github.com/amal-khailtash/pysystemc/issues"
 
 [project.scripts]
-pysystemc = "amal.eda.cli:main"
-pysystemc-cpp = "amal.eda.systemc._runner:main"
+systemc-py = "amal.eda.cli:main"
+systemc-cpp = "amal.eda.cli.cpp:main"
 
 [tool.uv.build-backend]
 module-name = "amal"
@@ -33,7 +33,7 @@ source-include = ["build_backend/**"]
 source-exclude = ["src/amal/eda/systemc/_native/**"]
 
 [build-system]
-requires = ["uv_build>=0.9,<0.14", "cmake>=3.20"]
+requires = ["uv_build>=0.9,<0.14", "cmake>=3.20", "patchelf>=0.17"]
 build-backend = "backend"
 backend-path = ["build_backend"]
 
@@ -54,7 +54,8 @@ docs = [
 
 # Simulation tests spawn fresh interpreters to isolate SystemC kernel state.
 [tool.coverage.run]
-source = ["amal.eda.systemc"]
+# Source paths also measure native-free tests loading adapters under isolated aliases.
+source = ["src/amal/eda/systemc", "src/amal/eda/cli"]
 patch = ["subprocess"]
 # The pytest parent intentionally never imports the singleton native kernel;
 # coverage data is collected by its simulation subprocesses instead.

@@ -1,0 +1,43 @@
+{
+  "schema": "pysystemc-tlm-profile-progress-v1",
+  "status": "complete",
+  "baseline_commit": "29251f038a0b095082bb07499892459d9a576aab",
+  "profiles": 3,
+  "transfers": 20000,
+  "candidate_limit": 1,
+  "screen_pairs": 3,
+  "confirmation_pairs": 10,
+  "minimum_reduction_percent": 5,
+  "resampling": false,
+  "child_timeout_seconds": 60,
+  "gates": {
+    "contract": {
+      "status": "passed"
+    },
+    "profile": {
+      "status": "passed",
+      "detail": "3/3 diagnostic profiles"
+    },
+    "candidate_choice": {
+      "status": "passed",
+      "detail": "40,000 ordinary sc_core module reads dominate ~24 ms self time per diagnostic; guarded base-slot lookup selected. Time constructor retry excluded."
+    },
+    "correctness": {
+      "status": "passed",
+      "detail": "2 module/native flag checks and 4 Python/native TLM models agree; actual MRO status retained."
+    },
+    "measurement": {
+      "status": "passed",
+      "detail": "screen 3/3, 1.37% reduction, 3/3 wins; fixed measurement finished"
+    },
+    "decision": {
+      "status": "passed",
+      "detail": "Rejected: 1.37% median reduction below 5%; no confirmation or runtime change."
+    },
+    "docs_commit": {
+      "status": "passed",
+      "detail": "Root/Luna reconciliation, strict Sphinx and lint passed; report and closure tracker grouped in result commit."
+    }
+  },
+  "candidate": "guarded-native-module-lookup"
+}

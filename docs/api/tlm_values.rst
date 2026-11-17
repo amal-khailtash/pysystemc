@@ -6,6 +6,14 @@ payload-option, socket-category and endianness enums. Version functions and
 metadata describe the loaded native TLM implementation. Host endianness helpers
 describe the machine running the simulation.
 
+The native comparison checks all 30 declared members across these seven enum
+types, including their values, enum identity and integer construction. It also
+checks ten version metadata variables, three version getters and the three host
+queries on the current host. ``get_host_endianness()`` returns a Python integer
+with the native enum value on cppyy 3.5; declared members retain their enum types.
+These checks cover the listed values and calls; other configurations, host
+architectures and concurrent cached-query initialization remain unverified.
+
 Get and peek interfaces
 -----------------------
 
@@ -18,6 +26,11 @@ through a blocking operation. Native conversion and callback errors propagate.
 Direct memory access
 --------------------
 
+The baseline native comparison covers initialization, all four permission
+states, permission replacement, 64-bit address ranges, latency values, borrowed
+buffer reads/writes and restoration through ``init()``. This finite state/value
+check does not establish arbitrary pointer lifetimes or concurrent access.
+
 ``tlm.tlm_dmi`` stores a borrowed byte pointer, inclusive 64-bit address range,
 read/write latency and access permissions. Keep its backing buffer alive while
 any initiator can use the grant. Permission setters replace the previous grant;
@@ -26,6 +39,13 @@ latency setters preserve native values without narrowing to Python word size.
 
 Phases and temporal decoupling
 ------------------------------
+
+The baseline comparison covers all five standard phase names and values,
+default and numeric construction, assignment and one registered extended phase.
+Its quantumkeeper scenario compares thirteen ordered timing/lifecycle records
+with C++, including reset cleanup at 2 ns, kill cleanup at 3 ns and successful
+synchronization at 10 ns and 20 ns. Other schedules and registry/concurrency
+contracts remain open.
 
 ``tlm.tlm_phase`` accepts standard phase enums and native numeric identifiers.
 Registered native extended phases retain their names and stream representation.

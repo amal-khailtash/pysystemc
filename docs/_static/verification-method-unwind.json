@@ -1,0 +1,82 @@
+{
+  "schema": "pysystemc-method-unwind-verification-v1",
+  "date": "2026-11-15",
+  "baseline_commit": "9208ba2",
+  "python": "3.14.0",
+  "status": "accepted",
+  "defect": "Method self-kill leaves a private Python unwind signal pending; a subsequent API access raises SystemError. Independently reproduced with the production sc_module.",
+  "change": "Clear pending Python error under acquired GIL before restoring native unwind on both exception and normal-return callback paths.",
+  "regression_cases": [
+    "ordinary finally",
+    "finally raises ValueError; native kill retains priority",
+    "callback catches private unwind and returns"
+  ],
+  "assertions": [
+    "one callback entry and cleanup",
+    "terminated native process",
+    "1 ns simulation time",
+    "post-unwind API access and garbage collection",
+    "callback retained through stop and released after explicit destruction in probe"
+  ],
+  "collection_count": 997,
+  "full_regression": "Historical 996-pass checkpoint retained; no full suite run for this delta.",
+  "coverage": "Historical Python coverage retained; no new coverage claim.",
+  "package_scope": "uv wheel and sdist build; changed C++ bytes match both archives; three isolated Python3.14 probes import extracted wheel with verified origin. No fresh full installed-example sweep.",
+  "performance": {
+    "status": "round closed without timing or adoption after correctness defect discovery",
+    "elapsed_reduction_percent": null,
+    "production_direct_callback_change": false,
+    "accepted_workload_slices": 25,
+    "accepted_performance_commits": 20
+  },
+  "changed_source_sha256": "3d115d4eabdec57b1127563b9c5db811b503e6a9e0808991697ddef34340f629",
+  "evidence": [
+    {
+      "path": "build/verification/method-unwind/fixed-probe.log",
+      "sha256": "29285a3de0eff64d3d212e294f356dd18e599de76e8b72cc513fd0736b1e62ce"
+    },
+    {
+      "path": "build/verification/method-unwind/root-regression-exact.log",
+      "sha256": "84553d23ff5d018bc5ccc107e25e1dceb227e93e350a5d288aa4abb64ec026d6"
+    },
+    {
+      "path": "build/verification/method-unwind/root-wheel-origin.log",
+      "sha256": "114d6c4096d91400e7172daedbf327ea13e49c2959070b260c5ebf3dee409e19"
+    },
+    {
+      "path": "build/verification/method-unwind/build-retry.log",
+      "sha256": "1baca585555e2c6c10c8f340f5798aca6dcf2d88f7fedf2d2ba5e098e44e0a2a"
+    },
+    {
+      "path": "build/verification/method-unwind/style.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "build/verification/method-unwind/docs-fixed.log",
+      "sha256": "bd30badb76e5d2f5649d9cb509c0f8932b1e558a063364b71e042f2541bec165"
+    },
+    {
+      "path": "build/verification/method-unwind/collection.log",
+      "sha256": "a1751b4340f8c692957c36d3f26a6d21b9d1bef5ff366c25ad477eed622e87d5"
+    },
+    {
+      "path": "build/verification/method-unwind/targeted-complete.log",
+      "sha256": "3d5ce5432553d866043107b2cfb6dee9d33117fa0fc1df2a831586ecc627462f"
+    }
+  ],
+  "retained_failures": [
+    "before/direct and production self-kill probes reproduce stale error",
+    "initial uv build could not write configured cache; authorized retry passed",
+    "initial root -k selection collected no test; exact test passed",
+    "strict docs underline warning; corrected docs gate passed",
+    "Initial sequential targeted run reached recorder 300-second aggregate deadline after 48 passing progress markers; complete suite rerun uses explicit 900-second aggregate limit and four workers, preserving per-simulation 60-second limits."
+  ],
+  "limits": [
+    "Method-only direct callback prototype remains unadopted and untimed.",
+    "No Python3.15 validation; deferred.",
+    "Broader arbitrary-template and lifecycle contracts remain outside selected finite scope."
+  ],
+  "targeted_tests": 90,
+  "targeted_seconds": 167.58,
+  "regression_test_sha256": "fa57db27ea4074a307384835081c60d5f976a24fd638bb56172d30d627183a92"
+}

@@ -12,6 +12,7 @@ from ._hashes import install as _install_hashes
 
 _install_hashes()
 _directory = Path(__file__).parent
+cppyy.include(str(_directory / "hierarchy.h"))
 for _bridge in (
     "sc_main.cpp",
     "native_entry.cpp",
@@ -33,6 +34,8 @@ for _bridge in (
 ):
     with (_directory / _bridge).open() as _source:
         cppyy.cppdef(_source.read())
+
+cppyy.include(str(_directory / "hierarchy.cpp"))
 
 cppyy.include(str(_directory / "vector_creator.cpp"))
 cppyy.include(str(_directory / "vector_policies.cpp"))

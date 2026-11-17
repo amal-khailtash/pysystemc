@@ -10,13 +10,15 @@ from unittest.mock import patch
 root = Path(sys.argv[1])
 scenario = sys.argv[2]
 source = root / "src/amal/eda/systemc/_runtime.py"
-for parent_name in ("amal", "amal.eda"):
+package_roots = {
+    "amal": root / "src/amal",
+    "amal.eda": root / "src/amal/eda",
+    "amal.eda.systemc": root / "src/amal/eda/systemc",
+}
+for parent_name, package_path in package_roots.items():
     parent = types.ModuleType(parent_name)
-    parent.__path__ = []
+    parent.__path__ = [str(package_path)]
     sys.modules[parent_name] = parent
-package = types.ModuleType("amal.eda.systemc")
-package.__path__ = []
-sys.modules["amal.eda.systemc"] = package
 logging = types.ModuleType("amal.eda.systemc._logging")
 logging.log = lambda message: None
 sys.modules[logging.__name__] = logging

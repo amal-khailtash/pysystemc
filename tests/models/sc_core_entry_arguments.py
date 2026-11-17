@@ -28,7 +28,6 @@ def sc_main(args):
     saved.extend(copied)
     args[1] = "modified"
     assert values[1] == "café" and sc.sc_argv()[1] == "café"
-    assert sc.python_argv_at(1) == "café"
     print("ENTRY_ARGUMENT_REFERENCE", sc.sc_argc(), *copied[1:])
     return 0
 

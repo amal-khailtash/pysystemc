@@ -53,9 +53,15 @@ void report_make_warnings_errors(bool promote)
 {
   sc_core::sc_report::make_warnings_errors(promote);
 }
-/** @brief Assign borrowed reports; destination owns copied fields and returned reference is borrowed. */
-sc_core::sc_report& report_assign(sc_core::sc_report& destination, const sc_core::sc_report& source)
+/** @brief Copy source report fields into destination without exposing a native reference return.
+ * @details Destination owns copied fields. Assignment invalidates its borrowed
+ * field references, including its timestamp, even on self-assignment. Copy
+ * needed values first and reacquire views afterward. Keep both reports alive
+ * during the call. Call on the simulation thread with the GIL held; no callbacks
+ * or ownership transfers occur. Native allocation exceptions propagate.
+ */
+void report_assign(sc_core::sc_report& destination, const sc_core::sc_report& source)
 {
-  return destination = source;
+  destination = source;
 }
 }  // namespace pysystemc

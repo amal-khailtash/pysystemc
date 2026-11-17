@@ -6,16 +6,108 @@ Run after generating modeling and compatibility snapshots with inventory_public_
 """
 
 import argparse
+from copy import deepcopy
 import hashlib
 import json
 import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+_SEMANTIC_VARIANT_FIELDS = (
+    "static",
+    "virtual",
+    "written_static",
+    "written_virtual",
+    "effective_static_status",
+    "effective_virtual_status",
+    "pure",
+    "bases",
+    "parameters",
+    "template_parameters",
+    "template_arguments",
+    "template_context",
+    "access",
+    "using_targets",
+)
+
+
+def reconcile_friend_relationships(snapshots):
+    """Union friend source sites without changing declaration ownership or IDs.
+
+    Each site retains every distinct relationship payload and the configurations
+    that observed it. The coverage list distinguishes a snapshot with an empty
+    sidecar from an older snapshot that did not collect friendship metadata.
+    Returned records are independent copies of the input snapshots.
+    """
+    sites = {}
+    indexes = {}
+    collected = []
+    unavailable = []
+    for snapshot in snapshots:
+        configuration = snapshot["configuration"]
+        coverage = collected if "friend_relationships" in snapshot else unavailable
+        if configuration not in coverage:
+            coverage.append(deepcopy(configuration))
+        for relationship in snapshot.get("friend_relationships", []):
+            identifier = relationship["occurrence_id"]
+            if identifier not in sites:
+                sites[identifier] = {"occurrence_id": identifier, "semantic_variants": []}
+                indexes[identifier] = {}
+            payload = {key: deepcopy(value) for key, value in relationship.items() if key != "occurrence_id"}
+            key = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+            if key not in indexes[identifier]:
+                variant = {**payload, "configurations": []}
+                indexes[identifier][key] = variant
+                sites[identifier]["semantic_variants"].append(variant)
+            configurations = indexes[identifier][key]["configurations"]
+            if configuration not in configurations:
+                configurations.append(deepcopy(configuration))
+    return {
+        "friend_relationships": [sites[key] for key in sorted(sites)],
+        "friend_relationship_coverage": {"collected": collected, "not_collected": unavailable},
+    }
+
+
+def reconcile_declaration_conditions(snapshots):
+    """Group textual source-condition observations without promoting API support.
+
+    Located occurrences group by their portable ID. Unlocated observations merge
+    only when their entire payload agrees, and retain a null occurrence ID.
+    Collection coverage distinguishes unavailable historical metadata from an
+    explicitly collected empty list. Input payloads are copied independently.
+    """
+    sites = {}
+    indexes = {}
+    collected = []
+    unavailable = []
+    for snapshot in snapshots:
+        configuration = snapshot["configuration"]
+        coverage = collected if "declaration_conditions" in snapshot else unavailable
+        if configuration not in coverage:
+            coverage.append(deepcopy(configuration))
+        for observation in snapshot.get("declaration_conditions", []):
+            identifier = observation["occurrence_id"]
+            payload = {key: deepcopy(value) for key, value in observation.items() if key != "occurrence_id"}
+            payload_key = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+            site_key = ("located", identifier) if identifier is not None else ("unlocated", payload_key)
+            if site_key not in sites:
+                sites[site_key] = {"occurrence_id": identifier, "semantic_variants": []}
+                indexes[site_key] = {}
+            if payload_key not in indexes[site_key]:
+                variant = {**payload, "configurations": []}
+                indexes[site_key][payload_key] = variant
+                sites[site_key]["semantic_variants"].append(variant)
+            configurations = indexes[site_key][payload_key]["configurations"]
+            if configuration not in configurations:
+                configurations.append(deepcopy(configuration))
+    return {
+        "declaration_conditions": [sites[key] for key in sorted(sites)],
+        "declaration_condition_coverage": {"collected": collected, "not_collected": unavailable},
+    }
 
 
 def reconcile(snapshots):
-    """Union declaration identities, preserving occurrences and configuration scope.
+    """Union identities while retaining each extracted semantic configuration variant.
 
     Parameters
     ----------
@@ -25,7 +117,18 @@ def reconcile(snapshots):
     Returns
     -------
     dict
-        Portable union with one review row per identity and explicit occurrences.
+        Portable union with one canonical row per identity, explicit occurrences,
+        and unique ``semantic_variants`` grouped by their source configurations.
+
+    The top-level declaration fields remain the first encountered snapshot's
+    canonical view for compatibility. Each variant separately deep-copies the
+    extracted effective and written static/virtual flags and their resolution
+    statuses, pure flags, bases, parameter/default metadata, template metadata,
+    access and using-declaration targets. Missing fields remain
+    absent, distinct from explicit false or empty defaults. Variants are audit evidence; they do not
+    infer or update public support status.
+    Optional friendship sidecars retain independent source-site variants and
+    explicit collection coverage without altering declaration fields.
 
     Raises
     ------
@@ -37,24 +140,45 @@ def reconcile(snapshots):
     if {item["schema_version"] for item in snapshots} != {4}:
         raise ValueError("Regenerate all snapshots with schema version 4")
     rows = {}
+    variant_indexes = {}
     for snapshot in snapshots:
         configuration = snapshot["configuration"]
         for entry in snapshot["declarations"]:
             identifier = entry["id"]
             if identifier not in rows:
-                rows[identifier] = {**entry, "occurrences": [], "configurations": []}
+                rows[identifier] = {**deepcopy(entry), "occurrences": [], "configurations": [], "semantic_variants": []}
+                variant_indexes[identifier] = {}
             row = rows[identifier]
             occurrence = {"source": entry["source"], "line": entry["line"], "access": entry["access"]}
             if occurrence not in row["occurrences"]:
                 row["occurrences"].append(occurrence)
             if configuration not in row["configurations"]:
-                row["configurations"].append(configuration)
+                row["configurations"].append(deepcopy(configuration))
+            semantic = {field: deepcopy(entry[field]) for field in _SEMANTIC_VARIANT_FIELDS if field in entry}
+            variant_key = json.dumps(semantic, sort_keys=True, separators=(",", ":"))
+            variants = variant_indexes[identifier]
+            if variant_key not in variants:
+                variant = {**semantic, "configurations": [], "occurrences": []}
+                variants[variant_key] = variant
+                row["semantic_variants"].append(variant)
+            variant = variants[variant_key]
+            variant_configurations = variant["configurations"]
+            if configuration not in variant_configurations:
+                variant_configurations.append(deepcopy(configuration))
+            variant_occurrence = {
+                "source": entry["source"],
+                "line": entry["line"],
+                "access": entry["access"],
+                "configuration": deepcopy(configuration),
+            }
+            if variant_occurrence not in variant["occurrences"]:
+                variant["occurrences"].append(variant_occurrence)
     families = {}
     for row in rows.values():
         family = "::".join(row["name"].split("::")[:2])
         families.setdefault(family, []).append(row["id"])
     fingerprint = hashlib.sha256("\n".join(sorted(rows)).encode()).hexdigest()
-    return {
+    inventory = {
         "systemc_revision": snapshots[0]["systemc_revision"],
         "schema_version": 4,
         "fingerprint": fingerprint,
@@ -69,6 +193,11 @@ def reconcile(snapshots):
             )
         ],
     }
+    if any("friend_relationships" in snapshot for snapshot in snapshots):
+        inventory.update(reconcile_friend_relationships(snapshots))
+    if any("declaration_conditions" in snapshot for snapshot in snapshots):
+        inventory.update(reconcile_declaration_conditions(snapshots))
+    return inventory
 
 
 def write_remaining(inventory, output):
@@ -120,6 +249,8 @@ def write_remaining(inventory, output):
             work.append("Resolve explicitly partial binding mappings")
         if any(entry.get("status") != "supported" for entry in public):
             work.append("Complete semantic evidence for public overload scope")
+        if any(len(entry.get("semantic_variants", [])) > 1 for entry in entries):
+            work.append("Reconcile declaration/definition or configuration metadata variants")
         remaining = "; ".join(work) or "Internal source review recorded; confirm any access-only exclusions"
         lines.append(
             f"| `{family.replace('|', '&#124;')}` | {len(entries)} | {classifications} | {sources} | {remaining} |"
@@ -153,6 +284,7 @@ def write_remaining(inventory, output):
         "- Reconcile inactive platform/compiler/ABI branches against the Linux/C++17 baseline; broader platforms are deferred.",
         "- Review all recorded conditional directives and macro definition sites; include guards do not create APIs.",
         "- Review inherited access and using declarations, qualified friends, template instantiations and aliases.",
+        "- Reconcile semantic_variants across declaration/definition occurrences and configurations; these are source metadata differences, not behavioral contradictions or support evidence.",
         "- Review noninstalled implementation headers and installed internal kernel/datatype facilities.",
         "- Map native operators to Python protocols and distinguish overload resolution from native declaration availability.",
         "- Reconcile upstream example variants and APIs without example coverage.",
@@ -161,9 +293,28 @@ def write_remaining(inventory, output):
         "",
         "PUBLIC_API_UNION.json contains each identity, signature, template context, access,",
         "source occurrence, configurations, classification, mapping and semantic review state.",
+        "Its top-level declaration fields retain the first snapshot as the canonical view;",
+        "semantic_variants preserves configuration-specific extracted flags, bases, parameter defaults,",
+        "template metadata and access, with source/line/access/configuration occurrences for review.",
+        "Multiple variants can reflect declarations and definitions in one configuration; they are not",
+        "behavioral contradictions or support evidence and do not promote a support status.",
         "PUBLIC_API_SOURCE_INVENTORY.md and PUBLIC_API_COMPATIBILITY.md retain source order occurrences.",
         "",
     ]
+    if "friend_relationships" in inventory:
+        lines += [
+            "Friend relationships retain lexical owners and exact or unresolved targets separately from declarations.",
+            "Their semantic_variants preserve configuration observations; friend_relationship_coverage records collection gaps.",
+            "Friendship source evidence does not establish Python visibility, ADL or binding support.",
+            "",
+        ]
+    if "declaration_conditions" in inventory:
+        lines += [
+            "Declaration conditions retain textual branch histories at individual source occurrences.",
+            "They do not evaluate preprocessing expressions or prove visibility, public role or binding support.",
+            "declaration_condition_coverage records configurations that collected this metadata.",
+            "",
+        ]
     output.write_text("\n".join(lines))
 
 

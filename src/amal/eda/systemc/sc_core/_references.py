@@ -2,6 +2,10 @@
 
 import cppyy
 
+# Retain generic templates; specialization and referent ownership stay per call.
+_native_sc_ref = cppyy.gbl.sc_core.sc_ref
+_native_sc_cref = cppyy.gbl.sc_core.sc_cref
+
 
 def sc_ref(value):
     """Return a native reference wrapper retaining the original Python proxy.
@@ -21,7 +25,7 @@ def sc_ref(value):
     while using them, and ensure separately managed native storage also remains
     alive. Calls hold the GIL and do not advance simulation.
     """
-    wrapper = cppyy.gbl.sc_core.sc_ref(value)
+    wrapper = _native_sc_ref(value)
     wrapper._reference_owner = value
     return wrapper
 
@@ -42,6 +46,6 @@ def sc_cref(value):
     Keep it alive while using borrowed get() results. Calls hold the GIL and do
     not advance simulation; native consumers preserve the const contract.
     """
-    wrapper = cppyy.gbl.sc_core.sc_cref(value)
+    wrapper = _native_sc_cref(value)
     wrapper._reference_owner = value
     return wrapper

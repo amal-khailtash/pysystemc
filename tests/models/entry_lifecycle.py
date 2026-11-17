@@ -33,12 +33,22 @@ models = []
 
 def sc_main(args):
     """Validate UTF-8 argv copying and independent start/pause/stop state."""
-    assert args == sys.argv
     original = list(args)
+    expected = [sys.argv[0], "café", "--value=17"]
+    assert args == sys.argv == expected
+    snapshot = sc.sc_argv()
+    assert isinstance(snapshot, tuple) and snapshot == tuple(expected)
+    assert sc.sc_argc() == len(expected)
     args[0] = "changed"
-    assert sc.python_argv_at(0) == original[0]
+    assert args[0] == "changed"
     assert sys.argv == original
-    assert sc.sc_argc() == len(original)
+    assert snapshot == tuple(original) and sc.sc_argv() == snapshot
+    try:
+        snapshot[0] = "changed"
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("public argv snapshot was mutable")
     models.append(Model("entry_lifecycle"))
     sc.sc_start(5, sc.SC_NS)
     assert sc.sc_get_status() == sc.SC_PAUSED

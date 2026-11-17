@@ -1,0 +1,42 @@
+{
+  "status": "complete",
+  "baseline_commit": "ca86205",
+  "candidate_limit": 1,
+  "screen_pairs": 3,
+  "confirmation_pairs": 10,
+  "minimum_reduction_percent": 5,
+  "required_wins": "all",
+  "resampling": false,
+  "transfers": 20000,
+  "child_timeout_seconds": 60,
+  "gates": {
+    "contract": {
+      "status": "passed",
+      "detail": "One candidate, fixed original TLM loop; no retries or additional workload."
+    },
+    "cost_classification": {
+      "status": "passed",
+      "detail": "Reuse three published diagnostic profiles; callback body self time includes cppyy native calls; result wrapper is distinct ~8ms."
+    },
+    "candidate_choice": {
+      "status": "passed",
+      "detail": "Freeze void-return validation branch at registration, retaining *args, None enforcement, callable ownership, and native bridge."
+    },
+    "correctness": {
+      "status": "passed",
+      "detail": "2 void-wrapper/native result checks and 4 Python/native TLM models agree. Six lifecycle/error/duplicate models passed."
+    },
+    "measurement": {
+      "status": "passed",
+      "detail": "screen 3/3, 1.59% reduction, 2/3 wins; fixed measurement finished"
+    },
+    "decision": {
+      "status": "passed",
+      "detail": "Rejected: 1.59% median reduction, 2/3 wins; no confirmation or runtime change."
+    },
+    "docs_commit": {
+      "status": "passed",
+      "detail": "Root/Luna evidence reconciliation, strict Sphinx and lint passed; report and seven-gate closure grouped in result commit."
+    }
+  }
+}

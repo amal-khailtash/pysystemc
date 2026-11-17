@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "status": "accepted_bounded_measurements_no_new_optimization",
+  "date": "2026-11-15",
+  "python": "3.14.0",
+  "tracking_interpretation": "VCD simulation tracing assumed after optional clarification; no profiling/coverage/AI-recorder overhead comparison.",
+  "startup": {
+    "model-construction": {
+      "max_peak_rss_bytes": 304852992,
+      "max_wall_seconds": 5.001191612333059,
+      "median_peak_rss_bytes": 304693248,
+      "median_wall_seconds": 4.898951146751642,
+      "min_peak_rss_bytes": 303931392,
+      "min_wall_seconds": 4.714698877185583,
+      "phase_summary": {
+        "first_model_construction_seconds": {
+          "max_seconds": 0.1865764521062374,
+          "median_seconds": 0.16469412669539452,
+          "min_seconds": 0.1626526564359665,
+          "spread_seconds": 0.02392379567027092
+        },
+        "systemc_import_seconds": {
+          "max_seconds": 4.609581965953112,
+          "median_seconds": 4.54612085968256,
+          "min_seconds": 4.370710670948029,
+          "spread_seconds": 0.23887129500508308
+        }
+      },
+      "successful_sample_count": 3,
+      "wall_spread_seconds": 0.2864927351474762
+    },
+    "systemc-import": {
+      "max_peak_rss_bytes": 302489600,
+      "max_wall_seconds": 4.862419072538614,
+      "median_peak_rss_bytes": 302366720,
+      "median_wall_seconds": 4.757053259760141,
+      "min_peak_rss_bytes": 301846528,
+      "min_wall_seconds": 4.728876821696758,
+      "phase_summary": {
+        "systemc_import_seconds": {
+          "max_seconds": 4.727697886526585,
+          "median_seconds": 4.5742631778120995,
+          "min_seconds": 4.571555469185114,
+          "spread_seconds": 0.15614241734147072
+        }
+      },
+      "successful_sample_count": 3,
+      "wall_spread_seconds": 0.133542250841856
+    }
+  },
+  "simulation": {
+    "status": "passed",
+    "python": "3.14.0",
+    "scope": "Same Python stimulus; method counter; VCD tracing overhead, not optimization gain. Imports/elaboration excluded; warm OS caches retained.",
+    "pairs": 3,
+    "cycles": 20000,
+    "samples": [
+      {
+        "pair": 0,
+        "engine": "python",
+        "traced": false,
+        "cycles": 20000,
+        "seconds": 0.12958301976323128,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": null
+      },
+      {
+        "pair": 0,
+        "engine": "python",
+        "traced": true,
+        "cycles": 20000,
+        "seconds": 0.24675825983285904,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": 20000
+      },
+      {
+        "pair": 0,
+        "engine": "native",
+        "traced": false,
+        "cycles": 20000,
+        "seconds": 0.09893737360835075,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": null
+      },
+      {
+        "pair": 0,
+        "engine": "native",
+        "traced": true,
+        "cycles": 20000,
+        "seconds": 0.22112387418746948,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": 20000
+      },
+      {
+        "pair": 1,
+        "engine": "python",
+        "traced": true,
+        "cycles": 20000,
+        "seconds": 0.23180050030350685,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": 20000
+      },
+      {
+        "pair": 1,
+        "engine": "python",
+        "traced": false,
+        "cycles": 20000,
+        "seconds": 0.13466444984078407,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": null
+      },
+      {
+        "pair": 1,
+        "engine": "native",
+        "traced": true,
+        "cycles": 20000,
+        "seconds": 0.21112054958939552,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": 20000
+      },
+      {
+        "pair": 1,
+        "engine": "native",
+        "traced": false,
+        "cycles": 20000,
+        "seconds": 0.09770853817462921,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": null
+      },
+      {
+        "pair": 2,
+        "engine": "python",
+        "traced": false,
+        "cycles": 20000,
+        "seconds": 0.12998147681355476,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": null
+      },
+      {
+        "pair": 2,
+        "engine": "python",
+        "traced": true,
+        "cycles": 20000,
+        "seconds": 0.2335035465657711,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": 20000
+      },
+      {
+        "pair": 2,
+        "engine": "native",
+        "traced": false,
+        "cycles": 20000,
+        "seconds": 0.09913109242916107,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": null
+      },
+      {
+        "pair": 2,
+        "engine": "native",
+        "traced": true,
+        "cycles": 20000,
+        "seconds": 0.2060062512755394,
+        "callbacks": 20000,
+        "value": 20000,
+        "time_ns": 40000,
+        "vcd_count_transitions": 20000
+      }
+    ],
+    "medians": {
+      "python": {
+        "trace_off_seconds": 0.12998147681355476,
+        "trace_on_seconds": 0.2335035465657711,
+        "trace_overhead_percent": 79.64370946539425
+      },
+      "native": {
+        "trace_off_seconds": 0.09893737360835075,
+        "trace_on_seconds": 0.21112054958939552,
+        "trace_overhead_percent": 113.38806751140199
+      }
+    }
+  },
+  "evidence": {
+    "build/performance/final-bounded/startup.json": "395352958321c51de23a45ae5d3fcb4fa93d95e1d6fc02e7417957fbb8143cd4",
+    "build/performance/final-bounded/simulation.json": "e8553a72b0b97280825a885df4c442b8150c2be4075d17cd6a68ec15c19448d7"
+  },
+  "source_reviews": {
+    "onprem/Qwen3.8-Flash-Next": "Interrupted after bounded wait; no usable review or accepted integration.",
+    "onprem/GLM-5.3-Flash": "Interrupted after bounded wait; no usable review or accepted integration.",
+    "root_disposition": "No runtime candidate adopted. Existing stream-dispatch rejection retained; no rebenchmark. MRO shortcut not pursued without preserving mutable reflected classification."
+  },
+  "finish_line": "Final installed comparator acceptance and this fixed measurement round complete; no further candidate or validation queued.",
+  "limits": [
+    "One host, three measured samples/pairs and inherited warm OS caches; not a cold-start or cross-platform claim.",
+    "Startup includes interpreter/subprocess costs; simulation excludes imports/elaboration and includes Python stimulus plus VCD creation/closure.",
+    "Native C++ method reference shares Python stimulus; it is not a fully native stimulus throughput measurement.",
+    "No before/after revision comparison or cumulative package-wide gain measured; historical25workload/20commit accounting unchanged.",
+    "Python3.15 remains deferred; no runtime source change or full-regression rerun in this round."
+  ]
+}

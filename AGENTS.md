@@ -67,3 +67,5 @@ upstream examples incrementally, preserving meaningful native reference checks.
 
 Place upstream Python ports under examples/sysc/ or examples/tlm/, preserving
 the upstream example subdirectory hierarchy and source-file stem where practical.
+
+@RTK.md

@@ -68,7 +68,9 @@ def _adapt(native_type):
         Returns:
             None, matching native construction.
         Raises:
-            TypeError: The native constructor or argument conversion is unavailable.
+            TypeError: The Python-side argument shape or native argument
+                conversion is unsupported. Native fallback errors keep cppyy's
+                overload candidates in their original diagnostic.
             Native exception: Allocation, conversion or configured reports throw.
         Initialization occurs directly in the owner's native storage, preserving
         observer identity and native callback ordering. Keep the observer owner
@@ -81,6 +83,8 @@ def _adapt(native_type):
         if configurable:
             selected = _configured_signature(arguments, observer_type, observer_signature)
             if selected is None:
+                if type(arguments[0]) is cppyy.gbl.sc_dt.sc_fxtype_params:
+                    raise TypeError(_unsupported_parameter_shape(native_type, arguments))
                 return native_constructor(owner, *args, **kwargs)
             signatures, arguments = selected
             return native_constructor.__overload__(", ".join(signatures))(owner, *arguments)
@@ -104,6 +108,26 @@ def _adapt(native_type):
         return native_constructor.__overload__(", ".join(signatures))(owner, *arguments)
 
     native_type.__init__ = NativeMethod(construct, native_constructor)
+
+
+def _native_type_label(native_type):
+    """Return a readable native spelling while retaining template arguments."""
+    name = getattr(native_type, "__cpp_name__", "")
+    if name.startswith("sc_dt::"):
+        return name.removeprefix("sc_dt::")
+    return name or native_type.__name__
+
+
+def _unsupported_parameter_shape(native_type, arguments):
+    """Describe a rejected parameter shape and the supported native forms."""
+    operation = _native_type_label(native_type)
+    shape = ", ".join(_native_type_label(type(argument)) for argument in arguments)
+    return (
+        f"{operation} constructor does not support native argument shape ({shape}); "
+        "supported configuration forms use sc_fxtype_params with an optional "
+        "sc_fxcast_switch and/or matching observer; a supported source value "
+        "may precede those parameters"
+    )
 
 
 def _configured_signature(arguments, observer_type, observer_signature):
