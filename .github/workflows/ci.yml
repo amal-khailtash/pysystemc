@@ -20,6 +20,8 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.14'
+          # Feature classification installs no dependencies to populate a cache.
+          enable-cache: false
       - name: Select validation
         id: classify
         env:
