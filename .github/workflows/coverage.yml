@@ -49,23 +49,19 @@ jobs:
               print(f"### {name}\n\n{description}", file=summary)
           PYTHON
       - name: Compute native cache identity
-        if: github.event.repository.name == 'pysystemc'
         id: native-key
         shell: bash
         run: |
           identity=$( { c++ --version; c++ -dumpmachine; cmake --version; git -C submodules/systemc rev-parse HEAD; sha256sum Makefile build_backend/backend.py; echo 'cxx17-pthreads-python3.14'; } | sha256sum | cut -d' ' -f1 )
           echo "key=$identity" >> "$GITHUB_OUTPUT"
       - name: Cache native dependencies
-        if: github.event.repository.name == 'pysystemc'
         uses: actions/cache@v4
         with:
           path: build/deps
           key: native-${{ runner.os }}-${{ runner.arch }}-${{ steps.native-key.outputs.key }}
       - name: Set up ${{ steps.project.outputs.name }} native dependencies
-        if: github.event.repository.name == 'pysystemc'
         run: make setup
       - name: Check Python lint and formatting
-        if: github.event.repository.name == 'pysystemc'
         run: |
           make lint
           uv run ruff format --check .
